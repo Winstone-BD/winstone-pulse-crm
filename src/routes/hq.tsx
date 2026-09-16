@@ -437,14 +437,23 @@ function StatTile({
   label,
   value,
   hint,
+  onOpen,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint: string;
+  /** Opens the drill-down list behind this number. */
+  onOpen?: () => void;
 }) {
   return (
-    <div className="card-elevated relative overflow-hidden p-5">
+    <button
+      type="button"
+      onClick={onOpen}
+      disabled={!onOpen}
+      aria-label={`${label} — বিস্তারিত তালিকা`}
+      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 disabled:cursor-default"
+    >
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
       <div className="flex items-start gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25">
