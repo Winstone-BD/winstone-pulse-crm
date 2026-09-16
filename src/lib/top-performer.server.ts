@@ -56,7 +56,9 @@ export type TopPerformerBoard = {
  * then talk time and follow-ups booked. Deliberately simple so the reason lines
  * on the homepage can be read straight off the numbers.
  */
-export function scoreOf(line: Omit<PerformerLine, "score" | "connectRate">): number {
+export function scoreOf(
+  line: Omit<PerformerLine, "score" | "connectRate" | "quota" | "fairScore">,
+): number {
   return line.connected * 4 + line.reports * 2 + line.followUps * 1.5 + line.talkMinutes * 0.4;
 }
 
