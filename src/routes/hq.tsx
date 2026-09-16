@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
+import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
 import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
