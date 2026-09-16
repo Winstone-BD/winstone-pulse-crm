@@ -65,6 +65,11 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
     const preview = (previewCandidates ?? []).filter((lead) => previewIds.has(lead.id)).slice(0, 12);
 
     const rows = assigned ?? [];
+    const rawImportMetadata = audits?.[0]?.metadata;
+    const importMetadata =
+      rawImportMetadata && typeof rawImportMetadata === "object" && !Array.isArray(rawImportMetadata)
+        ? rawImportMetadata
+        : null;
     const perAgent: LeadPoolAgent[] = agents.map((agent) => {
       const mine = rows.filter((row) => row.assigned_to === agent.id);
       return {
@@ -86,7 +91,18 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
       lastRunDate: plan.lastRunDate,
       shortage: poolCount < need,
       daysLeft: need > 0 ? Math.floor(poolCount / need) : 0,
-      latestImport: audits?.[0] ?? null,
+      latestImport:
+        audits?.[0] && importMetadata
+          ? {
+              createdAt: audits[0].created_at,
+              incoming: Number(importMetadata["incoming"] ?? 0),
+              excludedAlreadyWorkedOrAssigned: Number(
+                importMetadata["excludedAlreadyWorkedOrAssigned"] ?? 0,
+              ),
+              excludedDuplicate: Number(importMetadata["excludedDuplicate"] ?? 0),
+              eligibleNew: Number(importMetadata["eligibleNew"] ?? 0),
+            }
+          : null,
     };
   });
 

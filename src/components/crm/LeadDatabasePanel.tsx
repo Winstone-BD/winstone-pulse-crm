@@ -86,16 +86,16 @@ export function LeadDatabasePanel() {
 
       {status.data?.latestImport ? (
         <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface-2 p-3 text-xs sm:grid-cols-4">
-          <Result label="Incoming / এসেছে" value={status.data.latestImport.metadata["incoming"]} />
+          <Result label="Incoming / এসেছে" value={status.data.latestImport.incoming} />
           <Result
             label="Worked / আগে কাজ"
-            value={status.data.latestImport.metadata["excludedAlreadyWorkedOrAssigned"]}
+            value={status.data.latestImport.excludedAlreadyWorkedOrAssigned}
           />
           <Result
             label="Duplicate / একই"
-            value={status.data.latestImport.metadata["excludedDuplicate"]}
+            value={status.data.latestImport.excludedDuplicate}
           />
-          <Result label="Eligible / নতুন" value={status.data.latestImport.metadata["eligibleNew"]} />
+          <Result label="Eligible / নতুন" value={status.data.latestImport.eligibleNew} />
         </div>
       ) : null}
 

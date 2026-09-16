@@ -175,29 +175,42 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
         return { ok: false, message: "অমীমাংসিত কোনো লিড নেই" };
       }
 
-      await Promise.all(
-        leads.map((lead, index) =>
-          supabaseAdmin
+      const assignments = await Promise.all(
+        leads.map(async (lead, index) => {
+          const agent = agents[index % agents.length];
+          if (!agent) return null;
+          const { data: updated, error } = await supabaseAdmin
             .from("leads")
             .update({
-              assigned_to: agents[index % agents.length]!.id,
+              assigned_to: agent.id,
+              assigned_agent_id: agent.id,
               assignment_source: "command_agent",
             })
-            .eq("id", lead.id),
-        ),
+            .eq("id", lead.id)
+            .is("assigned_to", null)
+            .is("assigned_agent_id", null)
+            .select("id")
+            .maybeSingle();
+          if (error || !updated) return null;
+          return { lead_id: lead.id, to_agent_id: agent.id };
+        }),
       );
-      await supabaseAdmin.from("lead_assignments").insert(
-        leads.map((lead, index) => ({
-          lead_id: lead.id,
-          to_agent_id: agents[index % agents.length]!.id,
-          changed_by: actorProfileId,
-          source: "command_agent",
-        })),
+      const completed = assignments.filter(
+        (row): row is { lead_id: string; to_agent_id: string } => row !== null,
       );
-      await audit(`distributed:${leads.length}`);
+      if (completed.length) {
+        await supabaseAdmin.from("lead_assignments").insert(
+          completed.map((row) => ({
+            ...row,
+            changed_by: actorProfileId,
+            source: "command_agent",
+          })),
+        );
+      }
+      await audit(`distributed:${completed.length}`);
       return {
         ok: true,
-        message: `${leads.length}টি লিড ${agents.length} জন এজেন্টের মধ্যে ভাগ হয়েছে`,
+        message: `${completed.length}টি লিড ${agents.length} জন এজেন্টের মধ্যে ভাগ হয়েছে`,
       };
     }
 

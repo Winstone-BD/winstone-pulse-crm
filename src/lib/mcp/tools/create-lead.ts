@@ -3,15 +3,6 @@ import { z } from "zod";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
-/** Normalises Bangladeshi numbers the same way the ingest endpoints do. */
-function normalisePhone(input: string): string {
-  const digits = input.replace(/[^\d+]/g, "");
-  if (digits.startsWith("+")) return digits;
-  if (digits.startsWith("880")) return `+${digits}`;
-  if (digits.startsWith("0")) return `+88${digits}`;
-  return digits;
-}
-
 export default defineTool({
   name: "create_lead",
   title: "Create a lead",
@@ -35,19 +26,6 @@ export default defineTool({
     try {
       const email = await requireAllowedUser(ctx);
       const db = await crmDb();
-      const phone = normalisePhone(phone_number);
-
-      const { data: existing } = await db
-        .from("leads")
-        .select("id, name, status")
-        .eq("phone_number", phone)
-        .maybeSingle();
-      if (existing)
-        return text({
-          duplicate: true,
-          message: "This phone number is already a lead.",
-          lead: existing,
-        });
 
       let assignedTo: string | null = null;
       if (employee_id) {
@@ -60,24 +38,30 @@ export default defineTool({
         assignedTo = agent.id;
       }
 
+      const { intakeLead } = await import("@/lib/lead-intake.server");
+      const result = await intakeLead({
+        name,
+        phoneNumber: phone_number,
+        company: company ?? null,
+        notes: notes
+          ? `${notes}\n\n(added via agent integration by ${email})`
+          : `Added via agent integration by ${email}`,
+        source,
+        ownerId: assignedTo,
+      });
       const { data, error } = await db
         .from("leads")
-        .insert({
-          name,
-          phone_number: phone,
-          company: company ?? null,
-          notes: notes
-            ? `${notes}\n\n(added via agent integration by ${email})`
-            : `Added via agent integration by ${email}`,
-          source,
-          assigned_to: assignedTo,
-          status: "pending",
-        })
         .select("id, name, phone_number, status, assigned_to, created_at")
+        .eq("id", result.leadId)
         .single();
       if (error) throw new ToolError(error.message);
 
-      return text({ created: true, lead: data });
+      return text({
+        created: !result.duplicate,
+        duplicate: result.duplicate,
+        duplicate_reason: result.duplicateReason,
+        lead: data,
+      });
     } catch (error) {
       throw error instanceof ToolError ? error : new ToolError((error as Error).message);
     }
