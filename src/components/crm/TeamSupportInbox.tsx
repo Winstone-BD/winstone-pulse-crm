@@ -84,7 +84,7 @@ export function TeamSupportInbox() {
 
   const sendReply = useMutation({
     mutationFn: (ticketId: string) =>
-      reply({ data: { adminToken: getAdminToken(), ticketId, body: replyText, as: "team_admin" } }),
+      reply({ data: { adminToken: getAdminToken(), ticketId, body: replyText } }),
     onSuccess: () => {
       setReplyText("");
       toast.success("উত্তর পাঠানো হয়েছে");
@@ -96,7 +96,7 @@ export function TeamSupportInbox() {
   function open(ticketId: string, wasUnread: boolean) {
     setOpenId(openId === ticketId ? null : ticketId);
     if (wasUnread) {
-      void markRead({ data: { adminToken: getAdminToken(), ticketId, side: "admin" } }).then(() =>
+      void markRead({ data: { adminToken: getAdminToken(), ticketId } }).then(() =>
         queryClient.invalidateQueries({ queryKey: ["team-support-inbox"] }),
       );
     }
