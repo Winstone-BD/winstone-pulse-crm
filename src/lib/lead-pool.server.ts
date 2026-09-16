@@ -152,26 +152,63 @@ export async function distributeDailyLeads(options: {
   // runs on a fixed lighter quota (Sell Team Admin).
   const { quotaFor } = await import("@/lib/lead-quota");
   const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
-  const need = agents.reduce((sum, a) => sum + (quotas.get(a.id) ?? options.perAgent), 0);
-  // Read more than needed so phone duplicates can be skipped without shrinking
-  // today's hand-out.
-  const { data: pool } = await supabaseAdmin
-    .from("leads")
-    .select("id, name, phone_number, created_at")
-    .is("assigned_to", null)
-    .is("assigned_agent_id", null)
-    .or(USABLE)
-    .order("created_at", { ascending: true })
-    .limit(Math.min(need * 3 + 200, 6000));
+
+  // Idempotency: what each desk already holds for today is subtracted from its
+  // quota, so a second run (cron retry, double click) only fills real gaps.
+  const held = await assignedTodayByAgent(today);
+  const shortfallByAgent = new Map<string, number>();
+  for (const agent of agents) {
+    const quota = quotas.get(agent.id) ?? options.perAgent;
+    shortfallByAgent.set(agent.id, Math.max(0, quota - (held.get(agent.id) ?? 0)));
+  }
+  const need = [...shortfallByAgent.values()].reduce((sum, value) => sum + value, 0);
+  const fullRound = agents.reduce((sum, a) => sum + (quotas.get(a.id) ?? options.perAgent), 0);
+
+  const run = await distributionRun(today);
+  if (need === 0) {
+    const remainingNow = await usablePoolCount();
+    return {
+      moved: 0,
+      agents: agents.length,
+      perAgent: options.perAgent,
+      duplicatesSkipped: 0,
+      remaining: remainingNow,
+      shortage: remainingNow < fullRound,
+      shortfall: Math.max(0, fullRound - remainingNow),
+      workDate: today,
+      alreadyComplete: true,
+      toppedUp: [],
+    };
+  }
+
+  // The cursor remembers how far down the (oldest-first) database the engine got,
+  // so a run does not re-scan rows it already walked past. It is a hint only —
+  // when the cursor window cannot cover today's need, the full pool is read.
+  const cursor = run?.cursor_created_at ?? null;
+  async function readPool(fromCursor: string | null) {
+    let query = supabaseAdmin
+      .from("leads")
+      .select("id, name, phone_number, created_at")
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .or(USABLE);
+    if (fromCursor) query = query.gte("created_at", fromCursor);
+    const { data } = await query
+      .order("created_at", { ascending: true })
+      .limit(Math.min(need * 3 + 200, 6000));
+    return data ?? [];
+  }
+  let pool = await readPool(cursor);
+  if (cursor && pool.length < need) pool = await readPool(null);
 
   const taken = await assignedPhoneKeys();
   const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
-  const databaseEligible = new Set(await eligibleLeadIds((pool ?? []).map((lead) => lead.id)));
+  const databaseEligible = new Set(await eligibleLeadIds(pool.map((lead) => lead.id)));
   const seen = new Set<string>();
-  const usable: { id: string }[] = [];
+  const usable: { id: string; createdAt: string }[] = [];
   const duplicates: string[] = [];
 
-  for (const lead of pool ?? []) {
+  for (const lead of pool) {
     const keys = phoneKeys(lead.phone_number);
     if (keys.length === 0 || !databaseEligible.has(lead.id)) {
       duplicates.push(lead.id);
@@ -182,7 +219,7 @@ export async function distributeDailyLeads(options: {
       continue;
     }
     keys.forEach((key) => seen.add(key));
-    if (usable.length < need) usable.push({ id: lead.id });
+    if (usable.length < need) usable.push({ id: lead.id, createdAt: lead.created_at });
   }
 
   // Park duplicates so they never come up again, and so the database count is honest.
