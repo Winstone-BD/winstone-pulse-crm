@@ -563,7 +563,8 @@ function MixCard({
                 type="button"
                 onClick={() => onSelectRow?.(row)}
                 disabled={!onSelectRow}
-                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+                aria-label={`${title} · ${row.label}: ${row.value} — এই ভাগের তালিকা খুলুন / Open this segment`}
+                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent"
               >
                 <div className="flex items-baseline justify-between gap-2 text-xs">
                   <span className="truncate capitalize">{row.label}</span>
@@ -571,7 +572,14 @@ function MixCard({
                     {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-surface-2"
+                  role="progressbar"
+                  aria-valuenow={row.value}
+                  aria-valuemin={0}
+                  aria-valuemax={max || row.value}
+                  aria-label={`${row.label} অনুপাত / share`}
+                >
                   <div
                     className="h-full rounded-full bg-chart-1"
                     style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
