@@ -146,6 +146,7 @@ function ControlBoard() {
       { key: "closed", label: "বন্ধ" },
     ];
     return order.map((o) => ({
+      key: o.key,
       label: o.label,
       value: leads.filter((l) => l.status === o.key).length,
     }));
@@ -154,13 +155,13 @@ function ControlBoard() {
   const sourceRows = useMemo(() => {
     const counts = new Map<string, number>();
     for (const lead of leads) {
-      const key = (lead.source ?? "unknown").replace(/_/g, " ");
+      const key = lead.source ?? "unknown";
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([label, value]) => ({ label, value }));
+      .map(([key, value]) => ({ key, label: key.replace(/_/g, " "), value }));
   }, [leads]);
 
   const sentimentRows = useMemo(() => {
