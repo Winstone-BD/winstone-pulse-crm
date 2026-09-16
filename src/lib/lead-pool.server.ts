@@ -236,22 +236,27 @@ export async function distributeDailyLeads(options: {
   }
 
   // Round-robin, oldest first, so an incomplete batch is still fair. Each desk
-  // stops at its own quota, so a lighter desk never takes a full round.
+  // stops at ITS OWN remaining gap, so a lighter desk never takes a full round
+  // and a desk that already has today's leads takes nothing.
   const slots: PoolAgent[] = [];
-  const maxQuota = Math.max(...agents.map((a) => quotas.get(a.id) ?? options.perAgent));
-  for (let round = 0; round < maxQuota; round += 1) {
+  const maxGap = Math.max(0, ...agents.map((a) => shortfallByAgent.get(a.id) ?? 0));
+  for (let round = 0; round < maxGap; round += 1) {
     for (const agent of agents) {
-      if (round < (quotas.get(agent.id) ?? options.perAgent)) slots.push(agent);
+      if (round < (shortfallByAgent.get(agent.id) ?? 0)) slots.push(agent);
     }
   }
 
   const buckets = new Map<string, { name: string; leadIds: string[] }>();
   usable.forEach((lead, index) => {
-    const agent = slots[index] ?? agents[index % agents.length]!;
+    const agent = slots[index];
+    if (!agent) return;
     const bucket = buckets.get(agent.id) ?? { name: agent.name, leadIds: [] };
     bucket.leadIds.push(lead.id);
     buckets.set(agent.id, bucket);
   });
+  const cursorCreatedAt = usable.length
+    ? usable.map((lead) => lead.createdAt).sort().at(-1)!
+    : (cursor ?? null);
 
   const CHUNK = 100;
   let moved = 0;
