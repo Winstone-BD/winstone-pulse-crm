@@ -10,6 +10,7 @@ import { AssignmentHistory } from "@/components/crm/AssignmentHistory";
 import { CallOpsPanel } from "@/components/crm/CallOpsPanel";
 import { SelfClaimsFeed } from "@/components/crm/SelfClaimsFeed";
 import { RoleGate } from "@/components/crm/RoleGate";
+import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
@@ -136,6 +137,8 @@ function Dispatcher() {
           <CopilotDrawer />
         </div>
       </div>
+
+      <SmartInsightStrip scope="floor" />
 
       <LeadDatabasePanel />
 
