@@ -23,6 +23,14 @@ export type PerformerLine = {
   score: number;
   /** This desk's own daily lead quota (25 by default, 15 for the Sell Team Admin). */
   quota: number;
+  /** Base quota plus extra leads granted today — the day's real target. */
+  targetQuota: number;
+  /** Leads handed to this desk today. */
+  assigned: number;
+  /** Leads this desk finished today (classified + completed). */
+  completed: number;
+  /** completed ÷ own quota × 100 — 15/15 and 25/25 are both 100%. */
+  completionPercent: number;
   /** Quota-normalised score — how the same effort looks on a standard round. */
   fairScore: number;
 };
