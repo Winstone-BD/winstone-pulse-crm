@@ -23,6 +23,7 @@ import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
+import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 
@@ -183,6 +184,8 @@ function ControlBoard() {
             শুধু দেখার ভিউ · লিড অ্যাসাইন হয় কোঅর্ডিনেটর ডেস্ক থেকে
           </p>
         </div>
+
+        <SmartInsightStrip scope="floor" />
 
         <ExecutiveBrief />
 
