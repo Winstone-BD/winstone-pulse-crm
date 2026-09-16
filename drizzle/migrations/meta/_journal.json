@@ -288,6 +288,13 @@
       "when": 1789570669174,
       "tag": "0040_restrict_lead_phone_keys_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789571612520,
+      "tag": "0041_team_support_and_extra_leads",
+      "breakpoints": true
     }
   ]
 }

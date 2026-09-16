@@ -1154,6 +1154,57 @@ export type Database = {
           },
         ]
       }
+      lead_extra_grants: {
+        Row: {
+          agent_profile_id: string
+          created_at: string
+          granted_by: string | null
+          granted_by_label: string | null
+          id: string
+          quantity: number
+          reason: string | null
+          source: string
+          work_date: string
+        }
+        Insert: {
+          agent_profile_id: string
+          created_at?: string
+          granted_by?: string | null
+          granted_by_label?: string | null
+          id?: string
+          quantity: number
+          reason?: string | null
+          source?: string
+          work_date: string
+        }
+        Update: {
+          agent_profile_id?: string
+          created_at?: string
+          granted_by?: string | null
+          granted_by_label?: string | null
+          id?: string
+          quantity?: number
+          reason?: string | null
+          source?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_extra_grants_agent_profile_id_fkey"
+            columns: ["agent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_extra_grants_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_phone_keys: {
         Row: {
           canonical_phone: string
@@ -2284,6 +2335,170 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      team_support_admins: {
+        Row: {
+          created_at: string
+          profile_id: string
+          role_label: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          role_label?: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          role_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_support_admins_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_support_replies: {
+        Row: {
+          author_kind: string
+          author_label: string | null
+          author_profile_id: string | null
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          author_kind: string
+          author_label?: string | null
+          author_profile_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          author_kind?: string
+          author_label?: string | null
+          author_profile_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_support_replies_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_support_replies_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "team_support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_support_tickets: {
+        Row: {
+          agent_name: string
+          agent_profile_id: string
+          agent_role: string
+          assigned_profile_id: string | null
+          assigned_role: string
+          attachment_url: string | null
+          category: string
+          created_at: string
+          device_label: string | null
+          id: string
+          last_message_at: string
+          message: string
+          platform: string
+          priority: string
+          ref: string
+          reply_count: number
+          resolution_note: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          unread_for_admin: boolean
+          unread_for_agent: boolean
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          agent_profile_id: string
+          agent_role?: string
+          assigned_profile_id?: string | null
+          assigned_role?: string
+          attachment_url?: string | null
+          category: string
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          last_message_at?: string
+          message: string
+          platform?: string
+          priority?: string
+          ref: string
+          reply_count?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          unread_for_admin?: boolean
+          unread_for_agent?: boolean
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          agent_profile_id?: string
+          agent_role?: string
+          assigned_profile_id?: string | null
+          assigned_role?: string
+          attachment_url?: string | null
+          category?: string
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          last_message_at?: string
+          message?: string
+          platform?: string
+          priority?: string
+          ref?: string
+          reply_count?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          unread_for_admin?: boolean
+          unread_for_agent?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_support_tickets_agent_profile_id_fkey"
+            columns: ["agent_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_support_tickets_assigned_profile_id_fkey"
+            columns: ["assigned_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
