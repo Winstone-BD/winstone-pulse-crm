@@ -472,17 +472,24 @@ function StatTile({
   );
 }
 
-/** Compact intelligence card: labelled rows with a proportional bar. */
+/** A mix-card row carries the rows it counted, so a tap can list them. */
+type MixRow = { label: string; value: number; leads?: Lead[]; calls?: CallRecording[] };
+
+/** Compact intelligence card: labelled rows with a proportional bar; each row drills down. */
 function MixCard({
   title,
   subtitle,
   rows,
-  emptyLabel = "এই সময়ে কোনো তথ্য নেই",
+  loading,
+  emptyLabel = "এখনো লাইভ ডেটা নেই",
+  onSelectRow,
 }: {
   title: string;
   subtitle: string;
-  rows: { label: string; value: number }[];
+  rows: MixRow[];
+  loading?: boolean;
   emptyLabel?: string;
+  onSelectRow?: (row: MixRow) => void;
 }) {
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
@@ -493,28 +500,43 @@ function MixCard({
           <h2 className="text-sm font-semibold">{title}</h2>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
-          {total}
-        </span>
+        {!loading && (
+          <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+            {total}
+          </span>
+        )}
       </div>
-      {total === 0 ? (
+      {loading ? (
+        <ul className="mt-3 space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <li key={i} className="skeleton h-6 w-full" />
+          ))}
+        </ul>
+      ) : total === 0 ? (
         <p className="mt-6 mb-2 text-center text-xs text-muted-foreground">{emptyLabel}</p>
       ) : (
         <ul className="mt-3 space-y-2">
           {rows.map((row) => (
-            <li key={row.label} className="space-y-1">
-              <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="truncate capitalize">{row.label}</span>
-                <span className="tabular text-muted-foreground">
-                  {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
-                </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
-                />
-              </div>
+            <li key={row.label}>
+              <button
+                type="button"
+                onClick={() => onSelectRow?.(row)}
+                disabled={!onSelectRow}
+                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+              >
+                <div className="flex items-baseline justify-between gap-2 text-xs">
+                  <span className="truncate capitalize">{row.label}</span>
+                  <span className="tabular text-muted-foreground">
+                    {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
+                  />
+                </div>
+              </button>
             </li>
           ))}
         </ul>
