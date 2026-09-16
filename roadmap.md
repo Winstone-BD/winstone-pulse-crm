@@ -44,3 +44,11 @@
 
 - [x] Executive HQ billing: per-invoice PDF download (status, due/grace dates)
 - [ ] Paddle go-live: publish project + verification form (user action in Payments tab)
+
+## 2026-09-17 — কাঠামোগত ফাঁক বন্ধ
+- [x] docs/ নথিপত্র: architecture, roles-and-permissions, features, integrations, conventions, testing + README ঠিক করা
+- [x] বড় পাতা ভাগ: hq 24KB→7.4KB, reports 25KB→4.4KB, support-admin 25KB→3.2KB (নতুন components/crm/hq, crm/reports, support) — লজিক অপরিবর্তিত
+- [x] ভূমিকা-নিয়ম একজায়গায়: src/lib/rbac.server.ts (গেট) + src/lib/rbac.ts (কোন ভূমিকা কী দেখে)
+- [x] নতুন টেস্ট: rbac-matrix, team-support-shared (মোট ৮৮ টেস্ট পাস)
+- [x] নামকরণ/ফোল্ডার নিয়ম লিখিত (docs/conventions.md)
+- [ ] ঝুলে থাকা সংযোগ (docs/integrations.md-এ তালিকাভুক্ত): Firebase পুশ, Paddle go-live, Google Drive/Sheets পুনঃসংযোগ, ইমেইল DNS — সবই ব্যবহারকারীর অনুমোদন/ধাপের অপেক্ষায়
