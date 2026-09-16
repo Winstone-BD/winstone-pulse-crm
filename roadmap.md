@@ -33,4 +33,4 @@
 - [x] all import and assignment paths routed through the same eligibility guard
 - [x] Winstone Company / Company Lead metadata and EN/BN outreach preservation
 - [x] auditable import counts and bilingual import-result UI
-- [ ] production duplicate report, regression tests, typecheck/build validation
+- [x] production duplicate report, regression tests, typecheck/build validation
