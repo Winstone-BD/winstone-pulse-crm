@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { template as serviceBillAlertTemplate } from './service-bill-alert'
 
 export interface TemplateEntry {
   component: ComponentType<any>
