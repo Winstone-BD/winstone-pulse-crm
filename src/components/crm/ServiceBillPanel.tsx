@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Loader2, Receipt, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Download, Loader2, Receipt, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { openInvoicePdf } from "@/lib/invoice-pdf";
 import { getAdminToken } from "@/lib/local-session";
 import {
   recordServicePayout,
@@ -129,6 +130,12 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
 
   const architect = query.data?.architect;
 
+  const downloadPdf = (invoice: NonNullable<typeof current>) => {
+    const opened = openInvoicePdf(invoice, architect ?? null);
+    if (!opened) toast.error("পপআপ ব্লক হয়েছে — অনুমতি দিয়ে আবার চেষ্টা করুন");
+  };
+
+
   return (
     <section className="card-elevated space-y-4 p-4">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
@@ -143,15 +150,22 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
             </p>
           </div>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            query.data?.serviceActive
-              ? "bg-primary/20 text-primary"
-              : "bg-destructive/15 text-destructive"
-          }`}
-        >
-          {query.data?.serviceActive ? "সার্ভিস চালু" : "সার্ভিস চালু নয়"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              query.data?.serviceActive
+                ? "bg-primary/20 text-primary"
+                : "bg-destructive/15 text-destructive"
+            }`}
+          >
+            {query.data?.serviceActive ? "সার্ভিস চালু" : "সার্ভিস চালু নয়"}
+          </span>
+          {current ? (
+            <Button size="sm" variant="outline" onClick={() => downloadPdf(current)}>
+              <Download className="size-4" /> PDF
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {current ? (
@@ -267,8 +281,16 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
                 {STATUS_LABEL[invoice.status] ?? invoice.status}
               </span>
               <span className="text-xs text-muted-foreground">
-                মেয়াদ {dhakaDate(invoice.dueAt)}
+                মেয়াদ {dhakaDate(invoice.dueAt)} · গ্রেস {dhakaDate(invoice.graceUntil)}
               </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={() => downloadPdf(invoice)}
+              >
+                <Download className="size-3.5" /> PDF
+              </Button>
             </li>
           ))}
         </ul>
