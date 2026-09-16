@@ -150,3 +150,75 @@ export const logMyWhatsappMessage = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const TriageInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  leadId: z.string().uuid(),
+  action: z.enum(["follow_up", "closed"]),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+/**
+ * One-swipe triage from the mobile lead queue: park a lead for follow-up
+ * (tomorrow 10:00 Dhaka) or close it. Uses the same ownership rule as every
+ * other desk action — an agent may only triage a lead assigned to them.
+ */
+export const triageMyLead = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => TriageInput.parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { LEAD_OWNER_COLUMNS, leadHeldByOther, LEAD_NOT_YOURS } = await import(
+      "@/lib/lead-access.server"
+    );
+
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select(`id, name, phone_number, ${LEAD_OWNER_COLUMNS}`)
+      .eq("id", data.leadId)
+      .maybeSingle();
+    if (!lead) throw new Error(LEAD_NOT_YOURS);
+    if (caller.scope === "agent" && caller.profile && leadHeldByOther(lead, caller.profile.id)) {
+      throw new Error(LEAD_NOT_YOURS);
+    }
+
+    const { error } = await supabaseAdmin
+      .from("leads")
+      .update({ status: data.action, updated_at: new Date().toISOString() })
+      .eq("id", data.leadId);
+    if (error) throw new Error(error.message);
+
+    let scheduledAt: string | null = null;
+    if (data.action === "follow_up") {
+      // Tomorrow 10:00 Dhaka (UTC+6) => 04:00 UTC.
+      const next = new Date();
+      next.setUTCDate(next.getUTCDate() + 1);
+      next.setUTCHours(4, 0, 0, 0);
+      scheduledAt = next.toISOString();
+      await supabaseAdmin.from("follow_up_events").insert({
+        lead_id: data.leadId,
+        agent_id: caller.profile?.id ?? null,
+        category: "follow_up",
+        customer_name: lead.name,
+        phone_number: lead.phone_number,
+        note: data.note ?? "মোবাইল কিউ থেকে ফলো-আপে রাখা হয়েছে",
+        scheduled_at: scheduledAt,
+      });
+    }
+
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({
+      leadId: data.leadId,
+      agentId: caller.profile?.id ?? null,
+      kind: "outcome_logged",
+      detail:
+        data.action === "follow_up"
+          ? "মোবাইল কিউ: ফলো-আপে রাখা হয়েছে"
+          : "মোবাইল কিউ: লিড বন্ধ করা হয়েছে",
+    });
+
+    return { leadId: data.leadId, action: data.action, scheduledAt };
+  });
