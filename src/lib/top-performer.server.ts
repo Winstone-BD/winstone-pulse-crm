@@ -51,6 +51,10 @@ export type TopPerformerBoard = {
   /** False before 5:30 pm Dhaka — the homepage then shows a countdown instead. */
   revealed: boolean;
   revealAt: string;
+  /** True when the board is still showing the previous working day (midnight → 9:05 am). */
+  isPreviousDay: boolean;
+  /** Bengali label the UI can use directly: "আজকের" or "গতকের". */
+  dayLabel: "আজকের" | "গতকের";
   winner: PerformerLine | null;
   runnerUp: PerformerLine | null;
   topThree: RankedPerformer[];
