@@ -25,11 +25,11 @@ import type { BriefAgent, BriefBlock } from "@/lib/hq-brief.server";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
 
 const SLICE_COLORS = [
-  "var(--primary)",
-  "var(--live)",
-  "var(--chart-3, #f59e0b)",
-  "var(--chart-4, #8b5cf6)",
-  "var(--chart-5, #14b8a6)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
   "var(--muted-foreground)",
 ];
 
@@ -177,13 +177,28 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
             <div className="h-56 rounded-xl border border-border p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "var(--surface-2)" }} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="কথা" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="মিনিট" fill="var(--live)" radius={[6, 6, 0, 0]} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--border)"
+                    strokeOpacity={0.6}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--border)"
+                    tick={AXIS_TICK}
+                    tickLine={false}
+                  />
+                  <YAxis stroke="var(--border)" tick={AXIS_TICK} tickLine={false} />
+                  <Tooltip
+                    contentStyle={TOOLTIP}
+                    labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                    itemStyle={{ color: "var(--muted-foreground)" }}
+                    cursor={{ fill: "var(--surface-2)", fillOpacity: 0.6 }}
+                  />
+                  <Legend wrapperStyle={LEGEND_STYLE} />
+                  <Bar dataKey="কথা" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="মিনিট" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -205,8 +220,12 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
                       <Cell key={slice.label} fill={SLICE_COLORS[index % SLICE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={TOOLTIP}
+                    labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                    itemStyle={{ color: "var(--muted-foreground)" }}
+                  />
+                  <Legend wrapperStyle={{ ...LEGEND_STYLE, fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -222,16 +241,25 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
           <div className="h-48 rounded-xl border border-border p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={block.hourly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="hour" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip contentStyle={TOOLTIP} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  strokeOpacity={0.6}
+                  vertical={false}
+                />
+                <XAxis dataKey="hour" stroke="var(--border)" tick={AXIS_TICK} tickLine={false} />
+                <YAxis stroke="var(--border)" tick={AXIS_TICK} tickLine={false} />
+                <Tooltip
+                  contentStyle={TOOLTIP}
+                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                  itemStyle={{ color: "var(--muted-foreground)" }}
+                />
+                <Legend wrapperStyle={LEGEND_STYLE} />
                 <Line
                   type="monotone"
                   dataKey="calls"
                   name="কল"
-                  stroke="var(--primary)"
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -239,7 +267,7 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
                   type="monotone"
                   dataKey="minutes"
                   name="কথার মিনিট"
-                  stroke="var(--live)"
+                  stroke="var(--chart-2)"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -325,7 +353,11 @@ const TOOLTIP = {
   border: "1px solid var(--border)",
   borderRadius: 12,
   fontSize: 12,
+  color: "var(--foreground)",
 } as const;
+
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 11 } as const;
+const LEGEND_STYLE = { fontSize: 11, color: "var(--muted-foreground)" } as const;
 
 function AgentRow({ agent }: { agent: BriefAgent }) {
   const [open, setOpen] = useState(false);

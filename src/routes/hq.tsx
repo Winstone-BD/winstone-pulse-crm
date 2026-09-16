@@ -356,31 +356,58 @@ function ControlBoard() {
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm bg-primary" /> কথা হওয়া কল
+                <span className="size-2.5 rounded-sm bg-chart-1" /> কথা হওয়া কল
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm bg-live" /> কথার মিনিট
+                <span className="size-2.5 rounded-sm bg-chart-2" /> কথার মিনিট
               </span>
             </div>
           </div>
           <div className="card-elevated h-64 p-2 sm:h-72 sm:p-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  strokeOpacity={0.6}
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="var(--border)"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="var(--border)"
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  tickLine={false}
+                />
                 <Tooltip
-                  cursor={{ fill: "var(--surface-2)" }}
+                  cursor={{ fill: "var(--surface-2)", fillOpacity: 0.6 }}
                   contentStyle={{
                     background: "var(--card)",
                     border: "1px solid var(--border)",
                     borderRadius: 12,
                     fontSize: 12,
+                    color: "var(--foreground)",
                     boxShadow: "var(--shadow-card-hover)",
                   }}
+                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                  itemStyle={{ color: "var(--muted-foreground)" }}
                 />
-                <Bar dataKey="connected" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="talkMinutes" fill="var(--live)" radius={[6, 6, 0, 0]} />
+                <Bar
+                  dataKey="connected"
+                  name="কথা হওয়া কল"
+                  fill="var(--chart-1)"
+                  radius={[6, 6, 0, 0]}
+                />
+                <Bar
+                  dataKey="talkMinutes"
+                  name="কথার মিনিট"
+                  fill="var(--chart-2)"
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -546,7 +573,7 @@ function MixCard({
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-full bg-chart-1"
                     style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
                   />
                 </div>
@@ -568,7 +595,7 @@ function Sparkline({ seed }: { seed: number }) {
   return (
     <svg
       viewBox="0 0 100 20"
-      className="mt-3 h-5 w-full text-primary/60"
+      className="mt-3 h-5 w-full text-chart-1/60"
       preserveAspectRatio="none"
     >
       <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" />
