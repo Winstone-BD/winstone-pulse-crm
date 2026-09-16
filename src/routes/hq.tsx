@@ -76,9 +76,11 @@ function ControlBoardPage() {
 }
 
 function ControlBoard() {
-  const { profiles, leads, calls, messages, events } = useSnapshot();
+  const { profiles, leads, calls, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
+  /** Which number card / mix-card row the executive drilled into. */
+  const [drill, setDrill] = useState<DrillSpec | null>(null);
 
   const agents = useMemo(
     () =>
@@ -115,6 +117,7 @@ function ControlBoard() {
     return order.map((o) => ({
       label: o.label,
       value: leads.filter((l) => l.status === o.key).length,
+      leads: leads.filter((l) => l.status === o.key),
     }));
   }, [leads]);
 
@@ -127,7 +130,11 @@ function ControlBoard() {
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([label, value]) => ({ label, value }));
+      .map(([label, value]) => ({
+        label,
+        value,
+        leads: leads.filter((l) => (l.source ?? "unknown").replace(/_/g, " ") === label),
+      }));
   }, [leads]);
 
   const sentimentRows = useMemo(() => {
