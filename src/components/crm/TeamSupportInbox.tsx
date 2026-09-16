@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Inbox, Loader2 } from "lucide-react";
+import { Bell, Inbox, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,11 +16,14 @@ import {
 } from "@/lib/team-support-shared";
 import {
   openSupportTicket,
+  registerWebPushToken,
   replyToSupportTicket,
+  setSupportTicketPriority,
   setSupportTicketStatus,
   supportInbox,
 } from "@/lib/team-support.functions";
 import { getAdminToken } from "@/lib/local-session";
+import { PUSH_MESSAGES, requestWebPushToken } from "@/lib/web-push";
 
 type Filter = "unread" | "open" | "high" | "critical" | "resolved" | "all";
 
