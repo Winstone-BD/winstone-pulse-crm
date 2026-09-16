@@ -65,9 +65,7 @@ function Countdown({ target, kind }: { target: string; kind: "reveal" | "rollove
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   const pad = (n: number) => n.toString().padStart(2, "0");
-  const clock = new Intl.NumberFormat("bn-BD", { useGrouping: false }).format(0)
-    ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
-    : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  const clock = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 
   return (
     <div className="mt-3 grid gap-1 rounded-lg border border-primary/30 bg-primary/10 p-3">
