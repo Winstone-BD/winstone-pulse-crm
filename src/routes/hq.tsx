@@ -197,18 +197,42 @@ function ControlBoard() {
             label="মোট কল"
             value={String(calls.length)}
             hint={`${connected}টি কল ${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হয়েছে`}
+            onOpen={() =>
+              setDrill({
+                title: "মোট কল",
+                subtitle: "সব সিঙ্ক হওয়া কল — নাম চাপলে লিডের পুরো ফাইল",
+                kind: "calls",
+                calls,
+              })
+            }
           />
           <StatTile
             icon={<Timer className="size-4" />}
             label="ফ্লোরের কথার সময়"
             value={formatTalkTime(talkSeconds)}
             hint="সব সিঙ্ক হওয়া রেকর্ডিং মিলিয়ে"
+            onOpen={() =>
+              setDrill({
+                title: "কথা হওয়া কল",
+                subtitle: `${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হওয়া কল`,
+                kind: "calls",
+                calls: calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS),
+              })
+            }
           />
           <StatTile
             icon={<Users className="size-4" />}
             label="চালু লিড"
             value={String(leads.filter((l) => l.status !== "closed").length)}
             hint={`${unassigned}টি লিড এখনো কারো নামে দেওয়া হয়নি`}
+            onOpen={() =>
+              setDrill({
+                title: "চালু লিড",
+                subtitle: "যেসব লিড এখনো বন্ধ হয়নি",
+                kind: "leads",
+                leads: leads.filter((l) => l.status !== "closed"),
+              })
+            }
           />
           <StatTile
             icon={<TrendingUp className="size-4" />}
@@ -218,34 +242,59 @@ function ControlBoard() {
                 .length,
             )}
             hint={`${messages.length}টি হোয়াটসঅ্যাপ মেসেজ জমা আছে`}
+            onOpen={() =>
+              setDrill({
+                title: "ডিল জেতা লিড",
+                subtitle: "বন্ধ হওয়া ও ডিল জেতা লিড",
+                kind: "leads",
+                leads: leads.filter(
+                  (l) => l.status === "closed" && l.outcome_category === "deal_won",
+                ),
+              })
+            }
           />
         </div>
 
         {/* Classification board: what agents actually decided after talking. */}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
-            icon={<Flame className="size-4" />}
-            label="HOT লিড"
-            value={String(leads.filter((l) => l.temperature === "hot").length)}
-            hint="এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী"
-          />
-          <StatTile
-            icon={<Flame className="size-4" />}
-            label="WARM লিড"
-            value={String(leads.filter((l) => l.temperature === "warm").length)}
-            hint="কিছুটা আগ্রহী"
-          />
-          <StatTile
-            icon={<Snowflake className="size-4" />}
-            label="COLD লিড"
-            value={String(leads.filter((l) => l.temperature === "cold").length)}
-            hint="এখন আগ্রহ কম"
-          />
+          {(
+            [
+              { key: "hot", label: "HOT লিড", hint: "এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী" },
+              { key: "warm", label: "WARM লিড", hint: "কিছুটা আগ্রহী" },
+              { key: "cold", label: "COLD লিড", hint: "এখন আগ্রহ কম" },
+            ] as const
+          ).map((t) => (
+            <StatTile
+              key={t.key}
+              icon={
+                t.key === "cold" ? <Snowflake className="size-4" /> : <Flame className="size-4" />
+              }
+              label={t.label}
+              value={String(leads.filter((l) => l.temperature === t.key).length)}
+              hint={t.hint}
+              onOpen={() =>
+                setDrill({
+                  title: t.label,
+                  subtitle: "এজেন্টের শ্রেণিবিন্যাস অনুযায়ী",
+                  kind: "leads",
+                  leads: leads.filter((l) => l.temperature === t.key),
+                })
+              }
+            />
+          ))}
           <StatTile
             icon={<ListChecks className="size-4" />}
             label="বাকি কাজ (PENDING)"
             value={String(leads.filter((l) => l.work_state !== "completed").length)}
             hint={`${leads.filter((l) => l.work_state === "completed").length}টি লিড শ্রেণিবিন্যাসসহ শেষ`}
+            onOpen={() =>
+              setDrill({
+                title: "বাকি কাজ",
+                subtitle: "শ্রেণিবিন্যাস বা কাজ এখনো শেষ হয়নি",
+                kind: "leads",
+                leads: leads.filter((l) => l.work_state !== "completed"),
+              })
+            }
           />
         </div>
 
@@ -254,13 +303,44 @@ function ControlBoard() {
             title="লিড ফানেল"
             subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
             rows={funnelRows}
+            loading={isPending}
+            onSelectRow={(row) =>
+              setDrill({
+                title: `ফানেল · ${row.label}`,
+                subtitle: "এই ধাপের সব লিড",
+                kind: "leads",
+                leads: row.leads ?? [],
+              })
+            }
           />
-          <MixCard title="লিড কোথা থেকে" subtitle="সোর্স অনুযায়ী ভাগ" rows={sourceRows} />
+          <MixCard
+            title="লিড কোথা থেকে"
+            subtitle="সোর্স অনুযায়ী ভাগ"
+            rows={sourceRows}
+            loading={isPending}
+            onSelectRow={(row) =>
+              setDrill({
+                title: `সোর্স · ${row.label}`,
+                subtitle: "এই সোর্স থেকে আসা লিড",
+                kind: "leads",
+                leads: row.leads ?? [],
+              })
+            }
+          />
           <MixCard
             title="কলের সুর"
             subtitle="AI-বিশ্লেষিত কথাবার্তা"
             rows={sentimentRows}
-            emptyLabel="এখনো AI-বিশ্লেষিত কল নেই"
+            loading={isPending}
+            emptyLabel="এখনো লাইভ ডেটা নেই"
+            onSelectRow={(row) =>
+              setDrill({
+                title: `কলের সুর · ${row.label}`,
+                subtitle: "এই সুরের সব কল",
+                kind: "calls",
+                calls: row.calls ?? [],
+              })
+            }
           />
         </div>
 
