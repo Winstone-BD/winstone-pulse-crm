@@ -85,15 +85,67 @@ function copyFor(invoice: ServiceInvoice, stage: AlertStage) {
 }
 
 /** HQ (authority) and IT accounts — the only people this bill concerns. */
-async function recipientProfileIds(): Promise<string[]> {
+async function recipients(): Promise<{ ids: string[]; emails: string[] }> {
   const supabaseAdmin = await admin();
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("id")
+    .select("id,email")
     .in("role", ["admin", "team_leader"])
     .eq("is_active", true)
     .eq("approval_status", "approved");
-  return (data ?? []).map((row) => row.id);
+  const rows = data ?? [];
+  const emails = Array.from(
+    new Set(
+      rows
+        .map((row) => (typeof row.email === "string" ? row.email.trim().toLowerCase() : ""))
+        .filter((value) => value.includes("@")),
+    ),
+  );
+  return { ids: rows.map((row) => row.id), emails };
+}
+
+const STAGE_LABEL: Record<AlertStage, string> = {
+  due_soon: "মেয়াদ সামনে",
+  due: "মেয়াদ শেষ",
+  overdue: "মেয়াদোত্তীর্ণ",
+};
+
+/**
+ * One email per HQ/IT recipient per period+stage. The idempotency key is
+ * derived from period, stage and recipient, so repeated cron runs never
+ * re-send. A suppressed recipient is an expected outcome, not an error.
+ */
+async function emailRecipients(
+  invoice: ServiceInvoice,
+  stage: AlertStage,
+  copy: { title: string; detail: string },
+  emails: string[],
+): Promise<{ sent: number; skipped: number; failed: number }> {
+  if (emails.length === 0) return { sent: 0, skipped: 0, failed: 0 };
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const email of emails) {
+    try {
+      const result = await sendTemplateEmail("service-bill-alert", email, {
+        idempotencyKey: `service-bill-${invoice.period}-${stage}-${email}`,
+        templateData: {
+          title: copy.title,
+          detail: copy.detail,
+          period: invoice.period,
+          amount: `৳${invoice.amountBdt.toLocaleString("bn-BD")}`,
+          stageLabel: STAGE_LABEL[stage],
+        },
+      });
+      if (result.sent) sent += 1;
+      else skipped += 1;
+    } catch (error) {
+      failed += 1;
+      console.error("service bill alert email failed", email, error);
+    }
+  }
+  return { sent, skipped, failed };
 }
 
 async function alertAlreadyRaised(code: string, period: string): Promise<boolean> {
