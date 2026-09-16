@@ -108,7 +108,11 @@ export async function distributeDailyLeads(options: {
   const agents = await activeAgents();
   if (agents.length === 0) throw new Error("চালু কোনো এজেন্ট নেই");
 
-  const need = agents.length * options.perAgent;
+  // Each desk has its own daily quota: the floor-wide round, unless that person
+  // runs on a fixed lighter quota (Sell Team Admin).
+  const { quotaFor } = await import("@/lib/lead-quota");
+  const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
+  const need = agents.reduce((sum, a) => sum + (quotas.get(a.id) ?? options.perAgent), 0);
   // Read more than needed so phone duplicates can be skipped without shrinking
   // today's hand-out.
   const { data: pool } = await supabaseAdmin
