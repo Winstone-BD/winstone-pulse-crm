@@ -22,7 +22,7 @@ import {
   categoryLabel,
   type SupportPriority,
   type SupportStatus,
-} from "@/lib/team-support.server";
+} from "@/lib/team-support-shared";
 import {
   mySupportRequests,
   replyToSupportTicket,
