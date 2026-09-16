@@ -23,6 +23,7 @@ import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
+import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
@@ -188,6 +189,8 @@ function ControlBoard() {
         <SmartInsightStrip scope="floor" />
 
         <ExecutiveBrief />
+
+        <ServiceBillPanel mode="hq" />
 
         <ShiftSummaryPanel scope="hq" />
 
