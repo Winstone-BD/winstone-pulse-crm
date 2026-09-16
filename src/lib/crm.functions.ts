@@ -263,9 +263,9 @@ export const importLeads = createServerFn({ method: "POST" })
         phone_number: phones.length > 1 ? row.phone_number.trim() : phones[0]!,
         company: row.company || null,
         notes: appendCompanyLeadMetadata({
-          notes: row.notes,
-          outreachEn: row.outreach_en,
-          outreachBn: row.outreach_bn,
+          notes: row.notes ?? null,
+          outreachEn: row.outreach_en ?? null,
+          outreachBn: row.outreach_bn ?? null,
         }),
         source: "Winstone Company",
         assigned_to: agents.length ? agents[toInsert.length % agents.length]!.id : null,

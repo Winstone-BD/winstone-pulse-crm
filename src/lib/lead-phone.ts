@@ -17,9 +17,9 @@ export function primaryBangladeshPhone(raw: string): string | null {
 }
 
 export function appendCompanyLeadMetadata(input: {
-  notes?: string | null;
-  outreachEn?: string | null;
-  outreachBn?: string | null;
+  notes?: string | null | undefined;
+  outreachEn?: string | null | undefined;
+  outreachBn?: string | null | undefined;
 }): string {
   return [
     "Lead Type: Company Lead",
