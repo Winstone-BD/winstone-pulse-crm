@@ -175,6 +175,14 @@
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
+
+  /* One visible gold focus ring everywhere, so keyboard users never lose the
+     cursor on the dark surfaces. */
+  :where(a, button, [role="button"], input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
 
 /* Faint dot grid on the cream foundation */
