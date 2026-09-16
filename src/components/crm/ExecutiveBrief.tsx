@@ -241,16 +241,25 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
           <div className="h-48 rounded-xl border border-border p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={block.hourly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="hour" stroke="var(--muted-foreground)" fontSize={11} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={11} />
-                <Tooltip contentStyle={TOOLTIP} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  strokeOpacity={0.6}
+                  vertical={false}
+                />
+                <XAxis dataKey="hour" stroke="var(--border)" tick={AXIS_TICK} tickLine={false} />
+                <YAxis stroke="var(--border)" tick={AXIS_TICK} tickLine={false} />
+                <Tooltip
+                  contentStyle={TOOLTIP}
+                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                  itemStyle={{ color: "var(--muted-foreground)" }}
+                />
+                <Legend wrapperStyle={LEGEND_STYLE} />
                 <Line
                   type="monotone"
                   dataKey="calls"
                   name="কল"
-                  stroke="var(--primary)"
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -258,7 +267,7 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
                   type="monotone"
                   dataKey="minutes"
                   name="কথার মিনিট"
-                  stroke="var(--live)"
+                  stroke="var(--chart-2)"
                   strokeWidth={2}
                   dot={false}
                 />
