@@ -307,9 +307,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   }
 
   return {
-    dateKey,
-    revealed: minutes >= REVEAL_MINUTES,
+    dateKey: effectiveDateKey,
+    revealed,
     revealAt: revealAt.toISOString(),
+    isPreviousDay,
+    dayLabel,
     winner,
     runnerUp,
     topThree,
