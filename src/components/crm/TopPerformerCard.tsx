@@ -51,10 +51,13 @@ export function TopPerformerCard() {
     );
   }
 
-  const winner = data.winner;
-  const podium = [data.topThree[1], data.topThree[0], data.topThree[2]].filter(
+  const winner = data.winner ?? null;
+  const topThree = data.topThree ?? [];
+  const otherAgents = data.otherAgents ?? [];
+  const podium = [topThree[1], topThree[0], topThree[2]].filter(
     (entry): entry is NonNullable<typeof entry> => Boolean(entry),
   );
+
 
   return (
     <section className="card-elevated overflow-hidden p-4 sm:p-5">
