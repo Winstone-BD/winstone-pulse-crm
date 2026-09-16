@@ -109,21 +109,41 @@ export const setSupportTicketStatus = createServerFn({ method: "POST" })
     });
   });
 
-export const openSupportTicket = createServerFn({ method: "POST" })
+/** Escalation / de-escalation. Re-alerts the desk owners when urgency changes. */
+export const setSupportTicketPriority = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     TokenInput.extend({
       ticketId: z.string().uuid(),
-      side: z.enum(["admin", "agent"]),
+      priority: z.enum(["low", "normal", "high", "critical"]),
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    const me = await requireInboxOwner(data.adminToken);
+    const { updateTicketPriority } = await import("@/lib/team-support.server");
+    return updateTicketPriority({
+      ticketId: data.ticketId,
+      priority: data.priority,
+      actorProfileId: me.profile?.id ?? null,
+      actorLabel: me.profile?.name ?? "Sales Team Admin",
+    });
+  });
+
+export const openSupportTicket = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    TokenInput.extend({ ticketId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
     const me = await caller(data.adminToken);
+    // The side is decided by the server from the caller's own rights, never by
+    // the client — an agent can only clear their own unread flag.
+    const { ticketSide } = await import("@/lib/team-support-access.server");
+    const side = await ticketSide(me, data.ticketId);
     const { markTicketRead } = await import("@/lib/team-support.server");
-    await markTicketRead(data.ticketId, data.side, {
+    await markTicketRead(data.ticketId, side, {
       profileId: me.profile?.id ?? null,
       label: me.profile?.name ?? null,
     });
-    return { ok: true };
+    return { ok: true, side };
   });
 
 export const replyToSupportTicket = createServerFn({ method: "POST" })
@@ -131,20 +151,52 @@ export const replyToSupportTicket = createServerFn({ method: "POST" })
     TokenInput.extend({
       ticketId: z.string().uuid(),
       body: z.string().trim().min(1).max(4000),
-      as: z.enum(["agent", "team_admin"]),
     }).parse(input),
   )
   .handler(async ({ data }) => {
     const me = await caller(data.adminToken);
-    if (!me.profile && data.as === "agent") throw new Error("সাইন ইন করা দরকার");
-    if (data.as === "team_admin") await requireInboxOwner(data.adminToken);
+    const { ticketSide } = await import("@/lib/team-support-access.server");
+    const side = await ticketSide(me, data.ticketId);
+    if (side === "admin") await requireInboxOwner(data.adminToken);
+    else if (!me.profile) throw new Error("সাইন ইন করা দরকার");
+
     const { addReply } = await import("@/lib/team-support.server");
     await addReply({
       ticketId: data.ticketId,
-      authorKind: data.as,
+      authorKind: side === "admin" ? "team_admin" : "agent",
       authorProfileId: me.profile?.id ?? null,
       authorLabel: me.profile?.name ?? "Sales Team Admin",
       body: data.body,
+    });
+    return { ok: true, as: side };
+  });
+
+/** Registers this browser for support push notifications. */
+export const registerWebPushToken = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    TokenInput.extend({
+      token: z.string().trim().min(20).max(400),
+      label: z.string().trim().max(120).nullable().optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const me = await caller(data.adminToken);
+    if (!me.profile) throw new Error("সাইন ইন করা দরকার");
+    const { savePushToken } = await import("@/lib/push.server");
+    await savePushToken({
+      profileId: me.profile.id,
+      token: data.token,
+      platform: "web",
+      label: data.label ?? "Web browser",
+    });
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({
+      action: "push_token_registered",
+      entityType: "push_token",
+      entityId: me.profile.id,
+      actorProfileId: me.profile.id,
+      actorLabel: me.profile.name,
+      metadata: { platform: "web" },
     });
     return { ok: true };
   });
