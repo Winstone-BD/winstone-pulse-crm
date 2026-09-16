@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { performerInsight, scoreOf, type PerformerLine } from "@/lib/top-performer.server";
+import {
+  performerInsight,
+  scoreOf,
+  topPerformerDate,
+  type PerformerLine,
+} from "@/lib/top-performer.server";
 
 const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   agentId: "agent-1",
