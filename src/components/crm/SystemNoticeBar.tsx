@@ -110,7 +110,7 @@ function PendingAccountActions() {
             <span
               className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 done[account.id] === "approved"
-                  ? "bg-emerald-500/15 text-emerald-600"
+                  ? "bg-primary/15 text-primary"
                   : "bg-destructive/15 text-destructive"
               }`}
             >
