@@ -216,25 +216,55 @@ function ControlBoard() {
 
         <AskHqPanel />
 
-
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {isEmpty ? (
+          <section className="card-elevated flex flex-col items-center gap-2 px-5 py-12 text-center">
+            <span className="grid size-11 place-items-center rounded-full bg-surface-2 text-muted-foreground">
+              <Inbox className="size-5" />
+            </span>
+            <p className="text-sm font-semibold leading-snug">এখনো কোনো লাইভ ডেটা নেই</p>
+            <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">
+              এজেন্টরা কল করা ও রিপোর্ট জমা দেওয়া শুরু করলেই এখানে সব সংখ্যা ও কার্ড আসবে।
+            </p>
+          </section>
+        ) : (
+          <>
+        <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
           <StatTile
             icon={<PhoneCall className="size-4" />}
             label="মোট কল"
             value={String(calls.length)}
             hint={`${connected}টি কল ${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হয়েছে`}
+            onClick={() => showDrill("মোট কল", `${calls.length}টি সিঙ্ক হওয়া কল`, callRows(calls))}
           />
           <StatTile
             icon={<Timer className="size-4" />}
             label="ফ্লোরের কথার সময়"
             value={formatTalkTime(talkSeconds)}
             hint="সব সিঙ্ক হওয়া রেকর্ডিং মিলিয়ে"
+            onClick={() =>
+              showDrill(
+                "কথা হওয়া কল",
+                `${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হয়েছে এমন কল`,
+                callRows(
+                  calls
+                    .filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS)
+                    .sort((a, b) => b.duration_seconds - a.duration_seconds),
+                ),
+              )
+            }
           />
           <StatTile
             icon={<Users className="size-4" />}
             label="চালু লিড"
             value={String(leads.filter((l) => l.status !== "closed").length)}
             hint={`${unassigned}টি লিড এখনো কারো নামে দেওয়া হয়নি`}
+            onClick={() =>
+              showDrill(
+                "চালু লিড",
+                "যেসব লিড এখনো বন্ধ হয়নি",
+                leadRows(leads.filter((l) => l.status !== "closed")),
+              )
+            }
           />
           <StatTile
             icon={<TrendingUp className="size-4" />}
@@ -244,49 +274,113 @@ function ControlBoard() {
                 .length,
             )}
             hint={`${messages.length}টি হোয়াটসঅ্যাপ মেসেজ জমা আছে`}
+            onClick={() =>
+              showDrill(
+                "ডিল জেতা লিড",
+                "বিক্রি হয়েছে হিসেবে বন্ধ করা লিড",
+                leadRows(
+                  leads.filter(
+                    (l) => l.status === "closed" && l.outcome_category === "deal_won",
+                  ),
+                ),
+              )
+            }
           />
         </div>
 
         {/* Classification board: what agents actually decided after talking. */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
           <StatTile
             icon={<Flame className="size-4" />}
             label="HOT লিড"
             value={String(leads.filter((l) => l.temperature === "hot").length)}
             hint="এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী"
+            onClick={() =>
+              showDrill(
+                "HOT লিড",
+                "এজেন্টরা যেগুলো খুব সম্ভাবনাময় বলেছেন",
+                leadRows(leads.filter((l) => l.temperature === "hot")),
+              )
+            }
           />
           <StatTile
             icon={<Flame className="size-4" />}
             label="WARM লিড"
             value={String(leads.filter((l) => l.temperature === "warm").length)}
             hint="কিছুটা আগ্রহী"
+            onClick={() =>
+              showDrill(
+                "WARM লিড",
+                "কিছুটা আগ্রহী লিড",
+                leadRows(leads.filter((l) => l.temperature === "warm")),
+              )
+            }
           />
           <StatTile
             icon={<Snowflake className="size-4" />}
             label="COLD লিড"
             value={String(leads.filter((l) => l.temperature === "cold").length)}
             hint="এখন আগ্রহ কম"
+            onClick={() =>
+              showDrill(
+                "COLD লিড",
+                "এখন আগ্রহ কম এমন লিড",
+                leadRows(leads.filter((l) => l.temperature === "cold")),
+              )
+            }
           />
           <StatTile
             icon={<ListChecks className="size-4" />}
             label="বাকি কাজ (PENDING)"
             value={String(leads.filter((l) => l.work_state !== "completed").length)}
             hint={`${leads.filter((l) => l.work_state === "completed").length}টি লিড শ্রেণিবিন্যাসসহ শেষ`}
+            onClick={() =>
+              showDrill(
+                "বাকি কাজ",
+                "শ্রেণিবিন্যাস এখনো শেষ হয়নি এমন লিড",
+                leadRows(leads.filter((l) => l.work_state !== "completed")),
+              )
+            }
           />
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-2.5 sm:gap-3 lg:grid-cols-3">
           <MixCard
             title="লিড ফানেল"
             subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
             rows={funnelRows}
+            onRowClick={(row) =>
+              showDrill(
+                `ফানেল · ${row.label}`,
+                "এই ধাপে থাকা লিড",
+                leadRows(leads.filter((l) => l.status === row.key)),
+              )
+            }
           />
-          <MixCard title="লিড কোথা থেকে" subtitle="সোর্স অনুযায়ী ভাগ" rows={sourceRows} />
+          <MixCard
+            title="লিড কোথা থেকে"
+            subtitle="সোর্স অনুযায়ী ভাগ"
+            rows={sourceRows}
+            onRowClick={(row) =>
+              showDrill(
+                `সোর্স · ${row.label}`,
+                "এই সোর্স থেকে আসা লিড",
+                leadRows(leads.filter((l) => (l.source ?? "unknown") === row.key)),
+              )
+            }
+          />
           <MixCard
             title="কলের সুর"
             subtitle="AI-বিশ্লেষিত কথাবার্তা"
             rows={sentimentRows}
             emptyLabel="এখনো AI-বিশ্লেষিত কল নেই"
+            onRowClick={(row) =>
+              showDrill(
+                `কলের সুর · ${row.label}`,
+                "এই সুরের কল",
+                callRows(calls.filter((c) => c.sentiment === row.key)),
+              )
+            }
           />
         </div>
 
