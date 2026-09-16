@@ -25,13 +25,17 @@ import { RoleGate } from "@/components/crm/RoleGate";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 
+import { HqDrilldown, type Drilldown, type DrillRow } from "@/components/crm/HqDrilldown";
+
 import {
   buildAgentStats,
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
   useSnapshot,
+  type CallRecording,
+  type Lead,
 } from "@/lib/crm-data";
-import { formatTalkTime } from "@/lib/crm-format";
+import { formatTalkTime, shortDate } from "@/lib/crm-format";
 
 export const Route = createFileRoute("/hq")({
   head: () => ({
