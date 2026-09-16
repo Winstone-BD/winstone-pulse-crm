@@ -34,3 +34,10 @@
 - [x] Winstone Company / Company Lead metadata and EN/BN outreach preservation
 - [x] auditable import counts and bilingual import-result UI
 - [x] production duplicate report, regression tests, typecheck/build validation
+
+## 2026-09-17 — নতুন কাজ
+- [x] sales_team_admin RBAC কঠোর করা (ইনবক্স-স্কোপড, IT/সুপার অ্যাডমিন ক্ষমতা নয়)
+- [x] দৈনিক লিড বিতরণ ইঞ্জিন — আইডেমপটেন্ট + persistent allocation cursor
+- [x] কোটা-নরমালাইজড পারফরম্যান্স (২৫/দিন, হায়দার ১৫/দিন) ও টপ-পারফর্মার র‍্যাঙ্কিং
+- [x] সাপোর্ট টিকেট তৈরি/গুরুত্ব পরিবর্তনে ওয়েব ও অ্যান্ড্রয়েড পুশ অ্যালার্ট (Firebase সংযোগ বাকি)
+- [ ] মাসিক ৳৪,০০০ সার্ভিস বিল (ইনভয়েস, গ্রেস, পেমেন্ট যাচাই → সার্ভিস অ্যাক্টিভ, ৩,০০০/১,০০০ ভাগ) — এখনো কোডে নেই, ব্যবহারকারীর সিদ্ধান্তের অপেক্ষা
