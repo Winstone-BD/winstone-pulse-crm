@@ -132,9 +132,9 @@ export function TopPerformerCard() {
             <p className="mt-1 text-xs text-muted-foreground">
               আজকের নিজের gap দেখে ছোট একটি লক্ষ্য নিয়ে শুরু করুন।
             </p>
-            {data.otherAgents.length ? (
+            {otherAgents.length ? (
               <ul className="mt-3 divide-y divide-border">
-                {data.otherAgents.map((agent) => (
+                {otherAgents.map((agent) => (
                   <li key={agent.agentId} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="min-w-0">
                       <p className="break-words text-sm font-semibold">
@@ -158,7 +158,7 @@ export function TopPerformerCard() {
         </>
       ) : (
         <p className="mt-4 rounded-xl border border-border bg-surface p-3 text-sm text-muted-foreground">
-          {data.advice[0]}
+          {data.advice?.[0] ?? "আজ এখনো পর্যাপ্ত ডেটা নেই।"}
         </p>
       )}
     </section>
