@@ -196,6 +196,21 @@ function ControlBoard() {
           />
         </div>
 
+        <div className="grid gap-3 lg:grid-cols-3">
+          <MixCard
+            title="লিড ফানেল"
+            subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
+            rows={funnelRows}
+          />
+          <MixCard title="লিড কোথা থেকে" subtitle="সোর্স অনুযায়ী ভাগ" rows={sourceRows} />
+          <MixCard
+            title="কলের সুর"
+            subtitle="AI-বিশ্লেষিত কথাবার্তা"
+            rows={sentimentRows}
+            emptyLabel="এখনো AI-বিশ্লেষিত কল নেই"
+          />
+        </div>
+
         <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
 
         <section className="space-y-3">
