@@ -155,11 +155,15 @@ export type TopPerformerDate = {
 
 /** Pure date helper so the 9:05 am rollover can be unit-tested without the DB. */
 export function topPerformerDate(at: Date = new Date()): TopPerformerDate {
-  const { dateKey, minutes } = dhakaParts(at);
+  const { year, month, day, dateKey, minutes } = dhakaParts(at);
   const isPreviousDay = minutes < NEW_DAY_MINUTES;
-  const effectiveDateKey = isPreviousDay
-    ? new Date(dhakaInstant(dateKey, 0).getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    : dateKey;
+  let effectiveDateKey = dateKey;
+  if (isPreviousDay) {
+    // Step back one day in Dhaka wall-clock, not one UTC day.
+    const prev = new Date(Date.UTC(year, month - 1, day));
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    effectiveDateKey = dhakaParts(prev).dateKey;
+  }
   return {
     dateKey,
     effectiveDateKey,
@@ -172,7 +176,6 @@ export function topPerformerDate(at: Date = new Date()): TopPerformerDate {
 
 export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerformerBoard> {
   const { effectiveDateKey, isPreviousDay, dayLabel, revealed } = topPerformerDate(at);
-  const { minutes } = dhakaParts(at);
   const revealAt = dhakaInstant(effectiveDateKey, REVEAL_MINUTES);
   const startIso = dhakaInstant(effectiveDateKey, 0).toISOString();
   const endIso = isPreviousDay
