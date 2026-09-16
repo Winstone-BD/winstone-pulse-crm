@@ -158,10 +158,19 @@ export async function distributeDailyLeads(options: {
     throw new Error("ডেটাবেজে অ্যাসাইন করার মতো কোনো নতুন লিড নেই");
   }
 
-  // Round-robin, oldest first, so an incomplete batch is still fair.
+  // Round-robin, oldest first, so an incomplete batch is still fair. Each desk
+  // stops at its own quota, so a lighter desk never takes a full round.
+  const slots: PoolAgent[] = [];
+  const maxQuota = Math.max(...agents.map((a) => quotas.get(a.id) ?? options.perAgent));
+  for (let round = 0; round < maxQuota; round += 1) {
+    for (const agent of agents) {
+      if (round < (quotas.get(agent.id) ?? options.perAgent)) slots.push(agent);
+    }
+  }
+
   const buckets = new Map<string, { name: string; leadIds: string[] }>();
   usable.forEach((lead, index) => {
-    const agent = agents[index % agents.length]!;
+    const agent = slots[index] ?? agents[index % agents.length]!;
     const bucket = buckets.get(agent.id) ?? { name: agent.name, leadIds: [] };
     bucket.leadIds.push(lead.id);
     buckets.set(agent.id, bucket);
