@@ -46,8 +46,36 @@ export type RankedPerformer = PerformerLine & {
   advice: string;
 };
 
+/**
+ * Exactly which rows went into the score — shown in the homepage insight panel
+ * so anyone can check the board against the raw data instead of trusting it.
+ */
+export type TopPerformerSources = {
+  /** Dhaka wall-clock window used for call reports and follow-ups. */
+  windowStart: string;
+  windowEnd: string;
+  /** leads.work_date value used for the quota/completion side. */
+  workDate: string;
+  timeZone: "Asia/Dhaka";
+  activeAgents: number;
+  callReportRows: number;
+  submittedReportRows: number;
+  connectedReportRows: number;
+  followUpRows: number;
+  assignedLeadRows: number;
+  completedLeadRows: number;
+  talkMinutes: number;
+  /** True when nothing at all was counted — the reason a score can be 0. */
+  empty: boolean;
+};
+
 export type TopPerformerBoard = {
   dateKey: string;
+  /** When the board next changes: the 5:30 pm reveal, or the 9:05 am rollover. */
+  nextUpdateAt: string;
+  /** What happens at nextUpdateAt. */
+  nextUpdateKind: "reveal" | "rollover";
+  sources: TopPerformerSources;
   /** False before 5:30 pm Dhaka — the homepage then shows a countdown instead. */
   revealed: boolean;
   revealAt: string;
@@ -328,8 +356,46 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     advice.push("আজ কোনো কল রিপোর্ট জমা পড়েনি — কল শেষে রিপোর্ট জমা দিলেই বোর্ড তৈরি হবে");
   }
 
+  const assignedLeadRows = (todayLeads ?? []).length;
+  const completedLeadRows = (todayLeads ?? []).filter((row) => row.work_state === "completed").length;
+  const sources: TopPerformerSources = {
+    windowStart: startIso,
+    windowEnd: endIso,
+    workDate: effectiveDateKey,
+    timeZone: "Asia/Dhaka",
+    activeAgents: lines.length,
+    callReportRows: reports.length,
+    submittedReportRows: reports.filter((r) => r.status === "submitted").length,
+    connectedReportRows: reports.filter((r) => r.connected).length,
+    followUpRows: follows.length,
+    assignedLeadRows,
+    completedLeadRows,
+    talkMinutes: team.talkMinutes,
+    empty: reports.length === 0 && follows.length === 0 && completedLeadRows === 0,
+  };
+
+  // The board next changes either at today's 5:30 pm reveal, or — once that has
+  // passed — at the 9:05 am rollover of the following Dhaka day.
+  const { minutes } = dhakaParts(at);
+  const beforeRollover = isPreviousDay;
+  const beforeReveal = !beforeRollover && minutes < REVEAL_MINUTES;
+  const nextUpdate = beforeReveal
+    ? { at: revealAt, kind: "reveal" as const }
+    : {
+        at: beforeRollover
+          ? dhakaInstant(dhakaParts(at).dateKey, NEW_DAY_MINUTES)
+          : dhakaInstant(
+              dhakaParts(new Date(at.getTime() + 24 * 60 * 60 * 1000)).dateKey,
+              NEW_DAY_MINUTES,
+            ),
+        kind: "rollover" as const,
+      };
+
   return {
     dateKey: effectiveDateKey,
+    nextUpdateAt: nextUpdate.at.toISOString(),
+    nextUpdateKind: nextUpdate.kind,
+    sources,
     revealed,
     revealAt: revealAt.toISOString(),
     isPreviousDay,
