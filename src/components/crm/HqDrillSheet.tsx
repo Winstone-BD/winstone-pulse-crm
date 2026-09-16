@@ -100,7 +100,8 @@ export function HqDrillSheet({
                         type="button"
                         disabled={!lead}
                         onClick={() => lead && onSelectLead(lead.id)}
-                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-primary/40 disabled:opacity-70"
+                        aria-label={`${lead?.name ?? call.phone_number} — লিডের পুরো ফাইল খুলুন / Open full lead file`}
+                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:opacity-70 disabled:hover:border-border disabled:hover:bg-surface"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">
@@ -126,7 +127,8 @@ export function HqDrillSheet({
                       <button
                         type="button"
                         onClick={() => onSelectLead(lead.id)}
-                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-primary/40"
+                        aria-label={`${lead.name} · ${lead.phone_number} — লিডের পুরো ফাইল খুলুন / Open full lead file`}
+                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{lead.name}</p>
