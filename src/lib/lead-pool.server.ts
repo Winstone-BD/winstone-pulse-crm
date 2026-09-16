@@ -347,7 +347,8 @@ export async function distributeDailyLeads(options: {
     },
   });
 
-  if (shortage) await raiseShortageAlert({ remaining, need, perAgent: options.perAgent });
+  if (shortage)
+    await raiseShortageAlert({ remaining, need: fullRound, perAgent: options.perAgent });
 
   return {
     moved,
