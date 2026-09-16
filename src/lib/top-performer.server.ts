@@ -214,15 +214,17 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       b.talkMinutes - a.talkMinutes ||
       a.name.localeCompare(b.name, "bn"),
   );
-  const activeRanked = ranked.filter((line) => line.score > 0);
-  const leaderScore = activeRanked[0]?.fairScore ?? 0;
+  const isActive = (line: PerformerLine) => line.score > 0 || line.completed > 0;
+  const activeRanked = ranked.filter(isActive);
+  const leaderCompletion = activeRanked[0]?.completionPercent ?? 0;
   const detailed = ranked.map((line, index): RankedPerformer => ({
     ...line,
     rank: index + 1,
-    gapFromLeader: Math.max(0, leaderScore - line.fairScore),
+    // Gap is expressed in the same normalised percentage everyone is ranked on.
+    gapFromLeader: Math.max(0, leaderCompletion - line.completionPercent),
     ...performerInsight(line),
   }));
-  const topThree = detailed.filter((line) => line.score > 0).slice(0, 3);
+  const topThree = detailed.filter(isActive).slice(0, 3);
   const topIds = new Set(topThree.map((line) => line.agentId));
   const otherAgents = detailed.filter((line) => !topIds.has(line.agentId));
   const winner = activeRanked[0] ?? null;
