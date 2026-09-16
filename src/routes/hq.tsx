@@ -468,7 +468,7 @@ function StatTile({
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
       <Sparkline seed={value.length + label.length} />
-    </div>
+    </button>
   );
 }
 
