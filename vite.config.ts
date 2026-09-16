@@ -11,7 +11,7 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 // Load non-VITE_ env vars into process.env for server-side code only (email API keys,
 // service role key). These are never injected into the client bundle.
-const serverEnv = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
+const serverEnv = loadEnv(process.env["NODE_ENV"] || "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
 export default defineConfig({
