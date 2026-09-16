@@ -31,6 +31,12 @@ export async function requestWebPushToken(): Promise<PushResult & { token?: stri
   if (typeof window === "undefined" || !("Notification" in window)) return { status: "unsupported" };
   if (window.top !== window.self) return { status: "open-in-new-tab" };
 
+  const resolved = {
+    apiKey: config.apiKey!,
+    projectId: config.projectId!,
+    appId: appId!,
+    messagingSenderId: config.messagingSenderId,
+  };
   const { initializeApp } = await import("firebase/app");
   const { getMessaging, getToken, isSupported } = await import("firebase/messaging");
   if (!(await isSupported())) return { status: "unsupported" };
