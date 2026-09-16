@@ -64,7 +64,7 @@ export function Leaderboard({
                     <div className="flex items-center justify-end gap-2">
                       <span className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-surface-2 sm:block">
                         <span
-                          className="block h-full rounded-full bg-primary"
+                          className="block h-full rounded-full bg-chart-1"
                           style={{ width: `${(row.connected / maxConnected) * 100}%` }}
                         />
                       </span>

@@ -573,7 +573,7 @@ function MixCard({
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-full bg-chart-1"
                     style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
                   />
                 </div>
@@ -595,7 +595,7 @@ function Sparkline({ seed }: { seed: number }) {
   return (
     <svg
       viewBox="0 0 100 20"
-      className="mt-3 h-5 w-full text-primary/60"
+      className="mt-3 h-5 w-full text-chart-1/60"
       preserveAspectRatio="none"
     >
       <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" />
