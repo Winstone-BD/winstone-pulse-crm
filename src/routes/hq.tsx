@@ -472,6 +472,15 @@ function ControlBoard() {
         open={openAgentId !== null}
         onOpenChange={(next) => !next && setOpenAgentId(null)}
       />
+      <HqDrilldown
+        drill={drill}
+        open={drill !== null}
+        onOpenChange={(next) => !next && setDrill(null)}
+        onSelectLead={(leadId) => {
+          setDrill(null);
+          setOpenLeadId(leadId);
+        }}
+      />
     </>
   );
 }
