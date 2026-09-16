@@ -54,6 +54,7 @@ export function TopPerformerCard() {
   const winner = data.winner ?? null;
   const topThree = data.topThree ?? [];
   const otherAgents = data.otherAgents ?? [];
+  const dayLabel = data.dayLabel ?? "আজকের";
   const podium = [topThree[1], topThree[0], topThree[2]].filter(
     (entry): entry is NonNullable<typeof entry> => Boolean(entry),
   );
@@ -67,10 +68,10 @@ export function TopPerformerCard() {
         </span>
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
-            আজকের Top 3 পারফর্মার
+            {dayLabel} Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {revealTime}-এর হিসাব — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে
+            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে
           </p>
         </div>
       </header>
