@@ -164,6 +164,7 @@ export type AlertRun = {
   stage: AlertStage;
   alerted: boolean;
   push: { sent: number; failed: number; skipped?: string };
+  email: { sent: number; skipped: number; failed: number };
 }[];
 
 /**
