@@ -281,6 +281,13 @@
       "when": 1789568165635,
       "tag": "0039_protect_lead_phone_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789570669174,
+      "tag": "0040_restrict_lead_phone_keys_reads",
+      "breakpoints": true
     }
   ]
 }
