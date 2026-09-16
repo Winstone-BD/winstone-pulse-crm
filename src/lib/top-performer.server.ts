@@ -190,11 +190,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const floorQuota = (await dailyPlan()).perAgent;
   const extraToday = await extraGrantsToday();
 
-  // Today's own list per desk: how many leads arrived and how many are finished.
+  // The scored day's own list per desk: how many leads arrived and how many are finished.
   const { data: todayLeads } = await supabaseAdmin
     .from("leads")
     .select("assigned_to, work_state")
-    .eq("work_date", dateKey)
+    .eq("work_date", effectiveDateKey)
     .not("assigned_to", "is", null)
     .limit(20000);
 
