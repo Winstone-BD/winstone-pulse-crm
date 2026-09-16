@@ -182,8 +182,12 @@ function EntryCard({
   secondary?: React.ReactNode;
 }) {
   return (
-    <section className="card-elevated flex flex-col gap-3 p-5">
-      <span className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary">
+    <section className="card-elevated group relative flex flex-col gap-3 overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/30">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-80"
+      />
+      <span className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25 transition-transform group-hover:scale-105">
         {icon}
       </span>
       <div>
