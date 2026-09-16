@@ -1,10 +1,21 @@
-# WEB CRM WINSTONE
+# Winstone CRM (WEB CRM WINSTONE)
 
-Implement exactly the screenshot and nothing else
+বাংলা UI-র সেলস CRM — এজেন্টের নিজের সিমে কল, রেকর্ডিং সিঙ্ক, দৈনিক লিড বিতরণ, শিফট সারসংক্ষেপ, Executive HQ ও আইটি কনসোল।
+
+**Live app**: https://webcrm.winstonebd.com
+
+## নথিপত্র / Documentation
+
+শুরু করুন [`docs/README.md`](./docs/README.md) থেকে:
+
+- [architecture.md](./docs/architecture.md) — ফোল্ডার কাঠামো, কোন ফাইল কী করে
+- [roles-and-permissions.md](./docs/roles-and-permissions.md) — কোন ভূমিকা কী দেখে
+- [features.md](./docs/features.md) — ফিচার → ফাইল → টেবিল
+- [integrations.md](./docs/integrations.md) — বাইরের সংযোগের সত্যিকারের অবস্থা
+- [conventions.md](./docs/conventions.md) — নামকরণ ও নতুন কোডের নিয়ম
+- [testing.md](./docs/testing.md) — টেস্ট কী ঢাকা আছে
 
 This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://screenshot-perfect-viewer.lovable.app
 
 ## Build with Lovable
 
