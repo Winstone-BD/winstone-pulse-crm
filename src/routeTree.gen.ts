@@ -54,7 +54,6 @@ import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
-import { Route as ApiPublicHooksServiceBillingRouteImport } from './routes/api/public/hooks/service-billing'
 import { Route as ApiPublicHooksShiftSummaryRouteImport } from './routes/api/public/hooks/shift-summary'
 import { Route as ApiPublicIngestAnalyzeRouteImport } from './routes/api/public/ingest/analyze'
 import { Route as ApiPublicIngestLeadRouteImport } from './routes/api/public/ingest/lead'
@@ -63,7 +62,6 @@ import { Route as ApiPublicIngestOutcomeRouteImport } from './routes/api/public/
 import { Route as ApiPublicIngestRecordingRouteImport } from './routes/api/public/ingest/recording'
 import { Route as ApiPublicIngestReprocessRouteImport } from './routes/api/public/ingest/reprocess'
 import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicReportsSummaryRouteImport } from './routes/api/public/reports/summary'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 
@@ -297,12 +295,6 @@ const ApiPublicHooksLeadDistributionRoute =
     path: '/api/public/hooks/lead-distribution',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksServiceBillingRoute =
-  ApiPublicHooksServiceBillingRouteImport.update({
-    id: '/api/public/hooks/service-billing',
-    path: '/api/public/hooks/service-billing',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksShiftSummaryRoute =
   ApiPublicHooksShiftSummaryRouteImport.update({
     id: '/api/public/hooks/shift-summary',
@@ -346,12 +338,6 @@ const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
   path: '/api/public/paddle/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicReportsSummaryRoute = ApiPublicReportsSummaryRouteImport.update({
   id: '/api/public/reports/summary',
   path: '/api/public/reports/summary',
@@ -410,7 +396,6 @@ export interface FileRoutesByFullPath {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
-  '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
@@ -419,7 +404,6 @@ export interface FileRoutesByFullPath {
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -469,7 +453,6 @@ export interface FileRoutesByTo {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
-  '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
@@ -478,7 +461,6 @@ export interface FileRoutesByTo {
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -529,7 +511,6 @@ export interface FileRoutesById {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
-  '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
@@ -538,7 +519,6 @@ export interface FileRoutesById {
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
@@ -590,7 +570,6 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
-    | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
@@ -599,7 +578,6 @@ export interface FileRouteTypes {
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
     | '/api/public/paddle/webhook'
-    | '/api/public/payments/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -649,7 +627,6 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
-    | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
@@ -658,7 +635,6 @@ export interface FileRouteTypes {
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
     | '/api/public/paddle/webhook'
-    | '/api/public/payments/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
   id:
@@ -708,7 +684,6 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
-    | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
@@ -717,7 +692,6 @@ export interface FileRouteTypes {
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
     | '/api/public/paddle/webhook'
-    | '/api/public/payments/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
@@ -768,7 +742,6 @@ export interface RootRouteChildren {
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
-  ApiPublicHooksServiceBillingRoute: typeof ApiPublicHooksServiceBillingRoute
   ApiPublicHooksShiftSummaryRoute: typeof ApiPublicHooksShiftSummaryRoute
   ApiPublicIngestAnalyzeRoute: typeof ApiPublicIngestAnalyzeRoute
   ApiPublicIngestLeadRoute: typeof ApiPublicIngestLeadRoute
@@ -777,7 +750,6 @@ export interface RootRouteChildren {
   ApiPublicIngestRecordingRoute: typeof ApiPublicIngestRecordingRoute
   ApiPublicIngestReprocessRoute: typeof ApiPublicIngestReprocessRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
-  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicReportsSummaryRoute: typeof ApiPublicReportsSummaryRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
@@ -1099,13 +1071,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLeadDistributionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/service-billing': {
-      id: '/api/public/hooks/service-billing'
-      path: '/api/public/hooks/service-billing'
-      fullPath: '/api/public/hooks/service-billing'
-      preLoaderRoute: typeof ApiPublicHooksServiceBillingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/shift-summary': {
       id: '/api/public/hooks/shift-summary'
       path: '/api/public/hooks/shift-summary'
@@ -1160,13 +1125,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/paddle/webhook'
       fullPath: '/api/public/paddle/webhook'
       preLoaderRoute: typeof ApiPublicPaddleWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/reports/summary': {
@@ -1233,7 +1191,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
-  ApiPublicHooksServiceBillingRoute: ApiPublicHooksServiceBillingRoute,
   ApiPublicHooksShiftSummaryRoute: ApiPublicHooksShiftSummaryRoute,
   ApiPublicIngestAnalyzeRoute: ApiPublicIngestAnalyzeRoute,
   ApiPublicIngestLeadRoute: ApiPublicIngestLeadRoute,
@@ -1242,7 +1199,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicIngestRecordingRoute: ApiPublicIngestRecordingRoute,
   ApiPublicIngestReprocessRoute: ApiPublicIngestReprocessRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
-  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicReportsSummaryRoute: ApiPublicReportsSummaryRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }

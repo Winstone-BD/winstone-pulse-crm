@@ -59,18 +59,7 @@ export const Route = createFileRoute("/api/public/hooks/shift-summary")({
             recordingDoc = { error: error instanceof Error ? error.message : "failed" };
           }
 
-          // Monthly bill notices ride the existing daily schedule: the
-          // pre-deadline reminder and the after-grace follow-up, once each.
-          let billReminders: unknown = null;
-          try {
-            const { runBillingReminders } = await import("@/lib/service-billing.server");
-            billReminders = await runBillingReminders();
-          } catch (error) {
-            console.error("service bill reminders failed", error);
-            billReminders = { error: error instanceof Error ? error.message : "failed" };
-          }
-
-          return Response.json({ ok: true, summary, purge, recordingDoc, billReminders });
+          return Response.json({ ok: true, summary, purge, recordingDoc });
         } catch (error) {
           console.error("shift summary job failed", error);
           return new Response(

@@ -28,15 +28,7 @@ export const serviceBillingOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
     await reader(data.adminToken);
-    const { billingState, architectAccount, runBillingReminders } = await import(
-      "@/lib/service-billing.server"
-    );
-    // Due-date and after-grace notices are raised once each; safe on every read.
-    try {
-      await runBillingReminders();
-    } catch (error) {
-      console.error("bill reminder check failed", error);
-    }
+    const { billingState, architectAccount } = await import("@/lib/service-billing.server");
     const [state, architect] = await Promise.all([billingState(), architectAccount()]);
     return { ...state, architect };
   });
