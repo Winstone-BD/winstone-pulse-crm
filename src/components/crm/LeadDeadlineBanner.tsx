@@ -40,12 +40,12 @@ export function LeadDeadlineBanner() {
 
   return (
     <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-      <AlarmClock className="mt-0.5 size-5 shrink-0 text-amber-600" />
+      <AlarmClock className="mt-0.5 size-5 shrink-0 text-amber-300" />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+        <p className="text-sm font-semibold text-amber-300">
           আজকের লক্ষ্য{data.target ? `: ${data.target}টি লিড` : ""} — শেষ সময় {dueText}
         </p>
-        <p className="text-xs text-amber-700/90 dark:text-amber-300/90">{data.text}</p>
+        <p className="text-xs text-amber-200/90">{data.text}</p>
       </div>
     </div>
   );
