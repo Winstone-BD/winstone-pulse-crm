@@ -30,6 +30,7 @@ import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
 import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
 import { QueueBoard } from "@/components/crm/QueueBoard";
+import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
@@ -270,6 +271,8 @@ function DeskPage() {
         </div>
 
         <DeskStats />
+
+        <SmartInsightStrip scope="desk" />
 
         <MobileLeadQueue />
 
