@@ -108,6 +108,9 @@ export function TopPerformerCard() {
                   <span className="text-muted-foreground">স্কোর</span>
                   <strong className="tabular text-lg text-primary">{agent.score}</strong>
                 </div>
+                <p className="tabular mt-1 text-[11px] text-muted-foreground">
+                  দৈনিক কোটা {agent.quota}টি · অনুপাত-স্কোর {agent.fairScore}
+                </p>
                 <p className="mt-2 flex gap-2 text-xs text-warning">
                   <Target className="mt-0.5 size-3.5 shrink-0" />
                   <span>{agent.gap}</span>
