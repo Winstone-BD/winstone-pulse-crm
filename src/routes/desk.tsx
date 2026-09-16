@@ -198,11 +198,11 @@ function DeskPage() {
 
         <DeskStats />
 
+        <MobileLeadQueue />
+
         <FollowUpAlarm />
 
         <CarryOverLeads />
-
-        <MobileLeadQueue />
 
         <LeadDayBoard />
 
