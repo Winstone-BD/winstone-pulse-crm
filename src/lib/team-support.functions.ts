@@ -59,14 +59,10 @@ export const supportInbox = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
     const me = await caller(data.adminToken);
-    const { isSupportAdmin, listInboxTickets, listReplies } = await import(
-      "@/lib/team-support.server"
-    );
-    const allowed =
-      me.scope === "authority" ||
-      me.scope === "coordinator" ||
-      (await isSupportAdmin(me.profile?.id));
-    if (!allowed) return { allowed: false as const, tickets: [], replies: [] };
+    const { supportAccess } = await import("@/lib/team-support-access.server");
+    const access = await supportAccess(me);
+    if (!access.inbox) return { allowed: false as const, tickets: [], replies: [] };
+    const { listInboxTickets, listReplies } = await import("@/lib/team-support.server");
     const tickets = await listInboxTickets();
     return { allowed: true as const, tickets, replies: await listReplies(tickets.map((t) => t.id)) };
   });
@@ -76,23 +72,20 @@ export const mySupportRole = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
     const me = await caller(data.adminToken);
-    const { isSupportAdmin } = await import("@/lib/team-support.server");
+    const { supportAccess } = await import("@/lib/team-support-access.server");
+    const access = await supportAccess(me);
     return {
-      isTeamAdmin: await isSupportAdmin(me.profile?.id),
-      isAuthority: me.scope === "authority" || me.scope === "coordinator",
+      isTeamAdmin: access.via === "team_admin",
+      isAuthority: access.via === "authority" || access.via === "coordinator",
+      canManage: access.manage,
     };
   });
 
+/** Manage rights on the shared inbox — never widens any other permission. */
 async function requireInboxOwner(adminToken: string | null | undefined) {
   const me = await caller(adminToken);
-  const { isSupportAdmin } = await import("@/lib/team-support.server");
-  const allowed =
-    me.scope === "authority" ||
-    me.scope === "coordinator" ||
-    (await isSupportAdmin(me.profile?.id));
-  if (!allowed) throw new Error("Sales Team Admin access required");
-  const { requireWrite } = await import("@/lib/access.server");
-  requireWrite(me);
+  const { requireInboxManage } = await import("@/lib/team-support-access.server");
+  await requireInboxManage(me);
   return me;
 }
 

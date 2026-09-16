@@ -259,6 +259,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const advice: string[] = [];
 
   if (winner) {
+    if (winner.targetQuota)
+      reasons.push(
+        `নিজের কোটার ${winner.completionPercent}% শেষ (${winner.completed}/${winner.targetQuota})`,
+      );
     reasons.push(`${winner.connected}টি কলে কথা হয়েছে — আজ সবচেয়ে বেশি`);
     if (winner.reports) reasons.push(`${winner.reports}টি কল রিপোর্ট নিজে জমা দিয়েছেন`);
     if (winner.talkMinutes) reasons.push(`মোট ${winner.talkMinutes} মিনিট কথা বলেছেন`);
