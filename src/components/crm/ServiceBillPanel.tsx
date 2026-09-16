@@ -150,15 +150,22 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
             </p>
           </div>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            query.data?.serviceActive
-              ? "bg-primary/20 text-primary"
-              : "bg-destructive/15 text-destructive"
-          }`}
-        >
-          {query.data?.serviceActive ? "সার্ভিস চালু" : "সার্ভিস চালু নয়"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              query.data?.serviceActive
+                ? "bg-primary/20 text-primary"
+                : "bg-destructive/15 text-destructive"
+            }`}
+          >
+            {query.data?.serviceActive ? "সার্ভিস চালু" : "সার্ভিস চালু নয়"}
+          </span>
+          {current ? (
+            <Button size="sm" variant="outline" onClick={() => downloadPdf(current)}>
+              <Download className="size-4" /> PDF
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {current ? (
