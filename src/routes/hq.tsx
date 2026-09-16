@@ -104,6 +104,47 @@ function ControlBoard() {
     talkMinutes: Math.round(row.talkSeconds / 60),
   }));
 
+  const funnelRows = useMemo(() => {
+    const order: { key: string; label: string }[] = [
+      { key: "pending", label: "নতুন / বাকি" },
+      { key: "contacted", label: "কথা হয়েছে" },
+      { key: "follow_up", label: "ফলো-আপ" },
+      { key: "closed", label: "বন্ধ" },
+    ];
+    return order.map((o) => ({
+      label: o.label,
+      value: leads.filter((l) => l.status === o.key).length,
+    }));
+  }, [leads]);
+
+  const sourceRows = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const lead of leads) {
+      const key = (lead.source ?? "unknown").replace(/_/g, " ");
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, value]) => ({ label, value }));
+  }, [leads]);
+
+  const sentimentRows = useMemo(() => {
+    const labels: Record<string, string> = {
+      positive: "পজিটিভ",
+      neutral: "নিউট্রাল",
+      negative: "নেগেটিভ",
+    };
+    const counts = new Map<string, number>();
+    for (const call of calls) {
+      if (!call.sentiment) continue;
+      counts.set(call.sentiment, (counts.get(call.sentiment) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, value]) => ({ label: labels[key] ?? key, value }));
+  }, [calls]);
+
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
 
