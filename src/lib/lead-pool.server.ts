@@ -15,6 +15,8 @@
  *   - duplicates inside the database itself are collapsed the same way.
  */
 
+import { extractBangladeshPhones } from "@/lib/lead-phone";
+
 /** Today in Dhaka — the working day a distributed lead belongs to. */
 export function dhakaToday(): string {
   return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -24,10 +26,9 @@ const DUPLICATE = "duplicate_skipped";
 /** Rows still usable by the daily hand-out (not parked as duplicates). */
 const USABLE = `assignment_source.is.null,assignment_source.neq.${DUPLICATE}`;
 
-/** Digits-only key so 01712..., +88017121... and 8801712... count as one number. */
-function phoneKey(raw: string | null | undefined): string {
-  const digits = (raw ?? "").replace(/\D/g, "");
-  return digits.length > 10 ? digits.slice(-10) : digits;
+/** Canonical keys for every Bangladesh mobile found in one lead value. */
+function phoneKeys(raw: string | null | undefined): string[] {
+  return extractBangladeshPhones(raw ?? "");
 }
 
 async function admin() {
@@ -73,7 +74,7 @@ async function assignedPhoneKeys(): Promise<Set<string>> {
       .select("phone_number")
       .not("assigned_to", "is", null)
       .range(from, from + 999);
-    (data ?? []).forEach((row) => keys.add(phoneKey(row.phone_number)));
+    (data ?? []).forEach((row) => phoneKeys(row.phone_number).forEach((key) => keys.add(key)));
     if (!data || data.length < 1000) break;
   }
   return keys;
@@ -114,6 +115,7 @@ export async function distributeDailyLeads(options: {
     .from("leads")
     .select("id, name, phone_number, created_at")
     .is("assigned_to", null)
+    .is("assigned_agent_id", null)
     .or(USABLE)
     .order("created_at", { ascending: true })
     .limit(Math.min(need * 3 + 200, 6000));
@@ -126,16 +128,16 @@ export async function distributeDailyLeads(options: {
   const duplicates: string[] = [];
 
   for (const lead of pool ?? []) {
-    const key = phoneKey(lead.phone_number);
-    if (!key || !databaseEligible.has(lead.id)) {
+    const keys = phoneKeys(lead.phone_number);
+    if (keys.length === 0 || !databaseEligible.has(lead.id)) {
       duplicates.push(lead.id);
       continue;
     }
-    if (taken.has(key) || seen.has(key)) {
+    if (keys.some((key) => taken.has(key) || seen.has(key))) {
       duplicates.push(lead.id);
       continue;
     }
-    seen.add(key);
+    keys.forEach((key) => seen.add(key));
     if (usable.length < need) usable.push({ id: lead.id });
   }
 
@@ -176,6 +178,7 @@ export async function distributeDailyLeads(options: {
         })
         .in("id", ids)
         .is("assigned_to", null)
+        .is("assigned_agent_id", null)
         .select("id");
       if (error) continue;
       const takenIds = (updated ?? []).map((row) => row.id);
