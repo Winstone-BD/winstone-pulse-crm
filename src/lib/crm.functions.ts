@@ -166,27 +166,35 @@ export const autoDistributeLeads = createServerFn({ method: "POST" })
     if (!agents?.length) throw new Error("No active agents to distribute to");
     if (!leads?.length) return { assigned: 0, agents: agents.length };
 
-    await Promise.all(
-      leads.map((lead, index) =>
-        supabaseAdmin
+    const assignments = await Promise.all(
+      leads.map(async (lead, index) => {
+        const agent = agents[index % agents.length];
+        if (!agent) return null;
+        const { data: updated, error } = await supabaseAdmin
           .from("leads")
           .update({
-            assigned_to: agents[index % agents.length]!.id,
+            assigned_to: agent.id,
+            assigned_agent_id: agent.id,
             assignment_source: "coordinator",
           })
-          .eq("id", lead.id),
-      ),
+          .eq("id", lead.id)
+          .is("assigned_to", null)
+          .is("assigned_agent_id", null)
+          .select("id")
+          .maybeSingle();
+        if (error || !updated) return null;
+        return { lead_id: lead.id, to_agent_id: agent.id };
+      }),
     );
-
-    await supabaseAdmin.from("lead_assignments").insert(
-      leads.map((lead, index) => ({
-        lead_id: lead.id,
-        to_agent_id: agents[index % agents.length]!.id,
-        source: "auto_distribute",
-      })),
+    const completed = assignments.filter(
+      (row): row is { lead_id: string; to_agent_id: string } => row !== null,
     );
-
-    return { assigned: leads.length, agents: agents.length };
+    if (completed.length) {
+      await supabaseAdmin.from("lead_assignments").insert(
+        completed.map((row) => ({ ...row, source: "auto_distribute" })),
+      );
+    }
+    return { assigned: completed.length, agents: agents.length };
   });
 
 const ImportRow = z.object({
@@ -276,9 +284,12 @@ export const importLeads = createServerFn({ method: "POST" })
       });
     }
 
-    if (toInsert.length) {
-      const { error } = await supabaseAdmin.from("leads").insert(toInsert);
-      if (error) throw new Error(error.message);
+    let eligibleNew = 0;
+    for (const lead of toInsert) {
+      const { error } = await supabaseAdmin.from("leads").insert(lead);
+      if (!error) eligibleNew += 1;
+      else if (error.code === "23505") excludedDuplicate += 1;
+      else throw new Error(error.message);
     }
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
@@ -290,19 +301,19 @@ export const importLeads = createServerFn({ method: "POST" })
         incoming,
         excludedAlreadyWorkedOrAssigned,
         excludedDuplicate,
-        eligibleNew: toInsert.length,
+        eligibleNew,
         autoAssign: data.autoAssign,
         source: "Winstone Company",
         leadType: "Company Lead",
       },
     });
     return {
-      imported: toInsert.length,
+      imported: eligibleNew,
       skipped: excludedAlreadyWorkedOrAssigned + excludedDuplicate,
       incoming,
       excludedAlreadyWorkedOrAssigned,
       excludedDuplicate,
-      eligibleNew: toInsert.length,
+      eligibleNew,
     };
   });
 
