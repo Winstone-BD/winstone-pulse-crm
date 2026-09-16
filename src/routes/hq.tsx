@@ -428,7 +428,8 @@ function ControlBoard() {
                   <button
                     key={call.id}
                     onClick={() => lead && setOpenLeadId(lead.id)}
-                    className="card-elevated p-4 text-left transition-colors hover:border-primary/40"
+                    aria-label={`${lead?.name ?? "লিড"} — কথাবার্তার সারসংক্ষেপ ও পুরো ফাইল / Open call summary and lead file`}
+                    className="card-elevated p-4 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                   >
                     <p className="font-medium">{lead?.name ?? "লিড"}</p>
                     <p className="text-xs text-muted-foreground">{agent?.name}</p>
@@ -492,8 +493,8 @@ function StatTile({
       type="button"
       onClick={onOpen}
       disabled={!onOpen}
-      aria-label={`${label} — বিস্তারিত তালিকা`}
-      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 disabled:cursor-default"
+      aria-label={`${label}: ${value} — বিস্তারিত তালিকা খুলুন / Open detailed list`}
+      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:border-border disabled:hover:bg-transparent"
     >
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
       <div className="flex items-start gap-3">
@@ -563,7 +564,8 @@ function MixCard({
                 type="button"
                 onClick={() => onSelectRow?.(row)}
                 disabled={!onSelectRow}
-                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+                aria-label={`${title} · ${row.label}: ${row.value} — এই ভাগের তালিকা খুলুন / Open this segment`}
+                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent"
               >
                 <div className="flex items-baseline justify-between gap-2 text-xs">
                   <span className="truncate capitalize">{row.label}</span>
@@ -571,7 +573,14 @@ function MixCard({
                     {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
                   </span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-surface-2"
+                  role="progressbar"
+                  aria-valuenow={row.value}
+                  aria-valuemin={0}
+                  aria-valuemax={max || row.value}
+                  aria-label={`${row.label} অনুপাত / share`}
+                >
                   <div
                     className="h-full rounded-full bg-chart-1"
                     style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
