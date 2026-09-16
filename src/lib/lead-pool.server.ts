@@ -301,8 +301,34 @@ export async function distributeDailyLeads(options: {
   }
 
   const remaining = await usablePoolCount();
-  const shortfall = Math.max(0, need - remaining);
-  const shortage = remaining < need;
+  const shortfall = Math.max(0, fullRound - remaining);
+  const shortage = remaining < fullRound;
+
+  // Ledger row: one per work date, carrying the cursor forward for tomorrow.
+  await supabaseAdmin.from("lead_distribution_runs").upsert(
+    {
+      work_date: today,
+      status: "completed",
+      trigger: options.trigger,
+      per_agent: options.perAgent,
+      moved: (run?.moved ?? 0) + moved,
+      duplicates_skipped: (run?.duplicates_skipped ?? 0) + duplicates.length,
+      cursor_created_at: cursorCreatedAt,
+      cursor_lead_id: null,
+      actor_label: options.actorLabel ?? "IT Console",
+      actor_profile_id: options.actorProfileId ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "work_date" },
+  );
+
+  const toppedUp = [...buckets.entries()].map(([agentId, bucket]) => ({
+    agentId,
+    name: bucket.name,
+    quota: quotas.get(agentId) ?? options.perAgent,
+    had: held.get(agentId) ?? 0,
+    given: bucket.leadIds.length,
+  }));
 
   const { logAudit } = await import("@/lib/audit.server");
   await logAudit({
