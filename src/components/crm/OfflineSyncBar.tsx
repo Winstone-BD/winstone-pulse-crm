@@ -61,7 +61,7 @@ export function OfflineSyncBar() {
   const failed = items.filter((item) => item.status === "failed");
 
   return (
-    <div className="mb-3 space-y-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
+    <div className="mb-3 space-y-1.5 rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs">
       <p className="flex items-center gap-1.5 font-bold">
         {online ? <CloudOff className="size-3.5" /> : <WifiOff className="size-3.5" />}
         {online

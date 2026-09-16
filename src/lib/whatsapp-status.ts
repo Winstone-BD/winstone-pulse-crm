@@ -44,7 +44,7 @@ export function whatsappStatusTicks(raw: string | null | undefined): string {
 
 export function whatsappStatusTone(raw: string | null | undefined): string {
   const status = whatsappStatus(raw);
-  if (status === "read") return "text-sky-600 dark:text-sky-400";
+  if (status === "read") return "text-info";
   if (status === "failed") return "text-destructive";
   if (status === "delivered" || status === "sent") return "text-whatsapp";
   return "text-muted-foreground";

@@ -45,7 +45,7 @@ function stateClass(state: StageState) {
     case "success":
       return "bg-primary/15 text-primary";
     case "processing":
-      return "bg-amber-500/15 text-amber-300";
+      return "bg-warning/15 text-warning";
     case "failed":
       return "bg-destructive/15 text-destructive";
     case "skipped":

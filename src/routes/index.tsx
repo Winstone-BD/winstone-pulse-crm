@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
+import { TopPerformerCard } from "@/components/crm/TopPerformerCard";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
 
@@ -58,7 +59,11 @@ function EntryHall() {
           </p>
         </header>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        <div className="mt-8">
+          <TopPerformerCard />
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
