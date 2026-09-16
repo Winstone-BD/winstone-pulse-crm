@@ -35,7 +35,7 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
     );
     const today = dhakaToday();
 
-    const [poolCount, agents, plan, { data: preview }, { data: assigned }] = await Promise.all([
+    const [poolCount, agents, plan, { data: previewCandidates }, { data: assigned }, { data: audits }] = await Promise.all([
       usablePoolCount(),
       activeAgents(),
       dailyPlan(),
@@ -45,15 +45,31 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         .is("assigned_to", null)
         .or("assignment_source.is.null,assignment_source.neq.duplicate_skipped")
         .order("created_at", { ascending: true })
-        .limit(12),
+        .limit(100),
       supabaseAdmin
         .from("leads")
         .select("assigned_to, status, work_date")
         .not("assigned_to", "is", null)
         .limit(20000),
+      supabaseAdmin
+        .from("audit_logs")
+        .select("created_at, metadata")
+        .eq("action", "lead_imported")
+        .order("created_at", { ascending: false })
+        .limit(1),
     ]);
+    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+    const previewIds = new Set(
+      await eligibleLeadIds((previewCandidates ?? []).map((lead) => lead.id)),
+    );
+    const preview = (previewCandidates ?? []).filter((lead) => previewIds.has(lead.id)).slice(0, 12);
 
     const rows = assigned ?? [];
+    const rawImportMetadata = audits?.[0]?.metadata;
+    const importMetadata =
+      rawImportMetadata && typeof rawImportMetadata === "object" && !Array.isArray(rawImportMetadata)
+        ? rawImportMetadata
+        : null;
     const perAgent: LeadPoolAgent[] = agents.map((agent) => {
       const mine = rows.filter((row) => row.assigned_to === agent.id);
       return {
@@ -75,6 +91,18 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
       lastRunDate: plan.lastRunDate,
       shortage: poolCount < need,
       daysLeft: need > 0 ? Math.floor(poolCount / need) : 0,
+      latestImport:
+        audits?.[0] && importMetadata
+          ? {
+              createdAt: audits[0].created_at,
+              incoming: Number(importMetadata["incoming"] ?? 0),
+              excludedAlreadyWorkedOrAssigned: Number(
+                importMetadata["excludedAlreadyWorkedOrAssigned"] ?? 0,
+              ),
+              excludedDuplicate: Number(importMetadata["excludedDuplicate"] ?? 0),
+              eligibleNew: Number(importMetadata["eligibleNew"] ?? 0),
+            }
+          : null,
     };
   });
 

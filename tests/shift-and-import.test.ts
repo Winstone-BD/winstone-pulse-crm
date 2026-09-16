@@ -8,6 +8,11 @@ import {
   SHIFTS,
 } from "@/lib/shift.server";
 import { parseCsv, toLeadRows } from "@/lib/csv-leads";
+import {
+  appendCompanyLeadMetadata,
+  extractBangladeshPhones,
+  normalizeBangladeshPhone,
+} from "@/lib/lead-phone";
 import { normalizeWhatsAppNumber } from "@/lib/whatsapp";
 import { AI_USAGE_RATES } from "@/lib/credits-rates";
 
@@ -66,6 +71,38 @@ describe("lead import parsing", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.phone_number).toContain("1712345678");
     expect(rows[0]?.name).toBe("Rahim");
+  });
+});
+
+describe("Winstone Company lead phone safety", () => {
+  it.each([
+    ["01712345678", "8801712345678"],
+    ["8801712345678", "8801712345678"],
+    ["+8801712345678", "8801712345678"],
+  ])("normalizes %s to one canonical identity", (raw, expected) => {
+    expect(normalizeBangladeshPhone(raw)).toBe(expected);
+  });
+
+  it("extracts and deduplicates multi-phone values", () => {
+    expect(extractBangladeshPhones("01712345678 / +8801812345678 / 01712345678")).toEqual([
+      "8801712345678",
+      "8801812345678",
+    ]);
+  });
+
+  it("rejects invalid mobile identities", () => {
+    expect(normalizeBangladeshPhone("12345")).toBeNull();
+    expect(extractBangladeshPhones("office only")).toEqual([]);
+  });
+
+  it("preserves bilingual outreach in existing notes metadata", () => {
+    expect(
+      appendCompanyLeadMetadata({
+        notes: "Priority",
+        outreachEn: "Hello",
+        outreachBn: "আসসালামু আলাইকুম",
+      }),
+    ).toContain("Outreach BN: আসসালামু আলাইকুম");
   });
 });
 

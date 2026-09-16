@@ -149,29 +149,50 @@ async function runTool(
         mutated: false,
       };
     }
-    const pool = snap.leads
+    const candidates = snap.leads
       .filter((l) => l.assigned_to === null && l.status === "pending")
       .slice(0, count);
+    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+    const eligible = new Set(await eligibleLeadIds(candidates.map((lead) => lead.id)));
+    const pool = candidates.filter((lead) => eligible.has(lead.id));
     if (!pool.length)
       return { data: { assigned: 0, note: "No unassigned pending leads left" }, mutated: false };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { data: updated, error } = await supabaseAdmin
       .from("leads")
-      .update({ assigned_to: agent.id, assignment_source: "coordinator" })
+      .update({
+        assigned_to: agent.id,
+        assigned_agent_id: agent.id,
+        assignment_source: "coordinator",
+      })
       .in(
         "id",
         pool.map((l) => l.id),
-      );
+      )
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .select("id");
     if (error) return { data: { error: error.message }, mutated: false };
+    const updatedIds = new Set((updated ?? []).map((lead) => lead.id));
+    const assigned = pool.filter((lead) => updatedIds.has(lead.id));
+    if (assigned.length) {
+      await supabaseAdmin.from("lead_assignments").insert(
+        assigned.map((lead) => ({
+          lead_id: lead.id,
+          to_agent_id: agent.id,
+          source: "copilot",
+        })),
+      );
+    }
 
     return {
-      data: { assigned: pool.length, agent: agent.name },
+      data: { assigned: assigned.length, agent: agent.name },
       card: {
         title: "Leads dispatched",
         rows: [
           { label: "Agent", value: agent.name },
-          { label: "Leads assigned", value: String(pool.length) },
+          { label: "Leads assigned", value: String(assigned.length) },
         ],
       },
       mutated: true,

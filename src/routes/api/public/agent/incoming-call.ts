@@ -58,13 +58,18 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { leadOwnerId } = await import("@/lib/lead-access.server");
         const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
+        const { getLeadPhoneStatus, eligibleLeadIds } = await import(
+          "@/lib/lead-eligibility.server"
+        );
         const phone = normalizeLeadPhone(body.phone_number);
-
-        const { data: found } = await supabaseAdmin
-          .from("leads")
-          .select("id, assigned_to, assigned_agent_id")
-          .eq("phone_number", phone)
-          .maybeSingle();
+        const phoneStatus = await getLeadPhoneStatus(body.phone_number);
+        const { data: found } = phoneStatus.existingLeadId
+          ? await supabaseAdmin
+              .from("leads")
+              .select("id, assigned_to, assigned_agent_id")
+              .eq("id", phoneStatus.existingLeadId)
+              .maybeSingle()
+          : { data: null };
 
         let leadId = found?.id ?? null;
         let created = false;
@@ -84,14 +89,19 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
           created = !intake.duplicate;
         } else if (!leadOwnerId(found)) {
           // Unowned lead called this agent: it becomes theirs, like a web callback.
-          await supabaseAdmin
-            .from("leads")
-            .update({
-              assigned_to: caller.profile.id,
-              assigned_agent_id: caller.profile.id,
-              assignment_source: outgoing ? "dialer_claim" : "callback_claim",
-            })
-            .eq("id", leadId);
+          const canClaim = new Set(await eligibleLeadIds([leadId])).has(leadId);
+          if (canClaim) {
+            await supabaseAdmin
+              .from("leads")
+              .update({
+                assigned_to: caller.profile.id,
+                assigned_agent_id: caller.profile.id,
+                assignment_source: outgoing ? "dialer_claim" : "callback_claim",
+              })
+              .eq("id", leadId)
+              .is("assigned_to", null)
+              .is("assigned_agent_id", null);
+          }
         }
 
         const recordingStatus =

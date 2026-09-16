@@ -147,7 +147,7 @@ export const autoDistributeLeads = createServerFn({ method: "POST" })
     requireWrite(mutator);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [{ data: agents, error: agentError }, { data: leads, error: leadError }] =
+    const [{ data: agents, error: agentError }, { data: leadCandidates, error: leadError }] =
       await Promise.all([
         supabaseAdmin
           .from("profiles")
@@ -160,30 +160,41 @@ export const autoDistributeLeads = createServerFn({ method: "POST" })
 
     if (agentError) throw new Error(agentError.message);
     if (leadError) throw new Error(leadError.message);
+    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+    const eligible = new Set(await eligibleLeadIds((leadCandidates ?? []).map((lead) => lead.id)));
+    const leads = (leadCandidates ?? []).filter((lead) => eligible.has(lead.id));
     if (!agents?.length) throw new Error("No active agents to distribute to");
     if (!leads?.length) return { assigned: 0, agents: agents.length };
 
-    await Promise.all(
-      leads.map((lead, index) =>
-        supabaseAdmin
+    const assignments = await Promise.all(
+      leads.map(async (lead, index) => {
+        const agent = agents[index % agents.length];
+        if (!agent) return null;
+        const { data: updated, error } = await supabaseAdmin
           .from("leads")
           .update({
-            assigned_to: agents[index % agents.length]!.id,
+            assigned_to: agent.id,
+            assigned_agent_id: agent.id,
             assignment_source: "coordinator",
           })
-          .eq("id", lead.id),
-      ),
+          .eq("id", lead.id)
+          .is("assigned_to", null)
+          .is("assigned_agent_id", null)
+          .select("id")
+          .maybeSingle();
+        if (error || !updated) return null;
+        return { lead_id: lead.id, to_agent_id: agent.id };
+      }),
     );
-
-    await supabaseAdmin.from("lead_assignments").insert(
-      leads.map((lead, index) => ({
-        lead_id: lead.id,
-        to_agent_id: agents[index % agents.length]!.id,
-        source: "auto_distribute",
-      })),
+    const completed = assignments.filter(
+      (row): row is { lead_id: string; to_agent_id: string } => row !== null,
     );
-
-    return { assigned: leads.length, agents: agents.length };
+    if (completed.length) {
+      await supabaseAdmin.from("lead_assignments").insert(
+        completed.map((row) => ({ ...row, source: "auto_distribute" })),
+      );
+    }
+    return { assigned: completed.length, agents: agents.length };
   });
 
 const ImportRow = z.object({
@@ -191,6 +202,8 @@ const ImportRow = z.object({
   phone_number: z.string().trim().min(6).max(24),
   company: z.string().trim().max(120).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  outreach_en: z.string().trim().max(2000).optional().nullable(),
+  outreach_bn: z.string().trim().max(2000).optional().nullable(),
 });
 
 /** Bulk-inserts leads from a CSV (parsed in the browser). Skips numbers already in the pipeline. */
@@ -210,13 +223,10 @@ export const importLeads = createServerFn({ method: "POST" })
     requireDispatch(importer);
     (await import("@/lib/access.server")).requireWrite(importer);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const normalize = (p: string) => p.replace(/[^\d+]/g, "");
-    const { data: existing, error: existingError } = await supabaseAdmin
-      .from("leads")
-      .select("phone_number");
-    if (existingError) throw new Error(existingError.message);
-    const seen = new Set((existing ?? []).map((l) => normalize(l.phone_number)));
+    const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+    const { appendCompanyLeadMetadata, extractBangladeshPhones } = await import(
+      "@/lib/lead-phone"
+    );
 
     let agents: { id: string }[] = [];
     if (data.autoAssign) {
@@ -239,28 +249,47 @@ export const importLeads = createServerFn({ method: "POST" })
       assigned_to: string | null;
       assignment_source: string | null;
     }[] = [];
-    let skipped = 0;
+    const incoming = data.rows.length;
+    let excludedAlreadyWorkedOrAssigned = 0;
+    let excludedDuplicate = 0;
+    const seen = new Set<string>();
     for (const row of data.rows) {
-      const key = normalize(row.phone_number);
-      if (!key || seen.has(key)) {
-        skipped += 1;
+      const status = await getLeadPhoneStatus(row.phone_number);
+      const phones = extractBangladeshPhones(row.phone_number);
+      if (status.alreadyWorked) {
+        excludedAlreadyWorkedOrAssigned += 1;
         continue;
       }
-      seen.add(key);
+      if (
+        phones.length === 0 ||
+        status.existingLeadId ||
+        phones.some((phone) => seen.has(phone))
+      ) {
+        excludedDuplicate += 1;
+        continue;
+      }
+      phones.forEach((phone) => seen.add(phone));
       toInsert.push({
         name: row.name,
-        phone_number: row.phone_number.trim(),
+        phone_number: phones.length > 1 ? row.phone_number.trim() : phones[0]!,
         company: row.company || null,
-        notes: row.notes || null,
-        source: "csv_import",
+        notes: appendCompanyLeadMetadata({
+          notes: row.notes ?? null,
+          outreachEn: row.outreach_en ?? null,
+          outreachBn: row.outreach_bn ?? null,
+        }),
+        source: "Winstone Company",
         assigned_to: agents.length ? agents[toInsert.length % agents.length]!.id : null,
         assignment_source: agents.length ? "coordinator" : null,
       });
     }
 
-    if (toInsert.length) {
-      const { error } = await supabaseAdmin.from("leads").insert(toInsert);
-      if (error) throw new Error(error.message);
+    let eligibleNew = 0;
+    for (const lead of toInsert) {
+      const { error } = await supabaseAdmin.from("leads").insert(lead);
+      if (!error) eligibleNew += 1;
+      else if (error.code === "23505") excludedDuplicate += 1;
+      else throw new Error(error.message);
     }
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
@@ -268,9 +297,24 @@ export const importLeads = createServerFn({ method: "POST" })
       entityType: "lead",
       actorProfileId: importer.profile?.id ?? null,
       actorLabel: importer.profile?.name ?? "Authority PIN",
-      metadata: { imported: toInsert.length, skipped, autoAssign: data.autoAssign },
+      metadata: {
+        incoming,
+        excludedAlreadyWorkedOrAssigned,
+        excludedDuplicate,
+        eligibleNew,
+        autoAssign: data.autoAssign,
+        source: "Winstone Company",
+        leadType: "Company Lead",
+      },
     });
-    return { imported: toInsert.length, skipped };
+    return {
+      imported: eligibleNew,
+      skipped: excludedAlreadyWorkedOrAssigned + excludedDuplicate,
+      incoming,
+      excludedAlreadyWorkedOrAssigned,
+      excludedDuplicate,
+      eligibleNew,
+    };
   });
 
 const ManualCallInput = z.object({
@@ -373,22 +417,34 @@ export const assignLeadsToAgent = createServerFn({ method: "POST" })
     if (data.onlyUnassigned) query = query.is("assigned_to", null);
     else query = query.neq("assigned_to", data.agentId);
 
-    const { data: pool, error } = await query;
+    const { data: candidates, error } = await query;
     if (error) throw new Error(error.message);
+    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+    const eligible = new Set(await eligibleLeadIds((candidates ?? []).map((lead) => lead.id)));
+    const pool = (candidates ?? []).filter((lead) => eligible.has(lead.id));
     if (!pool?.length) return { assigned: 0 };
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from("leads")
-      .update({ assigned_to: data.agentId, assignment_source: "coordinator" })
+      .update({
+        assigned_to: data.agentId,
+        assigned_agent_id: data.agentId,
+        assignment_source: "coordinator",
+      })
       .in(
         "id",
         pool.map((l) => l.id),
-      );
+      )
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .select("id");
     if (updateError) throw new Error(updateError.message);
+    const updatedIds = new Set((updated ?? []).map((lead) => lead.id));
+    const assignedRows = pool.filter((lead) => updatedIds.has(lead.id));
 
     // Audit trail so the Coordinator Deck can show who moved what.
     await supabaseAdmin.from("lead_assignments").insert(
-      pool.map((l) => ({
+      assignedRows.map((l) => ({
         lead_id: l.id,
         from_agent_id: l.assigned_to ?? null,
         to_agent_id: data.agentId,
@@ -403,7 +459,7 @@ export const assignLeadsToAgent = createServerFn({ method: "POST" })
       entityId: null,
       actorProfileId: caller.profile?.id ?? null,
       actorLabel: caller.profile?.name ?? "Authority PIN",
-      metadata: { agentId: data.agentId, count: pool.length, source: "coordinator" },
+      metadata: { agentId: data.agentId, count: assignedRows.length, source: "coordinator" },
     });
-    return { assigned: pool.length };
+    return { assigned: assignedRows.length };
   });

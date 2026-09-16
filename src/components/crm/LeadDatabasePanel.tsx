@@ -84,6 +84,21 @@ export function LeadDatabasePanel() {
         </p>
       ) : null}
 
+      {status.data?.latestImport ? (
+        <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface-2 p-3 text-xs sm:grid-cols-4">
+          <Result label="Incoming / এসেছে" value={status.data.latestImport.incoming} />
+          <Result
+            label="Worked / আগে কাজ"
+            value={status.data.latestImport.excludedAlreadyWorkedOrAssigned}
+          />
+          <Result
+            label="Duplicate / একই"
+            value={status.data.latestImport.excludedDuplicate}
+          />
+          <Result label="Eligible / নতুন" value={status.data.latestImport.eligibleNew} />
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-end gap-2">
         <label className="space-y-1 text-xs text-muted-foreground">
           প্রতি এজেন্টকে কতটি লিড
@@ -158,5 +173,14 @@ export function LeadDatabasePanel() {
         </details>
       ) : null}
     </section>
+  );
+}
+
+function Result({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div>
+      <p className="text-muted-foreground">{label}</p>
+      <p className="tabular text-base font-semibold">{typeof value === "number" ? value : "—"}</p>
+    </div>
   );
 }

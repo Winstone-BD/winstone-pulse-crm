@@ -5,19 +5,18 @@
  * same timeline entry, so nothing about the lead reveals where it came from.
  */
 
+import { primaryBangladeshPhone } from "@/lib/lead-phone";
+
 export type LeadIntakeResult = {
   leadId: string;
   duplicate: boolean;
+  duplicateReason?: "already_worked_or_assigned" | "duplicate";
   assignedTo: string | null;
 };
 
 /** Bangladesh-first: 01XXXXXXXXX / +8801XXXXXXXXX / 8801XXXXXXXXX -> 8801XXXXXXXXX. */
 export function normalizeLeadPhone(raw: string): string {
-  const digits = raw.replace(/[^\d]/g, "");
-  if (/^01\d{9}$/.test(digits)) return `88${digits}`;
-  if (/^8801\d{9}$/.test(digits)) return digits;
-  if (/^1\d{9}$/.test(digits)) return `880${digits}`;
-  return raw.replace(/[^\d+]/g, "") || raw.trim();
+  return primaryBangladeshPhone(raw) ?? (raw.replace(/[^\d+]/g, "") || raw.trim());
 }
 
 export async function intakeLead(input: {
@@ -37,15 +36,25 @@ export async function intakeLead(input: {
   ownerName?: string | null;
 }): Promise<LeadIntakeResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const phone = normalizeLeadPhone(input.phoneNumber);
-
-  const { data: existing } = await supabaseAdmin
-    .from("leads")
-    .select("id, assigned_to")
-    .eq("phone_number", phone)
-    .maybeSingle();
-  if (existing) {
-    return { leadId: existing.id, duplicate: true, assignedTo: existing.assigned_to ?? null };
+  const extractedPhones = (await import("@/lib/lead-phone")).extractBangladeshPhones(
+    input.phoneNumber,
+  );
+  const phone = extractedPhones.length > 1 ? input.phoneNumber.trim() : normalizeLeadPhone(input.phoneNumber);
+  const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+  const phoneStatus = await getLeadPhoneStatus(input.phoneNumber);
+  if (phoneStatus.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
+  if (phoneStatus.existingLeadId) {
+    const { data: existing } = await supabaseAdmin
+      .from("leads")
+      .select("assigned_to")
+      .eq("id", phoneStatus.existingLeadId)
+      .maybeSingle();
+    return {
+      leadId: phoneStatus.existingLeadId,
+      duplicate: true,
+      duplicateReason: phoneStatus.alreadyWorked ? "already_worked_or_assigned" : "duplicate",
+      assignedTo: existing?.assigned_to ?? null,
+    };
   }
 
   const owner = input.ownerId ?? null;
@@ -70,7 +79,20 @@ export async function intakeLead(input: {
     })
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === "23505") {
+      const raced = await getLeadPhoneStatus(input.phoneNumber);
+      if (raced.existingLeadId) {
+        return {
+          leadId: raced.existingLeadId,
+          duplicate: true,
+          duplicateReason: raced.alreadyWorked ? "already_worked_or_assigned" : "duplicate",
+          assignedTo: null,
+        };
+      }
+    }
+    throw new Error(error.message);
+  }
 
   if (owner) {
     const { logLeadEvent } = await import("@/lib/lead-events.server");

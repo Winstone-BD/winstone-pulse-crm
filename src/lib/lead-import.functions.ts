@@ -18,6 +18,9 @@ export const ParsedLeadRow = z.object({
   phoneNumber: z.string().trim().min(6).max(30),
   referenceBy: z.string().trim().max(120).nullable().optional(),
   notes: z.string().trim().max(500).nullable().optional(),
+  company: z.string().trim().max(120).nullable().optional(),
+  outreachEn: z.string().trim().max(1000).nullable().optional(),
+  outreachBn: z.string().trim().max(1000).nullable().optional(),
 });
 export type ParsedLeadRow = z.infer<typeof ParsedLeadRow>;
 
@@ -31,13 +34,15 @@ const ParseInput = z.object({
 
 const PROMPT = `You extract sales leads from a document supplied by a Bangladeshi sales agent.
 Return ONLY a JSON array, no prose, no markdown fence. Each element:
-{"serialNo": string|null, "name": string, "address": string|null, "phoneNumber": string, "referenceBy": string|null, "notes": string|null}
+{"serialNo": string|null, "name": string, "address": string|null, "phoneNumber": string, "referenceBy": string|null, "company": string|null, "outreachEn": string|null, "outreachBn": string|null, "notes": string|null}
 Rules:
 - One element per person/business. Skip header rows, totals and empty rows.
 - phoneNumber: keep Bangladeshi mobile digits as written (e.g. 01712345678). Never invent a number; skip a row that has no number.
 - name: if only a business name exists, use it as the name.
 - Keep Bengali text in Bengali. Do not translate.
 - referenceBy: only if the document states who referred/assigned the lead.
+- company: preserve the organisation/business when present.
+- outreachEn/outreachBn: preserve supplied English/Bengali outreach copy; never invent it.
 - Never invent data that is not in the document.`;
 
 function stripFence(text: string): string {
@@ -179,6 +184,7 @@ export const importMyLeads = createServerFn({ method: "POST" })
           name: row.name,
           phoneNumber: row.phoneNumber,
           notes: row.notes ?? null,
+          company: row.company ?? null,
           address: row.address ?? null,
           serialNo: row.serialNo ?? null,
           referenceBy: row.referenceBy ?? data.referenceBy ?? caller.profile.name,

@@ -77,6 +77,7 @@ describe.runIf(hasService)("review alerts (live database)", () => {
     if (recordingId) await admin.from("call_recordings").delete().eq("id", recordingId);
     if (leadId) {
       await admin.from("audit_logs").delete().in("entity_id", reportIds);
+      await admin.from("lead_phone_keys").delete().eq("lead_id", leadId);
       await admin.from("leads").delete().eq("id", leadId);
     }
   });

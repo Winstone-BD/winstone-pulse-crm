@@ -65,9 +65,11 @@ export const runIngestDiagnostics = createServerFn({ method: "POST" })
     const messages = msgRes.data ?? [];
 
     const phoneCount = new Map<string, number>();
+    const { extractBangladeshPhones } = await import("@/lib/lead-phone");
     for (const lead of leads) {
-      const key = lead.phone_number.replace(/[^\d]/g, "").slice(-11);
-      phoneCount.set(key, (phoneCount.get(key) ?? 0) + 1);
+      for (const key of extractBangladeshPhones(lead.phone_number)) {
+        phoneCount.set(key, (phoneCount.get(key) ?? 0) + 1);
+      }
     }
 
     const latest = (rows: { created_at: string }[]) => rows[0]?.created_at ?? null;

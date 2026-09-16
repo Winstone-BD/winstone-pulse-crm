@@ -8,6 +8,8 @@ export type CsvLeadRow = {
   phone_number: string;
   company?: string | null;
   notes?: string | null;
+  outreach_en?: string | null;
+  outreach_bn?: string | null;
 };
 
 /** Minimal RFC-4180-ish CSV parser (handles quoted fields and commas inside quotes). */
@@ -46,6 +48,8 @@ const HEADER_ALIASES: Record<keyof CsvLeadRow, string[]> = {
   phone_number: ["phone", "phone number", "phone_number", "mobile", "number", "contact", "ফোন"],
   company: ["company", "organisation", "organization", "business", "shop", "প্রতিষ্ঠান"],
   notes: ["notes", "note", "remarks", "comment", "comments", "মন্তব্য"],
+  outreach_en: ["outreach en", "outreach_en", "english outreach", "message en"],
+  outreach_bn: ["outreach bn", "outreach_bn", "bangla outreach", "message bn", "যোগাযোগ বাংলা"],
 };
 
 /** Maps a parsed grid to lead rows; drops rows without a name or a usable number. */
@@ -57,6 +61,8 @@ export function toLeadRows(grid: string[][]): CsvLeadRow[] {
   let phoneIdx = col("phone_number");
   const companyIdx = col("company");
   const notesIdx = col("notes");
+  const outreachEnIdx = col("outreach_en");
+  const outreachBnIdx = col("outreach_bn");
   let body = grid.slice(1);
   // No header row? Assume "name, phone[, company[, notes]]".
   if (nameIdx === -1 || phoneIdx === -1) {
@@ -70,6 +76,8 @@ export function toLeadRows(grid: string[][]): CsvLeadRow[] {
       phone_number: (r[phoneIdx] ?? "").trim(),
       company: companyIdx >= 0 ? (r[companyIdx] ?? "").trim() || null : (r[2] ?? "").trim() || null,
       notes: notesIdx >= 0 ? (r[notesIdx] ?? "").trim() || null : null,
+      outreach_en: outreachEnIdx >= 0 ? (r[outreachEnIdx] ?? "").trim() || null : null,
+      outreach_bn: outreachBnIdx >= 0 ? (r[outreachBnIdx] ?? "").trim() || null : null,
     }))
     .filter((r) => r.name && r.phone_number.replace(/\D/g, "").length >= 6);
 }
