@@ -131,6 +131,11 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
 
   const architect = query.data?.architect;
 
+  const downloadPdf = (invoice: ServiceInvoice) => {
+    const opened = openInvoicePdf(invoice, architect ?? null);
+    if (!opened) toast.error("পপ-আপ ব্লক হয়েছে — ব্রাউজারে পপ-আপ অনুমতি দিন");
+  };
+
   return (
     <section className="card-elevated space-y-4 p-4">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
