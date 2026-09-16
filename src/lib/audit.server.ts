@@ -54,7 +54,10 @@ export type AuditAction =
   | "extra_leads_granted"
   | "support_ticket_priority_changed"
   | "push_token_registered"
-  | "daily_quota_changed";
+  | "daily_quota_changed"
+  | "service_invoice_raised"
+  | "service_payment_verified"
+  | "service_payout_recorded";
 
 export async function logAudit(input: {
   action: AuditAction;
