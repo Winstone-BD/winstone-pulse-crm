@@ -81,7 +81,7 @@ export function TopPerformerCard() {
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
             <Sparkles className="size-5 shrink-0 text-primary" />
             <p className="min-w-0 text-sm font-semibold text-primary">
-              অভিনন্দন {winner.name}! আজকের নেতৃত্ব আপনার — স্কোর {winner.score}
+              অভিনন্দন {winner.name}! দিনের নেতৃত্ব আপনার — স্কোর {winner.score}
             </p>
           </div>
 
