@@ -149,11 +149,24 @@ export function TeamSupportInbox() {
             </p>
           </div>
         </div>
-        {unread > 0 ? (
-          <Badge className="shrink-0 bg-destructive text-destructive-foreground">
-            {unread} না-পড়া
-          </Badge>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {unread > 0 ? (
+            <Badge className="bg-destructive text-destructive-foreground">{unread} না-পড়া</Badge>
+          ) : null}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={enableAlerts.isPending}
+            onClick={() => enableAlerts.mutate()}
+          >
+            {enableAlerts.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Bell className="size-4" />
+            )}
+            <span className="hidden sm:inline">অ্যালার্ট চালু</span>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
