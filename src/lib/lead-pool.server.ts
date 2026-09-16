@@ -36,13 +36,13 @@ async function admin() {
   return supabaseAdmin;
 }
 
-export type PoolAgent = { id: string; name: string };
+export type PoolAgent = { id: string; name: string; employee_id?: string | null };
 
 export async function activeAgents(): Promise<PoolAgent[]> {
   const supabaseAdmin = await admin();
   const { data } = await supabaseAdmin
     .from("profiles")
-    .select("id, name")
+    .select("id, name, employee_id")
     .eq("role", "agent")
     .eq("is_active", true)
     .eq("approval_status", "approved")
