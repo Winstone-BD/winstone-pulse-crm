@@ -35,7 +35,7 @@ export function HqDrilldown({
         side="right"
         className="inset-0 h-full max-h-full w-full max-w-full overflow-y-auto p-0 sm:inset-y-0 sm:right-0 sm:left-auto sm:max-w-lg"
       >
-        <SheetHeader className="border-b border-border px-4 py-4 text-left sm:px-6">
+        <SheetHeader className="sticky top-0 z-10 border-b border-border bg-card px-4 pb-3 pt-5 pr-12 text-left sm:px-6 sm:pr-14">
           <SheetTitle className="text-base leading-snug sm:text-lg">
             {drill?.title ?? "বিস্তারিত"}
           </SheetTitle>
