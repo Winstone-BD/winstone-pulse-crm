@@ -46,8 +46,36 @@ export type RankedPerformer = PerformerLine & {
   advice: string;
 };
 
+/**
+ * Exactly which rows went into the score — shown in the homepage insight panel
+ * so anyone can check the board against the raw data instead of trusting it.
+ */
+export type TopPerformerSources = {
+  /** Dhaka wall-clock window used for call reports and follow-ups. */
+  windowStart: string;
+  windowEnd: string;
+  /** leads.work_date value used for the quota/completion side. */
+  workDate: string;
+  timeZone: "Asia/Dhaka";
+  activeAgents: number;
+  callReportRows: number;
+  submittedReportRows: number;
+  connectedReportRows: number;
+  followUpRows: number;
+  assignedLeadRows: number;
+  completedLeadRows: number;
+  talkMinutes: number;
+  /** True when nothing at all was counted — the reason a score can be 0. */
+  empty: boolean;
+};
+
 export type TopPerformerBoard = {
   dateKey: string;
+  /** When the board next changes: the 5:30 pm reveal, or the 9:05 am rollover. */
+  nextUpdateAt: string;
+  /** What happens at nextUpdateAt. */
+  nextUpdateKind: "reveal" | "rollover";
+  sources: TopPerformerSources;
   /** False before 5:30 pm Dhaka — the homepage then shows a countdown instead. */
   revealed: boolean;
   revealAt: string;
