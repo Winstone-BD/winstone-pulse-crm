@@ -327,3 +327,154 @@ export async function recordArchitectPayout(input: {
   });
   return { invoice: shape(data as Row), alreadyPaid: false };
 }
+
+/* ------------------------------------------------------------------ *
+ * Bill reminders
+ *
+ * Two real, date-driven notices per unpaid invoice:
+ *   • "due_soon"    — from 3 days before the 15th until the due moment
+ *   • "grace_ended" — once the 3-day grace window has closed (overdue)
+ * Each notice fires once per period: the sent keys live in system_settings,
+ * so a repeated run (page load or scheduled call) never re-alerts.
+ * ------------------------------------------------------------------ */
+
+const REMINDER_SETTINGS_KEY = "service_billing_reminders";
+/** Days before the due date when the first reminder goes out. */
+export const REMINDER_LEAD_DAYS = 3;
+
+export type ReminderStage = "due_soon" | "grace_ended";
+
+function dhakaDateLabel(iso: string): string {
+  const dhaka = new Date(new Date(iso).getTime() + 6 * 60 * 60 * 1000);
+  return dhaka.toLocaleDateString("bn-BD", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+async function sentReminderKeys(): Promise<Set<string>> {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("system_settings")
+    .select("value")
+    .eq("key", REMINDER_SETTINGS_KEY)
+    .maybeSingle();
+  const stored = (data?.value ?? {}) as { sent?: unknown };
+  return new Set(Array.isArray(stored.sent) ? stored.sent.map((key) => String(key)) : []);
+}
+
+async function markReminderSent(keys: Set<string>) {
+  const supabaseAdmin = await admin();
+  await supabaseAdmin.from("system_settings").upsert(
+    {
+      key: REMINDER_SETTINGS_KEY,
+      value: { sent: [...keys].slice(-48) },
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "key" },
+  );
+}
+
+/** HQ / IT people who should hear about the bill. */
+async function billingRecipients(): Promise<string[]> {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .in("role", ["admin", "team_leader"])
+    .eq("is_active", true)
+    .eq("approval_status", "approved");
+  return (data ?? []).map((row) => row.id);
+}
+
+export type ReminderResult = {
+  period: string;
+  stage: ReminderStage;
+  dueAt: string;
+  graceUntil: string;
+};
+
+/**
+ * Raises the due-date reminder and the after-grace follow-up for every unpaid
+ * invoice. Safe to call as often as you like — already-sent notices are
+ * skipped, and a paid invoice is never reminded about.
+ */
+export async function runBillingReminders(now = new Date()): Promise<ReminderResult[]> {
+  const supabaseAdmin = await admin();
+  await ensureInvoice(dhakaPeriod(now));
+  await refreshOverdue();
+
+  const { data } = await supabaseAdmin
+    .from("service_invoices")
+    .select("*")
+    .in("status", ["due", "verifying", "overdue"])
+    .order("period", { ascending: true });
+
+  const invoices = (data ?? []).map((row) => shape(row as Row));
+  if (invoices.length === 0) return [];
+
+  const sent = await sentReminderKeys();
+  const fired: ReminderResult[] = [];
+  const time = now.getTime();
+
+  for (const invoice of invoices) {
+    const due = new Date(invoice.dueAt).getTime();
+    const grace = new Date(invoice.graceUntil).getTime();
+    const leadStart = due - REMINDER_LEAD_DAYS * 24 * 60 * 60 * 1000;
+
+    const stage: ReminderStage | null =
+      time >= grace ? "grace_ended" : time >= leadStart ? "due_soon" : null;
+    if (!stage) continue;
+
+    const key = `${invoice.period}:${stage}`;
+    if (sent.has(key)) continue;
+
+    const dueLabel = dhakaDateLabel(invoice.dueAt);
+    const graceLabel = dhakaDateLabel(invoice.graceUntil);
+    const amount = `৳${invoice.amountBdt.toLocaleString("bn-BD")}`;
+
+    const title =
+      stage === "due_soon"
+        ? `মাসিক বিল বাকি — ${dueLabel}-এর মধ্যে ${amount}`
+        : `বিলের গ্রেস শেষ — ${amount} এখনো বকেয়া`;
+    const detail =
+      stage === "due_soon"
+        ? `${invoice.period} মাসের সার্ভিস বিল ${amount}। শেষ তারিখ ${dueLabel}, গ্রেস ${graceLabel} পর্যন্ত। টাকা পাঠানোর পর IT কনসোলে পেমেন্ট যাচাই করুন।`
+        : `${invoice.period} মাসের ${amount} বিল ${graceLabel}-এর গ্রেস শেষ হওয়ার পরেও পরিশোধিত হয়নি। সার্ভিস বন্ধ হওয়া এড়াতে এখনই পেমেন্ট যাচাই করুন।`;
+
+    await supabaseAdmin.from("system_alerts").insert({
+      code: stage === "due_soon" ? "service_bill_due_soon" : "service_bill_overdue",
+      severity: stage === "due_soon" ? "warning" : "critical",
+      title,
+      detail,
+      action: "IT কনসোল → পেমেন্ট যাচাই",
+    });
+
+    const { sendPush } = await import("@/lib/push.server");
+    await sendPush({
+      eventKey: `service_bill:${key}`,
+      kind: stage === "due_soon" ? "service_bill_due_soon" : "service_bill_overdue",
+      entityId: invoice.period,
+      profileIds: await billingRecipients(),
+      payload: {
+        title,
+        body: detail,
+        path: "/hq",
+        data: { period: invoice.period, stage },
+      },
+    });
+
+    sent.add(key);
+    fired.push({
+      period: invoice.period,
+      stage,
+      dueAt: invoice.dueAt,
+      graceUntil: invoice.graceUntil,
+    });
+  }
+
+  if (fired.length > 0) await markReminderSent(sent);
+  return fired;
+}
