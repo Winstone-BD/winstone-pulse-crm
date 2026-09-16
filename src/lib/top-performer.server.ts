@@ -21,6 +21,10 @@ export type PerformerLine = {
   talkMinutes: number;
   connectRate: number;
   score: number;
+  /** This desk's own daily lead quota (30 by default, 15 for the Sell Team Admin). */
+  quota: number;
+  /** Quota-normalised score — how the same effort looks on a standard round. */
+  fairScore: number;
 };
 
 export type RankedPerformer = PerformerLine & {
@@ -118,7 +122,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const [agentsRes, reportsRes, followRes] = await Promise.all([
     supabaseAdmin
       .from("profiles")
-      .select("id, name")
+      .select("id, name, employee_id")
       .eq("approval_status", "approved")
       .eq("is_active", true)
       .eq("role", "agent"),
@@ -136,6 +140,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   if (agentsRes.error) throw new Error(agentsRes.error.message);
   if (reportsRes.error) throw new Error(reportsRes.error.message);
   if (followRes.error) throw new Error(followRes.error.message);
+
+  const { quotaFor, ratioScore } = await import("@/lib/lead-quota");
+  const { dailyPlan } = await import("@/lib/lead-pool.server");
+  const floorQuota = (await dailyPlan()).perAgent;
 
   const reports = reportsRes.data ?? [];
   const follows = followRes.data ?? [];
@@ -155,15 +163,21 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       followUps: follows.filter((f) => f.agent_id === agent.id).length,
       talkMinutes,
     };
+    const quota = quotaFor(agent.employee_id, floorQuota);
+    const score = Math.round(scoreOf(base));
     return {
       ...base,
       connectRate: base.called ? Math.round((connected / base.called) * 100) : 0,
-      score: Math.round(scoreOf(base)),
+      score,
+      quota,
+      // Ranking runs on the ratio, so a 15-lead desk competes fairly with a 30-lead desk.
+      fairScore: ratioScore(score, quota),
     };
   });
 
   const ranked = [...lines].sort(
     (a, b) =>
+      b.fairScore - a.fairScore ||
       b.score - a.score ||
       b.connected - a.connected ||
       b.reports - a.reports ||
@@ -171,11 +185,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       a.name.localeCompare(b.name, "bn"),
   );
   const activeRanked = ranked.filter((line) => line.score > 0);
-  const leaderScore = activeRanked[0]?.score ?? 0;
+  const leaderScore = activeRanked[0]?.fairScore ?? 0;
   const detailed = ranked.map((line, index): RankedPerformer => ({
     ...line,
     rank: index + 1,
-    gapFromLeader: Math.max(0, leaderScore - line.score),
+    gapFromLeader: Math.max(0, leaderScore - line.fairScore),
     ...performerInsight(line),
   }));
   const topThree = detailed.filter((line) => line.score > 0).slice(0, 3);
