@@ -325,7 +325,11 @@ const TOOLTIP = {
   border: "1px solid var(--border)",
   borderRadius: 12,
   fontSize: 12,
+  color: "var(--foreground)",
 } as const;
+
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 11 } as const;
+const LEGEND_STYLE = { fontSize: 11, color: "var(--muted-foreground)" } as const;
 
 function AgentRow({ agent }: { agent: BriefAgent }) {
   const [open, setOpen] = useState(false);
