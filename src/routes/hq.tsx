@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
+import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
 import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
@@ -30,6 +31,8 @@ import {
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
   useSnapshot,
+  type CallRecording,
+  type Lead,
 } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
 
@@ -75,9 +78,11 @@ function ControlBoardPage() {
 }
 
 function ControlBoard() {
-  const { profiles, leads, calls, messages, events } = useSnapshot();
+  const { profiles, leads, calls, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
+  /** Which number card / mix-card row the executive drilled into. */
+  const [drill, setDrill] = useState<DrillSpec | null>(null);
 
   const agents = useMemo(
     () =>
@@ -114,6 +119,7 @@ function ControlBoard() {
     return order.map((o) => ({
       label: o.label,
       value: leads.filter((l) => l.status === o.key).length,
+      leads: leads.filter((l) => l.status === o.key),
     }));
   }, [leads]);
 
@@ -126,7 +132,11 @@ function ControlBoard() {
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([label, value]) => ({ label, value }));
+      .map(([label, value]) => ({
+        label,
+        value,
+        leads: leads.filter((l) => (l.source ?? "unknown").replace(/_/g, " ") === label),
+      }));
   }, [leads]);
 
   const sentimentRows = useMemo(() => {
@@ -142,7 +152,11 @@ function ControlBoard() {
     }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([key, value]) => ({ label: labels[key] ?? key, value }));
+      .map(([key, value]) => ({
+        label: labels[key] ?? key,
+        value,
+        calls: calls.filter((c) => c.sentiment === key),
+      }));
   }, [calls]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
@@ -185,18 +199,42 @@ function ControlBoard() {
             label="মোট কল"
             value={String(calls.length)}
             hint={`${connected}টি কল ${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হয়েছে`}
+            onOpen={() =>
+              setDrill({
+                title: "মোট কল",
+                subtitle: "সব সিঙ্ক হওয়া কল — নাম চাপলে লিডের পুরো ফাইল",
+                kind: "calls",
+                calls,
+              })
+            }
           />
           <StatTile
             icon={<Timer className="size-4" />}
             label="ফ্লোরের কথার সময়"
             value={formatTalkTime(talkSeconds)}
             hint="সব সিঙ্ক হওয়া রেকর্ডিং মিলিয়ে"
+            onOpen={() =>
+              setDrill({
+                title: "কথা হওয়া কল",
+                subtitle: `${CONNECTED_THRESHOLD_SECONDS} সেকেন্ডের বেশি কথা হওয়া কল`,
+                kind: "calls",
+                calls: calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS),
+              })
+            }
           />
           <StatTile
             icon={<Users className="size-4" />}
             label="চালু লিড"
             value={String(leads.filter((l) => l.status !== "closed").length)}
             hint={`${unassigned}টি লিড এখনো কারো নামে দেওয়া হয়নি`}
+            onOpen={() =>
+              setDrill({
+                title: "চালু লিড",
+                subtitle: "যেসব লিড এখনো বন্ধ হয়নি",
+                kind: "leads",
+                leads: leads.filter((l) => l.status !== "closed"),
+              })
+            }
           />
           <StatTile
             icon={<TrendingUp className="size-4" />}
@@ -206,34 +244,59 @@ function ControlBoard() {
                 .length,
             )}
             hint={`${messages.length}টি হোয়াটসঅ্যাপ মেসেজ জমা আছে`}
+            onOpen={() =>
+              setDrill({
+                title: "ডিল জেতা লিড",
+                subtitle: "বন্ধ হওয়া ও ডিল জেতা লিড",
+                kind: "leads",
+                leads: leads.filter(
+                  (l) => l.status === "closed" && l.outcome_category === "deal_won",
+                ),
+              })
+            }
           />
         </div>
 
         {/* Classification board: what agents actually decided after talking. */}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
-            icon={<Flame className="size-4" />}
-            label="HOT লিড"
-            value={String(leads.filter((l) => l.temperature === "hot").length)}
-            hint="এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী"
-          />
-          <StatTile
-            icon={<Flame className="size-4" />}
-            label="WARM লিড"
-            value={String(leads.filter((l) => l.temperature === "warm").length)}
-            hint="কিছুটা আগ্রহী"
-          />
-          <StatTile
-            icon={<Snowflake className="size-4" />}
-            label="COLD লিড"
-            value={String(leads.filter((l) => l.temperature === "cold").length)}
-            hint="এখন আগ্রহ কম"
-          />
+          {(
+            [
+              { key: "hot", label: "HOT লিড", hint: "এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী" },
+              { key: "warm", label: "WARM লিড", hint: "কিছুটা আগ্রহী" },
+              { key: "cold", label: "COLD লিড", hint: "এখন আগ্রহ কম" },
+            ] as const
+          ).map((t) => (
+            <StatTile
+              key={t.key}
+              icon={
+                t.key === "cold" ? <Snowflake className="size-4" /> : <Flame className="size-4" />
+              }
+              label={t.label}
+              value={String(leads.filter((l) => l.temperature === t.key).length)}
+              hint={t.hint}
+              onOpen={() =>
+                setDrill({
+                  title: t.label,
+                  subtitle: "এজেন্টের শ্রেণিবিন্যাস অনুযায়ী",
+                  kind: "leads",
+                  leads: leads.filter((l) => l.temperature === t.key),
+                })
+              }
+            />
+          ))}
           <StatTile
             icon={<ListChecks className="size-4" />}
             label="বাকি কাজ (PENDING)"
             value={String(leads.filter((l) => l.work_state !== "completed").length)}
             hint={`${leads.filter((l) => l.work_state === "completed").length}টি লিড শ্রেণিবিন্যাসসহ শেষ`}
+            onOpen={() =>
+              setDrill({
+                title: "বাকি কাজ",
+                subtitle: "শ্রেণিবিন্যাস বা কাজ এখনো শেষ হয়নি",
+                kind: "leads",
+                leads: leads.filter((l) => l.work_state !== "completed"),
+              })
+            }
           />
         </div>
 
@@ -242,13 +305,44 @@ function ControlBoard() {
             title="লিড ফানেল"
             subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
             rows={funnelRows}
+            loading={isPending}
+            onSelectRow={(row) =>
+              setDrill({
+                title: `ফানেল · ${row.label}`,
+                subtitle: "এই ধাপের সব লিড",
+                kind: "leads",
+                leads: row.leads ?? [],
+              })
+            }
           />
-          <MixCard title="লিড কোথা থেকে" subtitle="সোর্স অনুযায়ী ভাগ" rows={sourceRows} />
+          <MixCard
+            title="লিড কোথা থেকে"
+            subtitle="সোর্স অনুযায়ী ভাগ"
+            rows={sourceRows}
+            loading={isPending}
+            onSelectRow={(row) =>
+              setDrill({
+                title: `সোর্স · ${row.label}`,
+                subtitle: "এই সোর্স থেকে আসা লিড",
+                kind: "leads",
+                leads: row.leads ?? [],
+              })
+            }
+          />
           <MixCard
             title="কলের সুর"
             subtitle="AI-বিশ্লেষিত কথাবার্তা"
             rows={sentimentRows}
-            emptyLabel="এখনো AI-বিশ্লেষিত কল নেই"
+            loading={isPending}
+            emptyLabel="এখনো লাইভ ডেটা নেই"
+            onSelectRow={(row) =>
+              setDrill({
+                title: `কলের সুর · ${row.label}`,
+                subtitle: "এই সুরের সব কল",
+                kind: "calls",
+                calls: row.calls ?? [],
+              })
+            }
           />
         </div>
 
@@ -336,6 +430,18 @@ function ControlBoard() {
         open={openAgentId !== null}
         onOpenChange={(next) => !next && setOpenAgentId(null)}
       />
+      <HqDrillSheet
+        spec={drill}
+        profiles={profiles}
+        leads={leads}
+        loading={isPending}
+        open={drill !== null}
+        onOpenChange={(next) => !next && setDrill(null)}
+        onSelectLead={(leadId) => {
+          setDrill(null);
+          setOpenLeadId(leadId);
+        }}
+      />
     </>
   );
 }
@@ -345,14 +451,23 @@ function StatTile({
   label,
   value,
   hint,
+  onOpen,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint: string;
+  /** Opens the drill-down list behind this number. */
+  onOpen?: () => void;
 }) {
   return (
-    <div className="card-elevated relative overflow-hidden p-5">
+    <button
+      type="button"
+      onClick={onOpen}
+      disabled={!onOpen}
+      aria-label={`${label} — বিস্তারিত তালিকা`}
+      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 disabled:cursor-default"
+    >
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
       <div className="flex items-start gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25">
@@ -367,21 +482,28 @@ function StatTile({
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
       <Sparkline seed={value.length + label.length} />
-    </div>
+    </button>
   );
 }
 
-/** Compact intelligence card: labelled rows with a proportional bar. */
+/** A mix-card row carries the rows it counted, so a tap can list them. */
+type MixRow = { label: string; value: number; leads?: Lead[]; calls?: CallRecording[] };
+
+/** Compact intelligence card: labelled rows with a proportional bar; each row drills down. */
 function MixCard({
   title,
   subtitle,
   rows,
-  emptyLabel = "এই সময়ে কোনো তথ্য নেই",
+  loading,
+  emptyLabel = "এখনো লাইভ ডেটা নেই",
+  onSelectRow,
 }: {
   title: string;
   subtitle: string;
-  rows: { label: string; value: number }[];
+  rows: MixRow[];
+  loading?: boolean;
   emptyLabel?: string;
+  onSelectRow?: (row: MixRow) => void;
 }) {
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
@@ -392,28 +514,43 @@ function MixCard({
           <h2 className="text-sm font-semibold">{title}</h2>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
-          {total}
-        </span>
+        {!loading && (
+          <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+            {total}
+          </span>
+        )}
       </div>
-      {total === 0 ? (
+      {loading ? (
+        <ul className="mt-3 space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <li key={i} className="skeleton h-6 w-full" />
+          ))}
+        </ul>
+      ) : total === 0 ? (
         <p className="mt-6 mb-2 text-center text-xs text-muted-foreground">{emptyLabel}</p>
       ) : (
         <ul className="mt-3 space-y-2">
           {rows.map((row) => (
-            <li key={row.label} className="space-y-1">
-              <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="truncate capitalize">{row.label}</span>
-                <span className="tabular text-muted-foreground">
-                  {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
-                </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
-                />
-              </div>
+            <li key={row.label}>
+              <button
+                type="button"
+                onClick={() => onSelectRow?.(row)}
+                disabled={!onSelectRow}
+                className="w-full space-y-1 rounded-lg px-1 py-1 text-left transition-colors hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+              >
+                <div className="flex items-baseline justify-between gap-2 text-xs">
+                  <span className="truncate capitalize">{row.label}</span>
+                  <span className="tabular text-muted-foreground">
+                    {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
+                  />
+                </div>
+              </button>
             </li>
           ))}
         </ul>
