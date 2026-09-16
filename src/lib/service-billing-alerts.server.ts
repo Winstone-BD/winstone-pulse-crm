@@ -178,7 +178,7 @@ export async function runServiceBillingAlerts(now = new Date()): Promise<AlertRu
   const open = invoices.filter((invoice) => invoice.status !== "paid");
   if (open.length === 0) return [];
 
-  const recipients = await recipientProfileIds();
+  const { ids: recipientIds, emails: recipientEmails } = await recipients();
   const supabaseAdmin = await admin();
   const results: AlertRun = [];
 
