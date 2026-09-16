@@ -20,6 +20,23 @@ import { topPerformerToday } from "@/lib/top-performer.functions";
 
 const DHAKA_TZ_LABEL = "ঢাকা সময় (UTC+৬)";
 
+/** Mirrors the server's TopPerformerSources payload (kept local: .server files stay off the client). */
+type Sources = {
+  windowStart: string;
+  windowEnd: string;
+  workDate: string;
+  timeZone: string;
+  activeAgents: number;
+  callReportRows: number;
+  submittedReportRows: number;
+  connectedReportRows: number;
+  followUpRows: number;
+  assignedLeadRows: number;
+  completedLeadRows: number;
+  talkMinutes: number;
+  empty: boolean;
+};
+
 function dhakaTime(iso: string) {
   return new Intl.DateTimeFormat("bn-BD", { timeStyle: "short", timeZone: "Asia/Dhaka" }).format(
     new Date(iso),
@@ -251,8 +268,8 @@ function EmptyReason({
   sources,
   fallback,
 }: {
-  sources: NonNullable<ReturnType<typeof useSources>>;
-  fallback?: string;
+  sources: Sources;
+  fallback?: string | undefined;
 }) {
   const nothing = sources.empty;
   return (
@@ -275,25 +292,8 @@ function EmptyReason({
   );
 }
 
-// Type helper so EmptyReason/SourcePanel stay in sync with the server payload.
-declare function useSources(): {
-  windowStart: string;
-  windowEnd: string;
-  workDate: string;
-  timeZone: string;
-  activeAgents: number;
-  callReportRows: number;
-  submittedReportRows: number;
-  connectedReportRows: number;
-  followUpRows: number;
-  assignedLeadRows: number;
-  completedLeadRows: number;
-  talkMinutes: number;
-  empty: boolean;
-} | null;
-
 /** Collapsible audit panel: exactly which rows the leaderboard counted. */
-function SourcePanel({ sources }: { sources: NonNullable<ReturnType<typeof useSources>> }) {
+function SourcePanel({ sources }: { sources: Sources }) {
   const [open, setOpen] = useState(false);
   const rows: Array<[string, string | number]> = [
     ["হিসাবের দিন (work_date)", sources.workDate],
