@@ -151,9 +151,20 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   if (reportsRes.error) throw new Error(reportsRes.error.message);
   if (followRes.error) throw new Error(followRes.error.message);
 
-  const { quotaFor, ratioScore } = await import("@/lib/lead-quota");
-  const { dailyPlan } = await import("@/lib/lead-pool.server");
+  const { quotaFor, ratioScore, effectiveQuota, completionPercent } = await import(
+    "@/lib/lead-quota"
+  );
+  const { dailyPlan, extraGrantsToday } = await import("@/lib/lead-pool.server");
   const floorQuota = (await dailyPlan()).perAgent;
+  const extraToday = await extraGrantsToday();
+
+  // Today's own list per desk: how many leads arrived and how many are finished.
+  const { data: todayLeads } = await supabaseAdmin
+    .from("leads")
+    .select("assigned_to, work_state")
+    .eq("work_date", dateKey)
+    .not("assigned_to", "is", null)
+    .limit(20000);
 
   const reports = reportsRes.data ?? [];
   const follows = followRes.data ?? [];
@@ -164,6 +175,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     const talkMinutes = Math.round(
       mine.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60,
     );
+    const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
+    const quota = quotaFor(agent.employee_id, floorQuota);
+    const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
+    const completed = myLeads.filter((row) => row.work_state === "completed").length;
     const base = {
       agentId: agent.id,
       name: agent.name,
@@ -172,14 +187,17 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       reports: mine.filter((r) => r.status === "submitted").length,
       followUps: follows.filter((f) => f.agent_id === agent.id).length,
       talkMinutes,
+      assigned: myLeads.length,
+      completed,
+      quota,
+      targetQuota,
+      completionPercent: completionPercent(completed, targetQuota),
     };
-    const quota = quotaFor(agent.employee_id, floorQuota);
     const score = Math.round(scoreOf(base));
     return {
       ...base,
       connectRate: base.called ? Math.round((connected / base.called) * 100) : 0,
       score,
-      quota,
       // Ranking runs on the ratio, so a 15-lead desk competes fairly with a 25-lead desk.
       fairScore: ratioScore(score, quota),
     };
@@ -187,6 +205,8 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
 
   const ranked = [...lines].sort(
     (a, b) =>
+      // Quota-normalised completion first: finishing your own list is the job.
+      b.completionPercent - a.completionPercent ||
       b.fairScore - a.fairScore ||
       b.score - a.score ||
       b.connected - a.connected ||
