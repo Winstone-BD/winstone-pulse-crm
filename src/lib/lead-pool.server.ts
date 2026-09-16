@@ -306,3 +306,137 @@ export async function saveDailyPlan(input: { perAgent: number; lastRunDate?: str
     updated_at: new Date().toISOString(),
   });
 }
+
+/**
+ * Extra leads on top of somebody's base daily quota.
+ *
+ * The base round is untouched: the person's default quota never changes, the
+ * extra batch is recorded separately in `lead_extra_grants` so performance
+ * screens can show "base 15 + extra 5" honestly. Same duplicate protection as
+ * the daily run — only eligible, unassigned, non-duplicate rows move, and the
+ * `assigned_to IS NULL` guard makes a double click harmless.
+ */
+export async function grantExtraLeads(input: {
+  agentProfileId: string;
+  quantity: number;
+  reason?: string | null;
+  actorProfileId?: string | null;
+  actorLabel?: string | null;
+}): Promise<{ moved: number; remaining: number; workDate: string }> {
+  const supabaseAdmin = await admin();
+  const today = dhakaToday();
+
+  const { data: agent } = await supabaseAdmin
+    .from("profiles")
+    .select("id, name, is_active, approval_status")
+    .eq("id", input.agentProfileId)
+    .maybeSingle();
+  if (!agent || !agent.is_active || agent.approval_status !== "approved") {
+    throw new Error("এই এজেন্ট সক্রিয় নয়");
+  }
+
+  const { data: pool } = await supabaseAdmin
+    .from("leads")
+    .select("id, phone_number, created_at")
+    .is("assigned_to", null)
+    .is("assigned_agent_id", null)
+    .or(USABLE)
+    .order("created_at", { ascending: true })
+    .limit(Math.min(input.quantity * 4 + 100, 4000));
+
+  const taken = await assignedPhoneKeys();
+  const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+  const eligible = new Set(await eligibleLeadIds((pool ?? []).map((lead) => lead.id)));
+  const seen = new Set<string>();
+  const picked: string[] = [];
+
+  for (const lead of pool ?? []) {
+    if (picked.length >= input.quantity) break;
+    const keys = phoneKeys(lead.phone_number);
+    if (keys.length === 0 || !eligible.has(lead.id)) continue;
+    if (keys.some((key) => taken.has(key) || seen.has(key))) continue;
+    keys.forEach((key) => seen.add(key));
+    picked.push(lead.id);
+  }
+  if (picked.length === 0) throw new Error("ডেটাবেজে দেওয়ার মতো নতুন লিড নেই");
+
+  let moved = 0;
+  for (let start = 0; start < picked.length; start += 100) {
+    const ids = picked.slice(start, start + 100);
+    const { data: updated } = await supabaseAdmin
+      .from("leads")
+      .update({
+        assigned_to: input.agentProfileId,
+        assigned_agent_id: input.agentProfileId,
+        assignment_source: "extra_manual",
+        work_date: today,
+      })
+      .in("id", ids)
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .select("id");
+    const takenIds = (updated ?? []).map((row) => row.id);
+    if (takenIds.length === 0) continue;
+    moved += takenIds.length;
+
+    await supabaseAdmin.from("lead_assignments").insert(
+      takenIds.map((leadId) => ({
+        lead_id: leadId,
+        from_agent_id: null,
+        to_agent_id: input.agentProfileId,
+        source: "extra_manual",
+        note: `অতিরিক্ত লিড — ${input.actorLabel ?? "IT Console"} (${today})`,
+      })),
+    );
+    await supabaseAdmin.from("lead_events").insert(
+      takenIds.map((leadId) => ({
+        lead_id: leadId,
+        agent_id: input.agentProfileId,
+        kind: "extra_lead_granted" as const,
+        detail: `অতিরিক্ত লিড দেওয়া হয়েছে (${today}) — ${input.reason ?? "কারণ লেখা হয়নি"}`,
+      })),
+    );
+  }
+
+  await supabaseAdmin.from("lead_extra_grants").insert({
+    agent_profile_id: input.agentProfileId,
+    work_date: today,
+    quantity: moved,
+    reason: input.reason ?? null,
+    source: "manual_extra",
+    granted_by: input.actorProfileId ?? null,
+    granted_by_label: input.actorLabel ?? "IT Console",
+  });
+
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({
+    action: "extra_leads_granted",
+    entityType: "lead_pool",
+    entityId: input.agentProfileId,
+    actorProfileId: input.actorProfileId ?? null,
+    actorLabel: input.actorLabel ?? "IT Console",
+    metadata: {
+      agent: agent.name,
+      requested: input.quantity,
+      moved,
+      reason: input.reason ?? null,
+      workDate: today,
+    },
+  });
+
+  return { moved, remaining: await usablePoolCount(), workDate: today };
+}
+
+/** Extra leads handed out today, per agent — shown next to the base quota. */
+export async function extraGrantsToday(): Promise<Record<string, number>> {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("lead_extra_grants")
+    .select("agent_profile_id, quantity")
+    .eq("work_date", dhakaToday());
+  const totals: Record<string, number> = {};
+  for (const row of data ?? []) {
+    totals[row.agent_profile_id] = (totals[row.agent_profile_id] ?? 0) + row.quantity;
+  }
+  return totals;
+}

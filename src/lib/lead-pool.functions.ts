@@ -149,3 +149,57 @@ export const setDailyLeadPlan = createServerFn({ method: "POST" })
     await saveDailyPlan({ perAgent: data.perAgent });
     return { perAgent: data.perAgent };
   });
+
+const ExtraInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  agentProfileId: z.string().uuid(),
+  quantity: z.number().int().min(1).max(200),
+  reason: z.string().trim().max(300).nullable().optional(),
+});
+
+/**
+ * Extra leads above the base quota — available from the IT Console and the
+ * Coordinator Deck. The person's default daily quota is not changed.
+ */
+export const grantExtraLeadPool = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => ExtraInput.parse(input))
+  .handler(async ({ data }) => {
+    const caller = await dispatcher(data.adminToken);
+    const { requireWrite } = await import("@/lib/access.server");
+    requireWrite(caller);
+    const { grantExtraLeads } = await import("@/lib/lead-pool.server");
+    return grantExtraLeads({
+      agentProfileId: data.agentProfileId,
+      quantity: data.quantity,
+      reason: data.reason ?? null,
+      actorProfileId: caller.profile?.id ?? null,
+      actorLabel: caller.profile?.name ?? "IT Console",
+    });
+  });
+
+/** Base quota vs extra leads for today, per agent. */
+export const quotaOverview = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => TokenInput.parse(input))
+  .handler(async ({ data }) => {
+    await dispatcher(data.adminToken);
+    const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday } = await import(
+      "@/lib/lead-pool.server"
+    );
+    const { quotaFor } = await import("@/lib/lead-quota");
+    const [agents, plan, extra] = await Promise.all([
+      activeAgents(),
+      dailyPlan(),
+      extraGrantsToday(),
+    ]);
+    return {
+      workDate: dhakaToday(),
+      floorQuota: plan.perAgent,
+      rows: agents.map((agent) => ({
+        id: agent.id,
+        name: agent.name,
+        employeeId: agent.employee_id ?? null,
+        baseQuota: quotaFor(agent.employee_id, plan.perAgent),
+        extraToday: extra[agent.id] ?? 0,
+      })),
+    };
+  });
