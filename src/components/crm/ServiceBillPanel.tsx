@@ -159,6 +159,11 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
         >
           {query.data?.serviceActive ? "সার্ভিস চালু" : "সার্ভিস চালু নয়"}
         </span>
+        {current ? (
+          <Button variant="outline" size="sm" onClick={() => downloadPdf(current)}>
+            <Download className="size-4" /> PDF
+          </Button>
+        ) : null}
       </div>
 
       {current ? (
@@ -276,6 +281,14 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
               <span className="text-xs text-muted-foreground">
                 মেয়াদ {dhakaDate(invoice.dueAt)}
               </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => downloadPdf(invoice)}
+                aria-label={`${invoice.period} ইনভয়েস PDF`}
+              >
+                <Download className="size-4" /> PDF
+              </Button>
             </li>
           ))}
         </ul>
