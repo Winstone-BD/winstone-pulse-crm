@@ -214,11 +214,13 @@ export async function runServiceBillingAlerts(now = new Date()): Promise<AlertRu
       eventKey: `service_bill:${invoice.period}:${stage}`,
       kind: code,
       entityId: invoice.period,
-      profileIds: recipients,
+      profileIds: recipientIds,
       payload: { title, body: detail, path: "/hq", data: { period: invoice.period, stage } },
     });
 
-    results.push({ period: invoice.period, stage, alerted, push });
+    const email = await emailRecipients(invoice, stage, { title, detail }, recipientEmails);
+
+    results.push({ period: invoice.period, stage, alerted, push, email });
   }
 
   return results;
