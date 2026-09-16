@@ -43,6 +43,8 @@ export function TeamSupportInbox() {
   const setStatus = useServerFn(setSupportTicketStatus);
   const markRead = useServerFn(openSupportTicket);
   const reply = useServerFn(replyToSupportTicket);
+  const setPriority = useServerFn(setSupportTicketPriority);
+  const saveToken = useServerFn(registerWebPushToken);
 
   const [filter, setFilter] = useState<Filter>("unread");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -82,6 +84,32 @@ export function TeamSupportInbox() {
       toast.success("অবস্থা আপডেট হয়েছে");
       void queryClient.invalidateQueries({ queryKey: ["team-support-inbox"] });
     },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const changePriority = useMutation({
+    mutationFn: (input: { ticketId: string; priority: SupportPriority }) =>
+      setPriority({ data: { adminToken: getAdminToken(), ...input } }),
+    onSuccess: () => {
+      toast.success("গুরুত্ব বদলানো হয়েছে — সংশ্লিষ্টদের কাছে অ্যালার্ট গেছে");
+      void queryClient.invalidateQueries({ queryKey: ["team-support-inbox"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  // One click turns on browser alerts for new or escalated requests.
+  const enableAlerts = useMutation({
+    mutationFn: async () => {
+      const result = await requestWebPushToken();
+      if (result.status === "registered" && result.token) {
+        await saveToken({ data: { adminToken: getAdminToken(), token: result.token, label: null } });
+      }
+      return result.status;
+    },
+    onSuccess: (status) =>
+      status === "registered"
+        ? toast.success(PUSH_MESSAGES[status])
+        : toast.info(PUSH_MESSAGES[status]),
     onError: (error: Error) => toast.error(error.message),
   });
 
