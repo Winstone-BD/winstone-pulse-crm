@@ -220,8 +220,12 @@ function BriefBlockView({ block, accent = false }: { block: BriefBlock; accent?:
                       <Cell key={slice.label} fill={SLICE_COLORS[index % SLICE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={TOOLTIP}
+                    labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                    itemStyle={{ color: "var(--muted-foreground)" }}
+                  />
+                  <Legend wrapperStyle={{ ...LEGEND_STYLE, fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
