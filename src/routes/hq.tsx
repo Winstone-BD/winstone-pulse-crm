@@ -79,9 +79,39 @@ function ControlBoardPage() {
 }
 
 function ControlBoard() {
-  const { profiles, leads, calls, messages, events } = useSnapshot();
+  const { profiles, leads, calls, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
+  const [drill, setDrill] = useState<Drilldown | null>(null);
+
+  const agentName = (id: string | null) =>
+    profiles.find((p) => p.id === id)?.name ?? "কেউ নেই";
+
+  /** Leads → drilldown rows. */
+  const leadRows = (list: Lead[]): DrillRow[] =>
+    list.slice(0, 60).map((lead) => ({
+      id: lead.id,
+      leadId: lead.id,
+      primary: lead.name ?? lead.phone_number ?? "লিড",
+      secondary: `${lead.phone_number ?? "নম্বর নেই"} · ${agentName(lead.assigned_to)}`,
+      meta: shortDate(lead.classified_at ?? lead.last_call_at ?? lead.created_at),
+    }));
+
+  /** Calls → drilldown rows. */
+  const callRows = (list: CallRecording[]): DrillRow[] =>
+    list.slice(0, 60).map((call) => {
+      const lead = leads.find((l) => l.id === call.lead_id);
+      return {
+        id: call.id,
+        leadId: lead?.id ?? null,
+        primary: lead?.name ?? call.phone_number,
+        secondary: `${agentName(call.agent_id)} · ${formatTalkTime(call.duration_seconds)}`,
+        meta: shortDate(call.created_at),
+      };
+    });
+
+  const showDrill = (title: string, subtitle: string, rows: DrillRow[]) =>
+    setDrill({ title, subtitle, rows });
 
   const agents = useMemo(
     () =>
