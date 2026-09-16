@@ -113,7 +113,7 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
       if (!agentId) throw new Error("কোন এজেন্টকে দেওয়া হবে তা বেছে নিন");
       const count = num(params, "count", 10);
 
-      const { data: pool, error } = await supabaseAdmin
+      const { data: candidates, error } = await supabaseAdmin
         .from("leads")
         .select("id, assigned_to")
         .eq("status", "pending")
@@ -121,20 +121,28 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
         .order("created_at")
         .limit(count);
       if (error) throw new Error(error.message);
+      const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+      const eligible = new Set(await eligibleLeadIds((candidates ?? []).map((lead) => lead.id)));
+      const pool = (candidates ?? []).filter((lead) => eligible.has(lead.id));
       if (!pool?.length) {
         await audit("no_unassigned_leads");
         return { ok: false, message: "অ্যাসাইন করার মতো অমীমাংসিত লিড নেই" };
       }
 
       const ids = pool.map((l) => l.id);
-      const { error: updateError } = await supabaseAdmin
+      const { data: updated, error: updateError } = await supabaseAdmin
         .from("leads")
         .update({ assigned_to: agentId, assignment_source: "command_agent" })
-        .in("id", ids);
+        .in("id", ids)
+        .is("assigned_to", null)
+        .is("assigned_agent_id", null)
+        .select("id");
       if (updateError) throw new Error(updateError.message);
+      const updatedIds = new Set((updated ?? []).map((lead) => lead.id));
+      const assignedRows = pool.filter((lead) => updatedIds.has(lead.id));
 
       await supabaseAdmin.from("lead_assignments").insert(
-        pool.map((l) => ({
+        assignedRows.map((l) => ({
           lead_id: l.id,
           from_agent_id: l.assigned_to ?? null,
           to_agent_id: agentId,
@@ -142,13 +150,13 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
           source: "command_agent",
         })),
       );
-      await audit(`assigned:${ids.length}`);
-      return { ok: true, message: `${ids.length}টি লিড অ্যাসাইন হয়েছে` };
+      await audit(`assigned:${assignedRows.length}`);
+      return { ok: true, message: `${assignedRows.length}টি লিড অ্যাসাইন হয়েছে` };
     }
 
     if (type === "distribute_unassigned") {
       requireDispatch(caller);
-      const [{ data: agents }, { data: leads }] = await Promise.all([
+      const [{ data: agents }, { data: candidates }] = await Promise.all([
         supabaseAdmin
           .from("profiles")
           .select("id")
@@ -158,6 +166,9 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
           .order("name"),
         supabaseAdmin.from("leads").select("id").is("assigned_to", null).order("created_at"),
       ]);
+      const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+      const eligible = new Set(await eligibleLeadIds((candidates ?? []).map((lead) => lead.id)));
+      const leads = (candidates ?? []).filter((lead) => eligible.has(lead.id));
       if (!agents?.length) throw new Error("সক্রিয় কোনো এজেন্ট নেই");
       if (!leads?.length) {
         await audit("nothing_to_distribute");

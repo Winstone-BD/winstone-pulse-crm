@@ -52,12 +52,15 @@ export async function activeAgents(): Promise<PoolAgent[]> {
 /** How many leads are still usable in the database. */
 export async function usablePoolCount(): Promise<number> {
   const supabaseAdmin = await admin();
-  const { count } = await supabaseAdmin
+  const { data } = await supabaseAdmin
     .from("leads")
-    .select("id", { count: "exact", head: true })
+    .select("id")
     .is("assigned_to", null)
-    .or(USABLE);
-  return count ?? 0;
+    .is("assigned_agent_id", null)
+    .or(USABLE)
+    .limit(20000);
+  const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+  return (await eligibleLeadIds((data ?? []).map((row) => row.id))).length;
 }
 
 /** Every phone number that already belongs to an agent. */
@@ -116,13 +119,15 @@ export async function distributeDailyLeads(options: {
     .limit(Math.min(need * 3 + 200, 6000));
 
   const taken = await assignedPhoneKeys();
+  const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
+  const databaseEligible = new Set(await eligibleLeadIds((pool ?? []).map((lead) => lead.id)));
   const seen = new Set<string>();
   const usable: { id: string }[] = [];
   const duplicates: string[] = [];
 
   for (const lead of pool ?? []) {
     const key = phoneKey(lead.phone_number);
-    if (!key) {
+    if (!key || !databaseEligible.has(lead.id)) {
       duplicates.push(lead.id);
       continue;
     }
