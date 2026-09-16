@@ -10,9 +10,9 @@
 
 export function normalizePhone(raw: string): string {
   const digits = raw.replace(/[^\d]/g, "");
-  if (/^8801[3-9]\d{8}$/.test(digits)) return digits;
-  if (/^01[3-9]\d{8}$/.test(digits)) return `88${digits}`;
-  if (/^1[3-9]\d{8}$/.test(digits)) return `880${digits}`;
+  if (/^8801[3-9]\d{8}$/.test(digits)) return `0${digits.slice(3)}`;
+  if (/^01[3-9]\d{8}$/.test(digits)) return digits;
+  if (/^1[3-9]\d{8}$/.test(digits)) return `0${digits}`;
   return raw.trim();
 }
 
