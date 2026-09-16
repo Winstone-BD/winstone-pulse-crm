@@ -1694,6 +1694,86 @@ export type Database = {
           },
         ]
       }
+      service_invoices: {
+        Row: {
+          amount_bdt: number
+          architect_share_bdt: number
+          created_at: string
+          due_at: string
+          grace_until: string
+          note: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_ref: string | null
+          payout_at: string | null
+          payout_ref: string | null
+          payout_status: string
+          period: string
+          service_active_until: string | null
+          split_at: string | null
+          status: string
+          system_share_bdt: number
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+          verified_by_label: string | null
+        }
+        Insert: {
+          amount_bdt?: number
+          architect_share_bdt?: number
+          created_at?: string
+          due_at: string
+          grace_until: string
+          note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_ref?: string | null
+          payout_at?: string | null
+          payout_ref?: string | null
+          payout_status?: string
+          period: string
+          service_active_until?: string | null
+          split_at?: string | null
+          status?: string
+          system_share_bdt?: number
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_label?: string | null
+        }
+        Update: {
+          amount_bdt?: number
+          architect_share_bdt?: number
+          created_at?: string
+          due_at?: string
+          grace_until?: string
+          note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_ref?: string | null
+          payout_at?: string | null
+          payout_ref?: string | null
+          payout_status?: string
+          period?: string
+          service_active_until?: string | null
+          split_at?: string | null
+          status?: string
+          system_share_bdt?: number
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_invoices_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_summaries: {
         Row: {
           agents: Json
