@@ -16,7 +16,9 @@ import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { CsvImportDialog } from "@/components/crm/CsvImportDialog";
+import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
+import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -141,6 +143,10 @@ function Dispatcher() {
       <SmartInsightStrip scope="floor" />
 
       <LeadDatabasePanel />
+
+      <ExtraLeadPanel />
+
+      <TeamSupportInbox />
 
       <section className="card-elevated p-4">
         <h2 className="text-sm font-semibold">Bulk push</h2>
