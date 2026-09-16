@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, LogIn, MessageCircle, PhoneCall, Timer, Users } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Clock,
+  LogIn,
+  MessageCircle,
+  PhoneCall,
+  Timer,
+  Users,
+} from "lucide-react";
 import { useMemo } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
@@ -21,6 +30,7 @@ import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
 import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
 import { QueueBoard } from "@/components/crm/QueueBoard";
+import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
@@ -50,23 +60,41 @@ export const Route = createFileRoute("/desk")({
   component: DeskPage,
 });
 
-/** Live counters for the agent's own day. */
+/** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
   const { leads, calls, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    const today = new Date().toDateString();
-    const todayCalls = calls.filter((c) => new Date(c.created_at).toDateString() === today);
+    const now = new Date();
+    const today = now.toDateString();
+    const yesterday = new Date(now.getTime() - 86_400_000).toDateString();
+    const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
+      rows.filter((r) => new Date(r.created_at).toDateString() === day);
+
+    const todayCalls = onDay(calls, today);
+    const yCalls = onDay(calls, yesterday);
     const talk = todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
+    const yTalk = yCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
+    const connectedOf = (rows: typeof calls) =>
+      rows.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length;
     return {
       leads: leads.length,
       pending: leads.filter((l) => l.status === "pending").length,
       calls: todayCalls.length,
-      connected: todayCalls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length,
+      callsDelta: todayCalls.length - yCalls.length,
+      connected: connectedOf(todayCalls),
+      connectRate: todayCalls.length
+        ? Math.round((connectedOf(todayCalls) / todayCalls.length) * 100)
+        : 0,
       talk,
-      whatsapp: messages.filter((m) => new Date(m.created_at).toDateString() === today).length,
+      talkDelta: Math.round((talk - yTalk) / 60),
+      whatsapp: onDay(messages, today).length,
+      whatsappDelta: onDay(messages, today).length - onDay(messages, yesterday).length,
+      done: leads.filter((l) => l.work_state === "completed").length,
     };
   }, [leads, calls, messages]);
+
+  const donePct = stats.leads ? Math.round((stats.done / stats.leads) * 100) : 0;
 
   return (
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -75,24 +103,32 @@ function DeskStats() {
         label="আমার লিড"
         value={String(stats.leads)}
         hint={`${stats.pending}টি এখনো বাকি`}
+        progress={donePct}
+        progressLabel={`${donePct}% কাজ শেষ`}
       />
       <Tile
         icon={<PhoneCall className="size-4" />}
         label="আজকের কল"
         value={String(stats.calls)}
-        hint={`${stats.connected}টিতে কথা হয়েছে`}
+        hint={`${stats.connected}টিতে কথা হয়েছে · ${stats.connectRate}%`}
+        delta={stats.callsDelta}
+        deltaUnit="টি"
       />
       <Tile
         icon={<Timer className="size-4" />}
         label="আজকের কথার সময়"
         value={formatTalkTime(stats.talk)}
         hint="সব কল মিলিয়ে"
+        delta={stats.talkDelta}
+        deltaUnit=" মিনিট"
       />
       <Tile
         icon={<MessageCircle className="size-4" />}
         label="আজকের হোয়াটসঅ্যাপ"
         value={String(stats.whatsapp)}
         hint="মেসেজ আদান-প্রদান"
+        delta={stats.whatsappDelta}
+        deltaUnit="টি"
       />
     </dl>
   );
@@ -103,20 +139,58 @@ function Tile({
   label,
   value,
   hint,
+  delta,
+  deltaUnit = "",
+  progress,
+  progressLabel,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint: string;
+  delta?: number;
+  deltaUnit?: string;
+  progress?: number;
+  progressLabel?: string;
 }) {
   return (
-    <div className="card-elevated p-3">
+    <div className="card-elevated relative overflow-hidden p-3">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-6 -top-6 size-16 rounded-full bg-primary/10 blur-xl"
+      />
       <dt className="flex items-center gap-2 text-xs text-muted-foreground">
         {icon}
         {label}
       </dt>
-      <dd className="tabular mt-1 text-xl font-bold">{value}</dd>
+      <dd className="tabular mt-1 flex flex-wrap items-baseline gap-2 text-xl font-bold">
+        {value}
+        {delta !== undefined && delta !== 0 && (
+          <span
+            className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+              delta > 0 ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {delta > 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+            {Math.abs(delta)}
+            {deltaUnit}
+          </span>
+        )}
+      </dd>
       <p className="text-[11px] text-muted-foreground">{hint}</p>
+      {progress !== undefined && (
+        <>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+            />
+          </div>
+          {progressLabel && (
+            <p className="mt-1 text-[10px] text-muted-foreground">{progressLabel}</p>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -197,6 +271,8 @@ function DeskPage() {
         </div>
 
         <DeskStats />
+
+        <SmartInsightStrip scope="desk" />
 
         <MobileLeadQueue />
 
