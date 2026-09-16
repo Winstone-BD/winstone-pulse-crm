@@ -41,3 +41,6 @@
 - [x] কোটা-নরমালাইজড পারফরম্যান্স (২৫/দিন, হায়দার ১৫/দিন) ও টপ-পারফর্মার র‍্যাঙ্কিং
 - [x] সাপোর্ট টিকেট তৈরি/গুরুত্ব পরিবর্তনে ওয়েব ও অ্যান্ড্রয়েড পুশ অ্যালার্ট (Firebase সংযোগ বাকি)
 - [x] মাসিক ৳৪,০০০ সার্ভিস বিল — service_invoices টেবিল, HQ ভিউ, IT কনসোল যাচাই/পেআউট, আইডেমপটেন্ট, অডিট; সেপ্টেম্বর ২০২৬ পরিশোধিত, অক্টোবর বকেয়া
+
+- [x] Executive HQ billing: per-invoice PDF download (status, due/grace dates)
+- [ ] Paddle go-live: publish project + verification form (user action in Payments tab)
