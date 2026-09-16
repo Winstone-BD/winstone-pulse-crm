@@ -91,7 +91,47 @@ export type DistributionResult = {
   /** How many more leads head office needs for one more full round. */
   shortfall: number;
   workDate: string;
+  /** True when every desk already held its full quota, so nothing moved. */
+  alreadyComplete: boolean;
+  /** Desks that were topped up to their quota by this run. */
+  toppedUp: { agentId: string; name: string; quota: number; had: number; given: number }[];
 };
+
+/** Today's run ledger row — the idempotency record and allocation cursor. */
+export async function distributionRun(workDate: string = dhakaToday()) {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("lead_distribution_runs")
+    .select("*")
+    .eq("work_date", workDate)
+    .maybeSingle();
+  return data;
+}
+
+/**
+ * How many database leads each desk already received for this work date.
+ * The daily run tops desks up to their quota instead of handing out a second
+ * full round, so calling it twice in one day can never double-assign.
+ */
+async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
+  const supabaseAdmin = await admin();
+  const counts = new Map<string, number>();
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabaseAdmin
+      .from("leads")
+      .select("assigned_to")
+      .eq("work_date", workDate)
+      .eq("assignment_source", "lead_database")
+      .not("assigned_to", "is", null)
+      .range(from, from + 999);
+    (data ?? []).forEach((row) => {
+      if (!row.assigned_to) return;
+      counts.set(row.assigned_to, (counts.get(row.assigned_to) ?? 0) + 1);
+    });
+    if (!data || data.length < 1000) break;
+  }
+  return counts;
+}
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
