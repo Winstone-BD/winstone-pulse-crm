@@ -38,17 +38,17 @@ export function CarryOverLeads() {
     Math.max(1, Math.round((todayStart - new Date(iso).getTime()) / 86_400_000));
 
   return (
-    <section className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4">
+    <section className="rounded-2xl border border-warning/40 bg-warning/5 p-4">
       <header className="flex flex-wrap items-center gap-2">
-        <AlarmClock className="size-4 text-amber-300" />
-        <h2 className="text-sm font-bold tracking-tight text-amber-300">
+        <AlarmClock className="size-4 text-warning" />
+        <h2 className="text-sm font-bold tracking-tight text-warning">
           গতকালের বাকি কাজ — আজকের পেন্ডিং লিড
         </h2>
-        <span className="ml-auto rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-200">
+        <span className="ml-auto rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">
           {rows.length}টি
         </span>
       </header>
-      <p className="mt-1 text-xs text-amber-200/90">
+      <p className="mt-1 text-xs text-warning/90">
         নির্ধারিত দিনে কাজ শেষ না হওয়া লিড পরদিন এখানে যুক্ত হয়। কল করে রিপোর্ট জমা দিলেই এটি
         তালিকা থেকে সরে যাবে।
       </p>

@@ -22,7 +22,7 @@ const STATE_LABEL: Record<string, string> = {
 
 const STATE_TONE: Record<string, string> = {
   overdue: "bg-destructive/15 text-destructive",
-  due: "bg-amber-500/15 text-amber-300",
+  due: "bg-warning/15 text-warning",
   upcoming: "bg-primary/10 text-primary",
   done: "bg-muted text-muted-foreground",
 };

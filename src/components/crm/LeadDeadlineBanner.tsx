@@ -39,13 +39,13 @@ export function LeadDeadlineBanner() {
   }).format(due);
 
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
-      <AlarmClock className="mt-0.5 size-5 shrink-0 text-amber-300" />
+    <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3">
+      <AlarmClock className="mt-0.5 size-5 shrink-0 text-warning" />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-amber-300">
+        <p className="text-sm font-semibold text-warning">
           আজকের লক্ষ্য{data.target ? `: ${data.target}টি লিড` : ""} — শেষ সময় {dueText}
         </p>
-        <p className="text-xs text-amber-200/90">{data.text}</p>
+        <p className="text-xs text-warning/90">{data.text}</p>
       </div>
     </div>
   );

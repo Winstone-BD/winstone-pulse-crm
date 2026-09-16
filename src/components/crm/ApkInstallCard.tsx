@@ -129,7 +129,7 @@ export function ApkInstallCard() {
             {result?.ok ? (
               <ShieldCheck className="size-4 text-primary" />
             ) : (
-              <ShieldAlert className="size-4 text-amber-500" />
+              <ShieldAlert className="size-4 text-warning" />
             )}
             লাইভ সাইট পরীক্ষা
           </h3>

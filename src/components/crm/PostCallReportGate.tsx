@@ -213,7 +213,7 @@ export function PostCallReportGate() {
       <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-lg overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <AlertTriangle className="size-4 text-amber-300" />
+            <AlertTriangle className="size-4 text-warning" />
             কল রিপোর্ট বাকি আছে
           </DialogTitle>
         </DialogHeader>
@@ -306,7 +306,7 @@ export function PostCallReportGate() {
         </div>
 
         {received ? (
-          <div className="space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+          <div className="space-y-2 rounded-xl border border-warning/30 bg-warning/5 p-3">
             <p className="text-xs font-bold">শ্রেণিবিন্যাস (বাধ্যতামূলক — কথা হয়েছে)</p>
             <div className="space-y-1.5">
               <Label className="text-xs">লিডের তাপমাত্রা</Label>
