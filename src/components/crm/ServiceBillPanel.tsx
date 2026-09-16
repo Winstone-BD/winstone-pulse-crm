@@ -281,8 +281,16 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
                 {STATUS_LABEL[invoice.status] ?? invoice.status}
               </span>
               <span className="text-xs text-muted-foreground">
-                মেয়াদ {dhakaDate(invoice.dueAt)}
+                মেয়াদ {dhakaDate(invoice.dueAt)} · গ্রেস {dhakaDate(invoice.graceUntil)}
               </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={() => downloadPdf(invoice)}
+              >
+                <Download className="size-3.5" /> PDF
+              </Button>
             </li>
           ))}
         </ul>
