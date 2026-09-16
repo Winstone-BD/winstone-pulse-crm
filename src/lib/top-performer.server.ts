@@ -74,17 +74,32 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
   const averageTalk = line.connected ? line.talkMinutes / line.connected : 0;
   const reportGap = Math.max(0, line.called - line.reports);
 
+  // Completion is always shown as the person's OWN quota ratio, so a 15-lead
+  // desk and a 25-lead desk read the same way.
+  const quotaLine = line.targetQuota
+    ? `কোটা ${line.completed}/${line.targetQuota} (${line.completionPercent}%)`
+    : "কোটা নির্ধারিত হয়নি";
+
   const reason = line.connected
-    ? `${line.connected}টি সংযোগ · ${line.reports}টি রিপোর্ট · ${line.talkMinutes} মিনিট কথা`
+    ? `${quotaLine} · ${line.connected}টি সংযোগ · ${line.reports}টি রিপোর্ট · ${line.talkMinutes} মিনিট কথা`
     : line.called
-      ? `${line.called}টি কল করেছেন — চেষ্টা চালু ছিল`
-      : "আজ এখনো যাচাইকৃত কল কার্যক্রম নেই";
+      ? `${quotaLine} · ${line.called}টি কল করেছেন — চেষ্টা চালু ছিল`
+      : line.completed
+        ? quotaLine
+        : "আজ এখনো যাচাইকৃত কল কার্যক্রম নেই";
 
   if (!line.called) {
     return {
       reason,
       gap: "আজকের কল শুরু হয়নি",
       advice: "আগামীকাল প্রথম শিফটেই নির্ধারিত কিউ থেকে কল শুরু করুন",
+    };
+  }
+  if (line.targetQuota > 0 && line.completionPercent < 100) {
+    return {
+      reason,
+      gap: `কোটার ${line.completionPercent}% শেষ — বাকি ${Math.max(0, line.targetQuota - line.completed)}টি`,
+      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় নিজের কোটার শতাংশে",
     };
   }
   if (reportGap > 0) {
