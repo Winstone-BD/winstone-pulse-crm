@@ -130,6 +130,12 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
 
   const architect = query.data?.architect;
 
+  const downloadPdf = (invoice: NonNullable<typeof current>) => {
+    const opened = openInvoicePdf(invoice, architect ?? null);
+    if (!opened) toast.error("পপআপ ব্লক হয়েছে — অনুমতি দিয়ে আবার চেষ্টা করুন");
+  };
+
+
   return (
     <section className="card-elevated space-y-4 p-4">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
