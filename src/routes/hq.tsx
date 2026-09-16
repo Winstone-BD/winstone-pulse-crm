@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  BarChart3,
   Flame,
   ListChecks,
   PhoneCall,
@@ -103,18 +104,66 @@ function ControlBoard() {
     talkMinutes: Math.round(row.talkSeconds / 60),
   }));
 
+  const funnelRows = useMemo(() => {
+    const order: { key: string; label: string }[] = [
+      { key: "pending", label: "নতুন / বাকি" },
+      { key: "contacted", label: "কথা হয়েছে" },
+      { key: "follow_up", label: "ফলো-আপ" },
+      { key: "closed", label: "বন্ধ" },
+    ];
+    return order.map((o) => ({
+      label: o.label,
+      value: leads.filter((l) => l.status === o.key).length,
+    }));
+  }, [leads]);
+
+  const sourceRows = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const lead of leads) {
+      const key = (lead.source ?? "unknown").replace(/_/g, " ");
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, value]) => ({ label, value }));
+  }, [leads]);
+
+  const sentimentRows = useMemo(() => {
+    const labels: Record<string, string> = {
+      positive: "পজিটিভ",
+      neutral: "নিউট্রাল",
+      negative: "নেগেটিভ",
+    };
+    const counts = new Map<string, number>();
+    for (const call of calls) {
+      if (!call.sentiment) continue;
+      counts.set(call.sentiment, (counts.get(call.sentiment) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, value]) => ({ label: labels[key] ?? key, value }));
+  }, [calls]);
+
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
 
   return (
     <>
       <div className="space-y-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">কন্ট্রোল বোর্ড</h1>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              পুরো ফ্লোরের প্রতিটি কল, রেকর্ডিং আর হোয়াটসঅ্যাপ কথা — সরাসরি লাইভ।
-            </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25">
+              <BarChart3 className="size-6" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
+                কন্ট্রোল বোর্ড
+              </h1>
+              <p className="text-xs text-muted-foreground sm:text-sm">
+                পুরো ফ্লোরের প্রতিটি কল, রেকর্ডিং আর হোয়াটসঅ্যাপ কথা — সরাসরি লাইভ।
+              </p>
+            </div>
           </div>
           <p className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
             শুধু দেখার ভিউ · লিড অ্যাসাইন হয় কোঅর্ডিনেটর ডেস্ক থেকে
@@ -185,6 +234,21 @@ function ControlBoard() {
             label="বাকি কাজ (PENDING)"
             value={String(leads.filter((l) => l.work_state !== "completed").length)}
             hint={`${leads.filter((l) => l.work_state === "completed").length}টি লিড শ্রেণিবিন্যাসসহ শেষ`}
+          />
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-3">
+          <MixCard
+            title="লিড ফানেল"
+            subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
+            rows={funnelRows}
+          />
+          <MixCard title="লিড কোথা থেকে" subtitle="সোর্স অনুযায়ী ভাগ" rows={sourceRows} />
+          <MixCard
+            title="কলের সুর"
+            subtitle="AI-বিশ্লেষিত কথাবার্তা"
+            rows={sentimentRows}
+            emptyLabel="এখনো AI-বিশ্লেষিত কল নেই"
           />
         </div>
 
@@ -290,16 +354,71 @@ function StatTile({
   return (
     <div className="card-elevated relative overflow-hidden p-5">
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
-      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className="grid size-6 place-items-center rounded-lg bg-accent text-accent-foreground">
+      <div className="flex items-start gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25">
           {icon}
         </span>
-        {label}
-      </p>
-      <p className="tabular mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {label}
+          </p>
+          <p className="tabular mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
       <Sparkline seed={value.length + label.length} />
     </div>
+  );
+}
+
+/** Compact intelligence card: labelled rows with a proportional bar. */
+function MixCard({
+  title,
+  subtitle,
+  rows,
+  emptyLabel = "এই সময়ে কোনো তথ্য নেই",
+}: {
+  title: string;
+  subtitle: string;
+  rows: { label: string; value: number }[];
+  emptyLabel?: string;
+}) {
+  const total = rows.reduce((sum, r) => sum + r.value, 0);
+  const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
+  return (
+    <section className="card-elevated p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold">{title}</h2>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+        <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+          {total}
+        </span>
+      </div>
+      {total === 0 ? (
+        <p className="mt-6 mb-2 text-center text-xs text-muted-foreground">{emptyLabel}</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {rows.map((row) => (
+            <li key={row.label} className="space-y-1">
+              <div className="flex items-baseline justify-between gap-2 text-xs">
+                <span className="truncate capitalize">{row.label}</span>
+                <span className="tabular text-muted-foreground">
+                  {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
