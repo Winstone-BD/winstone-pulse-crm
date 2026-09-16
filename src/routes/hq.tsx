@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   BarChart3,
   Flame,
+  Inbox,
   ListChecks,
   PhoneCall,
   ShieldCheck,
