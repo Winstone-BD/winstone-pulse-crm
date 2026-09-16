@@ -31,6 +31,8 @@ import {
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
   useSnapshot,
+  type CallRecording,
+  type Lead,
 } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
 
@@ -427,6 +429,18 @@ function ControlBoard() {
         messages={messages}
         open={openAgentId !== null}
         onOpenChange={(next) => !next && setOpenAgentId(null)}
+      />
+      <HqDrillSheet
+        spec={drill}
+        profiles={profiles}
+        leads={leads}
+        loading={isPending}
+        open={drill !== null}
+        onOpenChange={(next) => !next && setDrill(null)}
+        onSelectLead={(leadId) => {
+          setDrill(null);
+          setOpenLeadId(leadId);
+        }}
       />
     </>
   );
