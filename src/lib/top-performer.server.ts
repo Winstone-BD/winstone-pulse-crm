@@ -11,6 +11,9 @@ import { dhakaInstant, dhakaParts } from "@/lib/shift.server";
 /** Dhaka minute-of-day when the homepage reveals the winner (5:30 pm). */
 export const REVEAL_MINUTES = 17 * 60 + 30;
 
+/** Dhaka minute-of-day when the homepage switches to the new working day (9:05 am). */
+export const NEW_DAY_MINUTES = 9 * 60 + 5;
+
 export type PerformerLine = {
   agentId: string;
   name: string;
