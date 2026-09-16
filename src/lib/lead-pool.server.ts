@@ -358,6 +358,8 @@ export async function distributeDailyLeads(options: {
     shortage,
     shortfall,
     workDate: today,
+    alreadyComplete: false,
+    toppedUp,
   };
 }
 
