@@ -25,11 +25,11 @@ import type { BriefAgent, BriefBlock } from "@/lib/hq-brief.server";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
 
 const SLICE_COLORS = [
-  "var(--primary)",
-  "var(--live)",
-  "var(--chart-3, #f59e0b)",
-  "var(--chart-4, #8b5cf6)",
-  "var(--chart-5, #14b8a6)",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
   "var(--muted-foreground)",
 ];
 
