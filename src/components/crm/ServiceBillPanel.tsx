@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Loader2, Receipt, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Download, Loader2, Receipt, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { openInvoicePdf } from "@/lib/invoice-pdf";
 import { getAdminToken } from "@/lib/local-session";
+import type { ServiceInvoice } from "@/lib/service-billing.server";
 import {
   recordServicePayout,
   serviceBillingOverview,
