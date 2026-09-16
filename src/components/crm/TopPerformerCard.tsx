@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, Lightbulb, Medal, Sparkles, Trophy } from "lucide-react";
+import { ArrowUpRight, Clock, Crown, Lightbulb, Medal, Sparkles, Target, Trophy, Users } from "lucide-react";
 
 import { topPerformerToday } from "@/lib/top-performer.functions";
 
@@ -52,16 +52,19 @@ export function TopPerformerCard() {
   }
 
   const winner = data.winner;
+  const podium = [data.topThree[1], data.topThree[0], data.topThree[2]].filter(
+    (entry): entry is NonNullable<typeof entry> => Boolean(entry),
+  );
 
   return (
-    <section className="card-elevated p-4 sm:p-5">
-      <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+    <section className="card-elevated overflow-hidden p-4 sm:p-5">
+      <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b border-border pb-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
           <Trophy className="size-5" />
         </span>
         <div className="min-w-0">
           <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
-            আজকের সেরা পারফর্মার
+            আজকের Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
             {revealTime}-এর হিসাব — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে
@@ -71,47 +74,83 @@ export function TopPerformerCard() {
 
       {winner ? (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
             <Sparkles className="size-5 shrink-0 text-primary" />
             <p className="min-w-0 text-sm font-semibold text-primary">
-              অভিনন্দন {winner.name}! আজ আপনি ফ্লোরের সেরা — স্কোর {winner.score}
+              অভিনন্দন {winner.name}! আজকের নেতৃত্ব আপনার — স্কোর {winner.score}
             </p>
           </div>
 
-          <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="কথা হয়েছে" value={winner.connected} />
-            <Stat label="মোট কল" value={winner.called} />
-            <Stat label="কানেক্ট হার" value={`${winner.connectRate}%`} />
-            <Stat label="কথার মিনিট" value={winner.talkMinutes} />
-          </dl>
+          <div className="mt-4 grid gap-3 md:grid-cols-3 md:items-end">
+            {podium.map((agent) => (
+              <article
+                key={agent.agentId}
+                className={`relative min-w-0 rounded-lg border p-4 ${
+                  agent.rank === 1
+                    ? "border-primary/60 bg-primary/10 md:min-h-64 md:order-2"
+                    : agent.rank === 2
+                      ? "border-border bg-surface md:min-h-56 md:order-1"
+                      : "border-accent bg-accent/10 md:min-h-52 md:order-3"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full border border-primary/40 bg-ink text-primary">
+                    {agent.rank === 1 ? <Crown className="size-5" /> : <Medal className="size-5" />}
+                  </span>
+                  <span className="tabular text-3xl font-bold text-primary">#{agent.rank}</span>
+                </div>
+                <h3 className="mt-3 break-words text-base font-bold">{agent.name}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{agent.reason}</p>
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-xs">
+                  <span className="text-muted-foreground">স্কোর</span>
+                  <strong className="tabular text-lg text-primary">{agent.score}</strong>
+                </div>
+                <p className="mt-2 flex gap-2 text-xs text-warning">
+                  <Target className="mt-0.5 size-3.5 shrink-0" />
+                  <span>{agent.gap}</span>
+                </p>
+                <p className="mt-2 flex gap-2 text-xs text-muted-foreground">
+                  <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                  <span>{agent.advice}</span>
+                </p>
+                {agent.gapFromLeader > 0 ? (
+                  <p className="tabular mt-3 text-[11px] text-muted-foreground">
+                    লিডার থেকে {agent.gapFromLeader} স্কোর পিছিয়ে
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-xl border border-border bg-surface p-3">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Medal className="size-4 text-primary" /> কেন সেরা
-              </h3>
-              <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground sm:text-sm">
-                {data.reasons.map((line) => (
-                  <li key={line} className="flex gap-2">
-                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                    <span className="min-w-0">{line}</span>
+          <div className="mt-5 rounded-lg border border-border bg-surface p-3 sm:p-4">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Lightbulb className="size-4 text-primary" /> কাল আরও ভালো করতে
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              আজকের নিজের gap দেখে ছোট একটি লক্ষ্য নিয়ে শুরু করুন।
+            </p>
+            {data.otherAgents.length ? (
+              <ul className="mt-3 divide-y divide-border">
+                {data.otherAgents.map((agent) => (
+                  <li key={agent.agentId} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold">
+                        {agent.name} <span className="tabular text-xs text-primary">· {agent.score}</span>
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">{agent.reason}</p>
+                    </div>
+                    <div className="min-w-0 sm:max-w-72 sm:text-right">
+                      <p className="text-xs text-warning">Gap: {agent.gap}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{agent.advice}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="rounded-xl border border-warning/40 bg-warning/10 p-3">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-warning">
-                <Lightbulb className="size-4" /> কাল আরও ভালো করতে
-              </h3>
-              <ul className="mt-2 space-y-1.5 text-xs text-warning/90 sm:text-sm">
-                {data.advice.map((line) => (
-                  <li key={line} className="flex gap-2">
-                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-warning" />
-                    <span className="min-w-0">{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            ) : (
+              <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <Users className="size-4 text-primary" /> আজ সক্রিয় অন্য কোনো এজেন্ট নেই।
+              </p>
+            )}
           </div>
         </>
       ) : (

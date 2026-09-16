@@ -23,6 +23,14 @@ export type PerformerLine = {
   score: number;
 };
 
+export type RankedPerformer = PerformerLine & {
+  rank: number;
+  gapFromLeader: number;
+  reason: string;
+  gap: string;
+  advice: string;
+};
+
 export type TopPerformerBoard = {
   dateKey: string;
   /** False before 5:30 pm Dhaka — the homepage then shows a countdown instead. */
@@ -30,6 +38,8 @@ export type TopPerformerBoard = {
   revealAt: string;
   winner: PerformerLine | null;
   runnerUp: PerformerLine | null;
+  topThree: RankedPerformer[];
+  otherAgents: RankedPerformer[];
   /** Plain-Bengali lines explaining why this agent won. */
   reasons: string[];
   /** What the whole floor should push on tomorrow, from the same numbers. */
@@ -42,8 +52,60 @@ export type TopPerformerBoard = {
  * then talk time and follow-ups booked. Deliberately simple so the reason lines
  * on the homepage can be read straight off the numbers.
  */
-function scoreOf(line: Omit<PerformerLine, "score" | "connectRate">): number {
+export function scoreOf(line: Omit<PerformerLine, "score" | "connectRate">): number {
   return line.connected * 4 + line.reports * 2 + line.followUps * 1.5 + line.talkMinutes * 0.4;
+}
+
+export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "reason" | "gap" | "advice"> {
+  const averageTalk = line.connected ? line.talkMinutes / line.connected : 0;
+  const reportGap = Math.max(0, line.called - line.reports);
+
+  const reason = line.connected
+    ? `${line.connected}টি সংযোগ · ${line.reports}টি রিপোর্ট · ${line.talkMinutes} মিনিট কথা`
+    : line.called
+      ? `${line.called}টি কল করেছেন — চেষ্টা চালু ছিল`
+      : "আজ এখনো যাচাইকৃত কল কার্যক্রম নেই";
+
+  if (!line.called) {
+    return {
+      reason,
+      gap: "আজকের কল শুরু হয়নি",
+      advice: "আগামীকাল প্রথম শিফটেই নির্ধারিত কিউ থেকে কল শুরু করুন",
+    };
+  }
+  if (reportGap > 0) {
+    return {
+      reason,
+      gap: `${reportGap}টি কল রিপোর্ট বাকি`,
+      advice: "প্রতি কলের পরপরই সংক্ষিপ্ত রিপোর্ট জমা দিন",
+    };
+  }
+  if (line.connectRate < 35) {
+    return {
+      reason,
+      gap: `কানেক্ট হার ${line.connectRate}%`,
+      advice: "দুপুর ও সন্ধ্যার ভালো সময়ে আবার চেষ্টা করুন",
+    };
+  }
+  if (line.followUps < 5) {
+    return {
+      reason,
+      gap: `ফলো-আপ মাত্র ${line.followUps}টি`,
+      advice: "আগ্রহী কথোপকথন থেকে অন্তত ৫টি ফলো-আপ ঠিক করুন",
+    };
+  }
+  if (line.connected > 0 && averageTalk < 2) {
+    return {
+      reason,
+      gap: `গড় কথা ${averageTalk.toFixed(1)} মিনিট`,
+      advice: "প্রয়োজন বুঝতে প্রতিটি সংযোগে আরও একটি প্রশ্ন করুন",
+    };
+  }
+  return {
+    reason,
+    gap: "উল্লেখযোগ্য ঘাটতি নেই",
+    advice: "এই ছন্দ ধরে রাখুন — কালও একই লক্ষ্য নিয়ে শুরু করুন",
+  };
 }
 
 export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerformerBoard> {
@@ -100,9 +162,27 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     };
   });
 
-  const ranked = lines.filter((l) => l.score > 0).sort((a, b) => b.score - a.score);
-  const winner = ranked[0] ?? null;
-  const runnerUp = ranked[1] ?? null;
+  const ranked = [...lines].sort(
+    (a, b) =>
+      b.score - a.score ||
+      b.connected - a.connected ||
+      b.reports - a.reports ||
+      b.talkMinutes - a.talkMinutes ||
+      a.name.localeCompare(b.name, "bn"),
+  );
+  const activeRanked = ranked.filter((line) => line.score > 0);
+  const leaderScore = activeRanked[0]?.score ?? 0;
+  const detailed = ranked.map((line, index): RankedPerformer => ({
+    ...line,
+    rank: index + 1,
+    gapFromLeader: Math.max(0, leaderScore - line.score),
+    ...performerInsight(line),
+  }));
+  const topThree = detailed.filter((line) => line.score > 0).slice(0, 3);
+  const topIds = new Set(topThree.map((line) => line.agentId));
+  const otherAgents = detailed.filter((line) => !topIds.has(line.agentId));
+  const winner = activeRanked[0] ?? null;
+  const runnerUp = activeRanked[1] ?? null;
 
   const team = lines.reduce(
     (acc, l) => ({
@@ -150,6 +230,8 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     revealAt: revealAt.toISOString(),
     winner,
     runnerUp,
+    topThree,
+    otherAgents,
     reasons,
     advice,
     team,
