@@ -10,9 +10,9 @@
 
 export function normalizePhone(raw: string): string {
   const digits = raw.replace(/[^\d]/g, "");
-  if (digits.length === 13 && digits.startsWith("880")) return `0${digits.slice(3)}`;
-  if (digits.length === 11 && digits.startsWith("01")) return digits;
-  if (digits.length === 10 && digits.startsWith("1")) return `0${digits}`;
+  if (/^8801[3-9]\d{8}$/.test(digits)) return digits;
+  if (/^01[3-9]\d{8}$/.test(digits)) return `88${digits}`;
+  if (/^1[3-9]\d{8}$/.test(digits)) return `880${digits}`;
   return raw.trim();
 }
 
@@ -59,36 +59,16 @@ export async function resolveLeadId(input: {
   source: string;
   fallbackName?: string | null;
 }): Promise<{ leadId: string | null; created: boolean }> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
   if (input.leadId) return { leadId: input.leadId, created: false };
   if (!input.phoneNumber) return { leadId: null, created: false };
 
   const phone = normalizePhone(input.phoneNumber);
-  const variants = Array.from(new Set([phone, input.phoneNumber.trim()]));
-
-  const { data: existing } = await supabaseAdmin
-    .from("leads")
-    .select("id")
-    .in("phone_number", variants)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (existing) return { leadId: existing.id, created: false };
-
-  const { data: created, error } = await supabaseAdmin
-    .from("leads")
-    .insert({
-      name: input.fallbackName?.trim() || `Unknown ${phone}`,
-      phone_number: phone,
-      source: input.source,
-      status: "contacted",
-      assigned_to: input.agentId ?? null,
-      assigned_agent_id: input.agentId ?? null,
-    })
-    .select("id")
-    .single();
-  if (error || !created) return { leadId: null, created: false };
-
-  return { leadId: created.id, created: true };
+  const { intakeLead } = await import("@/lib/lead-intake.server");
+  const result = await intakeLead({
+    name: input.fallbackName?.trim() || `Unknown ${phone}`,
+    phoneNumber: input.phoneNumber,
+    ownerId: input.agentId ?? null,
+    source: input.source,
+  });
+  return { leadId: result.leadId, created: !result.duplicate };
 }
