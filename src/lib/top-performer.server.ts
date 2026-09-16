@@ -144,16 +144,35 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
   };
 }
 
-export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerformerBoard> {
+export type TopPerformerDate = {
+  dateKey: string;
+  effectiveDateKey: string;
+  minutes: number;
+  isPreviousDay: boolean;
+  dayLabel: "আজকের" | "গতকের";
+  revealed: boolean;
+};
+
+/** Pure date helper so the 9:05 am rollover can be unit-tested without the DB. */
+export function topPerformerDate(at: Date = new Date()): TopPerformerDate {
   const { dateKey, minutes } = dhakaParts(at);
-  // The working day on the homepage rolls over at 9:05 am Dhaka (just before the
-  // 9:10 lead distribution). Until then we keep showing the previous day's board.
   const isPreviousDay = minutes < NEW_DAY_MINUTES;
   const effectiveDateKey = isPreviousDay
     ? new Date(dhakaInstant(dateKey, 0).getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
     : dateKey;
-  const dayLabel: "আজকের" | "গতকের" = isPreviousDay ? "গতকের" : "আজকের";
-  const revealed = isPreviousDay || minutes >= REVEAL_MINUTES;
+  return {
+    dateKey,
+    effectiveDateKey,
+    minutes,
+    isPreviousDay,
+    dayLabel: isPreviousDay ? "গতকের" : "আজকের",
+    revealed: isPreviousDay || minutes >= REVEAL_MINUTES,
+  };
+}
+
+export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerformerBoard> {
+  const { effectiveDateKey, isPreviousDay, dayLabel, revealed } = topPerformerDate(at);
+  const { minutes } = dhakaParts(at);
   const revealAt = dhakaInstant(effectiveDateKey, REVEAL_MINUTES);
   const startIso = dhakaInstant(effectiveDateKey, 0).toISOString();
   const endIso = isPreviousDay
