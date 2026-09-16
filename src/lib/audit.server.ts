@@ -57,7 +57,8 @@ export type AuditAction =
   | "daily_quota_changed"
   | "service_invoice_raised"
   | "service_payment_verified"
-  | "service_payout_recorded";
+  | "service_payout_recorded"
+  | "service_bill_alert_raised";
 
 export async function logAudit(input: {
   action: AuditAction;
