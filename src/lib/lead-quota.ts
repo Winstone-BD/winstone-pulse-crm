@@ -42,3 +42,21 @@ export function ratioScore(score: number, quota: number): number {
   if (quota <= 0) return score;
   return Math.round((score / quota) * DEFAULT_DAILY_QUOTA);
 }
+
+/**
+ * Effective quota for one day: the base round plus any extra leads granted
+ * today. Extra leads count towards the target, so an extra batch cannot quietly
+ * lower somebody's completion percentage.
+ */
+export function effectiveQuota(baseQuota: number, extraToday = 0): number {
+  return Math.max(0, baseQuota) + Math.max(0, extraToday);
+}
+
+/**
+ * Quota-normalised completion: 15 of 15 and 25 of 25 are both 100%.
+ * Capped at 150% so an unusually big day cannot distort the leaderboard.
+ */
+export function completionPercent(completed: number, quota: number): number {
+  if (quota <= 0) return 0;
+  return Math.min(150, Math.round((Math.max(0, completed) / quota) * 100));
+}

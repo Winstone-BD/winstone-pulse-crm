@@ -91,7 +91,47 @@ export type DistributionResult = {
   /** How many more leads head office needs for one more full round. */
   shortfall: number;
   workDate: string;
+  /** True when every desk already held its full quota, so nothing moved. */
+  alreadyComplete: boolean;
+  /** Desks that were topped up to their quota by this run. */
+  toppedUp: { agentId: string; name: string; quota: number; had: number; given: number }[];
 };
+
+/** Today's run ledger row — the idempotency record and allocation cursor. */
+export async function distributionRun(workDate: string = dhakaToday()) {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("lead_distribution_runs")
+    .select("*")
+    .eq("work_date", workDate)
+    .maybeSingle();
+  return data;
+}
+
+/**
+ * How many database leads each desk already received for this work date.
+ * The daily run tops desks up to their quota instead of handing out a second
+ * full round, so calling it twice in one day can never double-assign.
+ */
+async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
+  const supabaseAdmin = await admin();
+  const counts = new Map<string, number>();
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabaseAdmin
+      .from("leads")
+      .select("assigned_to")
+      .eq("work_date", workDate)
+      .eq("assignment_source", "lead_database")
+      .not("assigned_to", "is", null)
+      .range(from, from + 999);
+    (data ?? []).forEach((row) => {
+      if (!row.assigned_to) return;
+      counts.set(row.assigned_to, (counts.get(row.assigned_to) ?? 0) + 1);
+    });
+    if (!data || data.length < 1000) break;
+  }
+  return counts;
+}
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
@@ -112,26 +152,63 @@ export async function distributeDailyLeads(options: {
   // runs on a fixed lighter quota (Sell Team Admin).
   const { quotaFor } = await import("@/lib/lead-quota");
   const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
-  const need = agents.reduce((sum, a) => sum + (quotas.get(a.id) ?? options.perAgent), 0);
-  // Read more than needed so phone duplicates can be skipped without shrinking
-  // today's hand-out.
-  const { data: pool } = await supabaseAdmin
-    .from("leads")
-    .select("id, name, phone_number, created_at")
-    .is("assigned_to", null)
-    .is("assigned_agent_id", null)
-    .or(USABLE)
-    .order("created_at", { ascending: true })
-    .limit(Math.min(need * 3 + 200, 6000));
+
+  // Idempotency: what each desk already holds for today is subtracted from its
+  // quota, so a second run (cron retry, double click) only fills real gaps.
+  const held = await assignedTodayByAgent(today);
+  const shortfallByAgent = new Map<string, number>();
+  for (const agent of agents) {
+    const quota = quotas.get(agent.id) ?? options.perAgent;
+    shortfallByAgent.set(agent.id, Math.max(0, quota - (held.get(agent.id) ?? 0)));
+  }
+  const need = [...shortfallByAgent.values()].reduce((sum, value) => sum + value, 0);
+  const fullRound = agents.reduce((sum, a) => sum + (quotas.get(a.id) ?? options.perAgent), 0);
+
+  const run = await distributionRun(today);
+  if (need === 0) {
+    const remainingNow = await usablePoolCount();
+    return {
+      moved: 0,
+      agents: agents.length,
+      perAgent: options.perAgent,
+      duplicatesSkipped: 0,
+      remaining: remainingNow,
+      shortage: remainingNow < fullRound,
+      shortfall: Math.max(0, fullRound - remainingNow),
+      workDate: today,
+      alreadyComplete: true,
+      toppedUp: [],
+    };
+  }
+
+  // The cursor remembers how far down the (oldest-first) database the engine got,
+  // so a run does not re-scan rows it already walked past. It is a hint only —
+  // when the cursor window cannot cover today's need, the full pool is read.
+  const cursor = run?.cursor_created_at ?? null;
+  async function readPool(fromCursor: string | null) {
+    let query = supabaseAdmin
+      .from("leads")
+      .select("id, name, phone_number, created_at")
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .or(USABLE);
+    if (fromCursor) query = query.gte("created_at", fromCursor);
+    const { data } = await query
+      .order("created_at", { ascending: true })
+      .limit(Math.min(need * 3 + 200, 6000));
+    return data ?? [];
+  }
+  let pool = await readPool(cursor);
+  if (cursor && pool.length < need) pool = await readPool(null);
 
   const taken = await assignedPhoneKeys();
   const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
-  const databaseEligible = new Set(await eligibleLeadIds((pool ?? []).map((lead) => lead.id)));
+  const databaseEligible = new Set(await eligibleLeadIds(pool.map((lead) => lead.id)));
   const seen = new Set<string>();
-  const usable: { id: string }[] = [];
+  const usable: { id: string; createdAt: string }[] = [];
   const duplicates: string[] = [];
 
-  for (const lead of pool ?? []) {
+  for (const lead of pool) {
     const keys = phoneKeys(lead.phone_number);
     if (keys.length === 0 || !databaseEligible.has(lead.id)) {
       duplicates.push(lead.id);
@@ -142,7 +219,7 @@ export async function distributeDailyLeads(options: {
       continue;
     }
     keys.forEach((key) => seen.add(key));
-    if (usable.length < need) usable.push({ id: lead.id });
+    if (usable.length < need) usable.push({ id: lead.id, createdAt: lead.created_at });
   }
 
   // Park duplicates so they never come up again, and so the database count is honest.
@@ -159,22 +236,27 @@ export async function distributeDailyLeads(options: {
   }
 
   // Round-robin, oldest first, so an incomplete batch is still fair. Each desk
-  // stops at its own quota, so a lighter desk never takes a full round.
+  // stops at ITS OWN remaining gap, so a lighter desk never takes a full round
+  // and a desk that already has today's leads takes nothing.
   const slots: PoolAgent[] = [];
-  const maxQuota = Math.max(...agents.map((a) => quotas.get(a.id) ?? options.perAgent));
-  for (let round = 0; round < maxQuota; round += 1) {
+  const maxGap = Math.max(0, ...agents.map((a) => shortfallByAgent.get(a.id) ?? 0));
+  for (let round = 0; round < maxGap; round += 1) {
     for (const agent of agents) {
-      if (round < (quotas.get(agent.id) ?? options.perAgent)) slots.push(agent);
+      if (round < (shortfallByAgent.get(agent.id) ?? 0)) slots.push(agent);
     }
   }
 
   const buckets = new Map<string, { name: string; leadIds: string[] }>();
   usable.forEach((lead, index) => {
-    const agent = slots[index] ?? agents[index % agents.length]!;
+    const agent = slots[index];
+    if (!agent) return;
     const bucket = buckets.get(agent.id) ?? { name: agent.name, leadIds: [] };
     bucket.leadIds.push(lead.id);
     buckets.set(agent.id, bucket);
   });
+  const cursorCreatedAt = usable.length
+    ? usable.map((lead) => lead.createdAt).sort().at(-1)!
+    : (cursor ?? null);
 
   const CHUNK = 100;
   let moved = 0;
@@ -219,8 +301,34 @@ export async function distributeDailyLeads(options: {
   }
 
   const remaining = await usablePoolCount();
-  const shortfall = Math.max(0, need - remaining);
-  const shortage = remaining < need;
+  const shortfall = Math.max(0, fullRound - remaining);
+  const shortage = remaining < fullRound;
+
+  // Ledger row: one per work date, carrying the cursor forward for tomorrow.
+  await supabaseAdmin.from("lead_distribution_runs").upsert(
+    {
+      work_date: today,
+      status: "completed",
+      trigger: options.trigger,
+      per_agent: options.perAgent,
+      moved: (run?.moved ?? 0) + moved,
+      duplicates_skipped: (run?.duplicates_skipped ?? 0) + duplicates.length,
+      cursor_created_at: cursorCreatedAt,
+      cursor_lead_id: null,
+      actor_label: options.actorLabel ?? "IT Console",
+      actor_profile_id: options.actorProfileId ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "work_date" },
+  );
+
+  const toppedUp = [...buckets.entries()].map(([agentId, bucket]) => ({
+    agentId,
+    name: bucket.name,
+    quota: quotas.get(agentId) ?? options.perAgent,
+    had: held.get(agentId) ?? 0,
+    given: bucket.leadIds.length,
+  }));
 
   const { logAudit } = await import("@/lib/audit.server");
   await logAudit({
@@ -239,7 +347,8 @@ export async function distributeDailyLeads(options: {
     },
   });
 
-  if (shortage) await raiseShortageAlert({ remaining, need, perAgent: options.perAgent });
+  if (shortage)
+    await raiseShortageAlert({ remaining, need: fullRound, perAgent: options.perAgent });
 
   return {
     moved,
@@ -250,6 +359,8 @@ export async function distributeDailyLeads(options: {
     shortage,
     shortfall,
     workDate: today,
+    alreadyComplete: false,
+    toppedUp,
   };
 }
 

@@ -1109,6 +1109,59 @@ export type Database = {
           },
         ]
       }
+      lead_distribution_runs: {
+        Row: {
+          actor_label: string | null
+          actor_profile_id: string | null
+          created_at: string
+          cursor_created_at: string | null
+          cursor_lead_id: string | null
+          duplicates_skipped: number
+          moved: number
+          per_agent: number
+          status: string
+          trigger: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          actor_label?: string | null
+          actor_profile_id?: string | null
+          created_at?: string
+          cursor_created_at?: string | null
+          cursor_lead_id?: string | null
+          duplicates_skipped?: number
+          moved?: number
+          per_agent?: number
+          status?: string
+          trigger?: string
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          actor_label?: string | null
+          actor_profile_id?: string | null
+          created_at?: string
+          cursor_created_at?: string | null
+          cursor_lead_id?: string | null
+          duplicates_skipped?: number
+          moved?: number
+          per_agent?: number
+          status?: string
+          trigger?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_distribution_runs_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_events: {
         Row: {
           agent_id: string | null
@@ -1452,6 +1505,99 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      push_deliveries: {
+        Row: {
+          created_at: string
+          delivered: number
+          entity_id: string | null
+          error_message: string | null
+          event_key: string
+          failed: number
+          id: string
+          kind: string
+          provider: string | null
+          recipients: number
+        }
+        Insert: {
+          created_at?: string
+          delivered?: number
+          entity_id?: string | null
+          error_message?: string | null
+          event_key: string
+          failed?: number
+          id?: string
+          kind: string
+          provider?: string | null
+          recipients?: number
+        }
+        Update: {
+          created_at?: string
+          delivered?: number
+          entity_id?: string | null
+          error_message?: string | null
+          event_key?: string
+          failed?: number
+          id?: string
+          kind?: string
+          provider?: string | null
+          recipients?: number
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          id: string
+          label: string | null
+          last_seen_at: string
+          platform: string
+          profile_id: string
+          revoked_at: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          label?: string | null
+          last_seen_at?: string
+          platform?: string
+          profile_id: string
+          revoked_at?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          label?: string | null
+          last_seen_at?: string
+          platform?: string
+          profile_id?: string
+          revoked_at?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "agent_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_tokens_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recording_doc_backups: {
         Row: {

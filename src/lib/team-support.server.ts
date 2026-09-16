@@ -112,7 +112,96 @@ export async function createSupportTicket(input: CreateTicketInput) {
     action: `টিম সাপোর্ট ইনবক্স → ${ref}`,
   });
 
+  // Push to Haidar's phone/browser and to the admins who watch the desk.
+  const { sendPush } = await import("@/lib/push.server");
+  await sendPush({
+    eventKey: `support_ticket_created:${data.id}`,
+    kind: "support_ticket_created",
+    entityId: data.id,
+    profileIds: await notifyRecipients(),
+    payload: {
+      title: `নতুন সাপোর্ট অনুরোধ — ${input.agentName}`,
+      body: `${categoryLabel(input.category)} · ${PRIORITY_LABELS[input.priority]} — ${input.subject}`,
+      path: "/desk?tab=support",
+      data: { ref, ticket_id: data.id, priority: input.priority },
+    },
+  });
+
   return data;
+}
+
+/** Who should be alerted about support activity: the desk owners plus admins. */
+export async function notifyRecipients(): Promise<string[]> {
+  const supabaseAdmin = await admin();
+  const ids = new Set(await supportAdminIds());
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .eq("approval_status", "approved");
+  (data ?? []).forEach((row) => ids.add(row.id));
+  return [...ids];
+}
+
+/**
+ * Changes a ticket's urgency. A raised priority is a real event: it re-alerts
+ * the desk owners so an escalation is never missed.
+ */
+export async function updateTicketPriority(input: {
+  ticketId: string;
+  priority: SupportPriority;
+  actorProfileId?: string | null;
+  actorLabel?: string | null;
+}) {
+  const supabaseAdmin = await admin();
+  const { data: before } = await supabaseAdmin
+    .from("team_support_tickets")
+    .select("ref, priority, subject, agent_name, category")
+    .eq("id", input.ticketId)
+    .maybeSingle();
+  if (!before) throw new Error("এই অনুরোধ পাওয়া যায়নি");
+  if (before.priority === input.priority) return { ref: before.ref, priority: input.priority };
+
+  const { error } = await supabaseAdmin
+    .from("team_support_tickets")
+    .update({ priority: input.priority, unread_for_admin: true })
+    .eq("id", input.ticketId);
+  if (error) throw new Error(error.message);
+
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({
+    action: "support_ticket_priority_changed",
+    entityType: "team_support_ticket",
+    entityId: input.ticketId,
+    actorProfileId: input.actorProfileId ?? null,
+    actorLabel: input.actorLabel ?? null,
+    metadata: { ref: before.ref, from: before.priority, to: input.priority },
+  });
+
+  await supabaseAdmin.from("system_alerts").insert({
+    code: "team_support_priority",
+    severity: input.priority === "critical" ? "critical" : "warning",
+    title: `গুরুত্ব বদলেছে — ${before.ref}`,
+    detail: `${before.agent_name} · ${categoryLabel(before.category)}\n${PRIORITY_LABELS[before.priority as SupportPriority]} → ${PRIORITY_LABELS[input.priority]}`,
+    action: `টিম সাপোর্ট ইনবক্স → ${before.ref}`,
+  });
+
+  const { sendPush } = await import("@/lib/push.server");
+  await sendPush({
+    eventKey: `support_priority:${input.ticketId}:${input.priority}:${new Date().toISOString().slice(0, 16)}`,
+    kind: "support_ticket_priority_changed",
+    entityId: input.ticketId,
+    profileIds: await notifyRecipients(),
+    payload: {
+      title: `গুরুত্ব বদলেছে — ${before.ref}`,
+      body: `${PRIORITY_LABELS[before.priority as SupportPriority]} → ${PRIORITY_LABELS[input.priority]} · ${before.subject}`,
+      path: "/desk?tab=support",
+      data: { ref: before.ref, ticket_id: input.ticketId, priority: input.priority },
+    },
+  });
+
+  return { ref: before.ref, priority: input.priority };
 }
 
 export async function listMyTickets(agentProfileId: string) {

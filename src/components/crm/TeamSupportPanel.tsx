@@ -75,7 +75,7 @@ export function TeamSupportPanel() {
 
   const sendReply = useMutation({
     mutationFn: (ticketId: string) =>
-      reply({ data: { adminToken: null, ticketId, body: replyText, as: "agent" } }),
+      reply({ data: { adminToken: null, ticketId, body: replyText } }),
     onSuccess: () => {
       setReplyText("");
       toast.success("বার্তা পাঠানো হয়েছে");

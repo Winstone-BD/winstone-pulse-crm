@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Inbox, Loader2 } from "lucide-react";
+import { Bell, Inbox, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,11 +16,14 @@ import {
 } from "@/lib/team-support-shared";
 import {
   openSupportTicket,
+  registerWebPushToken,
   replyToSupportTicket,
+  setSupportTicketPriority,
   setSupportTicketStatus,
   supportInbox,
 } from "@/lib/team-support.functions";
 import { getAdminToken } from "@/lib/local-session";
+import { PUSH_MESSAGES, requestWebPushToken } from "@/lib/web-push";
 
 type Filter = "unread" | "open" | "high" | "critical" | "resolved" | "all";
 
@@ -40,6 +43,8 @@ export function TeamSupportInbox() {
   const setStatus = useServerFn(setSupportTicketStatus);
   const markRead = useServerFn(openSupportTicket);
   const reply = useServerFn(replyToSupportTicket);
+  const setPriority = useServerFn(setSupportTicketPriority);
+  const saveToken = useServerFn(registerWebPushToken);
 
   const [filter, setFilter] = useState<Filter>("unread");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -82,9 +87,35 @@ export function TeamSupportInbox() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const changePriority = useMutation({
+    mutationFn: (input: { ticketId: string; priority: SupportPriority }) =>
+      setPriority({ data: { adminToken: getAdminToken(), ...input } }),
+    onSuccess: () => {
+      toast.success("গুরুত্ব বদলানো হয়েছে — সংশ্লিষ্টদের কাছে অ্যালার্ট গেছে");
+      void queryClient.invalidateQueries({ queryKey: ["team-support-inbox"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  // One click turns on browser alerts for new or escalated requests.
+  const enableAlerts = useMutation({
+    mutationFn: async () => {
+      const result = await requestWebPushToken();
+      if (result.status === "registered" && result.token) {
+        await saveToken({ data: { adminToken: getAdminToken(), token: result.token, label: null } });
+      }
+      return result.status;
+    },
+    onSuccess: (status) =>
+      status === "registered"
+        ? toast.success(PUSH_MESSAGES[status])
+        : toast.info(PUSH_MESSAGES[status]),
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const sendReply = useMutation({
     mutationFn: (ticketId: string) =>
-      reply({ data: { adminToken: getAdminToken(), ticketId, body: replyText, as: "team_admin" } }),
+      reply({ data: { adminToken: getAdminToken(), ticketId, body: replyText } }),
     onSuccess: () => {
       setReplyText("");
       toast.success("উত্তর পাঠানো হয়েছে");
@@ -96,7 +127,7 @@ export function TeamSupportInbox() {
   function open(ticketId: string, wasUnread: boolean) {
     setOpenId(openId === ticketId ? null : ticketId);
     if (wasUnread) {
-      void markRead({ data: { adminToken: getAdminToken(), ticketId, side: "admin" } }).then(() =>
+      void markRead({ data: { adminToken: getAdminToken(), ticketId } }).then(() =>
         queryClient.invalidateQueries({ queryKey: ["team-support-inbox"] }),
       );
     }
@@ -118,11 +149,24 @@ export function TeamSupportInbox() {
             </p>
           </div>
         </div>
-        {unread > 0 ? (
-          <Badge className="shrink-0 bg-destructive text-destructive-foreground">
-            {unread} না-পড়া
-          </Badge>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {unread > 0 ? (
+            <Badge className="bg-destructive text-destructive-foreground">{unread} না-পড়া</Badge>
+          ) : null}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={enableAlerts.isPending}
+            onClick={() => enableAlerts.mutate()}
+          >
+            {enableAlerts.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Bell className="size-4" />
+            )}
+            <span className="hidden sm:inline">অ্যালার্ট চালু</span>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
@@ -229,6 +273,20 @@ export function TeamSupportInbox() {
                         </Button>
                       ),
                     )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">গুরুত্ব:</span>
+                    {(["low", "normal", "high", "critical"] as SupportPriority[]).map((priority) => (
+                      <Button
+                        key={priority}
+                        size="sm"
+                        variant={ticket.priority === priority ? "default" : "outline"}
+                        disabled={changePriority.isPending || ticket.priority === priority}
+                        onClick={() => changePriority.mutate({ ticketId: ticket.id, priority })}
+                      >
+                        {PRIORITY_LABELS[priority]}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               ) : null}

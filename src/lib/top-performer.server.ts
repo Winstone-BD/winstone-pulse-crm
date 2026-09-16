@@ -23,6 +23,14 @@ export type PerformerLine = {
   score: number;
   /** This desk's own daily lead quota (25 by default, 15 for the Sell Team Admin). */
   quota: number;
+  /** Base quota plus extra leads granted today — the day's real target. */
+  targetQuota: number;
+  /** Leads handed to this desk today. */
+  assigned: number;
+  /** Leads this desk finished today (classified + completed). */
+  completed: number;
+  /** completed ÷ own quota × 100 — 15/15 and 25/25 are both 100%. */
+  completionPercent: number;
   /** Quota-normalised score — how the same effort looks on a standard round. */
   fairScore: number;
 };
@@ -57,7 +65,7 @@ export type TopPerformerBoard = {
  * on the homepage can be read straight off the numbers.
  */
 export function scoreOf(
-  line: Omit<PerformerLine, "score" | "connectRate" | "quota" | "fairScore">,
+  line: Pick<PerformerLine, "connected" | "reports" | "followUps" | "talkMinutes">,
 ): number {
   return line.connected * 4 + line.reports * 2 + line.followUps * 1.5 + line.talkMinutes * 0.4;
 }
@@ -66,17 +74,32 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
   const averageTalk = line.connected ? line.talkMinutes / line.connected : 0;
   const reportGap = Math.max(0, line.called - line.reports);
 
+  // Completion is always shown as the person's OWN quota ratio, so a 15-lead
+  // desk and a 25-lead desk read the same way.
+  const quotaLine = line.targetQuota
+    ? `কোটা ${line.completed}/${line.targetQuota} (${line.completionPercent}%)`
+    : "কোটা নির্ধারিত হয়নি";
+
   const reason = line.connected
-    ? `${line.connected}টি সংযোগ · ${line.reports}টি রিপোর্ট · ${line.talkMinutes} মিনিট কথা`
+    ? `${quotaLine} · ${line.connected}টি সংযোগ · ${line.reports}টি রিপোর্ট · ${line.talkMinutes} মিনিট কথা`
     : line.called
-      ? `${line.called}টি কল করেছেন — চেষ্টা চালু ছিল`
-      : "আজ এখনো যাচাইকৃত কল কার্যক্রম নেই";
+      ? `${quotaLine} · ${line.called}টি কল করেছেন — চেষ্টা চালু ছিল`
+      : line.completed
+        ? quotaLine
+        : "আজ এখনো যাচাইকৃত কল কার্যক্রম নেই";
 
   if (!line.called) {
     return {
       reason,
       gap: "আজকের কল শুরু হয়নি",
       advice: "আগামীকাল প্রথম শিফটেই নির্ধারিত কিউ থেকে কল শুরু করুন",
+    };
+  }
+  if (line.targetQuota > 0 && line.completionPercent < 100) {
+    return {
+      reason,
+      gap: `কোটার ${line.completionPercent}% শেষ — বাকি ${Math.max(0, line.targetQuota - line.completed)}টি`,
+      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় নিজের কোটার শতাংশে",
     };
   }
   if (reportGap > 0) {
@@ -143,9 +166,20 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   if (reportsRes.error) throw new Error(reportsRes.error.message);
   if (followRes.error) throw new Error(followRes.error.message);
 
-  const { quotaFor, ratioScore } = await import("@/lib/lead-quota");
-  const { dailyPlan } = await import("@/lib/lead-pool.server");
+  const { quotaFor, ratioScore, effectiveQuota, completionPercent } = await import(
+    "@/lib/lead-quota"
+  );
+  const { dailyPlan, extraGrantsToday } = await import("@/lib/lead-pool.server");
   const floorQuota = (await dailyPlan()).perAgent;
+  const extraToday = await extraGrantsToday();
+
+  // Today's own list per desk: how many leads arrived and how many are finished.
+  const { data: todayLeads } = await supabaseAdmin
+    .from("leads")
+    .select("assigned_to, work_state")
+    .eq("work_date", dateKey)
+    .not("assigned_to", "is", null)
+    .limit(20000);
 
   const reports = reportsRes.data ?? [];
   const follows = followRes.data ?? [];
@@ -156,6 +190,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     const talkMinutes = Math.round(
       mine.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60,
     );
+    const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
+    const quota = quotaFor(agent.employee_id, floorQuota);
+    const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
+    const completed = myLeads.filter((row) => row.work_state === "completed").length;
     const base = {
       agentId: agent.id,
       name: agent.name,
@@ -164,14 +202,17 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       reports: mine.filter((r) => r.status === "submitted").length,
       followUps: follows.filter((f) => f.agent_id === agent.id).length,
       talkMinutes,
+      assigned: myLeads.length,
+      completed,
+      quota,
+      targetQuota,
+      completionPercent: completionPercent(completed, targetQuota),
     };
-    const quota = quotaFor(agent.employee_id, floorQuota);
     const score = Math.round(scoreOf(base));
     return {
       ...base,
       connectRate: base.called ? Math.round((connected / base.called) * 100) : 0,
       score,
-      quota,
       // Ranking runs on the ratio, so a 15-lead desk competes fairly with a 25-lead desk.
       fairScore: ratioScore(score, quota),
     };
@@ -179,6 +220,8 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
 
   const ranked = [...lines].sort(
     (a, b) =>
+      // Quota-normalised completion first: finishing your own list is the job.
+      b.completionPercent - a.completionPercent ||
       b.fairScore - a.fairScore ||
       b.score - a.score ||
       b.connected - a.connected ||
@@ -186,15 +229,17 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       b.talkMinutes - a.talkMinutes ||
       a.name.localeCompare(b.name, "bn"),
   );
-  const activeRanked = ranked.filter((line) => line.score > 0);
-  const leaderScore = activeRanked[0]?.fairScore ?? 0;
+  const isActive = (line: PerformerLine) => line.score > 0 || line.completed > 0;
+  const activeRanked = ranked.filter(isActive);
+  const leaderCompletion = activeRanked[0]?.completionPercent ?? 0;
   const detailed = ranked.map((line, index): RankedPerformer => ({
     ...line,
     rank: index + 1,
-    gapFromLeader: Math.max(0, leaderScore - line.fairScore),
+    // Gap is expressed in the same normalised percentage everyone is ranked on.
+    gapFromLeader: Math.max(0, leaderCompletion - line.completionPercent),
     ...performerInsight(line),
   }));
-  const topThree = detailed.filter((line) => line.score > 0).slice(0, 3);
+  const topThree = detailed.filter(isActive).slice(0, 3);
   const topIds = new Set(topThree.map((line) => line.agentId));
   const otherAgents = detailed.filter((line) => !topIds.has(line.agentId));
   const winner = activeRanked[0] ?? null;
@@ -214,6 +259,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const advice: string[] = [];
 
   if (winner) {
+    if (winner.targetQuota)
+      reasons.push(
+        `নিজের কোটার ${winner.completionPercent}% শেষ (${winner.completed}/${winner.targetQuota})`,
+      );
     reasons.push(`${winner.connected}টি কলে কথা হয়েছে — আজ সবচেয়ে বেশি`);
     if (winner.reports) reasons.push(`${winner.reports}টি কল রিপোর্ট নিজে জমা দিয়েছেন`);
     if (winner.talkMinutes) reasons.push(`মোট ${winner.talkMinutes} মিনিট কথা বলেছেন`);
