@@ -11,6 +11,9 @@ import { dhakaInstant, dhakaParts } from "@/lib/shift.server";
 /** Dhaka minute-of-day when the homepage reveals the winner (5:30 pm). */
 export const REVEAL_MINUTES = 17 * 60 + 30;
 
+/** Dhaka minute-of-day when the homepage switches to the new working day (9:05 am). */
+export const NEW_DAY_MINUTES = 9 * 60 + 5;
+
 export type PerformerLine = {
   agentId: string;
   name: string;
@@ -48,6 +51,10 @@ export type TopPerformerBoard = {
   /** False before 5:30 pm Dhaka — the homepage then shows a countdown instead. */
   revealed: boolean;
   revealAt: string;
+  /** True when the board is still showing the previous working day (midnight → 9:05 am). */
+  isPreviousDay: boolean;
+  /** Bengali label the UI can use directly: "আজকের" or "গতকের". */
+  dayLabel: "আজকের" | "গতকের";
   winner: PerformerLine | null;
   runnerUp: PerformerLine | null;
   topThree: RankedPerformer[];
@@ -137,11 +144,43 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
   };
 }
 
+export type TopPerformerDate = {
+  dateKey: string;
+  effectiveDateKey: string;
+  minutes: number;
+  isPreviousDay: boolean;
+  dayLabel: "আজকের" | "গতকের";
+  revealed: boolean;
+};
+
+/** Pure date helper so the 9:05 am rollover can be unit-tested without the DB. */
+export function topPerformerDate(at: Date = new Date()): TopPerformerDate {
+  const { year, month, day, dateKey, minutes } = dhakaParts(at);
+  const isPreviousDay = minutes < NEW_DAY_MINUTES;
+  let effectiveDateKey = dateKey;
+  if (isPreviousDay) {
+    // Step back one day in Dhaka wall-clock, not one UTC day.
+    const prev = new Date(Date.UTC(year, month - 1, day));
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    effectiveDateKey = dhakaParts(prev).dateKey;
+  }
+  return {
+    dateKey,
+    effectiveDateKey,
+    minutes,
+    isPreviousDay,
+    dayLabel: isPreviousDay ? "গতকের" : "আজকের",
+    revealed: isPreviousDay || minutes >= REVEAL_MINUTES,
+  };
+}
+
 export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerformerBoard> {
-  const { dateKey, minutes } = dhakaParts(at);
-  const revealAt = dhakaInstant(dateKey, REVEAL_MINUTES);
-  const startIso = dhakaInstant(dateKey, 0).toISOString();
-  const endIso = at.toISOString();
+  const { effectiveDateKey, isPreviousDay, dayLabel, revealed } = topPerformerDate(at);
+  const revealAt = dhakaInstant(effectiveDateKey, REVEAL_MINUTES);
+  const startIso = dhakaInstant(effectiveDateKey, 0).toISOString();
+  const endIso = isPreviousDay
+    ? new Date(dhakaInstant(effectiveDateKey, 0).getTime() + 24 * 60 * 60 * 1000 - 1000).toISOString()
+    : at.toISOString();
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const [agentsRes, reportsRes, followRes] = await Promise.all([
@@ -173,11 +212,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const floorQuota = (await dailyPlan()).perAgent;
   const extraToday = await extraGrantsToday();
 
-  // Today's own list per desk: how many leads arrived and how many are finished.
+  // The scored day's own list per desk: how many leads arrived and how many are finished.
   const { data: todayLeads } = await supabaseAdmin
     .from("leads")
     .select("assigned_to, work_state")
-    .eq("work_date", dateKey)
+    .eq("work_date", effectiveDateKey)
     .not("assigned_to", "is", null)
     .limit(20000);
 
@@ -290,9 +329,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   }
 
   return {
-    dateKey,
-    revealed: minutes >= REVEAL_MINUTES,
+    dateKey: effectiveDateKey,
+    revealed,
     revealAt: revealAt.toISOString(),
+    isPreviousDay,
+    dayLabel,
     winner,
     runnerUp,
     topThree,
