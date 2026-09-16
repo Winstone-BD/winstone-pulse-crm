@@ -65,7 +65,7 @@ export type TopPerformerBoard = {
  * on the homepage can be read straight off the numbers.
  */
 export function scoreOf(
-  line: Omit<PerformerLine, "score" | "connectRate" | "quota" | "fairScore">,
+  line: Pick<PerformerLine, "connected" | "reports" | "followUps" | "talkMinutes">,
 ): number {
   return line.connected * 4 + line.reports * 2 + line.followUps * 1.5 + line.talkMinutes * 0.4;
 }
