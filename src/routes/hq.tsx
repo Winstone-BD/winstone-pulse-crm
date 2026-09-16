@@ -182,6 +182,9 @@ function ControlBoard() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
+  const isEmpty = leads.length === 0 && calls.length === 0 && messages.length === 0;
+
+  if (isPending) return <SnapshotSkeleton />;
 
   return (
     <>
