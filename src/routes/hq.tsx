@@ -492,8 +492,8 @@ function StatTile({
       type="button"
       onClick={onOpen}
       disabled={!onOpen}
-      aria-label={`${label} — বিস্তারিত তালিকা`}
-      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 disabled:cursor-default"
+      aria-label={`${label}: ${value} — বিস্তারিত তালিকা খুলুন / Open detailed list`}
+      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:border-border disabled:hover:bg-transparent"
     >
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
       <div className="flex items-start gap-3">
