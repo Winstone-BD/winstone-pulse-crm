@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, LogIn, MessageCircle, PhoneCall, Timer, Users } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Clock,
+  LogIn,
+  MessageCircle,
+  PhoneCall,
+  Timer,
+  Users,
+} from "lucide-react";
 import { useMemo } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
