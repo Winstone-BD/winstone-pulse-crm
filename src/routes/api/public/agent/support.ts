@@ -32,6 +32,16 @@ const PatchBody = z.discriminatedUnion("action", [
     ticket_id: z.string().uuid(),
     body: z.string().trim().min(1).max(4000),
   }),
+  z.object({
+    action: z.literal("priority"),
+    ticket_id: z.string().uuid(),
+    priority: z.enum(["low", "normal", "high", "critical"]),
+  }),
+  // Firebase device token for support alerts on the phone.
+  z.object({
+    action: z.literal("push_token"),
+    token: z.string().trim().min(20).max(400),
+  }),
 ]);
 
 export const Route = createFileRoute("/api/public/agent/support")({
@@ -92,6 +102,19 @@ export const Route = createFileRoute("/api/public/agent/support")({
 
         const support = await import("@/lib/team-support.server");
         const teamAdmin = await support.isSupportAdmin(caller.profile.id);
+
+        if (parsed.data.action === "push_token") {
+          const { savePushToken } = await import("@/lib/push.server");
+          await savePushToken({
+            profileId: caller.profile.id,
+            token: parsed.data.token,
+            platform: "android",
+            deviceId: caller.device.id,
+            label: caller.device.device_label ?? caller.device.model ?? null,
+          });
+          return json({ ok: true });
+        }
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: ticket } = await supabaseAdmin
           .from("team_support_tickets")
@@ -106,6 +129,16 @@ export const Route = createFileRoute("/api/public/agent/support")({
           await support.markTicketRead(ticket.id, teamAdmin ? "admin" : "agent", {
             profileId: caller.profile.id,
             label: caller.profile.name,
+          });
+          return json({ ok: true });
+        }
+        if (parsed.data.action === "priority") {
+          if (!teamAdmin) return json({ error: "Forbidden" }, 403);
+          await support.updateTicketPriority({
+            ticketId: ticket.id,
+            priority: parsed.data.priority,
+            actorProfileId: caller.profile.id,
+            actorLabel: caller.profile.name,
           });
           return json({ ok: true });
         }
