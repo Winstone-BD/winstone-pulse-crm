@@ -21,7 +21,7 @@ export type PerformerLine = {
   talkMinutes: number;
   connectRate: number;
   score: number;
-  /** This desk's own daily lead quota (30 by default, 15 for the Sell Team Admin). */
+  /** This desk's own daily lead quota (25 by default, 15 for the Sell Team Admin). */
   quota: number;
   /** Quota-normalised score — how the same effort looks on a standard round. */
   fairScore: number;
@@ -172,7 +172,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       connectRate: base.called ? Math.round((connected / base.called) * 100) : 0,
       score,
       quota,
-      // Ranking runs on the ratio, so a 15-lead desk competes fairly with a 30-lead desk.
+      // Ranking runs on the ratio, so a 15-lead desk competes fairly with a 25-lead desk.
       fairScore: ratioScore(score, quota),
     };
   });

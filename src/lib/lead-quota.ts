@@ -1,7 +1,7 @@
 /**
  * Per-person daily lead quota.
  *
- * Everybody on the floor gets the standard daily round (30 by default, set in
+ * Everybody on the floor gets the standard daily round (25 by default, set in
  * the IT Console). A few desks are deliberately lighter — the Sell Team Admin
  * carries admin duties alongside calling — so they receive a smaller quota.
  *
