@@ -31,8 +31,8 @@ export function CsvImportDialog() {
   const mutation = useMutation({
     mutationFn: () => run({ data: { adminToken: getAdminToken() ?? "", rows, autoAssign } }),
     onSuccess: (r) => {
-      toast.success(`${r.imported} leads imported`, {
-        description: r.skipped ? `${r.skipped} skipped (duplicate or invalid number)` : undefined,
+      toast.success(`${r.eligibleNew} eligible new / নতুন লিড imported`, {
+        description: `Incoming ${r.incoming} · worked/assigned ${r.excludedAlreadyWorkedOrAssigned} · duplicate/invalid ${r.excludedDuplicate}`,
       });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       setOpen(false);
@@ -53,8 +53,8 @@ export function CsvImportDialog() {
         <DialogHeader>
           <DialogTitle>Import leads from CSV</DialogTitle>
           <DialogDescription>
-            Columns: <code>name, phone, company, notes</code> (header row optional). Numbers already
-            in the pipeline are skipped.
+            Columns: <code>name, phone, company, notes, outreach_en, outreach_bn</code>. Previously
+            worked/assigned numbers are permanently excluded.
           </DialogDescription>
         </DialogHeader>
 

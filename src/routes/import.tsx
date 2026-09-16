@@ -99,10 +99,8 @@ function ImportScreen() {
   const mutation = useMutation({
     mutationFn: () => run({ data: { adminToken: getAdminToken() ?? "", rows, autoAssign } }),
     onSuccess: (result) => {
-      toast.success(`${result.imported}টি লিড যোগ হলো`, {
-        description: result.skipped
-          ? `${result.skipped}টি বাদ পড়েছে (একই নম্বর বা নম্বর ঠিক নেই)`
-          : undefined,
+      toast.success(`${result.eligibleNew}টি eligible new lead যোগ হলো`, {
+        description: `Incoming ${result.incoming} · আগে worked/assigned ${result.excludedAlreadyWorkedOrAssigned} · duplicate/invalid ${result.excludedDuplicate}`,
       });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       setRows([]);
@@ -118,8 +116,8 @@ function ImportScreen() {
           <FileUp className="size-5 text-primary" /> লিড ইমপোর্ট
         </h1>
         <p className="text-sm text-muted-foreground">
-          কলাম: <code>name, phone, company, notes</code> — হেডার সারি না থাকলেও চলবে। আগে থেকে থাকা
-          নম্বর নিজে থেকেই বাদ পড়বে।
+          কলাম: <code>name, phone, company, notes, outreach_en, outreach_bn</code> — নতুন লিড
+          Winstone Company / Company Lead হিসেবে জমা হবে; আগে কাজ করা নম্বর স্থায়ীভাবে বাদ পড়বে।
         </p>
       </header>
 

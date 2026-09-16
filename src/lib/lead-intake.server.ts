@@ -16,7 +16,7 @@ export type LeadIntakeResult = {
 
 /** Bangladesh-first: 01XXXXXXXXX / +8801XXXXXXXXX / 8801XXXXXXXXX -> 8801XXXXXXXXX. */
 export function normalizeLeadPhone(raw: string): string {
-  return primaryBangladeshPhone(raw) ?? raw.replace(/[^\d+]/g, "") || raw.trim();
+  return primaryBangladeshPhone(raw) ?? (raw.replace(/[^\d+]/g, "") || raw.trim());
 }
 
 export async function intakeLead(input: {
@@ -36,7 +36,10 @@ export async function intakeLead(input: {
   ownerName?: string | null;
 }): Promise<LeadIntakeResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const phone = normalizeLeadPhone(input.phoneNumber);
+  const extractedPhones = (await import("@/lib/lead-phone")).extractBangladeshPhones(
+    input.phoneNumber,
+  );
+  const phone = extractedPhones.length > 1 ? input.phoneNumber.trim() : normalizeLeadPhone(input.phoneNumber);
   const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
   const phoneStatus = await getLeadPhoneStatus(input.phoneNumber);
   if (phoneStatus.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");

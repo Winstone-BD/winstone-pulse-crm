@@ -191,6 +191,8 @@ const ImportRow = z.object({
   phone_number: z.string().trim().min(6).max(24),
   company: z.string().trim().max(120).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  outreach_en: z.string().trim().max(2000).optional().nullable(),
+  outreach_bn: z.string().trim().max(2000).optional().nullable(),
 });
 
 /** Bulk-inserts leads from a CSV (parsed in the browser). Skips numbers already in the pipeline. */
@@ -210,13 +212,10 @@ export const importLeads = createServerFn({ method: "POST" })
     requireDispatch(importer);
     (await import("@/lib/access.server")).requireWrite(importer);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const normalize = (p: string) => p.replace(/[^\d+]/g, "");
-    const { data: existing, error: existingError } = await supabaseAdmin
-      .from("leads")
-      .select("phone_number");
-    if (existingError) throw new Error(existingError.message);
-    const seen = new Set((existing ?? []).map((l) => normalize(l.phone_number)));
+    const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+    const { appendCompanyLeadMetadata, extractBangladeshPhones } = await import(
+      "@/lib/lead-phone"
+    );
 
     let agents: { id: string }[] = [];
     if (data.autoAssign) {
@@ -239,20 +238,36 @@ export const importLeads = createServerFn({ method: "POST" })
       assigned_to: string | null;
       assignment_source: string | null;
     }[] = [];
-    let skipped = 0;
+    const incoming = data.rows.length;
+    let excludedAlreadyWorkedOrAssigned = 0;
+    let excludedDuplicate = 0;
+    const seen = new Set<string>();
     for (const row of data.rows) {
-      const key = normalize(row.phone_number);
-      if (!key || seen.has(key)) {
-        skipped += 1;
+      const status = await getLeadPhoneStatus(row.phone_number);
+      const phones = extractBangladeshPhones(row.phone_number);
+      if (status.alreadyWorked) {
+        excludedAlreadyWorkedOrAssigned += 1;
         continue;
       }
-      seen.add(key);
+      if (
+        phones.length === 0 ||
+        status.existingLeadId ||
+        phones.some((phone) => seen.has(phone))
+      ) {
+        excludedDuplicate += 1;
+        continue;
+      }
+      phones.forEach((phone) => seen.add(phone));
       toInsert.push({
         name: row.name,
-        phone_number: row.phone_number.trim(),
+        phone_number: phones.length > 1 ? row.phone_number.trim() : phones[0]!,
         company: row.company || null,
-        notes: row.notes || null,
-        source: "csv_import",
+        notes: appendCompanyLeadMetadata({
+          notes: row.notes,
+          outreachEn: row.outreach_en,
+          outreachBn: row.outreach_bn,
+        }),
+        source: "Winstone Company",
         assigned_to: agents.length ? agents[toInsert.length % agents.length]!.id : null,
         assignment_source: agents.length ? "coordinator" : null,
       });
@@ -268,9 +283,24 @@ export const importLeads = createServerFn({ method: "POST" })
       entityType: "lead",
       actorProfileId: importer.profile?.id ?? null,
       actorLabel: importer.profile?.name ?? "Authority PIN",
-      metadata: { imported: toInsert.length, skipped, autoAssign: data.autoAssign },
+      metadata: {
+        incoming,
+        excludedAlreadyWorkedOrAssigned,
+        excludedDuplicate,
+        eligibleNew: toInsert.length,
+        autoAssign: data.autoAssign,
+        source: "Winstone Company",
+        leadType: "Company Lead",
+      },
     });
-    return { imported: toInsert.length, skipped };
+    return {
+      imported: toInsert.length,
+      skipped: excludedAlreadyWorkedOrAssigned + excludedDuplicate,
+      incoming,
+      excludedAlreadyWorkedOrAssigned,
+      excludedDuplicate,
+      eligibleNew: toInsert.length,
+    };
   });
 
 const ManualCallInput = z.object({
