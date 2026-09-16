@@ -274,6 +274,20 @@ export function TeamSupportInbox() {
                       ),
                     )}
                   </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">গুরুত্ব:</span>
+                    {(["low", "normal", "high", "critical"] as SupportPriority[]).map((priority) => (
+                      <Button
+                        key={priority}
+                        size="sm"
+                        variant={ticket.priority === priority ? "default" : "outline"}
+                        disabled={changePriority.isPending || ticket.priority === priority}
+                        onClick={() => changePriority.mutate({ ticketId: ticket.id, priority })}
+                      >
+                        {PRIORITY_LABELS[priority]}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
