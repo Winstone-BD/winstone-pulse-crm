@@ -451,7 +451,10 @@ function ControlBoard() {
               })}
           </div>
         </section>
+          </>
+        )}
       </div>
+
 
       <LeadDossier
         lead={openLead}
