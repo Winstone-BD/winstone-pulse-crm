@@ -150,7 +150,11 @@ function ControlBoard() {
     }
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([key, value]) => ({ label: labels[key] ?? key, value }));
+      .map(([key, value]) => ({
+        label: labels[key] ?? key,
+        value,
+        calls: calls.filter((c) => c.sentiment === key),
+      }));
   }, [calls]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
