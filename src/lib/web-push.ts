@@ -45,9 +45,9 @@ export async function requestWebPushToken(): Promise<PushResult & { token?: stri
     Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (permission !== "granted") return { status: "denied" };
 
-  const query = new URLSearchParams(config as Record<string, string>).toString();
+  const query = new URLSearchParams(resolved).toString();
   const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${query}`);
-  const messaging = getMessaging(initializeApp(config));
+  const messaging = getMessaging(initializeApp(resolved));
   const token = await getToken(messaging, {
     vapidKey: vapidKey!,
     serviceWorkerRegistration: registration,
