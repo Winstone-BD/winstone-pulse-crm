@@ -1154,6 +1154,32 @@ export type Database = {
           },
         ]
       }
+      lead_phone_keys: {
+        Row: {
+          canonical_phone: string
+          created_at: string
+          lead_id: string
+        }
+        Insert: {
+          canonical_phone: string
+          created_at?: string
+          lead_id: string
+        }
+        Update: {
+          canonical_phone?: string
+          created_at?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_phone_keys_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_year_archives: {
         Row: {
           archive_year: number
@@ -2399,6 +2425,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
+      filter_eligible_lead_ids: {
+        Args: { _lead_ids: string[] }
+        Returns: {
+          lead_id: string
+        }[]
+      }
       has_active_license: { Args: { check_env?: string }; Returns: boolean }
       has_pending_call_report: { Args: { _agent_id: string }; Returns: boolean }
       has_role: {
@@ -2408,6 +2441,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      lead_has_work_history: { Args: { _lead_id: string }; Returns: boolean }
+      lead_phone_status: {
+        Args: { _raw: string }
+        Returns: {
+          already_worked: boolean
+          canonical_phones: string[]
+          existing_lead_id: string
+        }[]
+      }
+      lead_phone_was_ever_worked: { Args: { _raw: string }; Returns: boolean }
+      normalize_bd_phone: { Args: { _raw: string }; Returns: string }
     }
     Enums: {
       agent_presence: "on_call" | "idle" | "offline"
