@@ -46,6 +46,7 @@ import { Route as ApiPublicAgentIncomingCallRouteImport } from './routes/api/pub
 import { Route as ApiPublicAgentLoginRouteImport } from './routes/api/public/agent/login'
 import { Route as ApiPublicAgentPresenceRouteImport } from './routes/api/public/agent/presence'
 import { Route as ApiPublicAgentReportRouteImport } from './routes/api/public/agent/report'
+import { Route as ApiPublicAgentSupportRouteImport } from './routes/api/public/agent/support'
 import { Route as ApiPublicAgentVersionRouteImport } from './routes/api/public/agent/version'
 import { Route as ApiPublicAgentWhatsappRouteImport } from './routes/api/public/agent/whatsapp'
 import { Route as ApiPublicAgentWorkspaceRouteImport } from './routes/api/public/agent/workspace'
@@ -252,6 +253,11 @@ const ApiPublicAgentReportRoute = ApiPublicAgentReportRouteImport.update({
   path: '/api/public/agent/report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentSupportRoute = ApiPublicAgentSupportRouteImport.update({
+  id: '/api/public/agent/support',
+  path: '/api/public/agent/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAgentVersionRoute = ApiPublicAgentVersionRouteImport.update({
   id: '/api/public/agent/version',
   path: '/api/public/agent/version',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
+  '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
+  '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
+  '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
     | '/api/public/agent/report'
+    | '/api/public/agent/support'
     | '/api/public/agent/version'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
@@ -609,6 +619,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
     | '/api/public/agent/report'
+    | '/api/public/agent/support'
     | '/api/public/agent/version'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
     | '/api/public/agent/report'
+    | '/api/public/agent/support'
     | '/api/public/agent/version'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
@@ -722,6 +734,7 @@ export interface RootRouteChildren {
   ApiPublicAgentLoginRoute: typeof ApiPublicAgentLoginRoute
   ApiPublicAgentPresenceRoute: typeof ApiPublicAgentPresenceRoute
   ApiPublicAgentReportRoute: typeof ApiPublicAgentReportRoute
+  ApiPublicAgentSupportRoute: typeof ApiPublicAgentSupportRoute
   ApiPublicAgentVersionRoute: typeof ApiPublicAgentVersionRoute
   ApiPublicAgentWhatsappRoute: typeof ApiPublicAgentWhatsappRoute
   ApiPublicAgentWorkspaceRoute: typeof ApiPublicAgentWorkspaceRoute
@@ -1002,6 +1015,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent/support': {
+      id: '/api/public/agent/support'
+      path: '/api/public/agent/support'
+      fullPath: '/api/public/agent/support'
+      preLoaderRoute: typeof ApiPublicAgentSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent/version': {
       id: '/api/public/agent/version'
       path: '/api/public/agent/version'
@@ -1163,6 +1183,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentLoginRoute: ApiPublicAgentLoginRoute,
   ApiPublicAgentPresenceRoute: ApiPublicAgentPresenceRoute,
   ApiPublicAgentReportRoute: ApiPublicAgentReportRoute,
+  ApiPublicAgentSupportRoute: ApiPublicAgentSupportRoute,
   ApiPublicAgentVersionRoute: ApiPublicAgentVersionRoute,
   ApiPublicAgentWhatsappRoute: ApiPublicAgentWhatsappRoute,
   ApiPublicAgentWorkspaceRoute: ApiPublicAgentWorkspaceRoute,

@@ -291,7 +291,7 @@ export async function dailyPlan(): Promise<{ perAgent: number; lastRunDate: stri
     .eq("id", "lead_pool_daily")
     .maybeSingle();
   const state = (data?.data ?? {}) as { perAgent?: number; lastRunDate?: string };
-  return { perAgent: state.perAgent ?? 30, lastRunDate: state.lastRunDate ?? null };
+  return { perAgent: state.perAgent ?? 25, lastRunDate: state.lastRunDate ?? null };
 }
 
 export async function saveDailyPlan(input: { perAgent: number; lastRunDate?: string | null }) {

@@ -46,7 +46,13 @@ export type AuditAction =
   | "ai_agent_mismatch_flagged"
   | "support_settings_updated"
   | "app_release_published"
-  | "year_archive_recorded";
+  | "year_archive_recorded"
+  | "support_ticket_created"
+  | "support_ticket_viewed"
+  | "support_ticket_status_changed"
+  | "support_ticket_resolved"
+  | "extra_leads_granted"
+  | "daily_quota_changed";
 
 export async function logAudit(input: {
   action: AuditAction;

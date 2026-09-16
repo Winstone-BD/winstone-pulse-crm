@@ -11,7 +11,7 @@
  */
 
 /** Fallback round size when no plan is stored. */
-export const DEFAULT_DAILY_QUOTA = 30;
+export const DEFAULT_DAILY_QUOTA = 25;
 
 /** Agent ID → fixed daily quota, regardless of the floor-wide round size. */
 export const FIXED_DAILY_QUOTA: Record<string, number> = {
