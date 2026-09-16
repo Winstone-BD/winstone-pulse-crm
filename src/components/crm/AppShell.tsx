@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { ChevronDown, Lock, LockOpen, LogOut, Menu, Smartphone, Sparkles } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +14,14 @@ import { OfflineSyncBar } from "@/components/crm/OfflineSyncBar";
 
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCrmRealtime } from "@/hooks/use-crm-realtime";
 import { setAdminToken, useAdminToken } from "@/lib/local-session";
 import { useMyAccount, useSignOut } from "@/lib/session";
@@ -42,13 +50,25 @@ const NAV = [
   { to: "/help", label: "Help Centre", scopes: ["authority", "coordinator", "agent", "none"] },
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
+const PRIMARY_ROUTES: Record<Scope, readonly string[]> = {
+  authority: ["/", "/hq", "/reports", "/system"],
+  coordinator: ["/", "/desk", "/dispatch", "/reports"],
+  agent: ["/", "/desk", "/coach", "/reports"],
+  none: ["/", "/docs", "/help"],
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
   const { scope } = useMyAccount();
+  const location = useLocation();
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
   const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
+  const primaryRoutes = PRIMARY_ROUTES[scope as Scope] ?? PRIMARY_ROUTES.none;
+  const primaryNav = nav.filter((item) => primaryRoutes.includes(item.to));
+  const moreNav = nav.filter((item) => !primaryRoutes.includes(item.to));
+  const moreIsActive = moreNav.some((item) => location.pathname === item.to);
 
   return (
     <div className="min-h-screen grid-noise">
@@ -70,8 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
 
-          <nav className="ml-2 hidden items-center gap-0.5 rounded-full border border-border bg-surface-2/70 p-1 lg:flex">
-            {nav.map((item) => (
+          <nav className="ml-2 hidden min-w-0 items-center gap-0.5 rounded-full border border-border bg-surface-2/70 p-1 lg:flex">
+            {primaryNav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -81,6 +101,38 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {item.label}
               </Link>
             ))}
+            {moreNav.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Open more navigation links"
+                    className={`h-8 gap-1 rounded-full px-3 text-[13px] font-medium ${
+                      moreIsActive ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
+                    }`}
+                  >
+                    More <ChevronDown className="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>More tools</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {moreNav.map((item) => (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link
+                        to={item.to}
+                        activeOptions={{ exact: item.to === "/" }}
+                        className="w-full cursor-pointer data-[status=active]:bg-accent data-[status=active]:text-primary"
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -153,8 +205,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-2 lg:hidden">
-          {nav.map((item) => (
+        <nav className="flex items-center gap-1 px-3 pb-2 lg:hidden">
+          <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
+          {primaryNav.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -164,6 +217,37 @@ export function AppShell({ children }: { children: ReactNode }) {
               {item.label}
             </Link>
           ))}
+          </div>
+          {moreNav.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Open more navigation links"
+                  className={`size-7 shrink-0 rounded-full ${moreIsActive ? "border-primary/30 bg-accent text-primary" : ""}`}
+                >
+                  <Menu className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>More tools</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {moreNav.map((item) => (
+                  <DropdownMenuItem key={item.to} asChild>
+                    <Link
+                      to={item.to}
+                      activeOptions={{ exact: item.to === "/" }}
+                      className="w-full cursor-pointer data-[status=active]:bg-accent data-[status=active]:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </nav>
       </header>
 
