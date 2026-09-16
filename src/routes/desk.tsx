@@ -31,6 +31,8 @@ import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
 import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
 import { QueueBoard } from "@/components/crm/QueueBoard";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
+import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
+import { TeamSupportPanel } from "@/components/crm/TeamSupportPanel";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
@@ -284,6 +286,8 @@ function DeskPage() {
 
         <CommandAgentPanel surface="desk" />
 
+        <TeamSupportInbox />
+
         <Tabs defaultValue="leads" className="space-y-4">
           <TabsList className="flex w-full flex-wrap">
             <TabsTrigger value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
@@ -292,7 +296,11 @@ function DeskPage() {
             <TabsTrigger value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
             <TabsTrigger value="calendar">ফলো-আপ</TabsTrigger>
             <TabsTrigger value="reports">আমার রিপোর্ট</TabsTrigger>
+            <TabsTrigger value="support">টিম সাপোর্ট</TabsTrigger>
           </TabsList>
+          <TabsContent value="support">
+            <TeamSupportPanel />
+          </TabsContent>
           <TabsContent value="leads" className="space-y-4">
             <LeadTable />
           </TabsContent>

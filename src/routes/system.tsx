@@ -8,7 +8,9 @@ import { AppReleasePanel } from "@/components/crm/AppReleasePanel";
 import { AuditTrail } from "@/components/crm/AuditTrail";
 import { DocSummaryPanel } from "@/components/crm/DocSummaryPanel";
 import { DriveBackupPanel } from "@/components/crm/DriveBackupPanel";
+import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
+import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
@@ -118,6 +120,10 @@ function SystemBoard() {
       <CommandAgentPanel surface="system" />
 
       <LeadDatabasePanel />
+
+      <ExtraLeadPanel />
+
+      <TeamSupportInbox />
 
       <CallOpsPanel showControls />
 
