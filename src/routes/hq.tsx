@@ -480,31 +480,42 @@ function StatTile({
   label,
   value,
   hint,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="card-elevated relative overflow-hidden p-5">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      className="card-elevated relative w-full min-w-0 overflow-hidden p-4 text-left transition-colors hover:border-primary/40 disabled:cursor-default sm:p-5"
+    >
       <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
       <div className="flex items-start gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25 sm:size-11">
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="truncate text-[11px] font-semibold uppercase leading-relaxed tracking-wider text-muted-foreground">
             {label}
           </p>
-          <p className="tabular mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
+          <p className="tabular mt-0.5 text-[1.6rem] font-bold leading-tight tracking-tight sm:text-3xl">
+            {value}
+          </p>
         </div>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">{hint}</p>
       <Sparkline seed={value.length + label.length} />
-    </div>
+    </button>
   );
 }
+
+type MixRow = { key: string; label: string; value: number };
 
 /** Compact intelligence card: labelled rows with a proportional bar. */
 function MixCard({
@@ -512,43 +523,56 @@ function MixCard({
   subtitle,
   rows,
   emptyLabel = "এই সময়ে কোনো তথ্য নেই",
+  onRowClick,
 }: {
   title: string;
   subtitle: string;
-  rows: { label: string; value: number }[];
+  rows: MixRow[];
   emptyLabel?: string;
+  onRowClick?: (row: MixRow) => void;
 }) {
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated min-w-0 p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold">{title}</h2>
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
+          <h2 className="truncate text-sm font-semibold leading-snug">{title}</h2>
+          <p className="text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+            {subtitle}
+          </p>
         </div>
-        <span className="tabular rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+        <span className="tabular shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
           {total}
         </span>
       </div>
       {total === 0 ? (
-        <p className="mt-6 mb-2 text-center text-xs text-muted-foreground">{emptyLabel}</p>
+        <p className="mt-6 mb-2 text-center text-xs leading-relaxed text-muted-foreground">
+          {emptyLabel}
+        </p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 space-y-1">
           {rows.map((row) => (
-            <li key={row.label} className="space-y-1">
-              <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="truncate capitalize">{row.label}</span>
-                <span className="tabular text-muted-foreground">
-                  {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
+            <li key={row.key}>
+              <button
+                type="button"
+                disabled={!onRowClick || row.value === 0}
+                onClick={() => onRowClick?.(row)}
+                className="w-full min-w-0 space-y-1 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+              >
+                <span className="flex items-baseline justify-between gap-2 text-xs leading-relaxed">
+                  <span className="min-w-0 truncate capitalize">{row.label}</span>
+                  <span className="tabular shrink-0 text-muted-foreground">
+                    {row.value} · {total ? Math.round((row.value / total) * 100) : 0}%
+                  </span>
                 </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
-                />
-              </div>
+                <span className="block h-1.5 overflow-hidden rounded-full bg-surface-2">
+                  <span
+                    className="block h-full rounded-full bg-primary"
+                    style={{ width: `${max ? (row.value / max) * 100 : 0}%` }}
+                  />
+                </span>
+              </button>
             </li>
           ))}
         </ul>
