@@ -25,3 +25,12 @@
 - [ ] নতুন ওয়ার্কস্পেসে Google Docs / Drive / Sheets সংযোগ আবার জোড়া (ব্যবহারকারীর অনুমোদন দরকার)
 - [ ] এজেন্ট ডেস্কে মোবাইল-অনলি লিড কিউ (স্বাইপ → ফলো-আপ / বন্ধ)
 - [ ] Reports পেজ এক্সিকিউটিভ-গ্রেড রিডিজাইন (KPI স্ট্রিপ, একটি বড় চার্ট, ৩ ইন্টেলিজেন্স কার্ড, স্মার্ট এম্পটি স্টেট, এজেন্ট পারফরম্যান্স, AI ব্রিফ) — ব্যাকএন্ড/লজিক অপরিবর্তিত
+
+## 2026-09-16 — Winstone Company lead safety audit
+- [ ] বাংলাদেশি ফোনের একক server/database normalization এবং multi-phone key extraction
+- [ ] historical worked/assigned phone exclusion across all lead/call/event tables
+- [ ] new lead object concurrency-safe duplicate prevention without deleting historical rows
+- [ ] all import and assignment paths routed through the same eligibility guard
+- [ ] Winstone Company / Company Lead metadata and EN/BN outreach preservation
+- [ ] auditable import counts and bilingual import-result UI
+- [ ] production duplicate report, regression tests, typecheck/build validation
