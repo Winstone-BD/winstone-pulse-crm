@@ -127,7 +127,7 @@ export function ApkInstallCard() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             {result?.ok ? (
-              <ShieldCheck className="size-4 text-emerald-500" />
+              <ShieldCheck className="size-4 text-primary" />
             ) : (
               <ShieldAlert className="size-4 text-amber-500" />
             )}
@@ -154,7 +154,7 @@ export function ApkInstallCard() {
             >
               <span className="font-mono">{check.name}</span>
               <span
-                className={check.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}
+                className={check.ok ? "text-primary" : "text-destructive"}
               >
                 {check.ok ? "✔" : "✖"} {check.detail}
                 {check.status ? ` (${check.status})` : ""}

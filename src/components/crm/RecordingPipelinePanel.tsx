@@ -43,9 +43,9 @@ function stateClass(state: StageState) {
     case "verified":
       return "bg-primary/15 text-primary";
     case "success":
-      return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400";
+      return "bg-primary/15 text-primary";
     case "processing":
-      return "bg-amber-500/15 text-amber-600 dark:text-amber-400";
+      return "bg-amber-500/15 text-amber-300";
     case "failed":
       return "bg-destructive/15 text-destructive";
     case "skipped":
@@ -266,7 +266,7 @@ export function RecordingPipelinePanel() {
                   </Button>
                 )}
                 {row.overall === "completed" && (
-                  <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                  <span className="flex items-center gap-1 text-[11px] text-primary">
                     <CheckCircle2 className="size-3.5" /> সব ধাপ শেষ
                   </span>
                 )}
