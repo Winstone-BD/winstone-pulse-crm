@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  BarChart3,
   Flame,
   ListChecks,
   PhoneCall,
