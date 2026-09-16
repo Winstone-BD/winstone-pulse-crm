@@ -24,6 +24,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SupportRouteImport } from './routes/support'
@@ -142,6 +143,11 @@ const IngestRoute = IngestRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/mcp': typeof McpRoute
+  '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/support': typeof SupportRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/mcp': typeof McpRoute
+  '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/support': typeof SupportRoute
@@ -515,6 +523,7 @@ export interface FileRoutesById {
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/mcp': typeof McpRoute
+  '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/support': typeof SupportRoute
@@ -578,6 +587,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/ingest'
     | '/mcp'
+    | '/migration'
     | '/privacy'
     | '/reports'
     | '/support'
@@ -639,6 +649,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/ingest'
     | '/mcp'
+    | '/migration'
     | '/privacy'
     | '/reports'
     | '/support'
@@ -700,6 +711,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/ingest'
     | '/mcp'
+    | '/migration'
     | '/privacy'
     | '/reports'
     | '/support'
@@ -762,6 +774,7 @@ export interface RootRouteChildren {
   InboxRoute: typeof InboxRoute
   IngestRoute: typeof IngestRoute
   McpRoute: typeof McpRoute
+  MigrationRoute: typeof MigrationRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
   SupportRoute: typeof SupportRoute
@@ -913,6 +926,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1242,6 +1262,7 @@ const rootRouteChildren: RootRouteChildren = {
   InboxRoute: InboxRoute,
   IngestRoute: IngestRoute,
   McpRoute: McpRoute,
+  MigrationRoute: MigrationRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
   SupportRoute: SupportRoute,
