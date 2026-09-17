@@ -39,12 +39,18 @@ async function resolveLoginEmail(raw: string): Promise<string | null> {
     .limit(500);
   const wantId = raw.toUpperCase().replace(/\s+/g, "");
   const wantPhone = phoneKey(raw);
-  const match = (rows ?? []).find(
-    (row) =>
-      (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId ||
-      (wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone),
+
+  // Employee ID is unique, so it wins over a phone two desks may share.
+  const byId = (rows ?? []).find(
+    (row) => (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId,
   );
-  return match?.email ?? null;
+  if (byId?.email) return byId.email;
+
+  const byPhone = (rows ?? []).filter(
+    (row) => wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone,
+  );
+  if (byPhone.length !== 1) return null;
+  return byPhone[0]?.email ?? null;
 }
 
 function json(body: unknown, status = 200): Response {
