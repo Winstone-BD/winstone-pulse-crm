@@ -32,13 +32,24 @@ export const resolveSignInEmail = createServerFn({ method: "POST" })
 
     const wantId = raw.toUpperCase().replace(/\s+/g, "");
     const wantPhone = phoneKey(raw);
-    const match = (rows ?? []).find(
-      (row) =>
-        (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId ||
-        (wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone),
+
+    // Employee ID is unique, so it always wins over a phone number that two
+    // desks may share.
+    const byId = (rows ?? []).find(
+      (row) => (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId,
     );
-    if (!match?.email) throw new Error("এই ফোন নম্বর বা Employee ID পাওয়া যায়নি");
-    return { email: match.email };
+    if (byId?.email) return { email: byId.email };
+
+    const byPhone = (rows ?? []).filter(
+      (row) => wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone,
+    );
+    if (byPhone.length > 1) {
+      throw new Error(
+        "এই ফোন নম্বরটি একাধিক অ্যাকাউন্টে আছে — Employee ID বা ইমেইল দিয়ে সাইন ইন করুন",
+      );
+    }
+    if (!byPhone[0]?.email) throw new Error("এই ফোন নম্বর বা Employee ID পাওয়া যায়নি");
+    return { email: byPhone[0].email };
   });
 
 /**
