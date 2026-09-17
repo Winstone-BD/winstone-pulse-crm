@@ -1440,6 +1440,77 @@ export type Database = {
           },
         ]
       }
+      pin_rotations: {
+        Row: {
+          actor_label: string | null
+          actor_profile_id: string | null
+          hint: string
+          id: string
+          note: string | null
+          reason: string | null
+          rotated_at: string
+          surface: string
+        }
+        Insert: {
+          actor_label?: string | null
+          actor_profile_id?: string | null
+          hint: string
+          id?: string
+          note?: string | null
+          reason?: string | null
+          rotated_at?: string
+          surface: string
+        }
+        Update: {
+          actor_label?: string | null
+          actor_profile_id?: string | null
+          hint?: string
+          id?: string
+          note?: string | null
+          reason?: string | null
+          rotated_at?: string
+          surface?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pin_rotations_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pin_vault: {
+        Row: {
+          created_at: string
+          hint: string
+          note: string | null
+          secret_cipher: string
+          surface: string
+          updated_at: string
+          updated_by_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          hint: string
+          note?: string | null
+          secret_cipher: string
+          surface: string
+          updated_at?: string
+          updated_by_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          hint?: string
+          note?: string | null
+          secret_cipher?: string
+          surface?: string
+          updated_at?: string
+          updated_by_label?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approval_status: string

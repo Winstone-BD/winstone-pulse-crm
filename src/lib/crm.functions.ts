@@ -90,8 +90,8 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
-    if (!pinMatches(data.pin)) return { ok: false as const };
+    const { pinMatchesLive, mintAdminToken } = await import("@/lib/admin-gate.server");
+    if (!(await pinMatchesLive(data.pin))) return { ok: false as const };
     return {
       ok: true as const,
       token: mintAdminToken(data.surface === "hq" ? "hq" : "full"),

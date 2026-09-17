@@ -309,6 +309,13 @@
       "when": 1789585624468,
       "tag": "0043_service_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789607099314,
+      "tag": "0044_pin_vault_and_rotation_history",
+      "breakpoints": true
     }
   ]
 }

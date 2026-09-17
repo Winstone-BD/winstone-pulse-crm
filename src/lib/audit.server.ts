@@ -58,7 +58,9 @@ export type AuditAction =
   | "service_invoice_raised"
   | "service_payment_verified"
   | "service_payout_recorded"
-  | "service_bill_alert_raised";
+  | "service_bill_alert_raised"
+  | "pin_rotated"
+  | "pin_revealed";
 
 export async function logAudit(input: {
   action: AuditAction;
