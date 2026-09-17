@@ -35,6 +35,25 @@ export function pinMatches(input: string): boolean {
   return ok;
 }
 
+/**
+ * Same check, but also accepts a PIN that IT stored/rotated in the secure vault.
+ * Env PINs keep working, so a rotation never locks anyone out by surprise.
+ */
+export async function pinMatchesLive(input: string): Promise<boolean> {
+  try {
+    if (pinMatches(input)) return true;
+  } catch {
+    /* no env PIN configured — fall through to the vault */
+  }
+  const { vaultPins } = await import("@/lib/pin-vault.server");
+  const candidate = sha(input);
+  let ok = false;
+  for (const stored of await vaultPins()) {
+    if (timingSafeEqual(candidate, sha(stored))) ok = true;
+  }
+  return ok;
+}
+
 /** Opaque token handed to the browser after a successful PIN unlock. */
 export function mintAdminToken(scope: AdminScope = "full"): string {
   const secret = process.env["ADMIN_TOKEN_SECRET"];
