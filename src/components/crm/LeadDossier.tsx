@@ -119,13 +119,10 @@ export function LeadDossier({
                   className="h-12 min-w-[140px] flex-1"
                 />
               </div>
-              {/* Dial without logging — for when the call was already reported. */}
-              <a
-                href={`tel:${lead.phone_number}`}
-                className="mt-2 inline-flex text-xs font-medium text-muted-foreground underline underline-offset-4"
-              >
-                শুধু ডায়াল করুন ({lead.phone_number})
-              </a>
+              {/* No bypass dial: every call from the desk must end in a report. */}
+              <p className="mt-2 text-xs text-muted-foreground">
+                {lead.phone_number} — কল শেষে রিপোর্টের পপ-আপ আসবে।
+              </p>
             </SheetHeader>
 
             <div className="space-y-4 px-5 py-5">

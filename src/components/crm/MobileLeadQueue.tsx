@@ -169,11 +169,13 @@ export function MobileLeadQueue() {
               <p className="mt-2 truncate text-xs text-muted-foreground">{lead.company}</p>
             ) : null}
 
-            <Button asChild size="lg" className="mt-3 h-12 w-full">
-              <a href={`tel:${lead.phone_number}`}>
-                <Phone className="size-4" /> কল করুন
-              </a>
-            </Button>
+            {/* Gated call: the report popup opens as soon as the call ends. */}
+            <WebCallButton
+              leadId={lead.id}
+              phone={lead.phone_number}
+              name={lead.name}
+              className="mt-3 h-12 w-full"
+            />
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
