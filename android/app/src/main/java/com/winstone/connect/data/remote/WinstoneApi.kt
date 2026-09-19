@@ -370,6 +370,18 @@ object WinstoneApi {
         post("/api/public/agent/incoming-call", payload)
     }
 
+    /** Due follow-ups and unfinished reports, for the reminder notifications. */
+    suspend fun reminders(): JSONObject = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
+            .url("$BASE_URL/api/public/agent/reminders")
+            .header("x-device-token", authToken())
+            .get()
+            .build()
+        client.newCall(req).execute().use { res ->
+            runCatching { JSONObject(res.body?.string().orEmpty()) }.getOrElse { JSONObject() }
+        }
+    }
+
     private fun post(path: String, payload: JSONObject): JSONObject {
         val req = Request.Builder()
             .url(BASE_URL + path)
