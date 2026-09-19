@@ -198,7 +198,7 @@ export function ExecutiveOverview({
           icon={<Activity className="size-4" />}
           label="আজকের কল রিপোর্ট"
           value={String(m.attemptsToday)}
-          hint={`কথা হয়েছে ${m.connectedToday}টিতে`}
+          hint={`কথা হয়েছে ${m.connectedToday}টিতে · মোট ${m.talkMinutesToday} মিনিট`}
         />
       </div>
 
@@ -295,7 +295,8 @@ export function ExecutiveOverview({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-semibold">{row.name}</span>
                       <span className="block text-[10px] text-muted-foreground">
-                        {row.attempts} কল · {row.connected} কথা · {row.bookings} বুকিং
+                        {row.attempts} কল · {row.connected} কথা · {row.talkMinutes} মিনিট ·{" "}
+                        {row.bookings} বুকিং
                       </span>
                       <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
                         <span
