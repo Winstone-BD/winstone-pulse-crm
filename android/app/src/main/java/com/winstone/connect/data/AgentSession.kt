@@ -28,6 +28,7 @@ object AgentSession {
     private val DEVICE_ID = stringPreferencesKey("device_id")
     private val SIM_NUMBER = stringPreferencesKey("sim_number")
     private val SELECTED_ROLE = stringPreferencesKey("selected_role")
+    private val ALLOWED_ROLES = stringPreferencesKey("allowed_roles")
 
     private const val MIRROR = "winstone_session_mirror"
     private const val M_EMPLOYEE = "employee_id"
@@ -37,12 +38,20 @@ object AgentSession {
     private const val M_DEVICE_ID = "device_id"
     private const val M_SIM = "sim_number"
     private const val M_SELECTED_ROLE = "selected_role"
+    private const val M_ALLOWED_ROLES = "allowed_roles"
 
     @Volatile var employeeId: String? = null; private set
     @Volatile var agentId: String? = null; private set
     @Volatile var agentName: String? = null; private set
     /** Currently selected desk role: agent | coordinator | executive | it_console. */
     @Volatile var selectedRole: String? = null; private set
+
+    /**
+     * Desks the server says this account may open. Set at sign-in and never
+     * widened on the phone: an agent's list is just ["agent"], so Executive HQ
+     * and IT Console are not reachable from their app at all.
+     */
+    @Volatile var allowedRoles: List<String> = listOf("agent"); private set
 
     /**
      * Per-device token issued by the CRM at sign-in. This replaces the old
@@ -82,6 +91,15 @@ object AgentSession {
     fun agentNameNow(context: Context): String? =
         agentName ?: mirror(context).getString(M_NAME, null)?.also { agentName = it }
 
+    fun allowedRolesNow(context: Context): List<String> {
+        val cached = allowedRoles
+        if (cached.size > 1) return cached
+        val raw = mirror(context).getString(M_ALLOWED_ROLES, null)
+        val parsed = raw?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        if (!parsed.isNullOrEmpty()) allowedRoles = parsed
+        return allowedRoles
+    }
+
     fun selectedRoleNow(context: Context): String? =
         selectedRole ?: mirror(context).getString(M_SELECTED_ROLE, null)?.also { selectedRole = it }
 
@@ -93,6 +111,9 @@ object AgentSession {
         agentId = m.getString(M_AGENT, null)
         agentName = m.getString(M_NAME, null)
         selectedRole = m.getString(M_SELECTED_ROLE, null)
+        m.getString(M_ALLOWED_ROLES, null)
+            ?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }?.let { allowedRoles = it }
         deviceToken = m.getString(M_DEVICE_TOKEN, null)
         deviceId = m.getString(M_DEVICE_ID, null)
         simNumber = m.getString(M_SIM, null)
@@ -102,6 +123,9 @@ object AgentSession {
         prefs[AGENT_ID]?.let { agentId = it }
         prefs[AGENT_NAME]?.let { agentName = it }
         prefs[SELECTED_ROLE]?.let { selectedRole = it }
+        prefs[ALLOWED_ROLES]
+            ?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+            ?.takeIf { it.isNotEmpty() }?.let { allowedRoles = it }
         prefs[DEVICE_TOKEN]?.let { deviceToken = it }
         prefs[DEVICE_ID]?.let { deviceId = it }
         prefs[SIM_NUMBER]?.let { simNumber = it }
@@ -110,6 +134,7 @@ object AgentSession {
             .putString(M_AGENT, agentId)
             .putString(M_NAME, agentName)
             .putString(M_SELECTED_ROLE, selectedRole)
+            .putString(M_ALLOWED_ROLES, allowedRoles.joinToString(","))
             .putString(M_DEVICE_TOKEN, deviceToken)
             .putString(M_DEVICE_ID, deviceId)
             .putString(M_SIM, simNumber)
@@ -155,6 +180,14 @@ object AgentSession {
 
     fun isSignedIn(): Boolean = !employeeId.isNullOrBlank()
 
+    /** Stores the desks the server allows for this account. */
+    suspend fun saveAllowedRoles(context: Context, roles: List<String>) {
+        val clean = roles.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.ifEmpty { listOf("agent") }
+        allowedRoles = clean
+        mirror(context).edit().putString(M_ALLOWED_ROLES, clean.joinToString(",")).commit()
+        context.sessionStore.edit { it[ALLOWED_ROLES] = clean.joinToString(",") }
+    }
+
     suspend fun saveSelectedRole(context: Context, role: String) {
         val clean = role.trim().lowercase()
         selectedRole = clean
@@ -163,7 +196,7 @@ object AgentSession {
     }
 
     suspend fun clear(context: Context) {
-        employeeId = null; agentId = null; agentName = null; selectedRole = null; deviceToken = null; deviceId = null; simNumber = null
+        employeeId = null; agentId = null; agentName = null; selectedRole = null; allowedRoles = listOf("agent"); deviceToken = null; deviceId = null; simNumber = null
         mirror(context).edit().clear().commit()
         context.sessionStore.edit { it.clear() }
     }

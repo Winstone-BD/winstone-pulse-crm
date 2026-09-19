@@ -29,6 +29,8 @@ object WinstoneAgentApi {
         val phone: String?,
         val deviceToken: String,
         val deviceId: String,
+        /** Desks this role may open: agent | coordinator | executive | it_console. */
+        val allowedRoles: List<String>,
     )
 
     /** CRM credentials sign-in: phone number + password, exactly like the web desk. */
@@ -59,6 +61,9 @@ object WinstoneAgentApi {
                 phone = agent.optString("phone").takeIf { it.isNotBlank() && it != "null" },
                 deviceToken = token,
                 deviceId = body.optString("device_id"),
+                allowedRoles = agent.optJSONArray("allowed_roles")?.let { arr ->
+                    (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }
+                }.orEmpty().ifEmpty { listOf("agent") },
             )
         }
     }
