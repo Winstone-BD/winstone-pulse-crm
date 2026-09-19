@@ -124,7 +124,10 @@ class CallStateReceiver : BroadcastReceiver() {
                 // Every finished call becomes reportable, even when recording
                 // failed entirely — the report is opened server-side and queued
                 // so a dead network cannot swallow it.
-                if (wasOnCall && endedLeadId != null) {
+                // Answered or not answered: an app-dialled call always becomes a
+                // report. Calls from the phone dialer or incoming calls have no
+                // lead id here — the CRM opens their report from the number.
+                if (endedLeadId != null) {
                     CallSyncQueue.queueReportOpen(
                         context = app,
                         leadId = endedLeadId,
