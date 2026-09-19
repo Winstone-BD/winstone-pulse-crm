@@ -11,6 +11,12 @@ data class Lead(
     val status: String,
     val attempts: Int,
     val notes: String?,
+    /** কাজের দিন (YYYY-MM-DD, ঢাকা সময়) — আজ, আগের দিন বা আগামী দিনের টাস্ক। */
+    val workDate: String? = null,
+    val workState: String? = null,
+    val createdAt: String? = null,
+    val lastCallAt: String? = null,
+    val classifiedAt: String? = null,
 )
 
 data class CallRow(
@@ -84,6 +90,11 @@ fun parseLeads(arr: JSONArray): List<Lead> = (0 until arr.length()).map { i ->
         status = o.optString("status", "pending"),
         attempts = o.optInt("call_attempts"),
         notes = o.str("notes"),
+        workDate = o.str("work_date"),
+        workState = o.str("work_state"),
+        createdAt = o.str("created_at"),
+        lastCallAt = o.str("last_call_at"),
+        classifiedAt = o.str("classified_at"),
     )
 }
 
@@ -123,3 +134,56 @@ fun statusLabel(status: String): String = when (status) {
 
 fun shortTime(iso: String): String =
     iso.replace("T", " ").take(16)
+
+/** আজকের তারিখ, ঢাকা সময়ে (YYYY-MM-DD)। */
+fun dhakaToday(): String =
+    java.time.LocalDate.now(java.time.ZoneId.of("Asia/Dhaka")).toString()
+
+private fun dayOf(iso: String?): java.time.LocalDate? = runCatching {
+    when {
+        iso == null || iso.isBlank() -> null
+        iso.length == 10 -> java.time.LocalDate.parse(iso)
+        else -> java.time.Instant.parse(iso.replace(" ", "T"))
+            .atZone(java.time.ZoneId.of("Asia/Dhaka")).toLocalDate()
+    }
+}.getOrNull()
+
+/** টাস্কটি আগামী দিনের কাজ কি না (কাজের দিন আজকের পরে)। */
+fun isUpcomingTask(lead: Lead, today: String = dhakaToday()): Boolean {
+    val day = lead.workDate ?: return false
+    return day > today
+}
+
+/** টাস্ক শেষ হয়েছে কি না। */
+fun isTaskDone(lead: Lead): Boolean =
+    lead.workState == "completed" || lead.status == "closed"
+
+/** টাস্কটি কত দিন ধরে অপেক্ষা করছে (যেদিন এসেছে সেদিন থেকে আজ পর্যন্ত)। */
+fun waitingDays(lead: Lead, today: String = dhakaToday()): Int {
+    val start = dayOf(lead.createdAt) ?: return 0
+    val now = dayOf(today) ?: return 0
+    val days = java.time.temporal.ChronoUnit.DAYS.between(start, now).toInt()
+    return if (days < 0) 0 else days
+}
+
+/** টাস্কের সময়রেখা: কবে এসেছে, শেষ হয়েছে কি না, আর কত দিন অপেক্ষায়। */
+fun taskTrail(lead: Lead, today: String = dhakaToday()): String {
+    val parts = mutableListOf<String>()
+    dayOf(lead.createdAt)?.let { parts += "এসেছে ${it}" }
+    when {
+        isTaskDone(lead) -> {
+            val done = dayOf(lead.classifiedAt) ?: dayOf(lead.lastCallAt)
+            parts += if (done != null) "শেষ ${done}" else "শেষ হয়েছে"
+        }
+        isUpcomingTask(lead, today) -> parts += "আগামী দিনের কাজ (${lead.workDate})"
+        lead.workDate == today -> {
+            val days = waitingDays(lead, today)
+            parts += if (days > 0) "আজকের কাজ · ${days} দিন অপেক্ষায়" else "আজকের কাজ"
+        }
+        else -> {
+            val days = waitingDays(lead, today)
+            parts += if (days > 0) "${days} দিন অপেক্ষায়" else "অপেক্ষমাণ"
+        }
+    }
+    return parts.joinToString(" · ")
+}
