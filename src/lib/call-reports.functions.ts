@@ -166,6 +166,121 @@ export const logIncomingCallback = createServerFn({ method: "POST" })
     return report;
   });
 
+/**
+ * Any call, any number — the universal report gate for the web desk.
+ *
+ * Incoming, outgoing, a follow-up call, or a number nobody has ever entered:
+ * the number is resolved to a lead and CREATED when it is unknown, the call is
+ * stored, and the mandatory post-call report is opened. Nothing an agent does on
+ * the phone can end without a report waiting in the CRM.
+ */
+export const logAnyNumberCall = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    Base.extend({
+      phoneNumber: z.string().trim().min(5).max(30),
+      name: z.string().trim().max(120).nullable().optional(),
+      direction: z.enum(["incoming", "outgoing"]).default("incoming"),
+      connected: z.boolean().default(true),
+      durationSeconds: z.number().int().min(0).max(86400).default(0),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const me = await agentOf(data.adminToken ?? null);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
+    const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+    const { leadOwnerId } = await import("@/lib/lead-access.server");
+
+    const phone = normalizeLeadPhone(data.phoneNumber);
+    const status = await getLeadPhoneStatus(data.phoneNumber);
+    if (status.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
+
+    let leadId = status.existingLeadId;
+    let createdLead = false;
+
+    if (leadId) {
+      const { data: lead } = await supabaseAdmin
+        .from("leads")
+        .select("id, assigned_to, assigned_agent_id")
+        .eq("id", leadId)
+        .maybeSingle();
+      // An unowned number that called this agent becomes theirs to work.
+      if (lead && !leadOwnerId(lead)) {
+        await supabaseAdmin
+          .from("leads")
+          .update({
+            assigned_to: me.id,
+            assigned_agent_id: me.id,
+            assignment_source: data.direction === "outgoing" ? "dialer_claim" : "callback_claim",
+          })
+          .eq("id", leadId)
+          .is("assigned_to", null)
+          .is("assigned_agent_id", null);
+      }
+    } else {
+      const intake = await intakeLead({
+        name: data.name?.trim() || `${data.direction === "outgoing" ? "কল" : "ফিরতি কল"} ${phone}`,
+        phoneNumber: phone,
+        ownerId: me.id,
+        ownerName: me.name,
+        referenceBy: data.direction === "outgoing" ? "ওয়েব থেকে কল" : "কলব্যাক",
+        notes:
+          data.direction === "outgoing"
+            ? "এজেন্ট সরাসরি নম্বরে কল করেছেন (CRM-এ লিড ছিল না)"
+            : "ক্রেতা নিজে ফোন করেছেন (CRM-এ লিড ছিল না)",
+      });
+      leadId = intake.leadId;
+      createdLead = !intake.duplicate;
+    }
+
+    const { data: rec } = await supabaseAdmin
+      .from("call_recordings")
+      .insert({
+        lead_id: leadId,
+        agent_id: me.id,
+        phone_number: phone,
+        call_direction: data.direction === "outgoing" ? "outgoing" : "incoming_callback",
+        duration_seconds: data.durationSeconds,
+        is_two_sided: false,
+        sync_status: "uploaded",
+        analysis_status: "not_available",
+        call_source: data.direction === "outgoing" ? "web_manual" : "web_callback",
+        call_status: data.connected ? "completed" : "no_answer",
+        recording_status: "not_available",
+        upload_status: "pending",
+      })
+      .select("id")
+      .maybeSingle();
+
+    const { openCallReport } = await import("@/lib/call-reports.server");
+    const report = await openCallReport({
+      leadId: leadId!,
+      agentId: me.id,
+      recordingId: rec?.id ?? null,
+      phoneNumber: phone,
+      durationSeconds: data.durationSeconds,
+      connected: data.connected,
+    });
+
+    await supabaseAdmin
+      .from("leads")
+      .update({ last_call_at: new Date().toISOString() })
+      .eq("id", leadId!);
+
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({
+      leadId,
+      agentId: me.id,
+      kind: data.connected ? "call_connected" : "call_ended",
+      detail:
+        data.direction === "outgoing"
+          ? `${me.name} ${phone} নম্বরে কল করেছেন`
+          : `${phone} থেকে ${me.name}-কে কল এসেছে`,
+    });
+
+    return { ...report, leadId, createdLead, phone };
+  });
+
 export const submitMyReport = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     Base.extend({

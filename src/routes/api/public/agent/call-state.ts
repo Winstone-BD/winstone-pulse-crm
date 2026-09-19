@@ -154,10 +154,30 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           });
         }
 
+        // Every finished call is reportable — answered, unanswered or failed.
+        // Opened here on the server so the report exists even if the phone never
+        // gets to send its own "open report" request.
+        let reportId: string | null = null;
+        if (body.state === "completed" || body.state === "no_answer" || body.state === "failed") {
+          await supabaseAdmin.from("leads").update({ last_call_at: at }).eq("id", lead.id);
+          const { openCallReport } = await import("@/lib/call-reports.server");
+          const report = await openCallReport({
+            leadId: lead.id,
+            agentId: caller.profile.id,
+            recordingId,
+            deviceId: caller.device.id,
+            phoneNumber: lead.phone_number,
+            durationSeconds: body.duration_seconds ?? 0,
+            connected: body.state === "completed",
+          });
+          reportId = report.id;
+        }
+
         return json({
           ok: true,
           call_uid: body.call_uid,
           recording_id: recordingId,
+          report_id: reportId,
           call_status: body.state,
           recording_status: recordingStatus,
         });
