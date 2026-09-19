@@ -116,14 +116,23 @@ export async function backupRecordingToDrive(recordingId: string) {
   const { data: recording } = await supabaseAdmin
     .from("call_recordings")
     .select(
-      "id, lead_id, agent_id, phone_number, duration_seconds, recording_status, audio_url, storage_path, file_name, mime_type, file_size_bytes, started_at, created_at",
+      "id, lead_id, agent_id, phone_number, duration_seconds, recording_status, upload_status, audio_url, storage_path, file_name, mime_type, file_size_bytes, started_at, created_at",
     )
     .eq("id", recordingId)
     .maybeSingle();
   if (!recording) throw new Error("রেকর্ডিং পাওয়া যায়নি");
-  if (recording.recording_status !== "stored" || !recording.storage_path) {
+  // The audio is backup-ready as soon as the file itself is in storage. Older
+  // rows use recording_status "stored", newer ones "available", and some only
+  // record it through upload_status — the storage path is the real signal.
+  const uploaded =
+    !!recording.storage_path &&
+    (recording.upload_status === "uploaded" ||
+      recording.recording_status === "stored" ||
+      recording.recording_status === "available");
+  if (!uploaded) {
     throw new Error(`রেকর্ডিং এখনো জমা হয়নি — অবস্থা: ${recording.recording_status ?? "unknown"}`);
   }
+
 
   const [{ data: leads }, { data: agents }] = await Promise.all([
     recording.lead_id
