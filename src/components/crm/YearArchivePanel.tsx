@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminToken } from "@/lib/local-session";
+import { useMyAccount } from "@/lib/session";
 import { listYearArchives, recordYearArchive, yearArchiveExport } from "@/lib/workday.functions";
 
 /**
@@ -52,9 +53,16 @@ export function YearArchivePanel() {
   const [location, setLocation] = useState("");
   const [counts, setCounts] = useState<{ leads: number; reports: number } | null>(null);
 
+  // Only the IT council / coordinator scope may read the archive list; asking
+  // before we know who is on the device throws "sign in first" and blanks the page.
+  const { scope } = useMyAccount();
+  const mayRead = scope !== "none" && scope !== "agent";
+
   const archives = useQuery({
-    queryKey: ["year-archives"],
+    queryKey: ["year-archives", adminToken ? "pin" : "session"],
     queryFn: () => listFn({ data: { adminToken } }),
+    enabled: mayRead,
+    retry: false,
   });
 
   const pull = useMutation({
