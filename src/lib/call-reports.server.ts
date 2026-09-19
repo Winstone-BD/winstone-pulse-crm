@@ -164,7 +164,34 @@ export function validateReport(input: {
 }
 
 /** Is this agent blocked from starting the next call? */
+/**
+ * Promotes the oldest queued post-call report to the open one. Used right after
+ * a report is submitted so every call that rang meanwhile still gets its popup.
+ */
+export async function promoteNextQueuedReport(agentId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: openRow } = await supabaseAdmin
+    .from("call_reports")
+    .select("id")
+    .eq("agent_id", agentId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (openRow) return openRow.id;
+  const { data: next } = await supabaseAdmin
+    .from("call_reports")
+    .select("id")
+    .eq("agent_id", agentId)
+    .eq("status", "queued")
+    .order("call_ended_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!next) return null;
+  await supabaseAdmin.from("call_reports").update({ status: "pending" }).eq("id", next.id);
+  return next.id;
+}
+
 export async function pendingReportFor(agentId: string) {
+
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("call_reports")
