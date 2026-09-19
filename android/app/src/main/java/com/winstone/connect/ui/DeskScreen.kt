@@ -103,7 +103,7 @@ fun DeskScreen(
 ) {
     val state by vm.state.collectAsStateSafe()
     val snackbar = remember { SnackbarHostState() }
-    var tab by remember { mutableStateOf(TAB_DASHBOARD) }
+    var tab by remember { mutableStateOf(TAB_HOME) }
     val callScope = rememberCoroutineScope()
     var callBlocked by remember { mutableStateOf<String?>(null) }
     var showPendingReport by remember { mutableStateOf(false) }
