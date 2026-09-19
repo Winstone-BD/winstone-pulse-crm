@@ -72,16 +72,6 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       count(() => reports().eq("status", "submitted")),
       count(() => reports().eq("status", "submitted").eq("connected", true)),
       count(() =>
-        reports().eq("status", "submitted").gte("call_ended_at", start).lt("call_ended_at", end),
-      ),
-      count(() =>
-        reports()
-          .eq("status", "submitted")
-          .eq("connected", true)
-          .gte("call_ended_at", start)
-          .lt("call_ended_at", end),
-      ),
-      count(() =>
         followUps()
           .in("status", OPEN_FOLLOW_UP_STATES)
           .gte("scheduled_at", start)
