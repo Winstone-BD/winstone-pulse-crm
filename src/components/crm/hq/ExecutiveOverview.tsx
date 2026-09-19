@@ -169,7 +169,7 @@ export function ExecutiveOverview({
         .slice(0, 6)
         .map((e) => ({
           id: e.id,
-          label: LEAD_EVENT_LABELS[e.event_type] ?? e.event_type.replace(/_/g, " "),
+          label: LEAD_EVENT_LABELS[e.kind] ?? e.kind.replace(/_/g, " "),
           when: new Date(e.created_at).toLocaleString("bn-BD", {
             hour: "2-digit",
             minute: "2-digit",
