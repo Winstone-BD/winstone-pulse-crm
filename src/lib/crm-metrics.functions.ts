@@ -207,9 +207,26 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
     const talkMeasuredToday = todayBucket.connected - todayBucket.unmeasured;
     const talkMinutesToday = talkMeasuredToday > 0 ? Math.round(todayBucket.talkSeconds / 60) : null;
 
-    const profiles = await supabaseAdmin.from("profiles").select("id, name, employee_id");
+    const profiles = await supabaseAdmin
+      .from("profiles")
+      .select("id, name, employee_id, role, is_active, approval_status");
     if (profiles.error) throw new Error(profiles.error.message);
     const nameOf = new Map((profiles.data ?? []).map((p) => [p.id, p]));
+
+    // Every active desk is listed, even with nothing submitted yet — a missing
+    // row would read as "this agent does not exist" instead of "no calls yet".
+    for (const p of profiles.data ?? []) {
+      if (p.role !== "agent" || !p.is_active || p.approval_status !== "approved") continue;
+      if (agentAgg.has(p.id)) continue;
+      agentAgg.set(p.id, {
+        attempts: 0,
+        connected: 0,
+        talkSeconds: 0,
+        unmeasured: 0,
+        bookingLeads: new Set<string>(),
+        contactedLeads: new Set<string>(),
+      });
+    }
 
     const agents = [...agentAgg.entries()]
       .map(([agentId, agg]) => ({
@@ -223,6 +240,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
         talkMinutes: agg.connected - agg.unmeasured > 0 ? Math.round(agg.talkSeconds / 60) : null,
       }))
       .sort((a, b) => b.connected - a.connected || b.attempts - a.attempts);
+
 
     return {
       dateKey,
