@@ -277,6 +277,11 @@ export async function distributeDailyLeads(options: {
   // left over is topped up from the database. Idempotent — a second run in the
   // same day fills real gaps only.
   const held = await openWorkloadByAgent(today);
+
+  // Balance first: a desk over its quota passes its untouched surplus to desks
+  // under theirs, so the database is only tapped for what the floor truly lacks.
+  await rebalanceSurplusPending({ workDate: today, agents, quotas, held });
+
   const shortfallByAgent = new Map<string, number>();
   for (const agent of agents) {
     const quota = quotas.get(agent.id) ?? options.perAgent;
