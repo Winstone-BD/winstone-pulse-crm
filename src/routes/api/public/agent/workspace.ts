@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/public/agent/workspace")({
         const { data: leads, error: leadsError } = await supabaseAdmin
           .from("leads")
           .select(
-            "id, name, phone_number, company, notes, status, outcome_category, call_attempts, source, created_at, updated_at",
+            "id, name, phone_number, company, notes, status, outcome_category, call_attempts, source, created_at, updated_at, work_date, work_state, last_call_at, classified_at",
           )
           .or(`assigned_to.eq.${agent.id},assigned_agent_id.eq.${agent.id}`)
           .order("updated_at", { ascending: false })
