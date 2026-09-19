@@ -59,14 +59,28 @@ describe("দৈনিক বণ্টনের হিসাব", () => {
   });
 
   it("বার বার চালালেও (রিফ্রেশ/ক্রন রিরান/ওয়েব+অ্যাপ একসাথে) ডুপ্লিকেট হয় না", () => {
-    const loads = [agent("a", 0), agent("donor", 40), agent("b", 28)];
-    const first = planAllocation(loads, 500);
-    const settled: AgentLoad[] = [
-      agent("a", 0 + (first.topUp["a"] ?? 0)),
-      agent("donor", 40 - 12, 0),
-      agent("b", 28 + (first.topUp["b"] ?? 0) + 12 > 30 ? 30 : 30),
-    ];
-    const again = planAllocation(settled, 500);
+    const start = [agent("a", 0), agent("donor", 40), agent("b", 28)];
+    const plan = planAllocation(start, 500);
+
+    // Apply the plan, exactly as the database would end up after the run.
+    const pending = new Map(start.map((load) => [load.id, load.pending]));
+    for (const transfer of plan.transfers) {
+      pending.set(transfer.from, pending.get(transfer.from)! - transfer.count);
+      pending.set(transfer.to, pending.get(transfer.to)! + transfer.count);
+    }
+    for (const [id, count] of Object.entries(plan.topUp)) {
+      pending.set(id, pending.get(id)! + count);
+    }
+    // Nobody is pushed past the target.
+    for (const count of pending.values()) expect(count).toBeLessThanOrEqual(40);
+    expect(pending.get("a")).toBe(30);
+    expect(pending.get("b")).toBe(30);
+
+    // A second identical run asks for nothing more.
+    const again = planAllocation(
+      start.map((load) => agent(load.id, pending.get(load.id)!, 0)),
+      500,
+    );
     expect(again.transfers).toHaveLength(0);
     expect(Object.values(again.topUp).reduce((s, n) => s + n, 0)).toBe(0);
   });
