@@ -200,6 +200,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       connectedCalls,
       attemptsToday,
       connectedToday,
+      talkMinutesToday,
       followUpDue,
       followUpOverdue,
       visitsCompleted,
