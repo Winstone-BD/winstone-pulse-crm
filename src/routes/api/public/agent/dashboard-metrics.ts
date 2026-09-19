@@ -60,7 +60,7 @@ export const Route = createFileRoute("/api/public/agent/dashboard-metrics")({
         }).length;
         const missedRetry = calledToday.filter((r) => r.category === "no_answer" || r.category === "callback").length;
 
-        const progressPercent = if (assigned > 0) Math.min(100, Math.round((called / assigned) * 100)) else 0;
+        const progressPercent = assigned > 0 ? Math.min(100, Math.round((called / assigned) * 100)) : 0;
 
         return json({
           ok: true,
