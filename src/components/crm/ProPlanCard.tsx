@@ -84,7 +84,7 @@ export function ProPlanCard({ compact = false }: { compact?: boolean }) {
     : null;
 
   return (
-    <div className="card-elevated p-4 sm:p-5">
+    <div className="card-elevated card-pad">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-sm font-semibold">

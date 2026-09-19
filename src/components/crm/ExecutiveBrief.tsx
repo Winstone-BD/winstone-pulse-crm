@@ -67,7 +67,7 @@ export function ExecutiveBrief() {
 
   if (!data) {
     return (
-      <section className="card-elevated p-6">
+      <section className="card-elevated card-pad">
         <p className="text-sm text-muted-foreground">প্রেজেন্টেশন তৈরি হচ্ছে…</p>
       </section>
     );
@@ -82,7 +82,7 @@ export function ExecutiveBrief() {
             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
               <CalendarClock className="size-3.5" /> এক্সিকিউটিভ প্রেজেন্টেশন
             </p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">{data.headline}</h2>
+            <h2 className="section-title mt-1">{data.headline}</h2>
             <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{data.subline}</p>
           </div>
           <p className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">

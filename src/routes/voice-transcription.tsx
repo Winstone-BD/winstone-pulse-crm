@@ -24,7 +24,7 @@ function VoiceTranscriptionPage() {
     <main className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 text-center">
-          <h1 className="text-2xl font-bold sm:text-3xl">Voice Transcription</h1>
+          <h1 className="hero-title">Voice Transcription</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Web Audio API + বাংলা STT — কথা বলুন, লেখা পান
           </p>

@@ -20,7 +20,7 @@ export function MyCallLog() {
   return (
     <section className="space-y-3">
       <div>
-        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <h2 className="section-title">
           <PhoneCall className="size-5 text-primary" /> আমার কল রেকর্ড
         </h2>
         <p className="text-xs text-muted-foreground sm:text-sm">

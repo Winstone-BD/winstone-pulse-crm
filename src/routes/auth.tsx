@@ -123,7 +123,7 @@ function AuthPage() {
           </span>
         </Link>
 
-        <h1 className="mt-6 text-xl font-bold tracking-tight">
+        <h1 className="hero-title mt-6">
           {isSignup ? "Create your account" : "Sign in to your desk"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

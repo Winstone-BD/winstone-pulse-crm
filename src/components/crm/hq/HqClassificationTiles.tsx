@@ -14,7 +14,7 @@ export function HqClassificationTiles({
   onDrill: (spec: DrillSpec) => void;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="stat-grid">
       {(
         [
           { key: "hot", label: "HOT লিড", hint: "এজেন্টের নিজের সিদ্ধান্ত অনুযায়ী" },

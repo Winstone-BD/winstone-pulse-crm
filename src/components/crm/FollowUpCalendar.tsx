@@ -72,7 +72,7 @@ export function FollowUpCalendar() {
     <section className="card-elevated space-y-4 p-4">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
+          <h2 className="section-title">
             <CalendarClock className="size-4" /> ফলো-আপ ক্যালেন্ডার
           </h2>
           <p className="text-xs text-muted-foreground">

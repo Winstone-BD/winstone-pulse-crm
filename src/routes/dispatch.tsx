@@ -126,10 +126,10 @@ function Dispatcher() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Lead Dispatcher</h1>
+          <h1 className="page-title">Lead Dispatcher</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             {leads.length} leads in the pipeline · {unassigned} waiting for an owner
           </p>
@@ -148,8 +148,8 @@ function Dispatcher() {
 
       <TeamSupportInbox />
 
-      <section className="card-elevated p-4">
-        <h2 className="text-sm font-semibold">Bulk push</h2>
+      <section className="card-elevated card-pad">
+        <h2 className="section-title">Bulk push</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Select value={agentId} onValueChange={setAgentId}>
             <SelectTrigger className="w-full sm:w-[240px]">
@@ -208,7 +208,7 @@ function Dispatcher() {
       <SelfClaimsFeed />
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Team load</h2>
+        <h2 className="section-title">Team load</h2>
         <div className="overflow-x-auto card-elevated">
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted-foreground">

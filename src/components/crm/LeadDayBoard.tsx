@@ -133,7 +133,7 @@ export function LeadDayBoard() {
     <section className="card-elevated space-y-3 p-4">
       <header className="flex flex-wrap items-center gap-2">
         <CalendarDays className="size-4 text-primary" />
-        <h2 className="text-sm font-bold tracking-tight">দিনের কাজ</h2>
+        <h2 className="section-title">দিনের কাজ</h2>
         <input
           type="date"
           value={day}
@@ -213,7 +213,7 @@ export function LeadDayBoard() {
       )}
 
       {dayLeads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
+        <p className="empty-note">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
       ) : (
         <ul className="space-y-2">
           {dayLeads.map((lead) => (

@@ -57,11 +57,11 @@ export function MyProfileCard() {
   if (!profile) return null;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <span
-            className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
+            className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold text-ink-foreground"
             style={{ backgroundColor: `hsl(${profile.avatar_hue} 65% 45%)` }}
           >
             {profile.name.slice(0, 2).toUpperCase()}
@@ -131,7 +131,7 @@ export function MyProfileCard() {
                   style={{ backgroundColor: `hsl(${value} 65% 45%)` }}
                   aria-label={`Colour ${value}`}
                 >
-                  {hue === value && <Check className="size-4 text-white" />}
+                  {hue === value && <Check className="size-4 text-ink-foreground" />}
                 </button>
               ))}
             </div>

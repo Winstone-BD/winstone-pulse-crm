@@ -60,7 +60,7 @@ export function ExtraLeadPanel() {
           <PlusCircle className="size-4" />
         </span>
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold">অতিরিক্ত লিড</h2>
+          <h2 className="section-title truncate">অতিরিক্ত লিড</h2>
           <p className="text-xs text-muted-foreground">
             দৈনিক কোটার বাইরে বাড়তি লিড — কোটা বদলায় না, আলাদাভাবে হিসাব থাকে।
           </p>

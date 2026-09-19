@@ -210,10 +210,10 @@ export function ShiftSummaryPanel({ scope }: { scope: "hq" | "it" }) {
     : null;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <CalendarClock className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">
+        <h2 className="section-title">
           শিফট সামারি {scope === "hq" ? "(চলতি মাস)" : "(সম্পূর্ণ সংরক্ষণ)"}
         </h2>
         <span className="ml-auto text-xs text-muted-foreground">{rows.length}টি</span>
@@ -342,7 +342,7 @@ export function ShiftSummaryPanel({ scope }: { scope: "hq" | "it" }) {
 
       {list.isPending && <p className="mt-3 text-sm text-muted-foreground">সামারি আনা হচ্ছে…</p>}
       {!list.isPending && rows.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো শিফট সামারি নেই।</p>
+        <p className="empty-note">এখনো কোনো শিফট সামারি নেই।</p>
       )}
 
       <div className="mt-3 space-y-4">

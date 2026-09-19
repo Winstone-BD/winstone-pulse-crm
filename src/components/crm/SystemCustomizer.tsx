@@ -95,7 +95,7 @@ export function SystemCustomizer() {
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
+        <h2 className="section-title">
           <Settings2 className="size-4 text-primary" /> সিস্টেম কাস্টমাইজার
         </h2>
         <div className="flex flex-wrap items-center gap-2">

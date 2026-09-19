@@ -74,7 +74,7 @@ export function QueueBoard({
     <div className="space-y-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
-          <h2 className="truncate text-xl font-bold tracking-tight">{title}</h2>
+          <h2 className="section-title truncate">{title}</h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
             {filtered.length} of {leads.length} leads · one tap to dial or open WhatsApp
           </p>
@@ -128,7 +128,7 @@ export function QueueBoard({
 
       {isPending && <SnapshotSkeleton />}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stat-grid">
         {LEAD_STATUSES.map((status) => {
           const columnLeads = filtered.filter((lead) => lead.status === status.key);
           return (

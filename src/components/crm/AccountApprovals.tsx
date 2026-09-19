@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { decideAccount, listAccountRequests } from "@/lib/accounts.functions";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
+import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "অপেক্ষমাণ",
@@ -43,10 +44,10 @@ export function AccountApprovals() {
   const pending = accounts.filter((a) => a.approval_status === "pending");
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex items-center gap-2">
         <ShieldCheck className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">অ্যাকাউন্ট অনুমোদন</h2>
+        <h2 className="section-title">অ্যাকাউন্ট অনুমোদন</h2>
         <span className="ml-auto text-xs text-muted-foreground">{pending.length}টি অপেক্ষমাণ</span>
       </header>
 
@@ -55,7 +56,7 @@ export function AccountApprovals() {
       )}
 
       {!list.isPending && accounts.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="empty-note">
           এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}
@@ -99,14 +100,18 @@ export function AccountApprovals() {
                 >
                   কোঅর্ডিনেটর
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <ConfirmAction
+                  title="অ্যাকাউন্টটি বাদ দেবেন?"
+                  description={`${account.name}-এর অনুরোধ বাতিল হবে এবং তিনি ডেস্কে ঢুকতে পারবেন না।`}
+                  confirmLabel="হ্যাঁ, বাদ দিন"
                   disabled={act.isPending}
-                  onClick={() => act.mutate({ profileId: account.id, decision: "reject" })}
-                >
-                  <X className="size-3.5" /> বাদ দিন
-                </Button>
+                  onConfirm={() => act.mutate({ profileId: account.id, decision: "reject" })}
+                  trigger={
+                    <Button size="sm" variant="ghost" disabled={act.isPending}>
+                      <X className="size-3.5" /> বাদ দিন
+                    </Button>
+                  }
+                />
               </div>
             )}
           </li>

@@ -56,7 +56,7 @@ export function LeadDatabasePanel() {
     <section className="card-elevated space-y-4 p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Database className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">লিড ডেটাবেজ</h2>
+        <h2 className="section-title">লিড ডেটাবেজ</h2>
         <span className="ml-auto text-xs text-muted-foreground">
           {status.isPending ? "…" : `${poolCount}টি লিড অপেক্ষায়`}
         </span>

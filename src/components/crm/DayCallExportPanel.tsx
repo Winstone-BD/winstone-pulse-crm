@@ -112,10 +112,10 @@ export function DayCallExportPanel() {
   });
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <FileAudio className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">এক দিনের কল ও রেকর্ডিং সামারি</h2>
+        <h2 className="section-title">এক দিনের কল ও রেকর্ডিং সামারি</h2>
         <input
           type="date"
           value={dateKey}
@@ -146,7 +146,7 @@ export function DayCallExportPanel() {
         </Button>
       </header>
 
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="empty-note">
         ওই দিনের প্রতিটি কল, সঠিক সংখ্যা ও কথার সময়, আর প্রতিটি রেকর্ডিংয়ের ৬ ঘণ্টার জন্য সাইন করা
         শোনার লিংক একটি ফাইলে নামে। যে কলের অডিও জমা নেই, সেখানে লিংকের বদলে আসল অবস্থাই লেখা থাকে।
         Google Doc-এ প্রতিদিনের তালিকা যায় — ফাইলের নাম: তারিখ_এজেন্ট_লিড_নম্বর_কল-নম্বর।

@@ -109,11 +109,11 @@ function MigrationBoard() {
     MIGRATION_CHECKLIST.filter((i) => i.kind === kind).length;
 
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <section className="rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold">V1 → V2 মাইগ্রেশন অগ্রগতি</h2>
+            <h2 className="section-title">V1 → V2 মাইগ্রেশন অগ্রগতি</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               ম্যাপিং রিপোর্ট: <code className="text-xs">docs/migration-plan-v1-to-v2-full.md</code>{" "}
               — এই বোর্ড থেকে কোনো ডেটা সরানো হয় না, শুধু সিদ্ধান্ত ও ঝুঁকি ট্র্যাক হয়।

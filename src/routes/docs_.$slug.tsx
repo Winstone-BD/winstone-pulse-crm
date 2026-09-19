@@ -85,7 +85,7 @@ function DocPage() {
           ) : (
             <>
               <header className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{page.data.title}</h1>
+                <h1 className="page-title">{page.data.title}</h1>
                 {page.data.summary ? (
                   <p className="text-sm text-muted-foreground">{page.data.summary}</p>
                 ) : null}
@@ -93,7 +93,7 @@ function DocPage() {
                   সর্বশেষ হালনাগাদ: {new Date(page.data.updated_at).toLocaleString("bn-BD")}
                 </p>
               </header>
-              <div className="card-elevated p-4">
+              <div className="card-elevated card-pad">
                 <MarkdownView source={page.data.body_markdown} />
               </div>
             </>

@@ -108,7 +108,7 @@ export function WhatsappInbox() {
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <h2 className="section-title">
             <MessageCircle className="size-5 text-whatsapp" /> হোয়াটসঅ্যাপ ইনবক্স
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">

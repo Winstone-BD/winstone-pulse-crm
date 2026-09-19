@@ -31,7 +31,7 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <div className="card-elevated p-3">
+    <div className="card-elevated card-pad">
       <div className="flex items-center gap-2">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
           {icon}
@@ -136,7 +136,7 @@ export function AgentOverview() {
     <section className="space-y-3">
       <div className="card-elevated flex flex-wrap items-end justify-between gap-3 p-4">
         <div>
-          <h2 className="text-lg font-bold tracking-tight sm:text-xl">এজেন্ট ড্যাশবোর্ড</h2>
+          <h2 className="section-title">এজেন্ট ড্যাশবোর্ড</h2>
           <p className="text-xs text-muted-foreground">
             স্বাগতম, <span className="font-semibold text-foreground">{name}</span>
             {employeeId ? ` (${employeeId})` : ""} — আজকের লক্ষ্য পূরণ করে ফেলুন!
@@ -198,7 +198,7 @@ export function AgentOverview() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="card-elevated p-4 lg:col-span-2">
+        <div className="card-elevated card-pad lg:col-span-2">
           <h3 className="text-sm font-semibold">আজকের কাজের ধারা</h3>
           <ul className="mt-3 space-y-2">
             {activity.map((row) => (

@@ -14,7 +14,7 @@ export function ReportsHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">Reports</h1>
+        <h1 className="page-title truncate">Reports</h1>
         <p className="text-xs text-muted-foreground sm:text-sm">
           Performance &amp; activity intelligence
         </p>

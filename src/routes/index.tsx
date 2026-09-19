@@ -49,7 +49,7 @@ function EntryHall() {
             alt="Winstone Properties Ltd. — Find. Build. Invest."
             className="size-16 rounded-full object-cover shadow-sm ring-2 ring-primary/20"
           />
-          <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">Winstone Connect</h1>
+          <h1 className="hero-title mt-4">Winstone Connect</h1>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Tele-Sales Operating System
           </p>
@@ -191,7 +191,7 @@ function EntryCard({
         {icon}
       </span>
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <h2 className="section-title">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="mt-auto flex flex-wrap gap-2 pt-2">

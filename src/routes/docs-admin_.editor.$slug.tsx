@@ -114,10 +114,10 @@ function Editor() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="page-stack">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+          <h1 className="page-title">
             {isNew ? "নতুন পাতা" : title || routeSlug}
           </h1>
           <p className="text-xs text-muted-foreground">
@@ -200,7 +200,7 @@ function Editor() {
       </div>
 
       {preview ? (
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <MarkdownView source={body} />
         </div>
       ) : (

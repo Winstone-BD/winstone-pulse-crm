@@ -75,10 +75,10 @@ function DocsAdmin() {
   }, [docs.data, term, status]);
 
   return (
-    <div className="space-y-4">
+    <div className="page-stack">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">ডকুমেন্টেশন ব্যবস্থাপনা</h1>
+          <h1 className="page-title">ডকুমেন্টেশন ব্যবস্থাপনা</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             পাতা লিখুন, পর্যালোচনায় রাখুন, প্রকাশ করলে সাথে সাথে /docs-এ দেখা যাবে।
           </p>

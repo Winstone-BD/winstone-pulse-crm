@@ -120,7 +120,7 @@ export function SmartInsightStrip({ scope }: { scope: "desk" | "floor" }) {
 
   if (isPending) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stat-grid">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-muted/40" />
         ))}
@@ -129,7 +129,7 @@ export function SmartInsightStrip({ scope }: { scope: "desk" | "floor" }) {
   }
 
   return (
-    <section aria-label="স্মার্ট পরামর্শ" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section aria-label="স্মার্ট পরামর্শ" className="stat-grid">
       {insights.map((row) => (
         <article
           key={row.title}

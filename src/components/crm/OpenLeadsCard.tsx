@@ -40,10 +40,10 @@ export function OpenLeadsCard() {
   const leads = open.data ?? [];
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-bold tracking-tight">খালি লিড — নিজে নিন</h2>
+          <h2 className="section-title">খালি লিড — নিজে নিন</h2>
           <p className="text-xs text-muted-foreground">
             কারও নামে দেওয়া হয়নি এমন লিড। “নিজের নামে নিন” চাপলেই আপনার তালিকায় যোগ হবে।
           </p>
@@ -67,7 +67,7 @@ export function OpenLeadsCard() {
       {open.isPending ? (
         <p className="mt-4 text-xs text-muted-foreground">লোড হচ্ছে…</p>
       ) : leads.length === 0 ? (
-        <p className="mt-4 text-xs text-muted-foreground">এখন কোনো খালি লিড নেই।</p>
+        <p className="empty-note">এখন কোনো খালি লিড নেই।</p>
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {leads.map((lead) => (

@@ -125,10 +125,10 @@ export function DriveBackupPanel() {
   const folderIdValue = folderIdDraft || settings?.folderId || "";
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <Cloud className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">Google Drive ব্যাকআপ</h2>
+        <h2 className="section-title">Google Drive ব্যাকআপ</h2>
       </header>
 
       <p className="mt-1 text-xs text-muted-foreground">

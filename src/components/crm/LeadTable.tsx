@@ -110,7 +110,7 @@ export function LeadTable() {
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">লিড ড্যাশবোর্ড</h2>
+          <h2 className="section-title">লিড ড্যাশবোর্ড</h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
             আজ {counts.pending}টি লিডে কল বাকি · {counts.follow_up}টিতে আবার যোগাযোগ করতে হবে ·{" "}
             {counts.done}টিতে কথা হয়ে গেছে

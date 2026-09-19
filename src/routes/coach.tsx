@@ -87,10 +87,10 @@ function CoachPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="page-stack">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 className="page-title flex items-center gap-2">
               <Brain className="size-5 text-primary" /> AI Sales Coach
             </h1>
             <p className="text-xs text-muted-foreground sm:text-sm">
@@ -146,7 +146,7 @@ function CoachPage() {
 function BriefingView({ briefing }: { briefing: Briefing }) {
   const m = briefing.metrics;
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <div className="card-elevated space-y-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="rounded-full">
@@ -159,11 +159,11 @@ function BriefingView({ briefing }: { briefing: Briefing }) {
             {new Date(briefing.generatedAt).toLocaleTimeString()}
           </span>
         </div>
-        <h2 className="text-lg font-bold tracking-tight sm:text-xl">{briefing.headline}</h2>
+        <h2 className="section-title">{briefing.headline}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">{briefing.summary}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stat-grid">
         <Tile label="Dials" value={String(m.dials)} hint={`Target ${m.dialTarget}/day`} />
         <Tile
           label="Connected"
@@ -213,7 +213,7 @@ function BriefingView({ briefing }: { briefing: Briefing }) {
         />
       </div>
 
-      <div className="card-elevated p-4">
+      <div className="card-elevated card-pad">
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <ListChecks className="size-4 text-primary" /> Next steps
         </h3>
@@ -236,7 +236,7 @@ function BriefingView({ briefing }: { briefing: Briefing }) {
       </div>
 
       {m.topObjections.length > 0 && (
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <TrendingUp className="size-4 text-primary" /> What customers push back on
           </h3>
@@ -255,7 +255,7 @@ function BriefingView({ briefing }: { briefing: Briefing }) {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="card-elevated p-4">
+    <div className="card-elevated card-pad">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="tabular mt-1 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
@@ -275,7 +275,7 @@ function ListCard({
   empty: string;
 }) {
   return (
-    <div className="card-elevated p-4">
+    <div className="card-elevated card-pad">
       <h3 className="flex items-center gap-2 text-sm font-semibold">
         {icon} {title}
       </h3>
