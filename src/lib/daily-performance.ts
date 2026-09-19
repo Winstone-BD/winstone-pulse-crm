@@ -85,6 +85,24 @@ export const BOOKING_CATEGORY = "closed_converted";
 /** Follow-up categories that represent a visit to the site. */
 export const SITE_VISIT_CATEGORIES = ["site_visit", "site-visit", "visit"];
 
+/**
+ * Follow-up rows are written as `upcoming` / `done` by the app, while older code
+ * and some imports used `pending` / `completed`. Both spellings mean the same
+ * thing, so every follow-up count accepts both — otherwise real rows are
+ * silently counted as zero.
+ */
+export const OPEN_FOLLOW_UP_STATES = ["upcoming", "pending", "scheduled"];
+export const DONE_FOLLOW_UP_STATES = ["done", "completed"];
+export const CANCELLED_FOLLOW_UP_STATES = ["cancelled", "canceled"];
+
+export function isOpenFollowUp(status: string | null): boolean {
+  return OPEN_FOLLOW_UP_STATES.includes((status ?? "").toLowerCase());
+}
+
+export function isDoneFollowUp(status: string | null): boolean {
+  return DONE_FOLLOW_UP_STATES.includes((status ?? "").toLowerCase());
+}
+
 const SUBMITTED = "submitted";
 
 /** Dhaka day boundaries as real UTC instants (UTC+6, no daylight saving). */
