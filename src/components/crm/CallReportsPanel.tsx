@@ -30,7 +30,14 @@ export function CallReportsPanel() {
   const [direction, setDirection] = useState<"" | "outgoing" | "incoming">("");
   const [callState, setCallState] = useState<"" | "connected" | "not_connected">("");
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [agentId, setAgentId] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
+
+  // A calendar day is a Dhaka day — the whole floor works on that clock.
+  const fromIso = fromDate ? `${fromDate}T00:00:00+06:00` : null;
+  const toIso = toDate ? `${toDate}T23:59:59+06:00` : null;
 
   // The lead file is drawn from the shared snapshot the rest of the desk uses.
   const snapshot = useSnapshot();
@@ -44,6 +51,9 @@ export function CallReportsPanel() {
       direction,
       callState,
       search,
+      fromIso,
+      toIso,
+      agentId,
     ],
     queryFn: () =>
       fetchList({
@@ -53,12 +63,17 @@ export function CallReportsPanel() {
           direction: direction || null,
           callState: callState || null,
           search: search.trim() || null,
+          fromIso,
+          toIso,
+          agentId: agentId || null,
         },
       }),
     refetchInterval: 60_000,
   });
 
   const reports = data?.reports ?? [];
+  // Agents only ever see their own reports, so they get no agent picker.
+  const canFilterAgent = data ? data.scope !== "agent" && data.scope !== "none" : false;
 
   return (
     <section className="space-y-4 rounded-2xl border bg-card p-4">
