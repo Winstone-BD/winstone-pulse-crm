@@ -8,6 +8,10 @@ import android.widget.Toast
 import com.winstone.connect.data.sync.PendingReportWorker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -274,7 +278,16 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     }
 
     ModalBottomSheet(onDismissRequest = { dismissed = true }, sheetState = sheet) {
-        Column(Modifier.padding(20.dp)) {
+        // লম্বা ফর্ম — ছোট ফোনেও পুরোটা স্ক্রল করে পাওয়া যায়, কীবোর্ড উঠলে
+        // ইনপুট ঢাকা পড়ে না, আর নিচের নেভিগেশন বারে বাটন আটকে যায় না।
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .imePadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+        ) {
             Text("কল শেষ — রিপোর্ট পূরণ করুন", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             leadLabel?.let {
                 Spacer(Modifier.height(4.dp))
