@@ -99,6 +99,10 @@ export function PostCallReportGate() {
   const [aiDecision, setAiDecision] = useState<"accepted" | "edited" | "rejected" | null>(null);
   const [smart, setSmart] = useState<string | null>(null);
   const [smartBusy, setSmartBusy] = useState(false);
+  // The agent may close an unfinished report to look something up; it stays
+  // pending on the server and reopens from the floating button (and still
+  // blocks the next call).
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
 
   const detail = pending.data;
   const suggestion = detail?.suggestion ?? null;
@@ -141,6 +145,12 @@ export function PostCallReportGate() {
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
   }, [detail?.report?.id, detail]);
+
+  // A new pending report always opens — the dismissed flag applies to one
+  // report only, never silences the next call's report.
+  useEffect(() => {
+    setDismissedId(null);
+  }, [detail?.report?.id]);
 
   // Smart summary from the agent's own words — no transcript needed. Debounced,
   // so a long note costs one short AI call after the agent pauses, not one per key.
