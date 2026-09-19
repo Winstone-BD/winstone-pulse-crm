@@ -197,6 +197,9 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     var aiSummary by remember { mutableStateOf<String?>(null) }
     var aiCategory by remember { mutableStateOf<String?>(null) }
     var talkSeconds by remember { mutableLongStateOf(0L) }
+    var callTypeLabel by remember { mutableStateOf<String?>(null) }
+    // শিটটি বন্ধ করা যায় — রিপোর্ট সার্ভারে বাকিই থাকে, আবার খোলার বাটন দেখায়।
+    var dismissed by remember { mutableStateOf(false) }
     // কলের তথ্য — বাধ্যতামূলক
     var direction by remember { mutableStateOf("outgoing") }
     var callState by remember { mutableStateOf("connected") }
@@ -224,6 +227,12 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                     pending.optJSONObject("recording")?.let { rec ->
                         aiSummary = rec.optString("ai_summary").takeIf { it.isNotBlank() && it != "null" }
                         if (rec.optString("call_direction") == "incoming_callback") direction = "incoming"
+                        callTypeLabel =
+                            if (rec.optString("call_direction") == "incoming_callback") {
+                                "ইনকামিং — ক্রেতা কল করেছেন"
+                            } else {
+                                "আউটগোয়িং — আমি কল করেছি"
+                            }
                     }
                     pending.optJSONObject("ai_suggestion")?.let { suggestion ->
                         aiCategory = suggestion.optString("suggestedCategory").takeIf { it.isNotBlank() }
