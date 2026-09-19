@@ -109,6 +109,23 @@ export async function distributionRun(workDate: string = dhakaToday()) {
 }
 
 /**
+ * Day rollover: unfinished (pending) leads from earlier working days become
+ * today's task. The lead stays with the same agent — only its listed working
+ * day moves forward, so yesterday's leftovers appear on today's board.
+ * Safe to call repeatedly; leads already on today are untouched.
+ */
+export async function rolloverPendingLeads(workDate: string = dhakaToday()): Promise<number> {
+  const supabaseAdmin = await admin();
+  const { data } = await supabaseAdmin
+    .from("leads")
+    .update({ work_date: workDate })
+    .eq("work_state", "pending")
+    .lt("work_date", workDate)
+    .select("id");
+  return (data ?? []).length;
+}
+
+/**
  * How many database leads each desk already received for this work date.
  * The daily run tops desks up to their quota instead of handing out a second
  * full round, so calling it twice in one day can never double-assign.
