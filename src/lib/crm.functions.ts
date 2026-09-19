@@ -39,16 +39,18 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         .range(from, from + page - 1);
     const allLeads = async () => {
       const first = await fetchLeadPage(0);
-      if (first.error) return first;
+      if (first.error) throw new Error(first.error.message);
       const rows = [...(first.data ?? [])];
-      if (rows.length < page) return { data: rows, error: null };
-      for (let from = page; from < 20_000; from += page) {
-        const result = await fetchPage(from);
-        if (result.error) return result;
-        rows.push(...(result.data ?? []));
-        if ((result.data?.length ?? 0) < page) break;
+      if (rows.length >= page) {
+        for (let from = page; from < 20_000; from += page) {
+          const result = await fetchLeadPage(from);
+          if (result.error) throw new Error(result.error.message);
+          const chunk = result.data ?? [];
+          rows.push(...chunk);
+          if (chunk.length < page) break;
+        }
       }
-      return { data: rows, error: null };
+      return { data: rows, error: null as null };
     };
 
     const [profiles, leads, calls, messages, events] = await Promise.all([
