@@ -285,6 +285,10 @@ fun DeskScreen(
                             val today = dhakaToday()
                             val upcoming = leads.filter { isUpcomingTask(it, today) && !isTaskDone(it) }
                             val current = leads.filter { !isUpcomingTask(it, today) || isTaskDone(it) }
+                            // সার্ভারের হিসাব — ওয়েব CRM-এ ঠিক এই সংখ্যাগুলোই দেখায়।
+                            state.data?.allocation?.let { alloc ->
+                                item { AllocationBanner(alloc) }
+                            }
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
                             if (current.isNotEmpty()) {
                                 item { SectionTitle("আজকের কাজ (${current.count { !isTaskDone(it) }})", null) {} }
