@@ -1,6 +1,8 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { leadOwner } from "./lead-owner";
+import { type CanonicalCall, talkTimeOf } from "@/lib/call-evidence";
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { useEffect } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -36,15 +38,7 @@ export type CrmSnapshot = Awaited<ReturnType<typeof getCrmSnapshot>>;
  * logged call start) — a written report alone never counts as a conversation.
  * `verifiedSeconds` is null when no duration was measured (talk time unavailable).
  */
-export type CanonicalCall = {
-  id: string;
-  agentId: string | null;
-  leadId: string | null;
-  at: string;
-  verifiedConnected: boolean;
-  verifiedSeconds: number | null;
-  recordingId: string | null;
-};
+export type { CanonicalCall };
 
 export const snapshotQueryFor = (scope: { token: string | null }) =>
   queryOptions({
@@ -124,14 +118,29 @@ export function useSnapshot() {
   return { ...(query.data ?? EMPTY_SNAPSHOT), isPending: query.isPending };
 }
 
-export const CONNECTED_THRESHOLD_SECONDS = 10;
-
+/**
+ * Per-agent floor numbers. Built from canonical calls (submitted post-call
+ * reports, de-duplicated per call session) — never from recordings, and never
+ * from a claimed outcome the phone did not back up. "Today" is the Asia/Dhaka
+ * calendar day, so the browser clock cannot move the boundary.
+ */
 export type AgentStats = {
   profile: Profile;
+  /** Call attempts: one submitted report = one attempt. */
   dials: number;
+  /** Connected calls: the phone proved the customer answered. */
   connected: number;
+  /** Proven talk seconds of connected calls only. */
   talkSeconds: number;
+  /** Connected calls whose duration the phone measured. */
+  measuredCalls: number;
+  /** Connected calls with no measured duration — talk time is partly unavailable. */
+  unmeasuredCalls: number;
+  /** False when no connected call carries a measured duration. */
+  talkTimeAvailable: boolean;
   avgCallSeconds: number;
+  /** Distinct leads with at least one connected call. */
+  contactedLeads: number;
   whatsappTouches: number;
   syncedAudio: number;
   closedWon: number;
@@ -145,25 +154,28 @@ export type AgentStats = {
   pendingWork: number;
 };
 
-function isToday(iso: string): boolean {
-  const d = new Date(iso);
-  const now = new Date();
-  return d.toDateString() === now.toDateString();
-}
-
 export function buildAgentStats(
   profiles: Profile[],
   leads: Lead[],
-  calls: CallRecording[],
+  callEvents: CanonicalCall[],
   messages: WhatsappMessage[],
   todayOnly = false,
+  recordings: CallRecording[] = [],
 ): AgentStats[] {
   const agents = profiles.filter((p) => p.role === "agent");
-  const inWindow = (iso: string) => (todayOnly ? isToday(iso) : true);
+  const today = dhakaDateKey();
+  const inWindow = (iso: string) => (todayOnly ? dhakaDateKey(new Date(iso)) === today : true);
 
   return agents
     .map((profile) => {
-      const agentCalls = calls.filter((c) => c.agent_id === profile.id && inWindow(c.created_at));
+      const agentCalls = callEvents.filter((c) => c.agentId === profile.id && inWindow(c.at));
+      const connectedCalls = agentCalls.filter((c) => c.verifiedConnected);
+      const talk = talkTimeOf(
+        agentCalls.map((c) => ({
+          connected: c.verifiedConnected,
+          verifiedSeconds: c.verifiedSeconds,
+        })),
+      );
       const agentMessages = messages.filter(
         (m) => m.agent_id === profile.id && m.sender_type === "agent" && inWindow(m.created_at),
       );
@@ -171,19 +183,24 @@ export function buildAgentStats(
       const closedWon = assignedLeads.filter(
         (l) => l.status === "closed" && l.outcome_category === "deal_won",
       ).length;
-      const connected = agentCalls.filter(
-        (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
-      ).length;
+      const contactedLeads = new Set(
+        connectedCalls.map((c) => c.leadId).filter((id): id is string => !!id),
+      ).size;
 
-      const talkSeconds = agentCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
       return {
         profile,
         dials: agentCalls.length,
-        connected,
-        talkSeconds,
-        avgCallSeconds: connected ? talkSeconds / connected : 0,
+        connected: connectedCalls.length,
+        talkSeconds: talk.seconds,
+        measuredCalls: talk.measuredCalls,
+        unmeasuredCalls: talk.unmeasuredCalls,
+        talkTimeAvailable: talk.measuredCalls > 0,
+        avgCallSeconds: talk.measuredCalls ? talk.seconds / talk.measuredCalls : 0,
+        contactedLeads,
         whatsappTouches: agentMessages.length,
-        syncedAudio: agentCalls.filter((c) => c.sync_status === "verified").length,
+        syncedAudio: recordings.filter(
+          (c) => c.agent_id === profile.id && c.sync_status === "verified" && inWindow(c.created_at),
+        ).length,
         closedWon,
         assigned: assignedLeads.length,
         conversionRate: assignedLeads.length ? (closedWon / assignedLeads.length) * 100 : 0,
@@ -249,44 +266,51 @@ export type BillingSummary = {
   connected: number;
   connectedPct: number;
   billableMinutes: number;
+  /** Connected calls with a measured duration (the minutes above come from these). */
+  measuredCalls: number;
+  /** Connected calls with no measured duration — minutes are understated, not invented. */
+  unmeasuredCalls: number;
   carrierCost: number;
-  aiAnalysed: number;
   dealsWon: number;
   newLeads: number;
 };
 
-function sameMonth(iso: string, ref: Date) {
-  const d = new Date(iso);
-  return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+/** Same Asia/Dhaka calendar month — never the browser's month. */
+function sameDhakaMonth(iso: string, ref: Date) {
+  return dhakaDateKey(new Date(iso)).slice(0, 7) === dhakaDateKey(ref).slice(0, 7);
 }
 
-/** Monthly telephony + floor billing rollup, computed from synced recordings. */
+/**
+ * Monthly floor rollup, computed from canonical calls: attempts, connected
+ * calls and proven talk minutes. Nothing is estimated from a recording row.
+ */
 export function buildBillingSummary(
-  calls: CallRecording[],
+  callEvents: CanonicalCall[],
   leads: Lead[],
   ratePerMinute = DEFAULT_RATE_PER_MINUTE,
   ref = new Date(),
 ): BillingSummary {
-  const monthCalls = calls.filter((c) => sameMonth(c.created_at, ref));
-  const connected = monthCalls.filter(
-    (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
-  ).length;
-  const billableMinutes = monthCalls.reduce(
-    (sum, c) => sum + Math.ceil(c.duration_seconds / 60),
-    0,
+  const monthCalls = callEvents.filter((c) => sameDhakaMonth(c.at, ref));
+  const talk = talkTimeOf(
+    monthCalls.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
   );
+  const connected = monthCalls.filter((c) => c.verifiedConnected).length;
+  const billableMinutes = Math.ceil(talk.seconds / 60);
   return {
     monthLabel: ref.toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
     dials: monthCalls.length,
     connected,
     connectedPct: monthCalls.length ? (connected / monthCalls.length) * 100 : 0,
     billableMinutes,
+    measuredCalls: talk.measuredCalls,
+    unmeasuredCalls: talk.unmeasuredCalls,
     carrierCost: billableMinutes * ratePerMinute,
-    aiAnalysed: monthCalls.filter((c) => c.ai_summary).length,
     dealsWon: leads.filter(
       (l) =>
-        l.status === "closed" && l.outcome_category === "deal_won" && sameMonth(l.updated_at, ref),
+        l.status === "closed" &&
+        l.outcome_category === "deal_won" &&
+        sameDhakaMonth(l.updated_at, ref),
     ).length,
-    newLeads: leads.filter((l) => sameMonth(l.created_at, ref)).length,
+    newLeads: leads.filter((l) => sameDhakaMonth(l.created_at, ref)).length,
   };
 }
