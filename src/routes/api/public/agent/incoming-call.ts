@@ -114,7 +114,8 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
 
         if (!leadId) {
           const intake = await intakeLead({
-            name: body.contact_name?.trim() || `ফিরতি কল ${phone}`,
+            // A call the agent dialled from the phone is not a callback.
+            name: body.contact_name?.trim() || `${outgoing ? "কল" : "ফিরতি কল"} ${phone}`,
             phoneNumber: phone,
             ownerId: caller.profile.id,
             ownerName: caller.profile.name,

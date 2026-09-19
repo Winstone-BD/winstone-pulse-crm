@@ -17,9 +17,12 @@ async function agentOf(adminToken: string | null) {
 export const myReminders = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.parse(input))
   .handler(async ({ data }) => {
-    const me = await agentOf(data.adminToken ?? null);
+    // A signed-out or pending visitor simply has no reminders; the bell stays quiet.
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none" || !caller.profile) return { reminders: [] };
     const { remindersFor } = await import("@/lib/reminders.server");
-    return { reminders: await remindersFor(me.id) };
+    return { reminders: await remindersFor(caller.profile.id) };
   });
 
 /** Stores this browser's Firebase token so reminders arrive with the tab closed. */
