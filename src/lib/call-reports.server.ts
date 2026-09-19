@@ -10,6 +10,10 @@
  * both the web desk and the Android app, so neither can bypass the rule.
  */
 
+import { nextRetryAt, needsSupervisorDecision, reportTrust } from "@/lib/call-retry";
+
+
+
 export const CALL_CATEGORIES = [
   "hot_lead",
   "follow_up",
@@ -433,6 +437,7 @@ export async function submitCallReport(input: {
         classified_at: nowIso,
         classified_by: input.agentId,
         work_state: "completed",
+        retry_after: null,
       })
       .eq("id", report.lead_id);
 
