@@ -7,6 +7,8 @@ import apkAsset from "@/assets/winstone-connect.apk.asset.json";
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
+import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
+import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
 import { InstallAppButton } from "@/components/crm/InstallAppButton";
 import { AgentSelector } from "@/components/crm/AgentSelector";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
@@ -139,6 +141,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             {adminToken && <AgentSelector />}
+
+            {scope !== "none" && <AnyNumberCallDialog />}
 
             <InstallAppButton />
 
@@ -297,6 +301,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           />
         </div>
       )}
+
+      {/* The mandatory post-call report follows the agent across every page, not
+          just the desk: a call that ended anywhere must be reported. */}
+      {scope !== "none" && <PostCallReportGate />}
 
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </div>
