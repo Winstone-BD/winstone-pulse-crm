@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { listCallReports } from "@/lib/call-reports.functions";
+import { buildTimeline, useSnapshot } from "@/lib/crm-data";
 import { clockTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 
@@ -30,6 +31,10 @@ export function CallReportsPanel() {
   const [callState, setCallState] = useState<"" | "connected" | "not_connected">("");
   const [search, setSearch] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
+
+  // The lead file is drawn from the shared snapshot the rest of the desk uses.
+  const snapshot = useSnapshot();
+  const openLead = snapshot.leads.find((lead) => lead.id === openLeadId) ?? null;
 
   const { data, isPending } = useQuery({
     queryKey: [
@@ -190,9 +195,17 @@ export function CallReportsPanel() {
         </ul>
       )}
 
-      {openLeadId ? (
-        <LeadDossier leadId={openLeadId} onClose={() => setOpenLeadId(null)} />
-      ) : null}
+      <LeadDossier
+        lead={openLead}
+        agents={snapshot.profiles}
+        timeline={
+          openLead
+            ? buildTimeline(snapshot.calls, snapshot.messages, openLead.id, snapshot.events)
+            : []
+        }
+        open={openLeadId !== null}
+        onOpenChange={(next) => !next && setOpenLeadId(null)}
+      />
     </section>
   );
 }
