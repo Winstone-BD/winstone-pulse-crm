@@ -892,8 +892,7 @@ private fun AllocationBanner(alloc: com.winstone.connect.data.Allocation) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(WinSurface)
+            .background(WinCreamDeep, RoundedCornerShape(16.dp))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -902,7 +901,7 @@ private fun AllocationBanner(alloc: com.winstone.connect.data.Allocation) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("আজকের কাজের হিসাব", fontWeight = FontWeight.Bold, color = WinGold)
+            Text("আজকের কাজের হিসাব", fontWeight = FontWeight.Bold, color = WinGreen)
             Text("${alloc.pending} / ${alloc.quota}", fontWeight = FontWeight.Bold)
         }
         Text(
