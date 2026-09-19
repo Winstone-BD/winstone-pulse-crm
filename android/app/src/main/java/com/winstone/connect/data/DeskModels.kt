@@ -41,6 +41,37 @@ data class DeskData(
     val messages: List<MessageRow>,
 )
 
+/** Dashboard metrics returned by /api/public/agent/dashboard-metrics. */
+data class DashboardMetrics(
+    val progressPercent: Int,
+    val assigned: Int,
+    val called: Int,
+    val connected: Int,
+    val interested: Int,
+    val followUp: Int,
+    val siteVisit: Int,
+    val hotLeads: Int,
+    val followUpsDue: Int,
+    val newAssigned: Int,
+    val missedRetry: Int,
+) {
+    companion object {
+        fun fromJson(obj: org.json.JSONObject): DashboardMetrics = DashboardMetrics(
+            progressPercent = obj.optInt("progress_percent", 0),
+            assigned = obj.optInt("assigned", 0),
+            called = obj.optInt("called", 0),
+            connected = obj.optInt("connected", 0),
+            interested = obj.optInt("interested", 0),
+            followUp = obj.optInt("follow_up", 0),
+            siteVisit = obj.optInt("site_visit", 0),
+            hotLeads = obj.optInt("hot_leads", 0),
+            followUpsDue = obj.optInt("follow_ups_due", 0),
+            newAssigned = obj.optInt("new_assigned", 0),
+            missedRetry = obj.optInt("missed_retry", 0),
+        )
+    }
+}
+
 private fun JSONObject.str(key: String): String? = optString(key).takeIf { it.isNotBlank() && it != "null" }
 
 fun parseLeads(arr: JSONArray): List<Lead> = (0 until arr.length()).map { i ->
