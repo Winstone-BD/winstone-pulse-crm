@@ -69,7 +69,7 @@ export function MyProfileCard() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{profile.name}</p>
             <p className="truncate text-xs text-muted-foreground">
-              {profile.role === "team_leader" ? "Coordinator" : "Sales agent"}
+              Sales agent
               {profile.employee_id ? ` · ${profile.employee_id}` : ""}
               {profile.email ? ` · ${profile.email}` : ""}
             </p>

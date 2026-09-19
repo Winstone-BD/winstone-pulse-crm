@@ -15,7 +15,7 @@ import { resolveSignInEmail } from "@/lib/accounts.functions";
 import { ensureRegistered, saveSignupDraft } from "@/lib/session";
 
 const SearchSchema = z.object({
-  role: z.enum(["agent", "coordinator"]).catch("agent"),
+  role: z.enum(["agent"]).catch("agent"),
   mode: z.enum(["signin", "signup"]).catch("signin"),
 });
 
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const ROLE_LABEL = { agent: "Sales Agent", coordinator: "Coordinator Deck" } as const;
+const ROLE_LABEL = { agent: "Sales Agent" } as const;
 
 function AuthPage() {
   const { role, mode } = Route.useSearch();

@@ -61,7 +61,7 @@ function CoachPage() {
   const isAuthority = token !== null;
 
   const agents = useMemo(
-    () => profiles.filter((p) => p.role === "agent" || p.role === "team_leader"),
+    () => profiles.filter((p) => p.role === "agent"),
     [profiles],
   );
   const [selected, setSelected] = useState<string | null>(null);

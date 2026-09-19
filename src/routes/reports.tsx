@@ -76,7 +76,7 @@ function ReportsBoard() {
 
   const sources = useMemo(() => leadSources(data.leads), [data.leads]);
   const agents = useMemo(
-    () => data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader"),
+    () => data.profiles.filter((p) => p.role === "agent"),
     [data.profiles],
   );
   const report = useMemo(() => buildReport(data, filters), [data, filters]);

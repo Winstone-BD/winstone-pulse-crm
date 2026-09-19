@@ -67,7 +67,6 @@ function json(body: unknown, status = 200): Response {
  */
 function allowedRolesFor(role: string | null): string[] {
   if (role === "admin") return ["agent", "coordinator", "executive", "it_console"];
-  if (role === "team_leader") return ["agent", "coordinator"];
   return ["agent"];
 }
 

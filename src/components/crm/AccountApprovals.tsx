@@ -57,7 +57,7 @@ export function AccountApprovals() {
 
       {!list.isPending && accounts.length === 0 && (
         <p className="empty-note">
-          এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
+          এখনো কোনো অনুরোধ নেই। নতুন এজেন্ট সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}
 
@@ -68,13 +68,13 @@ export function AccountApprovals() {
               <p className="truncate text-sm font-medium">{account.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-                {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"} ·{" "}
+                এজেন্ট ·{" "}
                 {STATUS_LABELS[account.approval_status] ?? account.approval_status}
               </p>
             </div>
             {account.approval_status === "approved" ? (
               <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                {account.role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
+                এজেন্ট
               </span>
             ) : (
               <div className="flex gap-1.5">
@@ -89,16 +89,6 @@ export function AccountApprovals() {
                     <Check className="size-3.5" />
                   )}
                   এজেন্ট
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={act.isPending}
-                  onClick={() =>
-                    act.mutate({ profileId: account.id, decision: "approve_coordinator" })
-                  }
-                >
-                  কোঅর্ডিনেটর
                 </Button>
                 <ConfirmAction
                   title="অ্যাকাউন্টটি বাদ দেবেন?"

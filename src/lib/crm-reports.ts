@@ -112,7 +112,7 @@ export function buildReport(
 ): ReportResult {
   const { from, to, agentId, source, status } = filters;
 
-  const agents = data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader");
+  const agents = data.profiles.filter((p) => p.role === "agent");
   const scopedAgents = agentId === "all" ? agents : agents.filter((a) => a.id === agentId);
   const agentIds = new Set(scopedAgents.map((a) => a.id));
 

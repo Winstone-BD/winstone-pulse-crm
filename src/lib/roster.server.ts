@@ -4,11 +4,11 @@
  * IT Console.
  */
 
-export type RosterRole = "agent" | "team_leader";
+export type RosterRole = "agent";
 
 const ROSTER: ReadonlyArray<{ name: string; role: RosterRole }> = [
-  { name: "Elias Zahid", role: "team_leader" },
-  { name: "Monisha Biswas", role: "team_leader" },
+  { name: "Elias Zahid", role: "agent" },
+  { name: "Monisha Biswas", role: "agent" },
   { name: "Mst. Soniya Yeasmin", role: "agent" },
   { name: "Mst. Nazrin Akter", role: "agent" },
   { name: "Debbroto Kumar Chakroborty", role: "agent" },
