@@ -220,5 +220,3 @@ private fun WinTextField(
         ),
     )
 }
-
-private fun Modifier.width(dp: androidx.compose.ui.unit.Dp): Modifier = this.then(Modifier.width(dp))
