@@ -204,19 +204,7 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         if (body.state === "completed" || body.state === "no_answer" || body.state === "failed") {
           await supabaseAdmin.from("leads").update({ last_call_at: at }).eq("id", leadId);
 
-          if (connected) {
-            const { openCallReport } = await import("@/lib/call-reports.server");
-            const report = await openCallReport({
-              leadId,
-              agentId: caller.profile.id,
-              recordingId,
-              deviceId: caller.device.id,
-              phoneNumber: phone,
-              durationSeconds: body.duration_seconds ?? 0,
-              connected: true,
-            });
-            reportId = report.id;
-          } else {
+          if (!connected) {
             await logLeadEvent({
               leadId,
               agentId: caller.profile.id,
@@ -224,6 +212,20 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
               detail: outgoing ? "কল ধরা হয়নি" : "ইনকামিং কল ধরা হয়নি",
             });
           }
+
+          // Answered or not, the call must be reported: the report opens for
+          // every finished call, and `connected` decides which fields are required.
+          const { openCallReport } = await import("@/lib/call-reports.server");
+          const report = await openCallReport({
+            leadId,
+            agentId: caller.profile.id,
+            recordingId,
+            deviceId: caller.device.id,
+            phoneNumber: phone,
+            durationSeconds: body.duration_seconds ?? 0,
+            connected,
+          });
+          reportId = report.id;
         }
 
         return json({
