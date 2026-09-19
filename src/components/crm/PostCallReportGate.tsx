@@ -631,9 +631,11 @@ export function PostCallReportGate() {
           রিপোর্ট জমা দিন
         </Button>
         <p className="text-center text-[11px] text-muted-foreground">
-          রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না।
+          রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না। বন্ধ করলেও ডান-নিচের বাটন থেকে আবার
+          খুলতে পারবেন।
         </p>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }
