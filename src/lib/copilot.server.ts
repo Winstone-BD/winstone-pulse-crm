@@ -84,7 +84,14 @@ async function runTool(
   if (name === "floor_report") {
     const todayOnly = Boolean(args["today_only"]);
     const limit = Math.min(Number(args["limit"] ?? 5) || 5, 20);
-    const stats = buildAgentStats(snap.profiles, snap.leads, snap.calls, snap.messages, todayOnly)
+    const stats = buildAgentStats(
+      snap.profiles,
+      snap.leads,
+      snap.callEvents,
+      snap.messages,
+      todayOnly,
+      snap.calls,
+    )
       .slice(0, limit)
       .map((s) => ({
         agent: s.profile.name,
@@ -113,7 +120,7 @@ async function runTool(
   if (name === "billing_report") {
     const rate =
       Number(args["rate_per_minute"] ?? DEFAULT_RATE_PER_MINUTE) || DEFAULT_RATE_PER_MINUTE;
-    const bill = buildBillingSummary(snap.calls, snap.leads, rate);
+    const bill = buildBillingSummary(snap.callEvents, snap.leads, rate);
     return {
       data: bill,
       card: {
@@ -123,7 +130,10 @@ async function runTool(
           { label: "Connected", value: `${bill.connected} (${bill.connectedPct.toFixed(0)}%)` },
           { label: "Billable minutes", value: String(bill.billableMinutes) },
           { label: "Estimated carrier cost", value: `৳${bill.carrierCost.toFixed(2)}` },
-          { label: "AI analysed calls", value: String(bill.aiAnalysed) },
+          {
+            label: "Measured talk time",
+            value: `${bill.measuredCalls} measured · ${bill.unmeasuredCalls} unmeasured`,
+          },
           { label: "Deals won", value: String(bill.dealsWon) },
         ],
       },

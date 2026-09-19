@@ -75,14 +75,14 @@ function DispatchPage() {
 }
 
 function Dispatcher() {
-  const { profiles, leads, calls, messages } = useSnapshot();
+  const { profiles, leads, calls, callEvents, messages } = useSnapshot();
   const queryClient = useQueryClient();
   const assign = useServerFn(assignLeadsToAgent);
   const distribute = useServerFn(autoDistributeLeads);
 
   const stats = useMemo(
-    () => buildAgentStats(profiles, leads, calls, messages),
-    [profiles, leads, calls, messages],
+    () => buildAgentStats(profiles, leads, callEvents, messages, false, calls),
+    [profiles, leads, callEvents, messages, calls],
   );
   const agents = stats.map((s) => s.profile);
   const [agentId, setAgentId] = useState(agents[0]?.id ?? "");

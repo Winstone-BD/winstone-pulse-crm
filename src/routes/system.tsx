@@ -88,12 +88,12 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 function SystemBoard() {
-  const { profiles, leads, calls, messages } = useSnapshot();
+  const { profiles, leads, calls, callEvents, messages } = useSnapshot();
   const [rate, setRate] = useState(String(DEFAULT_RATE_PER_MINUTE));
 
   const billing = useMemo(
-    () => buildBillingSummary(calls, leads, Number(rate) || DEFAULT_RATE_PER_MINUTE),
-    [calls, leads, rate],
+    () => buildBillingSummary(callEvents, leads, Number(rate) || DEFAULT_RATE_PER_MINUTE),
+    [callEvents, leads, rate],
   );
 
   const sources = useMemo(() => {
@@ -199,7 +199,11 @@ function SystemBoard() {
           <Tile
             label="আনুমানিক অপারেটর খরচ"
             value={`৳${billing.carrierCost.toFixed(2)}`}
-            hint={`${billing.aiAnalysed}টি কল এআই দেখেছে`}
+            hint={
+              billing.unmeasuredCalls
+                ? `${billing.measuredCalls}টি কলের সময় মাপা আছে · ${billing.unmeasuredCalls}টির সময় ফোনে জমা হয়নি`
+                : `${billing.measuredCalls}টি কলের মাপা সময় থেকে`
+            }
           />
         </div>
       </section>

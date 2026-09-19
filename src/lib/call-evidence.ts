@@ -175,7 +175,7 @@ export type CanonicalCall = {
 
 /** The raw columns every canonical read of `call_reports` needs. */
 export const CALL_REPORT_CANONICAL_COLUMNS =
-  "id, agent_id, lead_id, status, connected, connection_verified, call_status, duration_seconds, recording_id, call_started_at, call_ended_at, submitted_at, created_at";
+  "id, agent_id, lead_id, status, connected, connection_verified, duration_seconds, recording_id, call_started_at, call_ended_at, submitted_at, created_at";
 
 export type CallReportRow = {
   id: string;
