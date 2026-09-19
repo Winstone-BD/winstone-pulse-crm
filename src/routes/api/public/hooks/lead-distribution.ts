@@ -42,9 +42,13 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
           const { distributeDailyLeads, dailyPlan, saveDailyPlan, dhakaToday, usablePoolCount } =
             await import("@/lib/lead-pool.server");
           const today = dhakaToday();
+          // Yesterday's (and earlier) unfinished leads move onto today's board
+          // first — this runs even on a same-day retry, it only touches the past.
+          const { rolloverPendingLeads } = await import("@/lib/lead-pool.server");
+          const rolledOver = await rolloverPendingLeads(today);
           const plan = await dailyPlan();
           if (plan.lastRunDate === today) {
-            return Response.json({ ok: true, skipped: "already_done_today", today });
+            return Response.json({ ok: true, skipped: "already_done_today", today, rolledOver });
           }
 
           const before = await usablePoolCount();
