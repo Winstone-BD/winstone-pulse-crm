@@ -22,7 +22,6 @@
 - [x] শিফট সামারি → Google Sheets "শিফট সামারি" ট্যাব (স্বয়ংক্রিয় 12:50/5:30 + ব্যাকফিল + ম্যানুয়াল বোতাম) — shift-sheet.server.ts, shift-summary ফাংশন/প্যানেল; গেটওয়ে লেখা প্রমাণিত, tsgo/vitest(54)/build পাস
 
 ## 2026-09-16 — নতুন কাজ
-- [ ] নতুন ওয়ার্কস্পেসে Google Docs / Drive / Sheets সংযোগ আবার জোড়া (ব্যবহারকারীর অনুমোদন দরকার)
 - [ ] এজেন্ট ডেস্কে মোবাইল-অনলি লিড কিউ (স্বাইপ → ফলো-আপ / বন্ধ)
 - [ ] Reports পেজ এক্সিকিউটিভ-গ্রেড রিডিজাইন (KPI স্ট্রিপ, একটি বড় চার্ট, ৩ ইন্টেলিজেন্স কার্ড, স্মার্ট এম্পটি স্টেট, এজেন্ট পারফরম্যান্স, AI ব্রিফ) — ব্যাকএন্ড/লজিক অপরিবর্তিত
 
@@ -51,9 +50,7 @@
 - [x] ভূমিকা-নিয়ম একজায়গায়: src/lib/rbac.server.ts (গেট) + src/lib/rbac.ts (কোন ভূমিকা কী দেখে)
 - [x] নতুন টেস্ট: rbac-matrix, team-support-shared (মোট ৮৮ টেস্ট পাস)
 - [x] নামকরণ/ফোল্ডার নিয়ম লিখিত (docs/conventions.md)
-- [ ] ঝুলে থাকা সংযোগ (docs/integrations.md-এ তালিকাভুক্ত): Firebase পুশ, Paddle go-live, Google Drive/Sheets পুনঃসংযোগ, ইমেইল DNS — সবই ব্যবহারকারীর অনুমোদন/ধাপের অপেক্ষায়
+- [ ] ঝুলে থাকা সংযোগ (docs/integrations.md-এ তালিকাভুক্ত): Firebase পুশ, Paddle go-live, ইমেইল DNS — সবই ব্যবহারকারীর অনুমোদন/ধাপের অপেক্ষায়
 # Roadmap
 - [x] Release APK with black-gold theme (in progress)
-- [ ] Connect Google Docs (new workspace)
-- [ ] Connect Google Drive (new workspace)
-- [ ] Connect Google Sheets (new workspace)
+- [x] Connect Google Docs, Google Drive, Google Sheets (new workspace)
