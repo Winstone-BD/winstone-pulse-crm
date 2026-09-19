@@ -68,6 +68,8 @@ export const myDailyPerformance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
+
     const { agentDailyPerformance } = await import("@/lib/daily-performance.server");
     const { dhakaDateKey } = await import("@/lib/daily-performance");
     return agentDailyPerformance(caller.profile!.id, data.dateKey ?? dhakaDateKey());
