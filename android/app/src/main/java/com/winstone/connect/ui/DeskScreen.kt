@@ -193,7 +193,7 @@ fun DeskScreen(
             )
         },
         floatingActionButton = {
-            if (tab == TAB_DASHBOARD || tab == TAB_LEADS) {
+            if (tab == TAB_HOME || tab == TAB_LEADS) {
                 ExtendedFloatingActionButton(
                     onClick = { showNewLead = true },
                     containerColor = WinGreen,
