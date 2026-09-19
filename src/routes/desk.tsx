@@ -22,7 +22,6 @@ import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
 import { FollowUpWeek } from "@/components/crm/FollowUpWeek";
 import { MyReports } from "@/components/crm/MyReports";
-import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
 import { NewLeadDialog } from "@/components/crm/NewLeadDialog";
 import { LeadImportDialog } from "@/components/crm/LeadImportDialog";
 import { LeadDeadlineBanner } from "@/components/crm/LeadDeadlineBanner";
