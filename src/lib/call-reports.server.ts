@@ -194,14 +194,65 @@ export async function openCallReport(input: {
 
   const open = await pendingReportFor(input.agentId);
   if (open) {
-    if (input.recordingId && !open.recording_id) {
-      await supabaseAdmin
-        .from("call_reports")
-        .update({ recording_id: input.recordingId })
-        .eq("id", open.id);
+    // Same call / same lead: idempotent reuse (WorkManager retry, app restart).
+    if (open.lead_id === input.leadId) {
+      if (input.recordingId && !open.recording_id) {
+        await supabaseAdmin
+          .from("call_reports")
+          .update({ recording_id: input.recordingId })
+          .eq("id", open.id);
+      }
+      return { id: open.id, reused: true as const };
     }
-    return { id: open.id, reused: true as const };
+
+    // A different call while a report is still open: never fold it into the
+    // previous lead's report. It waits in the queue and becomes the next popup
+    // as soon as the open one is submitted, so every call keeps its own report.
+    const existingQueued = await supabaseAdmin
+      .from("call_reports")
+      .select("id, recording_id")
+      .eq("agent_id", input.agentId)
+      .eq("status", "queued")
+      .eq("lead_id", input.leadId)
+      .maybeSingle();
+    if (existingQueued.data) {
+      if (input.recordingId && !existingQueued.data.recording_id) {
+        await supabaseAdmin
+          .from("call_reports")
+          .update({ recording_id: input.recordingId })
+          .eq("id", existingQueued.data.id);
+      }
+      return { id: existingQueued.data.id, reused: true as const, queued: true as const };
+    }
+    const queued = await supabaseAdmin
+      .from("call_reports")
+      .insert({
+        lead_id: input.leadId,
+        agent_id: input.agentId,
+        recording_id: input.recordingId ?? null,
+        device_id: input.deviceId ?? null,
+        phone_number: input.phoneNumber ?? null,
+        call_started_at: input.callStartedAt ?? null,
+        duration_seconds: input.durationSeconds ?? 0,
+        connected: input.connected ?? true,
+        status: "queued",
+      })
+      .select("id")
+      .single();
+    if (queued.error || !queued.data) {
+      throw new Error(queued.error?.message ?? "Could not queue post-call report");
+    }
+    const { logLeadEvent: logQueued } = await import("@/lib/lead-events.server");
+    await logQueued({
+      leadId: input.leadId,
+      agentId: input.agentId,
+      recordingId: input.recordingId ?? null,
+      kind: "call_ended",
+      detail: "কল শেষ — রিপোর্ট সারিতে অপেক্ষমাণ",
+    });
+    return { id: queued.data.id, reused: false as const, queued: true as const };
   }
+
 
   const { data, error } = await supabaseAdmin
     .from("call_reports")
