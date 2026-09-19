@@ -3,10 +3,12 @@ import {
   CalendarCheck,
   Flame,
   Handshake,
+  Inbox,
   PhoneCall,
   Users,
 } from "lucide-react";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   CartesianGrid,
   Cell,
@@ -20,16 +22,10 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  CONNECTED_THRESHOLD_SECONDS,
-  LEAD_EVENT_LABELS,
-  buildAgentStats,
-  type CallRecording,
-  type Lead,
-  type LeadEvent,
-  type Profile,
-  type WhatsappMessage,
-} from "@/lib/crm-data";
+import { LEAD_EVENT_LABELS, type Lead, type LeadEvent } from "@/lib/crm-data";
+import { contactRate, connectRate, winRate } from "@/lib/crm-metrics";
+import { getFloorMetrics } from "@/lib/crm-metrics.functions";
+import { useAdminToken } from "@/lib/local-session";
 
 const DONUT_COLORS = [
   "var(--chart-1)",
@@ -65,70 +61,28 @@ function KpiCard({
   );
 }
 
-/** Reference-style executive overview: KPI row, funnel, source mix, team board, trends. */
+/**
+ * Executive overview built only on server-verified numbers.
+ *
+ * Every figure here comes from `getFloorMetrics`, the CRM's single metric
+ * contract (src/lib/crm-metrics.ts): leads are counted once per lead, calls are
+ * counted from submitted reports (never from recordings), and "today" is always
+ * the Asia/Dhaka business day decided by the server.
+ */
 export function ExecutiveOverview({
-  profiles,
   leads,
-  calls,
-  messages,
   events,
-  onSelectAgent,
 }: {
-  profiles: Profile[];
   leads: Lead[];
-  calls: CallRecording[];
-  messages: WhatsappMessage[];
   events: LeadEvent[];
-  onSelectAgent?: (agentId: string) => void;
 }) {
-  const kpi = useMemo(() => {
-    const today = new Date().toDateString();
-    // "যোগাযোগ হয়েছে" = লিডে সত্যিই কল হয়েছে (রিপোর্ট/কল গণনা থেকে),
-    // রেকর্ডিং সিঙ্ক আলাদা হিসাব — সেটা নিচের hint-এ দেখানো হয়।
-    const connected = calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
-    const recordedLeads = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
-    const contacted = leads.filter((l) => l.call_attempts > 0 || !!l.last_call_at).length;
-    const hot = leads.filter((l) => l.temperature === "hot").length;
-    const warm = leads.filter((l) => l.temperature === "warm").length;
-    const followUp = leads.filter((l) => l.status === "follow_up").length;
-    const won = leads.filter(
-      (l) => l.status === "closed" && l.outcome_category === "deal_won",
-    ).length;
-    return {
-      total: leads.length,
-      contacted,
-      recordedLeads,
-      qualified: hot + warm,
-      followUp,
-      won,
-      todayCalls: calls.filter((c) => new Date(c.created_at).toDateString() === today).length,
-      contactRate: leads.length ? Math.round((contacted / leads.length) * 100) : 0,
-      qualifiedRate: leads.length ? Math.round(((hot + warm) / leads.length) * 100) : 0,
-      wonRate: leads.length ? Math.round((won / leads.length) * 100) : 0,
-    };
-  }, [calls, leads]);
-
-  const funnel = useMemo(() => {
-    const steps = [
-      { label: "নতুন লিড", value: leads.length },
-      {
-        label: "যোগাযোগ হয়েছে",
-        value: leads.filter((l) => l.call_attempts > 0 || !!l.last_call_at).length,
-      },
-      {
-        label: "কোয়ালিফাইড",
-        value: leads.filter((l) => l.temperature === "hot" || l.temperature === "warm").length,
-      },
-      { label: "ফলো-আপ", value: leads.filter((l) => l.status === "follow_up").length },
-      { label: "আলোচনা চলছে", value: leads.filter((l) => l.temperature === "hot").length },
-      {
-        label: "বুকিং",
-        value: leads.filter((l) => l.status === "closed" && l.outcome_category === "deal_won")
-          .length,
-      },
-    ];
-    return steps;
-  }, [leads]);
+  const adminToken = useAdminToken();
+  const metricsQuery = useQuery({
+    queryKey: ["floor-metrics", adminToken ? "pin" : "session"],
+    queryFn: () => getFloorMetrics({ data: { token: adminToken } }),
+    refetchOnWindowFocus: false,
+  });
+  const m = metricsQuery.data ?? null;
 
   const sources = useMemo(() => {
     const counts = new Map<string, number>();
@@ -146,25 +100,6 @@ export function ExecutiveOverview({
       pct: leads.length ? Math.round((value / leads.length) * 100) : 0,
     }));
   }, [leads]);
-
-  const team = useMemo(
-    () => buildAgentStats(profiles, leads, calls, messages).slice(0, 5),
-    [profiles, leads, calls, messages],
-  );
-  const teamMax = Math.max(1, ...team.map((t) => t.connected));
-
-  const trend = useMemo(() => {
-    const days: { label: string; calls: number }[] = [];
-    for (let i = 13; i >= 0; i -= 1) {
-      const day = new Date(Date.now() - i * 86_400_000);
-      const key = day.toDateString();
-      days.push({
-        label: day.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }),
-        calls: calls.filter((c) => new Date(c.created_at).toDateString() === key).length,
-      });
-    }
-    return days;
-  }, [calls]);
 
   const recent = useMemo(
     () =>
@@ -184,44 +119,86 @@ export function ExecutiveOverview({
     [events],
   );
 
+  if (metricsQuery.isPending) {
+    return (
+      <section className="card-elevated card-pad text-sm text-muted-foreground">
+        সার্ভার থেকে হিসাব আসছে…
+      </section>
+    );
+  }
+  if (metricsQuery.isError) {
+    return (
+      <section className="card-elevated card-pad text-sm text-destructive">
+        হিসাব আনা যায়নি। পাতা রিফ্রেশ করুন।
+      </section>
+    );
+  }
+  if (!m) {
+    return (
+      <section className="card-elevated card-pad text-sm text-muted-foreground">
+        ফ্লোরের পুরো হিসাব দেখার অনুমতি নেই।
+      </section>
+    );
+  }
+
+  const trend = m.trend.map((row) => ({
+    label: new Date(`${row.dateKey}T00:00:00+06:00`).toLocaleDateString("bn-BD", {
+      day: "numeric",
+      month: "short",
+    }),
+    attempts: row.attempts,
+  }));
+  const funnel = [
+    { label: "মোট লিড", value: m.totalLeads },
+    { label: "যোগাযোগ হয়েছে", value: m.contactedLeads },
+    { label: "কোয়ালিফাইড", value: m.qualifiedLeads },
+    { label: "হট লিড", value: m.hotLeads },
+    { label: "বুকিং", value: m.closedWon },
+  ];
+  const teamMax = Math.max(1, ...m.agents.map((a) => a.connected));
+  const freshness = new Date(m.generatedAt).toLocaleTimeString("bn-BD", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <section className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <KpiCard
           icon={<Users className="size-4" />}
           label="মোট লিড"
-          value={String(kpi.total)}
-          hint="সব সময়ের"
+          value={String(m.totalLeads)}
+          hint={`${m.pendingLeads}টি কাজ বাকি`}
         />
         <KpiCard
           icon={<PhoneCall className="size-4" />}
           label="যোগাযোগ হয়েছে"
-          value={String(kpi.contacted)}
-          hint={`${kpi.contactRate}% লিডে কল · রেকর্ডিং সিঙ্ক ${kpi.recordedLeads}`}
+          value={String(m.contactedLeads)}
+          hint={`${contactRate(m)}% লিডে কল হয়েছে`}
         />
         <KpiCard
           icon={<Flame className="size-4" />}
           label="কোয়ালিফাইড (হট+ওয়ার্ম)"
-          value={String(kpi.qualified)}
-          hint={`${kpi.qualifiedRate}% কোয়ালিফাইড`}
+          value={String(m.qualifiedLeads)}
+          hint={`হট ${m.hotLeads} · ওয়ার্ম ${m.warmLeads}`}
         />
         <KpiCard
           icon={<CalendarCheck className="size-4" />}
-          label="ফলো-আপ বাকি"
-          value={String(kpi.followUp)}
-          hint="সময় নির্ধারিত"
+          label="ফলো-আপ বাকি (আজ)"
+          value={String(m.followUpDue)}
+          hint={`সময় পেরিয়েছে ${m.followUpOverdue}টি`}
         />
         <KpiCard
           icon={<Handshake className="size-4" />}
-          label="ডিল জেতা"
-          value={String(kpi.won)}
-          hint={`${kpi.wonRate}% রূপান্তর`}
+          label="বুকিং"
+          value={String(m.closedWon)}
+          hint={`${winRate(m)}% রূপান্তর`}
         />
         <KpiCard
           icon={<Activity className="size-4" />}
-          label="আজকের কল"
-          value={String(kpi.todayCalls)}
-          hint="সব এজেন্ট মিলিয়ে"
+          label="আজকের কল রিপোর্ট"
+          value={String(m.attemptsToday)}
+          hint={`কথা হয়েছে ${m.connectedToday}টিতে`}
         />
       </div>
 
@@ -229,7 +206,7 @@ export function ExecutiveOverview({
         <div className="card-elevated card-pad">
           <div className="flex items-end justify-between gap-2">
             <h3 className="text-sm font-semibold">সেলস পাইপলাইন</h3>
-            <span className="text-[11px] text-muted-foreground">মোট লিড: {kpi.total}</span>
+            <span className="text-[11px] text-muted-foreground">মোট লিড: {m.totalLeads}</span>
           </div>
           <ul className="mt-3 space-y-1.5">
             {funnel.map((step, i) => {
@@ -281,7 +258,7 @@ export function ExecutiveOverview({
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 <div className="text-center">
-                  <p className="tabular text-lg font-bold leading-none">{kpi.total}</p>
+                  <p className="tabular text-lg font-bold leading-none">{leads.length}</p>
                   <p className="text-[10px] text-muted-foreground">লিড</p>
                 </div>
               </div>
@@ -307,23 +284,18 @@ export function ExecutiveOverview({
 
         <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">টিম পারফরম্যান্স</h3>
+          <p className="text-[10px] text-muted-foreground">জমা দেওয়া কল রিপোর্ট অনুযায়ী</p>
           <ol className="mt-3 space-y-2.5">
-            {team.map((row, i) => {
+            {m.agents.slice(0, 5).map((row, i) => {
               const pct = Math.round((row.connected / teamMax) * 100);
               return (
-                <li key={row.profile.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectAgent?.(row.profile.id)}
-                    className="flex w-full items-center gap-2 text-left"
-                  >
+                <li key={row.agentId}>
+                  <span className="flex w-full items-center gap-2 text-left">
                     <span className="tabular w-4 text-[11px] text-muted-foreground">{i + 1}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold">
-                        {row.profile.name}
-                      </span>
+                      <span className="block truncate text-xs font-semibold">{row.name}</span>
                       <span className="block text-[10px] text-muted-foreground">
-                        {row.dials} কল · {row.connected} কথা · {row.closedWon} বুকিং
+                        {row.attempts} কল · {row.connected} কথা · {row.bookings} বুকিং
                       </span>
                       <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
                         <span
@@ -333,12 +305,14 @@ export function ExecutiveOverview({
                       </span>
                     </span>
                     <span className="tabular text-[11px] font-semibold">{pct}%</span>
-                  </button>
+                  </span>
                 </li>
               );
             })}
-            {team.length === 0 && (
-              <li className="text-[11px] text-muted-foreground">এখনো কোনো এজেন্ট নেই।</li>
+            {m.agents.length === 0 && (
+              <li className="text-[11px] text-muted-foreground">
+                এখনো কোনো কল রিপোর্ট জমা পড়েনি।
+              </li>
             )}
           </ol>
         </div>
@@ -346,7 +320,10 @@ export function ExecutiveOverview({
 
       <div className="grid gap-3 xl:grid-cols-3">
         <div className="card-elevated card-pad xl:col-span-1">
-          <h3 className="text-sm font-semibold">কল অ্যাক্টিভিটি ট্রেন্ড</h3>
+          <div className="flex items-end justify-between gap-2">
+            <h3 className="text-sm font-semibold">১৪ দিনের কল রিপোর্ট</h3>
+            <span className="text-[10px] text-muted-foreground">হিসাব {freshness}-এ</span>
+          </div>
           <div className="mt-2 h-40">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trend}>
@@ -380,8 +357,8 @@ export function ExecutiveOverview({
                 />
                 <Line
                   type="monotone"
-                  dataKey="calls"
-                  name="কল"
+                  dataKey="attempts"
+                  name="কল রিপোর্ট"
                   stroke="var(--chart-1)"
                   strokeWidth={2}
                   dot={{ r: 2.5, fill: "var(--chart-1)" }}
@@ -392,16 +369,23 @@ export function ExecutiveOverview({
         </div>
 
         <div className="card-elevated card-pad">
-          <h3 className="text-sm font-semibold">রূপান্তরের হার</h3>
+          <h3 className="text-sm font-semibold">হার</h3>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <Gauge label="কথা হওয়ার হার" value={kpi.contactRate} color="var(--chart-1)" />
-            <Gauge label="কোয়ালিফাইড হার" value={kpi.qualifiedRate} color="var(--chart-2)" />
-            <Gauge label="বুকিং হার" value={kpi.wonRate} color="var(--chart-3)" />
+            <Gauge label="কল হওয়ার হার" value={contactRate(m)} color="var(--chart-1)" />
+            <Gauge label="কথা হওয়ার হার" value={connectRate(m)} color="var(--chart-2)" />
+            <Gauge label="বুকিং হার" value={winRate(m)} color="var(--chart-3)" />
           </div>
+          <p className="mt-3 text-[10px] text-muted-foreground">
+            মোট {m.callAttempts}টি জমা রিপোর্ট · {m.connectedCalls}টিতে কথা হয়েছে · রেকর্ডিং সিঙ্ক{" "}
+            {m.recordingSync}
+          </p>
         </div>
 
         <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">সাম্প্রতিক কাজ</h3>
+          <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Inbox className="size-3" /> কারো নামে দেওয়া হয়নি {m.unassignedLeads}টি লিড
+          </p>
           <ul className="mt-3 space-y-2">
             {recent.map((row) => (
               <li key={row.id} className="flex items-center gap-2 text-[11px]">
