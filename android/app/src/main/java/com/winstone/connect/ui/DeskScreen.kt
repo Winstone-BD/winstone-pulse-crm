@@ -883,6 +883,66 @@ private fun EmptyNote(text: String) {
     Text(text, color = WinInkMuted, fontSize = 13.sp)
 }
 
+/**
+ * আজকের কাজের হিসাব — পুরোটাই সার্ভারের গণনা, ওয়েব CRM-এর সাথে হুবহু এক।
+ * অফলাইনে সর্বশেষ সিঙ্ক করা সংখ্যাই দেখায়, নিজে কিছু হিসাব বা বদল করে না।
+ */
+@Composable
+private fun AllocationBanner(alloc: com.winstone.connect.data.Allocation) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(WinSurface)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("আজকের কাজের হিসাব", fontWeight = FontWeight.Bold, color = WinGold)
+            Text("${alloc.pending} / ${alloc.quota}", fontWeight = FontWeight.Bold)
+        }
+        Text(
+            buildString {
+                append("আগের দিনের বাকি ${alloc.carriedOver}টি")
+                alloc.carriedFrom?.let { append(" ($it)") }
+                append(" • ডেটাবেজ থেকে নতুন ${alloc.newFromDatabase}টি")
+                if (alloc.receivedFromOthers > 0) append(" • অন্যের থেকে পাওয়া ${alloc.receivedFromOthers}টি")
+                append(" • শেষ ${alloc.completed}টি")
+            },
+            fontSize = 12.sp,
+            color = WinInkMuted,
+        )
+        if (alloc.excess > 0) {
+            Text(
+                "লক্ষ্যের চেয়ে ${alloc.excess}টি বেশি পেন্ডিং (অতিরিক্ত/মীমাংসাধীন) — একটিও মুছে যায়নি, " +
+                    "কাজ শুরু না হওয়া অতিরিক্ত লিড কম চাপে থাকা সহকর্মীর কাছে যেতে পারে।",
+                fontSize = 12.sp,
+                color = WinAmber,
+            )
+        }
+        if (alloc.movedToOthers > 0) {
+            Text(
+                "আজ আপনার ${alloc.movedToOthers}টি অতিরিক্ত লিড ভারসাম্যের জন্য সহকর্মীর কাছে গেছে।",
+                fontSize = 12.sp,
+                color = WinInkMuted,
+            )
+        }
+        if (alloc.gap > 0) {
+            Text(
+                if (alloc.poolShortage > 0)
+                    "আর ${alloc.gap}টি লিড দরকার — হেড ডেটাবেজে ${alloc.poolShortage}টির ঘাটতি আছে।"
+                else "আর ${alloc.gap}টি লিড দরকার — পরের স্বয়ংক্রিয় বণ্টনে যোগ হবে।",
+                fontSize = 12.sp,
+                color = WinInkMuted,
+            )
+        }
+    }
+}
+
 @Composable
 private fun NewLeadDialog(onDismiss: () -> Unit, onSubmit: (String, String, String, String) -> Unit) {
     var name by remember { mutableStateOf("") }
