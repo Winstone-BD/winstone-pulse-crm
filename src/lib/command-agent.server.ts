@@ -112,7 +112,8 @@ export async function buildCommandFacts(caller: Caller, surface: Surface) {
     supabaseAdmin
       .from("follow_up_events")
       .select("id, agent_id, lead_id, status, scheduled_at, category, priority")
-      .in("status", ["scheduled", "pending", "due"])
+      // `upcoming` is what the app actually writes; the rest are legacy spellings.
+      .in("status", ["upcoming", "scheduled", "pending", "due"])
       .order("scheduled_at")
       .limit(300),
   ]);
