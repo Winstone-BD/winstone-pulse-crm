@@ -191,6 +191,8 @@ export function LeadDayBoard() {
                   {lead.phone_number} · {dayOf(lead)} ·{" "}
                   {WORK_LABELS[lead.work_state] ?? lead.work_state}
                 </p>
+                <p className="truncate text-xs text-muted-foreground">{taskTrail(lead)}</p>
+
               </div>
               <Button
                 size="sm"
