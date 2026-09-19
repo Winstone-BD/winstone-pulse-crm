@@ -128,8 +128,6 @@ function ControlBoard() {
 
         <AskHqPanel />
 
-        <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
-
         <HqClassificationTiles leads={leads} onDrill={setDrill} />
 
         <HqMixCards
@@ -138,10 +136,6 @@ function ControlBoard() {
           loading={isPending}
           onDrill={setDrill}
         />
-
-        <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
-
-        <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
       </div>
 
       <LeadDossier
