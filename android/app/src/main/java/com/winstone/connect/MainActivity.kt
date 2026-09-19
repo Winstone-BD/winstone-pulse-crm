@@ -41,13 +41,18 @@ class MainActivity : ComponentActivity() {
                 // Mandatory post-call report gate: even if the app was closed
                 // after the call, the report opens itself on the next launch
                 // and no new call is possible before it is submitted.
+                // `reportTick` is bumped on every resume and whenever the report
+                // notification reopens the app, so a call made from the phone's
+                // own dialer is re-checked instead of only on first composition.
+                val tick by reportTick.collectAsStateSafe()
                 var pendingReport by remember { mutableStateOf(false) }
-                LaunchedEffect(phase, state.employeeId) {
+                LaunchedEffect(phase, state.employeeId, tick) {
                     if (phase == CallPhase.Idle && !state.employeeId.isNullOrBlank()) {
                         val body = runCatching {
                             com.winstone.connect.data.remote.WinstoneApi.pendingReport()
                         }.getOrNull()
                         pendingReport = body?.optJSONObject("pending") != null
+                        if (!pendingReport) PendingReportWorker.clear(this@MainActivity)
                     }
                 }
 
