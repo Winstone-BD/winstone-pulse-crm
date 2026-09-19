@@ -128,14 +128,7 @@ function ControlBoard() {
       <div className="page-stack">
         <HqHeader />
 
-        <ExecutiveOverview
-          profiles={profiles}
-          leads={leads}
-          calls={calls}
-          messages={messages}
-          events={events}
-          onSelectAgent={setOpenAgentId}
-        />
+        <ExecutiveOverview leads={leads} events={events} />
 
         <FloorAllocationPanel />
 
