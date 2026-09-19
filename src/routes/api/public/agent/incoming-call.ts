@@ -32,6 +32,13 @@ const Body = z.object({
    * phone still observes it, so it must land in the CRM the same way.
    */
   direction: z.enum(["incoming", "outgoing"]).optional(),
+  /**
+   * "call_log" means the phone found this call afterwards while reconciling the
+   * system call log (app was killed, call placed from WhatsApp/another dialer).
+   * Those arrive late, so they are matched against calls already reported in the
+   * same minute instead of creating a second call row for one physical call.
+   */
+  source: z.enum(["realtime", "call_log"]).optional(),
 });
 
 function json(body: unknown, status = 200): Response {
