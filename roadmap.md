@@ -52,3 +52,8 @@
 - [x] নতুন টেস্ট: rbac-matrix, team-support-shared (মোট ৮৮ টেস্ট পাস)
 - [x] নামকরণ/ফোল্ডার নিয়ম লিখিত (docs/conventions.md)
 - [ ] ঝুলে থাকা সংযোগ (docs/integrations.md-এ তালিকাভুক্ত): Firebase পুশ, Paddle go-live, Google Drive/Sheets পুনঃসংযোগ, ইমেইল DNS — সবই ব্যবহারকারীর অনুমোদন/ধাপের অপেক্ষায়
+# Roadmap
+- [x] Release APK with black-gold theme (in progress)
+- [ ] Connect Google Docs (new workspace)
+- [ ] Connect Google Drive (new workspace)
+- [ ] Connect Google Sheets (new workspace)
