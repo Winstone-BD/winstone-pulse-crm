@@ -1,37 +1,42 @@
 package com.winstone.connect.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val WinGreen = Color(0xFF2E9E64)
-val WinGreenSoft = Color(0xFFE4F4EA)
-val WinCream = Color(0xFFFBF8F0)
-val WinCreamDeep = Color(0xFFF4EFE2)
-val WinBorder = Color(0xFFE4DECE)
-val WinInk = Color(0xFF2B2A25)
-val WinInkMuted = Color(0xFF6F6B60)
-val WinAmber = Color(0xFFD89A2B)
-val WinRed = Color(0xFFC4503F)
-val WinLive = Color(0xFF35B473)
+// কালো-সোনালি ব্র্যান্ড রং — ওয়েব CRM-এর সাথে এক।
+// পুরনো নামগুলো রাখা হয়েছে, শুধু মানগুলো কালো-সোনালিতে বদলেছে।
+val WinGreen = Color(0xFFD4AF37)
+val WinGreenSoft = Color(0xFF211C10)
+val WinCream = Color(0xFF0B0B0C)
+val WinCreamDeep = Color(0xFF141416)
+val WinBorder = Color(0xFF2C2720)
+val WinInk = Color(0xFFF6F2E7)
+val WinInkMuted = Color(0xFF9E9683)
+val WinAmber = Color(0xFFE2B94F)
+val WinRed = Color(0xFFE0705B)
+val WinLive = Color(0xFF4FC98A)
+val WinSurface = Color(0xFF15151A)
 
-private val WinstoneLight = lightColorScheme(
+private val WinstoneDark = darkColorScheme(
     primary = WinGreen,
-    onPrimary = Color.White,
+    onPrimary = Color(0xFF17130A),
     primaryContainer = WinGreenSoft,
-    onPrimaryContainer = Color(0xFF217A4C),
+    onPrimaryContainer = WinGreen,
+    secondary = WinAmber,
     background = WinCream,
     onBackground = WinInk,
-    surface = Color.White,
+    surface = WinSurface,
     onSurface = WinInk,
     surfaceVariant = WinCreamDeep,
     onSurfaceVariant = WinInkMuted,
+    outline = WinBorder,
     outlineVariant = WinBorder,
     error = WinRed,
 )
 
 @Composable
 fun WinstoneTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = WinstoneLight, content = content)
+    MaterialTheme(colorScheme = WinstoneDark, content = content)
 }
