@@ -70,9 +70,11 @@ object CallLogSweeper {
             val durCol = c.getColumnIndexOrThrow(CallLog.Calls.DURATION)
             while (c.moveToNext()) {
                 val at = c.getLong(dateCol)
-                if (at > newest) newest = at
-                // A call still in progress must be left to the live receiver.
+                // A call still in progress is left to the live receiver, and the
+                // cursor is NOT advanced past it: if the receiver misses it, the
+                // next sweep must still find the row.
                 if (at > now - 20_000) continue
+                if (at > newest) newest = at
                 val number = c.getString(numCol)?.trim().orEmpty()
                 if (number.length < 5 || number.any { !it.isDigit() && it != '+' }) continue
                 val duration = c.getInt(durCol).coerceAtLeast(0)

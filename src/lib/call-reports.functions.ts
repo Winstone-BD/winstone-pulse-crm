@@ -18,13 +18,20 @@ async function agentOf(adminToken: string | null) {
   return caller.profile;
 }
 
-/** The agent's open post-call report, with the AI suggestion when ready. */
+/**
+ * The agent's open post-call report, with the AI suggestion when ready.
+ *
+ * This one polls on every page, so a signed-out visitor is answered quietly
+ * with "no report" instead of an error toast.
+ */
 export const myPendingReport = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.parse(input))
   .handler(async ({ data }) => {
-    const me = await agentOf(data.adminToken ?? null);
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none" || !caller.profile) return null;
     const { loadPendingReportDetail } = await import("@/lib/call-reports.server");
-    return loadPendingReportDetail(me.id);
+    return loadPendingReportDetail(caller.profile.id);
   });
 
 /** Gate before dialling: refuses while a report is unfinished. */
