@@ -23,8 +23,6 @@ import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
-import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
-import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
@@ -91,12 +89,6 @@ function ControlBoard() {
     [profiles, leads, calls, messages],
   );
 
-  const chartData = stats.map((row) => ({
-    name: row.profile.name.split(" ")[0] ?? row.profile.name,
-    connected: row.connected,
-    talkMinutes: Math.round(row.talkSeconds / 60),
-  }));
-
   const funnelRows = useMemo(() => {
     const order: { key: string; label: string }[] = [
       { key: "pending", label: "নতুন / বাকি" },
@@ -127,25 +119,6 @@ function ControlBoard() {
       }));
   }, [leads]);
 
-  const sentimentRows = useMemo(() => {
-    const labels: Record<string, string> = {
-      positive: "পজিটিভ",
-      neutral: "নিউট্রাল",
-      negative: "নেগেটিভ",
-    };
-    const counts = new Map<string, number>();
-    for (const call of calls) {
-      if (!call.sentiment) continue;
-      counts.set(call.sentiment, (counts.get(call.sentiment) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([key, value]) => ({
-        label: labels[key] ?? key,
-        value,
-        calls: calls.filter((c) => c.sentiment === key),
-      }));
-  }, [calls]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
@@ -187,23 +160,13 @@ function ControlBoard() {
         <HqMixCards
           funnelRows={funnelRows}
           sourceRows={sourceRows}
-          sentimentRows={sentimentRows}
           loading={isPending}
           onDrill={setDrill}
         />
 
         <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
 
-        <HqTalkChart chartData={chartData} />
-
         <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
-
-        <HqRecentSummaries
-          calls={calls}
-          leads={leads}
-          profiles={profiles}
-          onSelectLead={setOpenLeadId}
-        />
       </div>
 
       <LeadDossier

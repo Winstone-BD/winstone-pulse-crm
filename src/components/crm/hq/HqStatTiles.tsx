@@ -42,7 +42,7 @@ export function HqStatTiles({
         icon={<Timer className="size-4" />}
         label="ফ্লোরের কথার সময়"
         value={formatTalkTime(talkSeconds)}
-        hint="সব সিঙ্ক হওয়া রেকর্ডিং মিলিয়ে"
+        hint={`${calls.filter((c) => c.duration_seconds > 0).length}টি কলে সময় পাওয়া গেছে`}
         onOpen={() =>
           onDrill({
             title: "কথা হওয়া কল",
