@@ -6,12 +6,10 @@ import { AgentDossier } from "@/components/crm/AgentDossier";
 import { FloorAllocationPanel } from "@/components/crm/AllocationStatusCard";
 import { FloorPerformancePanel } from "@/components/crm/DailyPerformanceCard";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
-import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
 import { ExecutiveBrief } from "@/components/crm/ExecutiveBrief";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
-import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
@@ -20,11 +18,10 @@ import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
-import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 
-import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
+import { buildTimeline, useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/hq")({
   head: () => ({
@@ -74,21 +71,6 @@ function ControlBoard() {
   /** Which number card / mix-card row the executive drilled into. */
   const [drill, setDrill] = useState<DrillSpec | null>(null);
 
-  const agents = useMemo(
-    () =>
-      profiles.filter(
-        (p) =>
-          (p.role === "agent" || p.role === "team_leader") &&
-          p.is_active &&
-          p.approval_status === "approved",
-      ),
-    [profiles],
-  );
-  const stats = useMemo(
-    () => buildAgentStats(profiles, leads, calls, messages),
-    [profiles, leads, calls, messages],
-  );
-
   const funnelRows = useMemo(() => {
     const order: { key: string; label: string }[] = [
       { key: "pending", label: "নতুন / বাকি" },
@@ -128,14 +110,7 @@ function ControlBoard() {
       <div className="page-stack">
         <HqHeader />
 
-        <ExecutiveOverview
-          profiles={profiles}
-          leads={leads}
-          calls={calls}
-          messages={messages}
-          events={events}
-          onSelectAgent={setOpenAgentId}
-        />
+        <ExecutiveOverview leads={leads} events={events} />
 
         <FloorAllocationPanel />
 
@@ -153,8 +128,6 @@ function ControlBoard() {
 
         <AskHqPanel />
 
-        <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
-
         <HqClassificationTiles leads={leads} onDrill={setDrill} />
 
         <HqMixCards
@@ -163,10 +136,6 @@ function ControlBoard() {
           loading={isPending}
           onDrill={setDrill}
         />
-
-        <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
-
-        <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
       </div>
 
       <LeadDossier
