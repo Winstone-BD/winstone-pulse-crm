@@ -82,6 +82,9 @@ object AgentSession {
     fun agentNameNow(context: Context): String? =
         agentName ?: mirror(context).getString(M_NAME, null)?.also { agentName = it }
 
+    fun selectedRoleNow(context: Context): String? =
+        selectedRole ?: mirror(context).getString(M_SELECTED_ROLE, null)?.also { selectedRole = it }
+
     /** Call once from Application.onCreate (inside a coroutine). */
     suspend fun load(context: Context) {
         // Mirror first: instant, so a call arriving during startup is covered.
@@ -89,6 +92,7 @@ object AgentSession {
         employeeId = m.getString(M_EMPLOYEE, null)
         agentId = m.getString(M_AGENT, null)
         agentName = m.getString(M_NAME, null)
+        selectedRole = m.getString(M_SELECTED_ROLE, null)
         deviceToken = m.getString(M_DEVICE_TOKEN, null)
         deviceId = m.getString(M_DEVICE_ID, null)
         simNumber = m.getString(M_SIM, null)
@@ -97,6 +101,7 @@ object AgentSession {
         prefs[EMPLOYEE_ID]?.let { employeeId = it }
         prefs[AGENT_ID]?.let { agentId = it }
         prefs[AGENT_NAME]?.let { agentName = it }
+        prefs[SELECTED_ROLE]?.let { selectedRole = it }
         prefs[DEVICE_TOKEN]?.let { deviceToken = it }
         prefs[DEVICE_ID]?.let { deviceId = it }
         prefs[SIM_NUMBER]?.let { simNumber = it }
@@ -104,6 +109,7 @@ object AgentSession {
             .putString(M_EMPLOYEE, employeeId)
             .putString(M_AGENT, agentId)
             .putString(M_NAME, agentName)
+            .putString(M_SELECTED_ROLE, selectedRole)
             .putString(M_DEVICE_TOKEN, deviceToken)
             .putString(M_DEVICE_ID, deviceId)
             .putString(M_SIM, simNumber)
