@@ -220,6 +220,17 @@ export function PostCallReportGate() {
 
   if (!detail || queuedReportIds.includes(detail.report.id)) return null;
 
+  const isDismissed = dismissedId === detail.report.id;
+  const callTypeLabel =
+    detail.recording?.call_direction === "incoming_callback"
+      ? "ইনকামিং — ক্রেতা কল করেছেন"
+      : "আউটগোয়িং — আমি কল করেছি";
+  const callSeconds = Math.max(0, detail.report.duration_seconds ?? 0);
+  const callDurationLabel =
+    callSeconds >= 60
+      ? `${Math.floor(callSeconds / 60)} মিনিট ${callSeconds % 60} সেকেন্ড`
+      : `${callSeconds} সেকেন্ড`;
+
   const reasonRequired = NEEDS_REASON.has(category);
   // The customer answered -> classification (Hot/Warm/Cold + A/B/C/D) is what
   // turns the lead into COMPLETED. Not answered -> the lead goes back to retry.
