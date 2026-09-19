@@ -324,6 +324,67 @@ export function PostCallReportGate() {
           </div>
         ) : null}
 
+        <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
+          <p className="text-xs font-bold">কলের তথ্য (বাধ্যতামূলক)</p>
+          <div className="space-y-1.5">
+            <Label className="text-xs">কলের দিক</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {DIRECTIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setDirection(item.value)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                    direction === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">কলের অবস্থা</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {CALL_STATES.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setCallState(item.value)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                    callState === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="call-duration" className="text-xs">
+              সময়কাল (সেকেন্ড)
+            </Label>
+            <Input
+              id="call-duration"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={duration}
+              onChange={(event) => setDuration(event.target.value)}
+              placeholder="যেমন ১২০"
+            />
+            {callState === "connected" && seconds < 1 ? (
+              <p className="text-[11px] text-destructive">
+                কথা হয়েছে বললে সময়কাল অবশ্যই ১ সেকেন্ড বা বেশি দিন।
+              </p>
+            ) : null}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label className="text-xs">কল ক্যাটাগরি (বাধ্যতামূলক)</Label>
           <div className="grid gap-2 sm:grid-cols-2">
