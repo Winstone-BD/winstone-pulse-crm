@@ -209,7 +209,7 @@ export function dailyPerformanceOf(input: {
   const siteVisitsCompleted = new Set(
     mine
       .filter(
-        (event) => isVisit(event) && event.status === "completed" && withinDay(event.completedAt, dateKey),
+        (event) => isVisit(event) && isDoneFollowUp(event.status) && withinDay(event.completedAt, dateKey),
       )
       .map((event) => event.id),
   ).size;
