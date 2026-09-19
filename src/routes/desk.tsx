@@ -18,6 +18,7 @@ import { MyCallLog } from "@/components/crm/MyCallLog";
 import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
 import { MyAllocationCard } from "@/components/crm/AllocationStatusCard";
+import { MyPerformanceCard } from "@/components/crm/DailyPerformanceCard";
 import { CarryOverLeads } from "@/components/crm/CarryOverLeads";
 import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
@@ -276,6 +277,7 @@ function DeskPage() {
 
         <DeskStats />
         <MyAllocationCard />
+        <MyPerformanceCard />
 
         <SmartInsightStrip scope="desk" />
 
