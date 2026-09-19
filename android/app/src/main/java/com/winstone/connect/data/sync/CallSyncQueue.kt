@@ -199,6 +199,7 @@ object CallSyncQueue {
     const val KIND_RECORDING = "recording"
     const val KIND_OUTCOME = "outcome"
     const val KIND_REPORT_OPEN = "report_open"
+    const val KIND_REPORT_SUBMIT = "report_submit"
     const val KIND_INCOMING_CALL = "incoming_call"
     const val KEY_DIRECTION = "direction"
 }
@@ -275,6 +276,12 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                     Result.success()
                 }
 
+                CallSyncQueue.KIND_REPORT_SUBMIT -> {
+                    val raw = inputData.getString(CallSyncQueue.KEY_TEXT) ?: return Result.failure()
+                    WinstoneApi.submitReportRaw(org.json.JSONObject(raw))
+                    Result.success()
+                }
+
                 CallSyncQueue.KIND_CALL_STATE -> {
                     val callUid = inputData.getString(CallSyncQueue.KEY_CALL_UID)
                     if (leadId == null || callUid == null) return Result.failure()
@@ -304,6 +311,7 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             val keepTrying = !giveUp && (
                 kind == CallSyncQueue.KIND_RECORDING ||
                     kind == CallSyncQueue.KIND_REPORT_OPEN ||
+                    kind == CallSyncQueue.KIND_REPORT_SUBMIT ||
                     kind == CallSyncQueue.KIND_CALL_STATE ||
                     runAttemptCount < 12
                 )
