@@ -1351,10 +1351,12 @@ export type Database = {
           outcome_category: string | null
           phone_number: string
           reference_by: string | null
+          retry_after: string | null
           serial_no: string | null
           source: string
           status: Database["public"]["Enums"]["lead_status"]
           temperature: string | null
+          unanswered_attempts: number
           updated_at: string
           work_date: string | null
           work_state: string
@@ -1381,10 +1383,12 @@ export type Database = {
           outcome_category?: string | null
           phone_number: string
           reference_by?: string | null
+          retry_after?: string | null
           serial_no?: string | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: string | null
+          unanswered_attempts?: number
           updated_at?: string
           work_date?: string | null
           work_state?: string
@@ -1411,10 +1415,12 @@ export type Database = {
           outcome_category?: string | null
           phone_number?: string
           reference_by?: string | null
+          retry_after?: string | null
           serial_no?: string | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: string | null
+          unanswered_attempts?: number
           updated_at?: string
           work_date?: string | null
           work_state?: string

@@ -43,7 +43,8 @@ export function MyPerformanceCard() {
 
       <p className="text-xs text-muted-foreground">
         লিড হাতে থাকা আর কাজ করা আলাদা — নিচের সংখ্যাগুলো কেবল বাস্তবে জমা দেওয়া কল রিপোর্ট,
-        শেষ হওয়া ফলো-আপ ও নিশ্চিত হওয়া বুকিং থেকে গোনা হয়েছে।
+        শেষ হওয়া ফলো-আপ ও নিশ্চিত হওয়া বুকিং থেকে গোনা হয়েছে। কেউ কল না ধরলে সেই টাস্ক শেষ ধরা হয়
+        না — লিডটি কিউর পেছনে গিয়ে নির্দিষ্ট সময় পর আবার কলের জন্য আসে।
       </p>
 
       <div className="stat-grid">
@@ -55,7 +56,17 @@ export function MyPerformanceCard() {
         <Metric
           label="কথা হয়েছে"
           value={`${me.connectedCalls}টি`}
-          hint={`${me.connectRate}% সংযোগ · ${me.talkMinutes} মিনিট`}
+          hint={`${me.connectRate}% সংযোগ · ${me.talkMinutes} মিনিট কথা`}
+        />
+        <Metric
+          label="শেষ হওয়া টাস্ক"
+          value={`${me.completedTasks}টি`}
+          hint={`লক্ষ্যের ${me.performancePercent}% — কথা হয়ে শ্রেণিবিন্যাস হওয়া লিড`}
+        />
+        <Metric
+          label="ধরেনি — আবার কল"
+          value={`${me.unansweredCalls}টি`}
+          hint="টাস্ক শেষ হয়নি, লিড আবার কিউতে গেছে"
         />
         <Metric label="সম্ভাবনাময় লিড" value={`${me.qualifiedLeads}টি`} hint="একই লিড একবারই" />
         <Metric
@@ -120,6 +131,9 @@ export function FloorPerformancePanel() {
               <th className="px-2 py-2 text-right font-medium">লক্ষ্য</th>
               <th className="px-2 py-2 text-right font-medium">কল</th>
               <th className="px-2 py-2 text-right font-medium">কথা</th>
+              <th className="px-2 py-2 text-right font-medium">মিনিট</th>
+              <th className="px-2 py-2 text-right font-medium">শেষ টাস্ক</th>
+              <th className="px-2 py-2 text-right font-medium">ধরেনি</th>
               <th className="px-2 py-2 text-right font-medium">সম্ভাবনাময়</th>
               <th className="px-2 py-2 text-right font-medium">ফলো-আপ</th>
               <th className="px-2 py-2 text-right font-medium">ভিজিট</th>
@@ -134,6 +148,9 @@ export function FloorPerformancePanel() {
                 <td className="tabular px-2 py-2 text-right">{row.target}</td>
                 <td className="tabular px-2 py-2 text-right font-semibold">{row.callsAttempted}</td>
                 <td className="tabular px-2 py-2 text-right">{row.connectedCalls}</td>
+                <td className="tabular px-2 py-2 text-right">{row.talkMinutes}</td>
+                <td className="tabular px-2 py-2 text-right font-semibold">{row.completedTasks}</td>
+                <td className="tabular px-2 py-2 text-right">{row.unansweredCalls}</td>
                 <td className="tabular px-2 py-2 text-right">{row.qualifiedLeads}</td>
                 <td className="tabular px-2 py-2 text-right">{row.followUpsCompleted}</td>
                 <td className="tabular px-2 py-2 text-right">{row.siteVisitsCompleted}</td>
@@ -153,7 +170,8 @@ export function FloorPerformancePanel() {
 
       <p className="text-xs text-muted-foreground">
         মোট: লক্ষ্য {t.target}টি · কল {t.callsAttempted}টি · কথা {t.connectedCalls}টি (
-        {t.connectRate}%) · সম্ভাবনাময় {t.qualifiedLeads}টি · বুকিং {t.bookings}টি (
+        {t.connectRate}%) · {t.talkMinutes} মিনিট কথা · শেষ টাস্ক {t.completedTasks}টি · ধরেনি{" "}
+        {t.unansweredCalls}টি · সম্ভাবনাময় {t.qualifiedLeads}টি · বুকিং {t.bookings}টি (
         {t.conversionRate}%) · অতিরিক্ত পেন্ডিং {t.excessPending}টি
       </p>
     </section>

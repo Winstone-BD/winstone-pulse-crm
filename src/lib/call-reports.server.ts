@@ -10,6 +10,10 @@
  * both the web desk and the Android app, so neither can bypass the rule.
  */
 
+import { nextRetryAt, needsSupervisorDecision, reportTrust } from "@/lib/call-retry";
+
+
+
 export const CALL_CATEGORIES = [
   "hot_lead",
   "follow_up",
@@ -410,7 +414,7 @@ export async function submitCallReport(input: {
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
-    .select("id, name, phone_number, status")
+    .select("id, name, phone_number, status, unanswered_attempts")
     .eq("id", report.lead_id)
     .maybeSingle();
 
@@ -433,6 +437,7 @@ export async function submitCallReport(input: {
         classified_at: nowIso,
         classified_by: input.agentId,
         work_state: "completed",
+        retry_after: null,
       })
       .eq("id", report.lead_id);
 
@@ -447,8 +452,11 @@ export async function submitCallReport(input: {
       classified_at: nowIso,
     });
   } else {
-    // Not received: the lead stays in the working queue for a retry call and is
-    // never silently completed.
+    // Not received: the task is NOT finished. The lead goes back into the working
+    // queue behind the untried leads and becomes callable again after a waiting
+    // gap that grows with every unanswered try. It is never silently completed.
+    const unanswered = Math.max(0, lead?.unanswered_attempts ?? 0) + 1;
+    const retryAt = nextRetryAt(unanswered, new Date(nowIso));
     await supabaseAdmin
       .from("leads")
       .update({
@@ -457,8 +465,31 @@ export async function submitCallReport(input: {
         notes,
         last_call_at: nowIso,
         work_state: "pending",
+        unanswered_attempts: unanswered,
+        retry_after: retryAt,
       })
       .eq("id", report.lead_id);
+
+    const { logLeadEvent: logRetryEvent } = await import("@/lib/lead-events.server");
+    await logRetryEvent({
+      leadId: report.lead_id,
+      agentId: input.agentId,
+      recordingId: report.recording_id,
+      kind: "outcome_logged",
+      detail: `কল ধরা হয়নি (${unanswered}তম বার) — টাস্ক শেষ হয়নি, লিড আবার কিউতে গেল, ${new Date(
+        retryAt,
+      ).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}-এর পর আবার কল করা যাবে`,
+    });
+
+    if (needsSupervisorDecision(unanswered)) {
+      await supabaseAdmin.from("system_alerts").insert({
+        code: "lead_unreachable",
+        severity: "warning",
+        title: "একই লিডে বারবার কল — কেউ ধরছে না",
+        detail: `লিড ${lead?.name ?? report.lead_id} (${lead?.phone_number ?? report.phone_number ?? "—"}) ${unanswered} বার চেষ্টা করেও ধরা যায়নি — lead:${report.lead_id}`,
+        action: "কোঅর্ডিনেটর সিদ্ধান্ত নিন: আবার চেষ্টা, অন্য এজেন্ট, নাকি বাদ",
+      });
+    }
   }
 
   let followUpId: string | null = null;
@@ -567,6 +598,38 @@ export async function submitCallReport(input: {
     };
   }
 
+  // Honesty check: does the phone's own record support the report? A real call
+  // on a phone that failed to measure the duration is still accepted — but a
+  // "কথা হয়েছে" with no evidence at all is flagged and the agent is warned.
+  const trust = reportTrust({
+    claimedConnected: received,
+    measuredSeconds: report.duration_seconds ?? 0,
+    declaredSeconds: input.durationSeconds ?? 0,
+    hasRecording: Boolean(report.recording_id),
+    callStartedAt: report.call_started_at ?? null,
+  });
+  if (trust.suspicious) {
+    try {
+      await supabaseAdmin.from("system_alerts").insert({
+        code: "call_report_unverified",
+        severity: "warning",
+        title: "কল রিপোর্ট ফোনের রেকর্ডের সঙ্গে মেলেনি",
+        detail: `${trust.reasons.join("; ")} — report:${report.id}`,
+        action: "এজেন্টের সঙ্গে কথা বলুন — কল না করে রিপোর্ট দেওয়া হয়েছে কি না যাচাই করুন",
+      });
+      const { logAudit: logTrustAudit } = await import("@/lib/audit.server");
+      await logTrustAudit({
+        action: "call_report_unverified",
+        entityType: "call_report",
+        entityId: report.id,
+        actorProfileId: input.agentId,
+        metadata: { leadId: report.lead_id, reasons: trust.reasons, category },
+      });
+    } catch (alertError) {
+      console.error("unverified report alert failed:", alertError);
+    }
+  }
+
   // The next queued call becomes the open report right away, so the popup
   // returns for every call that happened while this one was being written.
   const nextQueued = await promoteNextQueuedReport(input.agentId);
@@ -578,6 +641,8 @@ export async function submitCallReport(input: {
     review,
     nextReportId: nextQueued,
     workState: received && classified ? ("completed" as const) : ("pending" as const),
+    retryQueued: !(received && classified),
+    warning: trust.warning,
   };
 
 }

@@ -450,7 +450,23 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                         )
                         val result = runCatching { WinstoneApi.submitReportRaw(payload) }
                         busy = false
-                        result.onSuccess { LiveCallLauncher.clear(); onSubmitted() }
+                        result.onSuccess { body ->
+                            // সার্ভার যা বলল সেটাই দেখানো হয় — কথা না হলে টাস্ক শেষ নয়,
+                            // আর ফোনের কল রেকর্ডের সঙ্গে না মিললে সতর্কতা।
+                            val warning = body.optString("warning").takeIf {
+                                it.isNotBlank() && it != "null"
+                            }
+                            if (warning != null) {
+                                Toast.makeText(context, warning, Toast.LENGTH_LONG).show()
+                            } else if (body.optBoolean("retryQueued")) {
+                                Toast.makeText(
+                                    context,
+                                    "কথা হয়নি — টাস্ক শেষ ধরা হয়নি, লিডটি আবার কলের জন্য কিউতে গেল।",
+                                    Toast.LENGTH_LONG,
+                                ).show()
+                            }
+                            LiveCallLauncher.clear(); onSubmitted()
+                        }
                             .onFailure { failure ->
                                 val message = failure.message.orEmpty()
                                 // নেটওয়ার্কের সমস্যা হলে রিপোর্ট ফোনেই জমা থাকবে,
