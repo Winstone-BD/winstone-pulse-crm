@@ -174,16 +174,7 @@ function ControlBoard() {
 
         <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
 
-        <HqTalkChart chartData={chartData} />
-
         <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
-
-        <HqRecentSummaries
-          calls={calls}
-          leads={leads}
-          profiles={profiles}
-          onSelectLead={setOpenLeadId}
-        />
       </div>
 
       <LeadDossier
