@@ -62,6 +62,11 @@ import com.winstone.connect.data.CallRow
 import com.winstone.connect.data.Lead
 import com.winstone.connect.data.shortTime
 import com.winstone.connect.data.statusLabel
+import com.winstone.connect.data.dhakaToday
+import com.winstone.connect.data.isTaskDone
+import com.winstone.connect.data.isUpcomingTask
+import com.winstone.connect.data.taskTrail
+import com.winstone.connect.data.waitingDays
 import com.winstone.connect.data.remote.WinstoneApi
 import androidx.compose.ui.platform.LocalContext
 import com.winstone.connect.data.AgentSession
@@ -276,8 +281,15 @@ fun DeskScreen(
                             }
                         }
                         TAB_LEADS -> {
+                            // আজকের/বকেয়া কাজ আগে, তার নিচে আগামী দিনের টাস্ক আলাদা করে।
+                            val today = dhakaToday()
+                            val upcoming = leads.filter { isUpcomingTask(it, today) && !isTaskDone(it) }
+                            val current = leads.filter { !isUpcomingTask(it, today) || isTaskDone(it) }
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
-                            items(leads) { lead ->
+                            if (current.isNotEmpty()) {
+                                item { SectionTitle("আজকের কাজ (${current.count { !isTaskDone(it) }})", null) {} }
+                            }
+                            items(current) { lead ->
                                 LeadCard(
                                     lead = lead,
                                     recordingMode = state.recordingMode,
@@ -285,6 +297,18 @@ fun DeskScreen(
                                     onWhatsApp = { whatsappLead = lead },
                                     onCall = { startCall(lead) },
                                 )
+                            }
+                            if (upcoming.isNotEmpty()) {
+                                item { SectionTitle("পরের দিনের টাস্ক (${upcoming.size})", null) {} }
+                                items(upcoming) { lead ->
+                                    LeadCard(
+                                        lead = lead,
+                                        recordingMode = state.recordingMode,
+                                        recordingReason = state.recordingReason,
+                                        onWhatsApp = { whatsappLead = lead },
+                                        onCall = { startCall(lead) },
+                                    )
+                                }
                             }
                         }
                         TAB_CALLS -> {
@@ -791,6 +815,12 @@ private fun LeadCard(
             "${statusLabel(lead.status)} · চেষ্টা ${lead.attempts}",
             color = if (lead.status == "pending") WinAmber else WinGreen,
             fontSize = 12.sp,
+        )
+        // টাস্কের সময়রেখা: কবে এসেছে, কত দিন অপেক্ষায়, নাকি পরের দিনের কাজ।
+        Text(
+            taskTrail(lead),
+            fontSize = 11.sp,
+            color = if (!isTaskDone(lead) && waitingDays(lead) > 2) WinAmber else WinInkMuted,
         )
         lead.notes?.let { Text(it, fontSize = 12.sp, color = WinInkMuted) }
         Spacer(Modifier.height(6.dp))
