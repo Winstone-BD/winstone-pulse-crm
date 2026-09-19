@@ -132,7 +132,7 @@ fun DeskScreen(
     LaunchedEffect(tab) { if (tab == TAB_AI_COACH && state.coach == null) vm.loadCoach() }
 
     LaunchedEffect(tab, reportCategory, reportState) {
-        if (tab != TAB_FOLLOWUPS) return@LaunchedEffect
+        if (tab != TAB_CALLS) return@LaunchedEffect
         reportsLoading = true
         reports = runCatching {
             WinstoneApi.listReports(
