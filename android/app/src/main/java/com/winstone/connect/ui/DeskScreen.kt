@@ -114,6 +114,7 @@ fun DeskScreen(
     var reportCategory by remember { mutableStateOf("") }
     var reportState by remember { mutableStateOf("") }
     var openReportLead by remember { mutableStateOf<Lead?>(null) }
+    var leadDetail by remember { mutableStateOf<Lead?>(null) }
     var whatsappLead by remember { mutableStateOf<Lead?>(null) }
     val context = LocalContext.current
     var update by remember { mutableStateOf<UpdateChecker.Available?>(null) }
