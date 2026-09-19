@@ -153,6 +153,105 @@ async function openWorkloadByAgent(workDate: string): Promise<Map<string, number
   return counts;
 }
 
+/**
+ * Balancing step, run before any database lead is handed out.
+ *
+ * A desk carrying MORE pending work than its quota gives its surplus (the
+ * newest, never-called leads only) to desks sitting BELOW their quota. Nobody
+ * loses a lead they already worked on, and the transfer is recorded on the
+ * lead's own history so the change is traceable.
+ */
+async function rebalanceSurplusPending(input: {
+  workDate: string;
+  agents: PoolAgent[];
+  quotas: Map<string, number>;
+  held: Map<string, number>;
+}): Promise<number> {
+  const supabaseAdmin = await admin();
+  const { workDate, agents, quotas, held } = input;
+
+  const donors = agents
+    .map((a) => ({ agent: a, surplus: (held.get(a.id) ?? 0) - (quotas.get(a.id) ?? 0) }))
+    .filter((row) => row.surplus > 0)
+    .sort((a, b) => b.surplus - a.surplus);
+  const receivers = agents
+    .map((a) => ({ agent: a, gap: (quotas.get(a.id) ?? 0) - (held.get(a.id) ?? 0) }))
+    .filter((row) => row.gap > 0)
+    .sort((a, b) => b.gap - a.gap);
+  if (donors.length === 0 || receivers.length === 0) return 0;
+
+  let moved = 0;
+  let receiverIndex = 0;
+
+  for (const donor of donors) {
+    let surplus = donor.surplus;
+    if (surplus <= 0) continue;
+    const { data: spare } = await supabaseAdmin
+      .from("leads")
+      .select("id")
+      .eq("assigned_to", donor.agent.id)
+      .eq("work_date", workDate)
+      .eq("work_state", "pending")
+      .eq("call_attempts", 0)
+      .is("last_call_at", null)
+      .order("created_at", { ascending: false })
+      .limit(surplus);
+    const spareIds = (spare ?? []).map((row) => row.id);
+    let cursor = 0;
+
+    while (cursor < spareIds.length && receiverIndex < receivers.length) {
+      const receiver = receivers[receiverIndex]!;
+      if (receiver.gap <= 0) {
+        receiverIndex += 1;
+        continue;
+      }
+      const batch = spareIds.slice(cursor, cursor + Math.min(receiver.gap, 100));
+      if (batch.length === 0) break;
+      const { data: updated } = await supabaseAdmin
+        .from("leads")
+        .update({
+          assigned_to: receiver.agent.id,
+          assigned_agent_id: receiver.agent.id,
+          work_date: workDate,
+        })
+        .in("id", batch)
+        .eq("assigned_to", donor.agent.id)
+        .eq("work_state", "pending")
+        .select("id");
+      const movedIds = (updated ?? []).map((row) => row.id);
+      cursor += batch.length;
+      if (movedIds.length === 0) continue;
+
+      await supabaseAdmin.from("lead_assignments").insert(
+        movedIds.map((leadId) => ({
+          lead_id: leadId,
+          from_agent_id: donor.agent.id,
+          to_agent_id: receiver.agent.id,
+          source: "rebalance",
+          note: `ভারসাম্য: ${donor.agent.name} → ${receiver.agent.name} (${workDate})`,
+        })),
+      );
+      await supabaseAdmin.from("lead_events").insert(
+        movedIds.map((leadId) => ({
+          lead_id: leadId,
+          agent_id: receiver.agent.id,
+          kind: "workday_moved" as const,
+          detail: `অতিরিক্ত পেন্ডিং লিড ${donor.agent.name} থেকে ${receiver.agent.name}-কে দেওয়া হয়েছে (${workDate})`,
+        })),
+      );
+
+      moved += movedIds.length;
+      receiver.gap -= movedIds.length;
+      surplus -= movedIds.length;
+      held.set(donor.agent.id, (held.get(donor.agent.id) ?? 0) - movedIds.length);
+      held.set(receiver.agent.id, (held.get(receiver.agent.id) ?? 0) + movedIds.length);
+      if (receiver.gap <= 0) receiverIndex += 1;
+      if (surplus <= 0) break;
+    }
+  }
+  return moved;
+}
+
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
