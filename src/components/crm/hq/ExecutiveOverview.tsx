@@ -290,7 +290,7 @@ export function ExecutiveOverview({
           <h3 className="text-sm font-semibold">টিম পারফরম্যান্স</h3>
           <p className="text-[10px] text-muted-foreground">জমা দেওয়া কল রিপোর্ট অনুযায়ী</p>
           <ol className="mt-3 space-y-2.5">
-            {m.agents.slice(0, 5).map((row, i) => {
+            {m.agents.map((row, i) => {
               const pct = Math.round((row.connected / teamMax) * 100);
               return (
                 <li key={row.agentId}>
