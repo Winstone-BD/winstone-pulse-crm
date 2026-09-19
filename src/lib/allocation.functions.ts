@@ -12,21 +12,27 @@ import { z } from "zod";
 const Base = z.object({ adminToken: z.string().nullable().optional() });
 const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "তারিখ ঠিক নয়");
 
+/**
+ * Resolves the caller. Returns null instead of throwing when there is no
+ * signed-in session yet (first paint / session still hydrating), so these
+ * read-only panels quietly render nothing rather than crashing the page.
+ */
 async function callerOf(adminToken: string | null) {
   const { resolveCaller } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken);
-  if (caller.scope === "none" || !caller.profile) {
-    throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
-  }
+  if (caller.scope === "none" || !caller.profile) return null;
   return caller;
 }
+
 
 /** This desk's own workday allocation state — carried over, new, excess, gap. */
 export const myAllocationStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ workDate: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     const me = caller.profile!;
+
     const { dhakaToday } = await import("@/lib/lead-pool.server");
     const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
     const workDate = data.workDate ?? dhakaToday();
@@ -45,7 +51,9 @@ export const floorAllocation = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ workDate: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     if (caller.scope === "agent") throw new Error("এই তথ্য দেখার অনুমতি নেই");
+
     const { dhakaToday } = await import("@/lib/lead-pool.server");
     const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
     return floorAllocationStatus(data.workDate ?? dhakaToday());
@@ -60,6 +68,8 @@ export const myDailyPerformance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
+
     const { agentDailyPerformance } = await import("@/lib/daily-performance.server");
     const { dhakaDateKey } = await import("@/lib/daily-performance");
     return agentDailyPerformance(caller.profile!.id, data.dateKey ?? dhakaDateKey());
@@ -70,7 +80,9 @@ export const floorDailyPerformance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     if (caller.scope === "agent") throw new Error("এই তথ্য দেখার অনুমতি নেই");
+
     const { dailyPerformanceBoard } = await import("@/lib/daily-performance.server");
     const { dhakaDateKey } = await import("@/lib/daily-performance");
     const board = await dailyPerformanceBoard(data.dateKey ?? dhakaDateKey());
