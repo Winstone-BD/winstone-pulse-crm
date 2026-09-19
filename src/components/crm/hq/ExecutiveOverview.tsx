@@ -113,7 +113,7 @@ export function ExecutiveOverview({
       { label: "নতুন লিড", value: leads.length },
       {
         label: "যোগাযোগ হয়েছে",
-        value: leads.filter((l) => l.status !== "pending").length,
+        value: leads.filter((l) => l.call_attempts > 0 || !!l.last_call_at).length,
       },
       {
         label: "কোয়ালিফাইড",
