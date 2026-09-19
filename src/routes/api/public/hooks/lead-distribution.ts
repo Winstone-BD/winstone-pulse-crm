@@ -65,6 +65,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
               skipped: "already_done_today",
               today,
               rolledOver,
+              rescue,
               excess: status.totals.excess,
               shortage: status.shortage,
             });
@@ -80,7 +81,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
               need: agents.length * plan.perAgent,
               perAgent: plan.perAgent,
             });
-            return Response.json({ ok: true, skipped: "database_empty", today });
+            return Response.json({ ok: true, skipped: "database_empty", today, rescue });
           }
 
           const result = await distributeDailyLeads({
@@ -89,7 +90,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
             trigger: "daily_auto",
           });
           await saveDailyPlan({ perAgent: plan.perAgent, lastRunDate: today });
-          return Response.json({ ok: true, ...result });
+          return Response.json({ ok: true, rescue, rolledOver, ...result });
         } catch (error) {
           console.error("daily lead distribution failed", error);
           return new Response(
