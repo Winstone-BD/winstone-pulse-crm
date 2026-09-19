@@ -24,6 +24,7 @@ import com.winstone.connect.ui.RoleSelectionScreen
 import com.winstone.connect.ui.SignInScreen
 import com.winstone.connect.ui.collectAsStateSafe
 import com.winstone.connect.ui.theme.WinstoneTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
