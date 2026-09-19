@@ -177,6 +177,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
         attempts: agg.attempts,
         connected: agg.connected,
         bookings: agg.bookingLeads.size,
+        talkMinutes: Math.round(agg.talkSeconds / 60),
       }))
       .sort((a, b) => b.connected - a.connected || b.attempts - a.attempts);
 
