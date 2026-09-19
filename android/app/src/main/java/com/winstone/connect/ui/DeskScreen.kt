@@ -64,6 +64,7 @@ import com.winstone.connect.data.shortTime
 import com.winstone.connect.data.statusLabel
 import com.winstone.connect.data.dhakaToday
 import com.winstone.connect.data.isTaskDone
+import com.winstone.connect.data.isRetryWaiting
 import com.winstone.connect.data.isUpcomingTask
 import com.winstone.connect.data.taskTrail
 import com.winstone.connect.data.waitingDays
@@ -284,7 +285,10 @@ fun DeskScreen(
                             // আজকের/বকেয়া কাজ আগে, তার নিচে আগামী দিনের টাস্ক আলাদা করে।
                             val today = dhakaToday()
                             val upcoming = leads.filter { isUpcomingTask(it, today) && !isTaskDone(it) }
-                            val current = leads.filter { !isUpcomingTask(it, today) || isTaskDone(it) }
+                            // যে নম্বরে কেউ ধরেনি সেটি কিউর পেছনে — আগে না-করা কল।
+                            val current = leads
+                                .filter { !isUpcomingTask(it, today) || isTaskDone(it) }
+                                .sortedBy { if (isRetryWaiting(it)) 1 else 0 }
                             // সার্ভারের হিসাব — ওয়েব CRM-এ ঠিক এই সংখ্যাগুলোই দেখায়।
                             state.data?.allocation?.let { alloc ->
                                 item { AllocationBanner(alloc) }
