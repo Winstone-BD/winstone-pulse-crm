@@ -16,6 +16,7 @@ import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
+import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
@@ -151,6 +152,15 @@ function ControlBoard() {
     <>
       <div className="space-y-8">
         <HqHeader />
+
+        <ExecutiveOverview
+          profiles={profiles}
+          leads={leads}
+          calls={calls}
+          messages={messages}
+          events={events}
+          onSelectAgent={setOpenAgentId}
+        />
 
         <SmartInsightStrip scope="floor" />
 
