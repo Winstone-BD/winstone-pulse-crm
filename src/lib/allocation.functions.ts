@@ -80,7 +80,9 @@ export const floorDailyPerformance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     if (caller.scope === "agent") throw new Error("এই তথ্য দেখার অনুমতি নেই");
+
     const { dailyPerformanceBoard } = await import("@/lib/daily-performance.server");
     const { dhakaDateKey } = await import("@/lib/daily-performance");
     const board = await dailyPerformanceBoard(data.dateKey ?? dhakaDateKey());
