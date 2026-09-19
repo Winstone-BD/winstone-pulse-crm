@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ClipboardList, Loader2, PhoneIncoming, PhoneOutgoing, Search } from "lucide-react";
 import { useState } from "react";
 
+import { CallReportSummary } from "@/components/crm/CallReportSummary";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
