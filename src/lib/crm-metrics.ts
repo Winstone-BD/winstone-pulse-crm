@@ -22,8 +22,8 @@
  * | connectedCalls    | submitted `call_reports` with `connected = true`                       |
  * | attemptsToday     | submitted reports whose `call_ended_at` falls in the Dhaka day        |
  * | connectedToday    | as above, `connected = true`                                          |
- * | followUpDue       | `follow_up_events.status = 'pending'`, scheduled inside the Dhaka day |
- * | followUpOverdue   | `follow_up_events.status = 'pending'`, scheduled before now           |
+ * | followUpDue       | open follow-ups (`upcoming`/`pending`) scheduled inside the Dhaka day |
+ * | followUpOverdue   | open follow-ups scheduled before now                                  |
  * | visitsCompleted   | completed follow-ups in a site-visit category                        |
  * | trend             | submitted reports grouped by Dhaka day (attempts vs connected)       |
  *
