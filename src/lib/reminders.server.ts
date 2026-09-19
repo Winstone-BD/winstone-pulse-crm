@@ -27,6 +27,10 @@ export type Reminder = {
 };
 
 const REPORT_GRACE_MINUTES = 5;
+/** A follow-up older than this is backlog: listed in the app, not pushed. */
+const FOLLOW_UP_PUSH_WINDOW_HOURS = 12;
+/** Never buzz a phone more than this many times in one sweep. */
+const MAX_PUSH_PER_SWEEP = 6;
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
