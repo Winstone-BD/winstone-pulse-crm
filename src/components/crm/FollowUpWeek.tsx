@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, PhoneCall } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

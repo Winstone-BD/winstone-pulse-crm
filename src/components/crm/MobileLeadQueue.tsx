@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, CheckCircle2, Loader2, Phone, Sparkles, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { WebCallButton } from "@/components/crm/WebCallButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { triageMyLead } from "@/lib/agent-desk.functions";
