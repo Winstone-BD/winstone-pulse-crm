@@ -141,7 +141,10 @@ describe("canonical call performance contract", () => {
   });
 
   it("talk time is unavailable, never zero, when nothing was measured", () => {
-    const talk = talkTimeOf([{ verifiedSeconds: null }, { verifiedSeconds: null }]);
+    const talk = talkTimeOf([
+      { connected: true, verifiedSeconds: null },
+      { connected: true, verifiedSeconds: null },
+    ]);
     expect(talk).toEqual({ seconds: 0, measuredCalls: 0, unmeasuredCalls: 2 });
     const row = board([
       report({ id: "r1", connectionVerified: true, durationSeconds: 0, verifiedSeconds: null, classified: true }),

@@ -19,6 +19,9 @@ function report(over: Partial<CallReportEvent>): CallReportEvent {
     agentId: "a1",
     status: "submitted",
     connected: true,
+    // The phone measured 2 minutes, so this call is verified as connected.
+    connectionVerified: over.connectionVerified ?? (over.connected ?? true) && (over.durationSeconds ?? 120) > 0,
+    verifiedSeconds: over.durationSeconds === 0 ? null : (over.durationSeconds ?? 120),
     durationSeconds: 120,
     category: "interested",
     at: "2026-09-20T05:00:00Z",
