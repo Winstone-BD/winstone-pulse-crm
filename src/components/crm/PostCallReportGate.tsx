@@ -263,6 +263,13 @@ export function PostCallReportGate() {
           {detail.report.duration_seconds}s{detail.report.connected ? "" : " · কথা হয়নি"}
         </p>
 
+        {(detail.queuedCount ?? 0) > 0 ? (
+          <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+            আরও {detail.queuedCount}টি কলের রিপোর্ট সারিতে অপেক্ষা করছে — এটি জমা দিলেই পরেরটি খুলবে।
+          </p>
+        ) : null}
+
+
         {detail.recording && detail.recording.analysis_status !== "completed" ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
             {detail.recording.analysis_status === "failed"

@@ -560,7 +560,8 @@ export const listCallReports = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    // Not signed in: an empty list, never an error screen on a shared page.
+    if (caller.scope === "none") return { reports: [], scope: "none" as const, agents: [] };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin
