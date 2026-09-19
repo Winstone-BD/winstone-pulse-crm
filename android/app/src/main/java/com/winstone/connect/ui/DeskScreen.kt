@@ -1,7 +1,9 @@
 package com.winstone.connect.ui
 
 import android.app.Activity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,23 +14,36 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,12 +72,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.winstone.connect.ui.theme.WinAmber
 import com.winstone.connect.ui.theme.WinBorder
+import com.winstone.connect.ui.theme.WinCreamDeep
 import com.winstone.connect.ui.theme.WinGreen
 import com.winstone.connect.ui.theme.WinGreenSoft
 import com.winstone.connect.ui.theme.WinInkMuted
+import com.winstone.connect.ui.theme.WinLive
 import com.winstone.connect.ui.theme.WinRed
 
-/** Mirrors the web CRM /desk screen: stats, lead queue, call log, device/sync status, AI copilot. */
+private const val TAB_DASHBOARD = 0
+private const val TAB_LEADS = 1
+private const val TAB_FOLLOWUPS = 2
+private const val TAB_PERFORMANCE = 3
+private const val TAB_PROFILE = 4
+
+/**
+ * এজেন্ট অ্যাপের প্রধান পর্দা — উপরে ব্র্যান্ড বার, নিচে পাঁচটি ট্যাবের নিচের
+ * নেভিগেশন: ড্যাশবোর্ড, লিড, ফলো-আপ, পারফরম্যান্স, প্রোফাইল। ডেটা, কল গেট ও
+ * রিপোর্টের নিয়ম আগের মতোই — শুধু সাজানোটা বদলেছে।
+ */
 @Composable
 fun DeskScreen(
     activity: Activity,
@@ -71,12 +99,12 @@ fun DeskScreen(
 ) {
     val state by vm.state.collectAsStateSafe()
     val snackbar = remember { SnackbarHostState() }
-    var tab by remember { mutableStateOf(0) }
+    var tab by remember { mutableStateOf(TAB_DASHBOARD) }
     val callScope = rememberCoroutineScope()
     var callBlocked by remember { mutableStateOf<String?>(null) }
     var showPendingReport by remember { mutableStateOf(false) }
     var showNewLead by remember { mutableStateOf(false) }
-    // রিপোর্ট ট্যাব — নিজের সব কল রিপোর্ট, ফিল্টার সহ
+    // ফলো-আপ ট্যাব — নিজের সব কল রিপোর্ট, ফিল্টার সহ
     var reports by remember { mutableStateOf<List<ReportRow>>(emptyList()) }
     var reportsLoading by remember { mutableStateOf(false) }
     var reportCategory by remember { mutableStateOf("") }
@@ -100,10 +128,10 @@ fun DeskScreen(
             vm.clearToast()
         }
     }
-    LaunchedEffect(tab) { if (tab == 4 && state.coach == null) vm.loadCoach() }
+    LaunchedEffect(tab) { if (tab == TAB_PERFORMANCE && state.coach == null) vm.loadCoach() }
 
     LaunchedEffect(tab, reportCategory, reportState) {
-        if (tab != 2) return@LaunchedEffect
+        if (tab != TAB_FOLLOWUPS) return@LaunchedEffect
         reportsLoading = true
         reports = runCatching {
             WinstoneApi.listReports(
@@ -133,23 +161,50 @@ fun DeskScreen(
         reportsLoading = false
     }
 
+    val data = state.data
+    val leads = data?.leads.orEmpty()
+    val calls = data?.calls.orEmpty()
+    val pendingLeads = leads.count { it.status == "pending" }
+    val followUpLeads = leads.filter { it.status == "follow_up" }
+
+    /** একটাই কল-পথ: সার্ভার গেট পাস করলে লাইভ কল, নইলে রিপোর্টের বার্তা। */
+    fun startCall(lead: Lead) {
+        callScope.launch {
+            val gate = runCatching { WinstoneApi.startCall(lead.id) }.getOrNull()
+            if (gate?.optBoolean("blocked", false) == true) {
+                callBlocked = gate.optString("reason").takeIf { it.isNotBlank() && it != "null" }
+                    ?: "আগের কলের রিপোর্ট জমা দিন"
+            } else {
+                LiveCallLauncher.call(activity, lead.id, lead.phone, data?.agentId, lead.name)
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
+        bottomBar = {
+            DeskBottomBar(
+                tab = tab,
+                onTab = { tab = it },
+                leadBadge = pendingLeads,
+                followUpBadge = followUpLeads.size,
+            )
+        },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showNewLead = true },
-                containerColor = WinGreen,
-                contentColor = androidx.compose.ui.graphics.Color.White,
-            ) { Text("নতুন লিড") }
+            if (tab == TAB_DASHBOARD || tab == TAB_LEADS) {
+                ExtendedFloatingActionButton(
+                    onClick = { showNewLead = true },
+                    containerColor = WinGreen,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) { Text("নতুন লিড") }
+            }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            DeskHeader(
-                agentName = state.data?.agentName ?: "…",
-                employeeId = state.employeeId.orEmpty(),
-                onRefresh = { vm.refresh() },
-                onSignOut = { vm.signOut() },
+            BrandBar(
+                agentName = data?.agentName ?: "…",
+                online = state.error == null,
             )
 
             update?.takeIf { !updateDismissed || it.mandatory }?.let { available ->
@@ -173,6 +228,7 @@ fun DeskScreen(
                 Text(
                     "সমস্যা: $it",
                     color = WinRed,
+                    fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 )
             }
@@ -197,25 +253,36 @@ fun DeskScreen(
                 }
             }
 
-            StatsRow(state)
-
-            TabRow(selectedTabIndex = tab, containerColor = MaterialTheme.colorScheme.background) {
-                listOf("লিড", "কল লগ", "রিপোর্ট", "স্টেটাস", "AI কোচ").forEachIndexed { i, label ->
-                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label, fontSize = 13.sp) })
-                }
-            }
-
-            if (state.loading && state.data == null) {
+            if (state.loading && data == null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
-                val data = state.data
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     when (tab) {
-                        0 -> {
-                            val leads = data?.leads.orEmpty()
+                        TAB_DASHBOARD -> {
+                            item {
+                                WelcomeCard(
+                                    agentName = data?.agentName ?: "…",
+                                    employeeId = state.employeeId.orEmpty(),
+                                    online = state.error == null,
+                                    targetLine = "লক্ষ্য: ${leads.size} লিড · ${followUpLeads.size} ফলো-আপ",
+                                )
+                            }
+                            item { SectionTitle("আজকের KPI", "সব লিড") { tab = TAB_LEADS } }
+                            item { KpiGrid(leads = leads, calls = calls) }
+                            item {
+                                SectionTitle("আজকের নির্ধারিত কল", "সব ফলো-আপ") { tab = TAB_FOLLOWUPS }
+                            }
+                            val queue = (followUpLeads + leads.filter { it.status == "pending" }).take(5)
+                            if (queue.isEmpty()) item { EmptyNote("আজ নির্ধারিত কোনো কল নেই।") }
+                            items(queue) { lead ->
+                                ScheduledCallRow(lead = lead, onCall = { startCall(lead) })
+                            }
+                            item { InfoBanner() }
+                        }
+                        TAB_LEADS -> {
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
                             items(leads) { lead ->
                                 LeadCard(
@@ -223,29 +290,18 @@ fun DeskScreen(
                                     recordingMode = state.recordingMode,
                                     recordingReason = state.recordingReason,
                                     onWhatsApp = { whatsappLead = lead },
-                                    onCall = {
-                                        // The server decides: an unfinished post-call
-                                        // report blocks the next outbound call.
-                                        callScope.launch {
-                                            val gate = runCatching { WinstoneApi.startCall(lead.id) }.getOrNull()
-                                            val blocked = gate?.optBoolean("blocked", false) == true
-                                            if (blocked) {
-                                                callBlocked = gate?.optString("reason")
-                                                    ?: "আগের কলের রিপোর্ট জমা দিন"
-                                            } else {
-                                                LiveCallLauncher.call(activity, lead.id, lead.phone, data?.agentId, lead.name)
-                                            }
-                                        }
-                                    },
+                                    onCall = { startCall(lead) },
                                 )
                             }
                         }
-                        1 -> {
-                            val calls = data?.calls.orEmpty()
-                            if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
-                            items(calls) { CallCard(it, data?.leads.orEmpty()) }
-                        }
-                        2 -> {
+                        TAB_FOLLOWUPS -> {
+                            if (followUpLeads.isNotEmpty()) {
+                                item { SectionTitle("আজকের ফলো-আপ", null) {} }
+                                items(followUpLeads) { lead ->
+                                    ScheduledCallRow(lead = lead, onCall = { startCall(lead) })
+                                }
+                            }
+                            item { SectionTitle("কল রিপোর্ট", null) {} }
                             if (reportsLoading) item { EmptyNote("রিপোর্ট আনা হচ্ছে…") }
                             item {
                                 ReportFilterRow(
@@ -260,21 +316,31 @@ fun DeskScreen(
                             }
                             items(reports) { row ->
                                 ReportRowCard(row) { leadId ->
-                                    data?.leads.orEmpty().firstOrNull { it.id == leadId }
-                                        ?.let { openReportLead = it }
+                                    leads.firstOrNull { it.id == leadId }?.let { openReportLead = it }
                                 }
                             }
                         }
-                        3 -> {
-                            item { StatusCards(state) }
-                        }
-                        else -> {
+                        TAB_PERFORMANCE -> {
+                            item { KpiGrid(leads = leads, calls = calls) }
+                            item { SectionTitle("AI কোচ", null) {} }
                             if (state.coachLoading) item { EmptyNote("AI কোচ তৈরি হচ্ছে…") }
                             state.coach?.let { coach ->
                                 item { CoachCard("সারসংক্ষেপ", listOf(coach.summary)) }
                                 if (coach.strengths.isNotEmpty()) item { CoachCard("শক্তি", coach.strengths) }
                                 if (coach.risks.isNotEmpty()) item { CoachCard("ঝুঁকি", coach.risks) }
                                 if (coach.nextSteps.isNotEmpty()) item { CoachCard("পরবর্তী ধাপ", coach.nextSteps) }
+                            }
+                            item { SectionTitle("আজকের কল লগ", null) {} }
+                            if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
+                            items(calls) { CallCard(it, leads) }
+                        }
+                        else -> {
+                            item { StatusCards(state) }
+                            item {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = { vm.refresh() }) { Text("রিফ্রেশ") }
+                                    TextButton(onClick = { vm.signOut() }) { Text("সাইন আউট", color = WinRed) }
+                                }
                             }
                         }
                     }
@@ -346,6 +412,290 @@ fun DeskScreen(
     }
 }
 
+/** উপরের ব্র্যান্ড বার — লোগো, নাম, ফেজ ব্যাজ, অনলাইন বিন্দু ও এজেন্টের আদ্যক্ষর। */
+@Composable
+private fun BrandBar(agentName: String, online: Boolean) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(38.dp)
+                .background(WinGreen, RoundedCornerShape(11.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "W",
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp,
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("উইনস্টোন এজেন্ট", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Spacer(Modifier.width(6.dp))
+                Pill("অন-ডিউটি")
+            }
+            Text(
+                "Winstone Properties Ltd. · অভ্যন্তরীণ সেলস",
+                color = WinInkMuted,
+                fontSize = 11.sp,
+            )
+        }
+        Box(
+            Modifier
+                .size(8.dp)
+                .background(if (online) WinLive else WinRed, CircleShape),
+        )
+        Spacer(Modifier.width(10.dp))
+        Avatar(agentName, 34.dp)
+    }
+}
+
+@Composable
+private fun Pill(text: String) {
+    Text(
+        text,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = WinGreen,
+        modifier = Modifier
+            .background(WinGreenSoft, RoundedCornerShape(7.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    )
+}
+
+@Composable
+private fun Avatar(name: String, size: androidx.compose.ui.unit.Dp) {
+    val initials = name.trim().split(" ").mapNotNull { it.firstOrNull()?.uppercase() }
+        .take(2).joinToString("").ifBlank { "W" }
+    Box(
+        Modifier
+            .size(size)
+            .background(WinGreenSoft, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(initials, color = WinGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    }
+}
+
+/** স্বাগত কার্ড — নাম, আইডি, আজকের তারিখ, শিফট ও লক্ষ্য। */
+@Composable
+private fun WelcomeCard(
+    agentName: String,
+    employeeId: String,
+    online: Boolean,
+    targetLine: String,
+) {
+    val today = remember {
+        java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", java.util.Locale("bn", "BD"))
+            .format(java.util.Date())
+    }
+    WinCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Winstone Properties Ltd.", color = WinGreen, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(2.dp))
+                Text("স্বাগতম, $agentName", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(today, color = WinInkMuted, fontSize = 12.sp)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(employeeId.ifBlank { "—" }, color = WinInkMuted, fontSize = 11.sp)
+                Spacer(Modifier.height(6.dp))
+                Avatar(agentName, 44.dp)
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .background(if (online) WinLive else WinRed, CircleShape),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                if (online) "শিফট: সক্রিয় · CRM সংযুক্ত" else "শিফট: সক্রিয় · অফলাইন",
+                fontSize = 12.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Text(targetLine, fontSize = 12.sp, color = WinInkMuted)
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(title: String, action: String?, onAction: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = WinInkMuted,
+            modifier = Modifier.weight(1f),
+        )
+        action?.let {
+            Text(
+                "$it ›",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = WinGreen,
+                modifier = Modifier.clickable { onAction() },
+            )
+        }
+    }
+}
+
+/** ছয়টি টাইলে আজকের অবস্থা — স্ক্রিনশটের KPI গ্রিডের মতো। */
+@Composable
+private fun KpiGrid(leads: List<Lead>, calls: List<CallRow>) {
+    val connected = calls.count { it.durationSeconds > 0 }
+    val talkMinutes = calls.sumOf { it.durationSeconds } / 60
+    val avgSeconds = if (calls.isNotEmpty()) calls.sumOf { it.durationSeconds } / calls.size else 0
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KpiTile("নতুন লিড", leads.count { it.status == "pending" }.toString(), "অপেক্ষমাণ", Modifier.weight(1f))
+            KpiTile("আজকের কল", calls.size.toString(), "$connected কথা", Modifier.weight(1f))
+            KpiTile("ফলো-আপ", leads.count { it.status == "follow_up" }.toString(), "নির্ধারিত", Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
+            KpiTile("কথা", "$talkMinutes মি.", "মোট", Modifier.weight(1f))
+            KpiTile("গড় সময়", "$avgSeconds সে.", "প্রতি কলে", Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun KpiTile(label: String, value: String, hint: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .background(WinCreamDeep, RoundedCornerShape(14.dp))
+            .padding(10.dp),
+    ) {
+        Column {
+            Text(hint, fontSize = 10.sp, color = WinGreen, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
+            Text(value, fontWeight = FontWeight.Bold, fontSize = 19.sp)
+            Text(label, fontSize = 11.sp, color = WinInkMuted)
+        }
+    }
+}
+
+/** নির্ধারিত কলের সারি — নাম, প্রতিষ্ঠান/নোট এবং গোল কল বাটন। */
+@Composable
+private fun ScheduledCallRow(lead: Lead, onCall: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, WinBorder),
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(lead.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        statusLabel(lead.status),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (lead.status == "pending") WinAmber else WinGreen,
+                        modifier = Modifier
+                            .background(WinGreenSoft, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
+                Text(
+                    listOfNotNull(lead.phone, lead.company?.takeIf { it.isNotBlank() })
+                        .joinToString(" · "),
+                    color = WinInkMuted,
+                    fontSize = 12.sp,
+                )
+            }
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .background(WinGreenSoft, CircleShape)
+                    .clickable { onCall() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Phone, contentDescription = "কল করুন", tint = WinGreen)
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoBanner() {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = WinGreenSoft),
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text("উইনস্টোন এজেন্ট সিস্টেম", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = WinGreen)
+            Text(
+                "কল, রেকর্ডিং ও রিপোর্ট ইন্টারনেট ছাড়াও ফোনে জমা থাকে এবং নেটওয়ার্ক ফিরলে নিজে থেকেই CRM-এ চলে যায়।",
+                fontSize = 12.sp,
+                color = WinInkMuted,
+            )
+        }
+    }
+}
+
+/** নিচের নেভিগেশন — পাঁচটি ট্যাব, লিড ও ফলো-আপে সংখ্যার ব্যাজ। */
+@Composable
+private fun DeskBottomBar(
+    tab: Int,
+    onTab: (Int) -> Unit,
+    leadBadge: Int,
+    followUpBadge: Int,
+) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+        val items = listOf(
+            Triple("ড্যাশবোর্ড", Icons.Filled.GridView, 0),
+            Triple("লিড", Icons.Filled.Groups, leadBadge),
+            Triple("ফলো-আপ", Icons.Filled.CalendarMonth, followUpBadge),
+            Triple("পারফরম্যান্স", Icons.Filled.BarChart, 0),
+            Triple("প্রোফাইল", Icons.Filled.Person, 0),
+        )
+        items.forEachIndexed { index, (label, icon, badge) ->
+            NavigationBarItem(
+                selected = tab == index,
+                onClick = { onTab(index) },
+                icon = {
+                    if (badge > 0) {
+                        BadgedBox(badge = {
+                            Badge(containerColor = WinGreen, contentColor = MaterialTheme.colorScheme.onPrimary) {
+                                Text(badge.toString(), fontSize = 9.sp)
+                            }
+                        }) { Icon(icon, contentDescription = label) }
+                    } else {
+                        Icon(icon, contentDescription = label)
+                    }
+                },
+                label = { Text(label, fontSize = 10.sp) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = WinGreen,
+                    selectedTextColor = WinGreen,
+                    indicatorColor = WinGreenSoft,
+                    unselectedIconColor = WinInkMuted,
+                    unselectedTextColor = WinInkMuted,
+                ),
+            )
+        }
+    }
+}
+
 /**
  * Message composer for the lead's WhatsApp. Sending opens WhatsApp on this phone
  * and syncs the same text to the CRM lead timeline.
@@ -377,56 +727,10 @@ private fun WhatsAppDialog(lead: Lead, onDismiss: () -> Unit, onSend: (String) -
 }
 
 @Composable
-private fun DeskHeader(agentName: String, employeeId: String, onRefresh: () -> Unit, onSignOut: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("এজেন্ট ডেস্ক", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Text("$agentName · $employeeId", color = WinInkMuted, fontSize = 13.sp)
-        }
-        OutlinedButton(onClick = onRefresh) { Text("রিফ্রেশ") }
-        Spacer(Modifier.width(8.dp))
-        TextButton(onClick = onSignOut) { Text("সাইন আউট") }
-    }
-}
-
-@Composable
-private fun StatsRow(state: DeskUiState) {
-    val calls = state.data?.calls.orEmpty()
-    val talkMinutes = calls.sumOf { it.durationSeconds } / 60
-    val pending = state.data?.leads.orEmpty().count { it.status == "pending" }
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        StatChip("কল", calls.size.toString(), Modifier.weight(1f))
-        StatChip("কথা (মিনিট)", talkMinutes.toString(), Modifier.weight(1f))
-        StatChip("অপেক্ষমাণ লিড", pending.toString(), Modifier.weight(1f))
-        StatChip("ফলো-আপ", state.data?.leads.orEmpty().count { it.status == "follow_up" }.toString(), Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun StatChip(label: String, value: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .background(WinGreenSoft, RoundedCornerShape(12.dp))
-            .padding(vertical = 10.dp, horizontal = 8.dp),
-    ) {
-        Column {
-            Text(value, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(label, fontSize = 11.sp, color = WinInkMuted)
-        }
-    }
-}
-
-@Composable
 private fun WinCard(content: @Composable () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, WinBorder),
+        border = BorderStroke(1.dp, WinBorder),
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -745,14 +1049,19 @@ private fun ReportFilterRow(
 
 @Composable
 private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, WinBorder),
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(Modifier.padding(12.dp)) {
             Text(
                 row.leadName ?: row.phone ?: "অজানা নম্বর",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
             )
-            row.phone?.let { Text(it, fontSize = 12.sp) }
+            row.phone?.let { Text(it, fontSize = 12.sp, color = WinInkMuted) }
             Spacer(Modifier.height(4.dp))
             Text(
                 listOfNotNull(
@@ -762,6 +1071,7 @@ private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
                     if (row.status == "pending") "জমা হয়নি" else null,
                 ).joinToString(" · "),
                 fontSize = 12.sp,
+                color = if (row.status == "pending") WinRed else Color.Unspecified,
             )
             row.summary?.let {
                 Spacer(Modifier.height(4.dp))
