@@ -106,7 +106,7 @@ export const Route = createFileRoute("/api/public/agent/report")({
           ? await supabaseAdmin
               .from("call_recordings")
               .select(
-                "id, analysis_status, ai_summary, sentiment, customer_objections, deal_stage, is_two_sided, recorder_source",
+                "id, analysis_status, ai_summary, sentiment, customer_objections, deal_stage, is_two_sided, recorder_source, call_direction, call_status",
               )
               .eq("id", report.recording_id)
               .maybeSingle()
