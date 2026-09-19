@@ -598,6 +598,38 @@ export async function submitCallReport(input: {
     };
   }
 
+  // Honesty check: does the phone's own record support the report? A real call
+  // on a phone that failed to measure the duration is still accepted — but a
+  // "কথা হয়েছে" with no evidence at all is flagged and the agent is warned.
+  const trust = reportTrust({
+    claimedConnected: received,
+    measuredSeconds: report.duration_seconds ?? 0,
+    declaredSeconds: input.durationSeconds ?? 0,
+    hasRecording: Boolean(report.recording_id),
+    callStartedAt: report.call_started_at ?? null,
+  });
+  if (trust.suspicious) {
+    try {
+      await supabaseAdmin.from("system_alerts").insert({
+        code: "call_report_unverified",
+        severity: "warning",
+        title: "কল রিপোর্ট ফোনের রেকর্ডের সঙ্গে মেলেনি",
+        detail: `${trust.reasons.join("; ")} — report:${report.id}`,
+        action: "এজেন্টের সঙ্গে কথা বলুন — কল না করে রিপোর্ট দেওয়া হয়েছে কি না যাচাই করুন",
+      });
+      const { logAudit: logTrustAudit } = await import("@/lib/audit.server");
+      await logTrustAudit({
+        action: "call_report_unverified",
+        entityType: "call_report",
+        entityId: report.id,
+        actorProfileId: input.agentId,
+        metadata: { leadId: report.lead_id, reasons: trust.reasons, category },
+      });
+    } catch (alertError) {
+      console.error("unverified report alert failed:", alertError);
+    }
+  }
+
   // The next queued call becomes the open report right away, so the popup
   // returns for every call that happened while this one was being written.
   const nextQueued = await promoteNextQueuedReport(input.agentId);
@@ -609,6 +641,8 @@ export async function submitCallReport(input: {
     review,
     nextReportId: nextQueued,
     workState: received && classified ? ("completed" as const) : ("pending" as const),
+    retryQueued: !(received && classified),
+    warning: trust.warning,
   };
 
 }
