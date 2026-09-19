@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.provider.CallLog
 import androidx.core.content.ContextCompat
 import com.winstone.connect.data.sync.CallSyncQueue
+import com.winstone.connect.data.sync.PendingReportWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
