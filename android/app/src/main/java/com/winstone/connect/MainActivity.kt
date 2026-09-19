@@ -55,7 +55,16 @@ class MainActivity : ComponentActivity() {
                     SignInScreen(
                         error = state.error,
                         loading = state.loading,
-                        onSignIn = vm::signIn,
+                        onSignIn = { id, pass -> vm.signIn(id, pass) },
+                    )
+                } else if (AgentSession.selectedRoleNow(this@MainActivity).isNullOrBlank()) {
+                    RoleSelectionScreen(
+                        agentName = state.agentName ?: "",
+                        onSelectRole = { role ->
+                            androidx.lifecycle.lifecycleScope.launchWhenStarted {
+                                AgentSession.saveSelectedRole(this@MainActivity, role)
+                            }
+                        },
                     )
                 } else {
                     DeskScreen(
