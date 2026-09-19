@@ -165,7 +165,7 @@ export function SupportChat() {
 
   const openAttachment = async (path: string) => {
     try {
-      const { url } = await getSupportAttachmentUrl({ data: { path } });
+      const { url } = await getSupportAttachmentUrl({ data: { token: token!, path } });
       window.open(url, "_blank", "noopener");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not open the file");
