@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { callEvidence, callSessionKey } from "@/lib/call-evidence";
+import type { CanonicalCall } from "@/lib/crm-data";
+
 import { leadOwner } from "./lead-owner";
 import { z } from "zod";
 
@@ -26,7 +29,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     const caller = await resolveCaller(data.token ?? null);
 
     if (caller.scope === "none")
-      return { profiles: [], leads: [], calls: [], messages: [], events: [] };
+      return { profiles: [], leads: [], calls: [], callEvents: [], messages: [], events: [] };
 
     // The Data API caps a single response at 1000 rows, which silently truncated
     // the floor to "1000 leads". Page through so every KPI counts every lead.
@@ -53,7 +56,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
       return { data: rows, error: null as null };
     };
 
-    const [profiles, leads, calls, messages, events] = await Promise.all([
+    const [profiles, leads, calls, callReports, messages, events] = await Promise.all([
       supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
       allLeads(),
       supabaseAdmin
@@ -61,6 +64,14 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         .select("*")
         .order("created_at", { ascending: false })
         .limit(500),
+      supabaseAdmin
+        .from("call_reports")
+        .select(
+          "id, agent_id, lead_id, connected, connection_verified, duration_seconds, recording_id, call_started_at, call_ended_at, submitted_at",
+        )
+        .eq("status", "submitted")
+        .order("submitted_at", { ascending: false })
+        .limit(5000),
       supabaseAdmin
         .from("whatsapp_interactions")
         .select("*")
@@ -72,8 +83,35 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false })
         .limit(1000),
     ]);
-    const failed = [profiles, leads, calls, messages, events].find((r) => r.error);
+    const failed = [profiles, leads, calls, callReports, messages, events].find((r) => r.error);
     if (failed?.error) throw new Error(failed.error.message);
+
+    // Canonical call layer: one submitted report = one attempt, de-duplicated per
+    // call session, and "connected" only with telephony evidence.
+    const seenSessions = new Set<string>();
+    const callEvents: CanonicalCall[] = [];
+    for (const row of callReports.data ?? []) {
+      const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id });
+      if (seenSessions.has(key)) continue;
+      seenSessions.add(key);
+      const measured = row.duration_seconds ?? 0;
+      const verified = callEvidence({
+        claimedConnected: row.connected !== false,
+        measuredSeconds: row.duration_seconds,
+        hasRecording: Boolean(row.recording_id),
+        callStartedAt: row.call_started_at,
+        callEndedAt: row.call_ended_at,
+      }).connected;
+      callEvents.push({
+        id: row.id,
+        agentId: row.agent_id,
+        leadId: row.lead_id,
+        at: row.call_ended_at ?? row.submitted_at ?? new Date().toISOString(),
+        verifiedConnected: row.connection_verified === true || verified,
+        verifiedSeconds: measured > 0 ? measured : null,
+        recordingId: row.recording_id,
+      });
+    }
 
     if (caller.scope === "agent" && caller.profile) {
       const me = caller.profile.id;
@@ -84,6 +122,9 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         leads: myLeads,
         calls: (calls.data ?? []).filter(
           (c) => c.agent_id === me || (c.lead_id && myLeadIds.has(c.lead_id)),
+        ),
+        callEvents: callEvents.filter(
+          (c) => c.agentId === me || (c.leadId && myLeadIds.has(c.leadId)),
         ),
         messages: (messages.data ?? []).filter(
           (m) => m.agent_id === me || (m.lead_id && myLeadIds.has(m.lead_id)),
@@ -98,6 +139,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
       profiles: profiles.data ?? [],
       leads: leads.data ?? [],
       calls: calls.data ?? [],
+      callEvents,
       messages: messages.data ?? [],
       events: events.data ?? [],
     };
