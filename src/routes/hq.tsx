@@ -6,12 +6,10 @@ import { AgentDossier } from "@/components/crm/AgentDossier";
 import { FloorAllocationPanel } from "@/components/crm/AllocationStatusCard";
 import { FloorPerformancePanel } from "@/components/crm/DailyPerformanceCard";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
-import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
 import { ExecutiveBrief } from "@/components/crm/ExecutiveBrief";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
-import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
@@ -20,11 +18,10 @@ import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
-import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 
-import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
+import { buildTimeline, useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/hq")({
   head: () => ({
