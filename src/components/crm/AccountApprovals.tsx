@@ -68,13 +68,13 @@ export function AccountApprovals() {
               <p className="truncate text-sm font-medium">{account.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-                {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"} ·{" "}
+                এজেন্ট ·{" "}
                 {STATUS_LABELS[account.approval_status] ?? account.approval_status}
               </p>
             </div>
             {account.approval_status === "approved" ? (
               <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                {account.role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
+                এজেন্ট
               </span>
             ) : (
               <div className="flex gap-1.5">

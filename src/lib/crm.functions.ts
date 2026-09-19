@@ -220,7 +220,7 @@ export const autoDistributeLeads = createServerFn({ method: "POST" })
           .from("profiles")
           .select("id")
           .eq("is_active", true)
-          .in("role", ["agent", "team_leader"])
+          .eq("role", "agent")
           .order("name"),
         supabaseAdmin.from("leads").select("id").is("assigned_to", null).order("created_at"),
       ]);
@@ -301,7 +301,7 @@ export const importLeads = createServerFn({ method: "POST" })
         .from("profiles")
         .select("id")
         .eq("is_active", true)
-        .in("role", ["agent", "team_leader"])
+        .eq("role", "agent")
         .order("name");
       if (error) throw new Error(error.message);
       agents = activeAgents ?? [];

@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
             .select("id, name")
             .eq("id", requestedAgentId)
             .eq("is_active", true)
-            .in("role", ["agent", "team_leader"])
+            .eq("role", "agent")
             .maybeSingle();
           if (agent) {
             assignedTo = agent.id;
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
               .from("profiles")
               .select("id")
               .eq("is_active", true)
-              .in("role", ["agent", "team_leader"])
+              .eq("role", "agent")
               .order("name"),
             supabaseAdmin.from("leads").select("assigned_to").neq("status", "closed"),
           ]);

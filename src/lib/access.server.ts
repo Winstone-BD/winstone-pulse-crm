@@ -91,12 +91,8 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
   }
 
   return {
-    scope:
-      profile.role === "admin"
-        ? "authority"
-        : profile.role === "team_leader"
-          ? "coordinator"
-          : "agent",
+    // Coordinator is no longer a staff role: only authority accounts dispatch.
+    scope: profile.role === "admin" ? "authority" : "agent",
     profile,
     userId,
     approval,

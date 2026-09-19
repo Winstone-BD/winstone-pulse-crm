@@ -104,7 +104,7 @@ function PendingAccountActions() {
             <p className="truncate text-xs font-semibold">{account.name}</p>
             <p className="truncate text-[11px] text-muted-foreground">
               {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-              {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
+              এজেন্ট
             </p>
           </div>
           {done[account.id] ? (

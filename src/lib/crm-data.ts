@@ -158,7 +158,7 @@ export function buildAgentStats(
   messages: WhatsappMessage[],
   todayOnly = false,
 ): AgentStats[] {
-  const agents = profiles.filter((p) => p.role === "agent" || p.role === "team_leader");
+  const agents = profiles.filter((p) => p.role === "agent");
   const inWindow = (iso: string) => (todayOnly ? isToday(iso) : true);
 
   return agents
