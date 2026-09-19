@@ -79,7 +79,11 @@ import com.winstone.connect.ui.theme.WinInkMuted
 import com.winstone.connect.ui.theme.WinLive
 import com.winstone.connect.ui.theme.WinRed
 
-private const val TAB_DASHBOARD = 0
+private const val TAB_HOME = 0
+private const val TAB_LEADS = 1
+private const val TAB_CALLS = 2
+private const val TAB_AI_COACH = 3
+private const val TAB_MORE = 4
 private const val TAB_LEADS = 1
 private const val TAB_FOLLOWUPS = 2
 private const val TAB_PERFORMANCE = 3
