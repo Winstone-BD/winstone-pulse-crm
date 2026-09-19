@@ -200,7 +200,7 @@ export function PostCallReportGate() {
           ...payload,
           clientEventId: `report-${detail!.report.id}`,
         });
-        return { offline: true as const };
+        return { offline: true as const, warning: null as string | null, retryQueued: false };
       }
       const result = await submit({ data: payload });
       return {
