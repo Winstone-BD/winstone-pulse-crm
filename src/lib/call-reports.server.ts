@@ -382,7 +382,7 @@ export async function submitCallReport(input: {
   // the report is still stored, so nothing real is ever lost.
   const evidence = callEvidence({
     claimedConnected,
-    callStatus: input.callStatus,
+    callStatus: input.callStatus ?? null,
     measuredSeconds: report.duration_seconds,
     hasRecording: Boolean(report.recording_id),
     callStartedAt: report.call_started_at,
