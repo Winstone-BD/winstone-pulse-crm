@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/public/agent/workspace")({
         const { data: leads, error: leadsError } = await supabaseAdmin
           .from("leads")
           .select(
-            "id, name, phone_number, company, notes, status, outcome_category, call_attempts, source, created_at, updated_at, work_date, work_state, last_call_at, classified_at",
+            "id, name, phone_number, company, notes, status, outcome_category, call_attempts, source, created_at, updated_at, work_date, work_state, last_call_at, classified_at, carried_from_date, assignment_source",
           )
           .or(`assigned_to.eq.${agent.id},assigned_agent_id.eq.${agent.id}`)
           .order("updated_at", { ascending: false })
@@ -88,9 +88,24 @@ export const Route = createFileRoute("/api/public/agent/workspace")({
             ])
           : [{ data: [] }, { data: [] }];
 
+        // The SAME allocation state the web dashboard shows. The app never
+        // computes a quota, a pending count or an excess number of its own, and
+        // it never uses the device date — this is the Asia/Dhaka business day.
+        const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
+        const { dhakaToday } = await import("@/lib/lead-pool.server");
+        const board = await floorAllocationStatus(dhakaToday());
+        const allocation = {
+          work_date: board.workDate,
+          special: board.special,
+          pool_available: board.poolAvailable,
+          shortage: board.shortage,
+          me: board.agents.find((row) => row.agentId === agent.id) ?? null,
+        };
+
         return json({
           ok: true,
           server_time: new Date().toISOString(),
+          allocation,
           agent,
           roster: roster ?? [],
           leads: leads ?? [],
