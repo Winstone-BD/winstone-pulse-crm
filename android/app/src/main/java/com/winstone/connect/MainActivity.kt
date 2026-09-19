@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     RoleSelectionScreen(
                         agentName = state.agentName ?: "",
                         onSelectRole = { role ->
-                            androidx.lifecycle.lifecycleScope.launchWhenStarted {
+                            lifecycleScope.launch {
                                 AgentSession.saveSelectedRole(this@MainActivity, role)
                             }
                         },
