@@ -32,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,9 +67,22 @@ import com.winstone.connect.ui.theme.WinSurface
 import kotlinx.coroutines.launch
 
 /**
- * V2 Agent Dashboard — matches the mockup:
- * greeting header, today's progress, KPI tiles, start-calling CTA,
- * today's priorities, and a quick scheduled-calls list.
+ * V2.10 Agent Dashboard — daily authoritative KPIs from the same server API as web.
+ *
+ * The phone never computes its own target, pending count or performance numbers.
+ * Everything here comes from /api/public/agent/dashboard-metrics, so the Android
+ * app, the web desk and Executive HQ always show the same figures.
+ *
+ * Metrics shown:
+ *   - লক্ষ্য (target quota)
+ *   - হাতে আছে (assigned/held workload)
+ *   - কল করা (actual calls attempted)
+ *   - কথা হয়েছে (connected calls)
+ *   - সম্ভাবনাময় (qualified leads)
+ *   - ফলো-আপ শেষ (follow-ups completed, with due hint)
+ *   - সাইট ভিজিট (site visits completed, with scheduled hint)
+ *   - বুকিং (bookings)
+ *   - অতিরিক্ত পেন্ডিং (excess pending / dispute)
  */
 @Composable
 fun AgentDashboardScreen(
@@ -89,7 +101,8 @@ fun AgentDashboardScreen(
 
     LaunchedEffect(Unit) {
         loading = true
-        metrics = runCatching { WinstoneApi.fetchDashboardMetrics() }.getOrNull()
+        metrics = runCatching { WinstoneApi.fetchDashboardMetrics() }
+            .getOrNull()
             ?.let { DashboardMetrics.fromJson(it) }
         loading = false
     }
@@ -109,18 +122,95 @@ fun AgentDashboardScreen(
         item {
             ProgressCard(
                 percent = metrics?.progressPercent ?: 0,
-                assigned = metrics?.target ?: 0,
+                target = metrics?.target ?: 0,
+                assigned = metrics?.assigned ?: 0,
                 called = metrics?.called ?: 0,
                 connected = metrics?.connected ?: 0,
             )
         }
 
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // সব সংখ্যা সার্ভারের গণনা — বাস্তবে যা হয়েছে, তাই।
-                KpiTile("Qualified", metrics?.qualified ?: 0, "সম্ভাবনাময়", Modifier.weight(1f), WinAmber)
-                KpiTile("Follow-up", metrics?.followUpsCompleted ?: 0, "ফলো-আপ শেষ", Modifier.weight(1f), WinGreen)
-                KpiTile("Booking", metrics?.bookings ?: 0, "বুকিং", Modifier.weight(1f), WinLive)
+            Text(
+                "আজকের আসল কাজ",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = WinInk,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+
+        // 3x3 authoritative KPI grid — same names and sources as the web CRM.
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MetricBox(
+                        label = "লক্ষ্য",
+                        value = metrics?.target?.toString() ?: "0",
+                        hint = "কোটা",
+                        modifier = Modifier.weight(1f),
+                        accent = WinInkMuted,
+                    )
+                    MetricBox(
+                        label = "হাতে আছে",
+                        value = metrics?.assigned?.toString() ?: "0",
+                        hint = "অ্যাসাইন করা",
+                        modifier = Modifier.weight(1f),
+                        accent = WinAmber,
+                    )
+                    MetricBox(
+                        label = "কল করা",
+                        value = metrics?.called?.toString() ?: "0",
+                        hint = "আসল কল",
+                        modifier = Modifier.weight(1f),
+                        accent = WinGreen,
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MetricBox(
+                        label = "কথা হয়েছে",
+                        value = metrics?.connected?.toString() ?: "0",
+                        hint = "${metrics?.connectRate ?: 0}% সংযোগ",
+                        modifier = Modifier.weight(1f),
+                        accent = WinGreen,
+                    )
+                    MetricBox(
+                        label = "সম্ভাবনাময়",
+                        value = metrics?.qualified?.toString() ?: "0",
+                        hint = "Qualified",
+                        modifier = Modifier.weight(1f),
+                        accent = WinAmber,
+                    )
+                    MetricBox(
+                        label = "ফলো-আপ",
+                        value = metrics?.followUpsCompleted?.toString() ?: "0",
+                        hint = "${metrics?.followUpsDue ?: 0}টি বাকি",
+                        modifier = Modifier.weight(1f),
+                        accent = WinLive,
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MetricBox(
+                        label = "সাইট ভিজিট",
+                        value = metrics?.siteVisitsCompleted?.toString() ?: "0",
+                        hint = "${metrics?.siteVisitsScheduled ?: 0}টি নির্ধারিত",
+                        modifier = Modifier.weight(1f),
+                        accent = WinLive,
+                    )
+                    MetricBox(
+                        label = "বুকিং",
+                        value = metrics?.bookings?.toString() ?: "0",
+                        hint = "${metrics?.conversionRate ?: 0}% রূপান্তর",
+                        modifier = Modifier.weight(1f),
+                        accent = WinGreen,
+                    )
+                    MetricBox(
+                        label = "অতিরিক্ত পেন্ডিং",
+                        value = metrics?.excessPending?.toString() ?: "0",
+                        hint = "মীমাংসাধীন",
+                        modifier = Modifier.weight(1f),
+                        accent = WinRed,
+                    )
+                }
             }
         }
 
@@ -178,15 +268,6 @@ fun AgentDashboardScreen(
                 icon = Icons.Filled.Person,
                 color = WinGreen,
                 onClick = onViewAllLeads,
-            )
-        }
-        item {
-            PriorityCard(
-                label = "অতিরিক্ত পেন্ডিং (মীমাংসাধীন)",
-                count = metrics?.excessPending ?: 0,
-                icon = Icons.Filled.Call,
-                color = WinInkMuted,
-                onClick = onViewAllFollowUps,
             )
         }
 
@@ -270,7 +351,13 @@ private fun DashboardHeader(agentName: String, employeeId: String, today: String
 }
 
 @Composable
-private fun ProgressCard(percent: Int, assigned: Int, called: Int, connected: Int) {
+private fun ProgressCard(
+    percent: Int,
+    target: Int,
+    assigned: Int,
+    called: Int,
+    connected: Int,
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = WinSurface),
         shape = RoundedCornerShape(18.dp),
@@ -304,38 +391,33 @@ private fun ProgressCard(percent: Int, assigned: Int, called: Int, connected: In
             )
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MetricBox(label = "Assigned", value = assigned.toString(), Modifier.weight(1f))
-                MetricBox(label = "Called", value = called.toString(), Modifier.weight(1f))
-                MetricBox(label = "Connected", value = connected.toString(), Modifier.weight(1f))
+                MetricBox(label = "Target", value = target.toString(), modifier = Modifier.weight(1f))
+                MetricBox(label = "Held", value = assigned.toString(), modifier = Modifier.weight(1f))
+                MetricBox(label = "Called", value = called.toString(), modifier = Modifier.weight(1f))
+                MetricBox(label = "Connected", value = connected.toString(), modifier = Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun MetricBox(label: String, value: String, modifier: Modifier) {
+private fun MetricBox(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    hint: String? = null,
+    accent: Color = WinInkMuted,
+) {
     Column(
         modifier = modifier
             .background(WinCreamDeep, RoundedCornerShape(12.dp))
-            .padding(vertical = 10.dp),
+            .padding(vertical = 10.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(value, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = WinInk)
-        Text(label, fontSize = 11.sp, color = WinInkMuted)
-    }
-}
-
-@Composable
-private fun KpiTile(label: String, value: Int, hint: String, modifier: Modifier, accent: Color) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = WinSurface),
-        shape = RoundedCornerShape(14.dp),
-        modifier = modifier,
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Text(value.toString(), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = WinInk)
-            Text(label, fontSize = 12.sp, color = WinInkMuted)
-            Text(hint, fontSize = 10.sp, color = accent, fontWeight = FontWeight.SemiBold)
+        Text(label, fontSize = 10.sp, color = WinInkMuted, lineHeight = 12.sp)
+        if (hint != null) {
+            Text(hint, fontSize = 9.sp, color = accent, fontWeight = FontWeight.SemiBold, lineHeight = 11.sp)
         }
     }
 }
