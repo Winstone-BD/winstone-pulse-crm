@@ -151,6 +151,10 @@ object CallSyncQueue {
         recordingNote: String? = null,
         /** "incoming" for a customer callback, "outgoing" for a dialer call. */
         direction: String = "incoming",
+        /** "realtime" (observed live) or "call_log" (found later in the call log). */
+        source: String = "realtime",
+        /** When the call happened, for log entries that are reported late. */
+        atIso: String? = null,
     ) {
         enqueue(
             context,
@@ -163,6 +167,8 @@ object CallSyncQueue {
                 .putString(KEY_STATE, state)
                 .putInt(KEY_DURATION, durationSeconds)
                 .putString(KEY_REC_NOTE, recordingNote)
+                .putString(KEY_CALL_SOURCE, source)
+                .putString(KEY_AT, atIso)
                 .apply { recordingSupported?.let { putBoolean(KEY_REC_SUPPORTED, it) } }
                 .build(),
         )
@@ -202,6 +208,8 @@ object CallSyncQueue {
     const val KIND_REPORT_SUBMIT = "report_submit"
     const val KIND_INCOMING_CALL = "incoming_call"
     const val KEY_DIRECTION = "direction"
+    const val KEY_CALL_SOURCE = "call_source"
+    const val KEY_AT = "at"
 }
 
 class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
@@ -248,6 +256,8 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                             else null,
                         recordingNote = inputData.getString(CallSyncQueue.KEY_REC_NOTE),
                         direction = inputData.getString(CallSyncQueue.KEY_DIRECTION) ?: "incoming",
+                        source = inputData.getString(CallSyncQueue.KEY_CALL_SOURCE) ?: "realtime",
+                        atIso = inputData.getString(CallSyncQueue.KEY_AT),
                     )
                     Result.success()
                 }

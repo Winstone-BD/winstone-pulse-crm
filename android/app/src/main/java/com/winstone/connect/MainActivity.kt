@@ -67,6 +67,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Every time the agent opens the app, reconcile the phone's call log: a call
+     * made or received through any other app still becomes a CRM entry with its
+     * mandatory report.
+     */
+    override fun onResume() {
+        super.onResume()
+        Thread { runCatching { com.winstone.connect.telephony.CallLogSweeper.sweep(this) } }.start()
+    }
+
     private fun requestCallPermissions() {
         val wanted = mutableListOf(
             Manifest.permission.CALL_PHONE,

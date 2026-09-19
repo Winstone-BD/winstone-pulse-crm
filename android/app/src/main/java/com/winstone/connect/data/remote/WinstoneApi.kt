@@ -352,12 +352,17 @@ object WinstoneApi {
         recordingSupported: Boolean? = null,
         recordingNote: String? = null,
         direction: String = "incoming",
+        /** "realtime" observed live, or "call_log" found later in the system log. */
+        source: String = "realtime",
+        atIso: String? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
         val payload = JSONObject().apply {
             put("call_uid", callUid)
             put("phone_number", phoneNumber)
             put("state", state)
             put("direction", direction)
+            put("source", source)
+            atIso?.let { put("at", it) }
             durationSeconds?.let { put("duration_seconds", it) }
             recordingSupported?.let { put("recording_supported", it) }
             recordingNote?.let { if (it.isNotBlank()) put("recording_note", it.take(300)) }
