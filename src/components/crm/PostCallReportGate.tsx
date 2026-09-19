@@ -202,15 +202,27 @@ export function PostCallReportGate() {
         });
         return { offline: true as const };
       }
-      await submit({ data: payload });
-      return { offline: false as const };
+      const result = await submit({ data: payload });
+      return {
+        offline: false as const,
+        warning: "warning" in result ? ((result as { warning?: string | null }).warning ?? null) : null,
+        retryQueued:
+          "retryQueued" in result
+            ? Boolean((result as { retryQueued?: boolean }).retryQueued)
+            : false,
+      };
     },
     onSuccess: (result) => {
       toast.success(
         result.offline
           ? "ইন্টারনেট নেই — রিপোর্ট এই ফোনে সেভ হয়েছে, নেট ফিরলে নিজেই সার্ভারে যাবে"
-          : "রিপোর্ট জমা হয়েছে — পরের লিড খুলে গেল",
+          : result.retryQueued
+            ? "রিপোর্ট জমা হয়েছে — কথা হয়নি, তাই টাস্ক শেষ হয়নি; লিডটি আবার কলের জন্য কিউতে গেল"
+            : "রিপোর্ট জমা হয়েছে — পরের লিড খুলে গেল",
       );
+      if (!result.offline && result.warning) {
+        toast.warning(result.warning, { duration: 12_000 });
+      }
       void queryClient.invalidateQueries({ queryKey: ["pending-call-report"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
