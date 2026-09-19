@@ -193,7 +193,7 @@ export const logAnyNumberCall = createServerFn({ method: "POST" })
 
     const phone = normalizeLeadPhone(data.phoneNumber);
     // Same number = same lead: an existing lead is reused, never duplicated.
-    const status = await resolveLeadIdByPhone(data.phoneNumber);
+    const status = await resolveLeadIdByPhone(data.phoneNumber, me.id);
     if (status.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
 
     let leadId = status.existingLeadId;
