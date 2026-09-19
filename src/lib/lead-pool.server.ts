@@ -174,9 +174,10 @@ export async function distributeDailyLeads(options: {
   const { quotaFor } = await import("@/lib/lead-quota");
   const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
 
-  // Idempotency: what each desk already holds for today is subtracted from its
-  // quota, so a second run (cron retry, double click) only fills real gaps.
-  const held = await assignedTodayByAgent(today);
+  // Pending first: today's unfinished leads fill the quota, and only the gap
+  // left over is topped up from the database. Idempotent — a second run in the
+  // same day fills real gaps only.
+  const held = await openWorkloadByAgent(today);
   const shortfallByAgent = new Map<string, number>();
   for (const agent of agents) {
     const quota = quotas.get(agent.id) ?? options.perAgent;
