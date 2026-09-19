@@ -25,9 +25,19 @@ export async function getLeadPhoneStatus(raw: string): Promise<LeadPhoneStatus> 
  * matched against the lead list itself and the missing key is written back —
  * after that the unique index keeps the number single forever.
  */
-export async function resolveLeadIdByPhone(raw: string): Promise<LeadPhoneStatus> {
+export async function resolveLeadIdByPhone(
+  raw: string,
+  /**
+   * The agent this call belongs to. The same number can exist on more than one
+   * lead card (imports in different formats, older duplicates), so when this
+   * agent already owns a card for the number, their own card is the one the call
+   * and its report attach to — never a colleague's.
+   */
+  preferAgentId?: string | null,
+): Promise<LeadPhoneStatus> {
   const status = await getLeadPhoneStatus(raw);
-  if (status.existingLeadId || status.canonicalPhones.length === 0) return status;
+  if (status.canonicalPhones.length === 0) return status;
+  if (status.existingLeadId && !preferAgentId) return status;
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { extractBangladeshPhones } = await import("@/lib/lead-phone");
@@ -37,16 +47,37 @@ export async function resolveLeadIdByPhone(raw: string): Promise<LeadPhoneStatus
     .join(",");
   const { data: candidates } = await supabaseAdmin
     .from("leads")
-    .select("id, phone_number, created_at")
+    .select("id, phone_number, created_at, assigned_agent_id, assigned_to")
     .or(filter)
     .order("created_at", { ascending: true })
     .limit(50);
 
-  const match = (candidates ?? []).find((lead) =>
+  const sameNumber = (candidates ?? []).filter((lead) =>
     extractBangladeshPhones(lead.phone_number ?? "").some((phone) =>
       status.canonicalPhones.includes(phone),
     ),
   );
+  const ownByAgent = preferAgentId
+    ? sameNumber.find(
+        (lead) =>
+          lead.assigned_agent_id === preferAgentId || lead.assigned_to === preferAgentId,
+      )
+    : undefined;
+
+  if (status.existingLeadId) {
+    // The index already knows the number: only an own-card match may override it.
+    if (!ownByAgent || ownByAgent.id === status.existingLeadId) return status;
+    const { data: worked } = await supabaseAdmin.rpc("lead_has_work_history", {
+      _lead_id: ownByAgent.id,
+    });
+    return {
+      canonicalPhones: status.canonicalPhones,
+      existingLeadId: ownByAgent.id,
+      alreadyWorked: Boolean(worked) || status.alreadyWorked,
+    };
+  }
+
+  const match = ownByAgent ?? sameNumber[0];
   if (!match) return status;
 
   for (const phone of extractBangladeshPhones(match.phone_number ?? "")) {
