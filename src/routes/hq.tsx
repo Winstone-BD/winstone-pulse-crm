@@ -127,25 +127,6 @@ function ControlBoard() {
       }));
   }, [leads]);
 
-  const sentimentRows = useMemo(() => {
-    const labels: Record<string, string> = {
-      positive: "পজিটিভ",
-      neutral: "নিউট্রাল",
-      negative: "নেগেটিভ",
-    };
-    const counts = new Map<string, number>();
-    for (const call of calls) {
-      if (!call.sentiment) continue;
-      counts.set(call.sentiment, (counts.get(call.sentiment) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([key, value]) => ({
-        label: labels[key] ?? key,
-        value,
-        calls: calls.filter((c) => c.sentiment === key),
-      }));
-  }, [calls]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
