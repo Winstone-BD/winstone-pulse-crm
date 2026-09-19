@@ -48,6 +48,7 @@ import com.winstone.connect.ui.theme.WinSurface
 @Composable
 fun RoleSelectionScreen(
     agentName: String,
+    allowedRoles: List<String>,
     onSelectRole: (String) -> Unit,
 ) {
     Column(
@@ -98,8 +99,12 @@ fun RoleSelectionScreen(
             ),
         )
 
+        // Only the desks the server allows for this account are shown. A sales
+        // agent sees just their own desk — never Executive HQ or IT Console.
+        val visible = roles.filter { allowedRoles.contains(it.key) }
+
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            roles.forEach { role ->
+            visible.forEach { role ->
                 RoleCardView(role) { onSelectRole(role.key) }
             }
         }

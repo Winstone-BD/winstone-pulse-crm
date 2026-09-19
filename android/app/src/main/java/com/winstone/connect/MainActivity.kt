@@ -59,9 +59,13 @@ class MainActivity : ComponentActivity() {
                         loading = state.loading,
                         onSignIn = { id, pass -> vm.signIn(id, pass) },
                     )
-                } else if (AgentSession.selectedRoleNow(this@MainActivity).isNullOrBlank()) {
+                } else if (
+                    AgentSession.selectedRoleNow(this@MainActivity).isNullOrBlank() &&
+                    AgentSession.allowedRolesNow(this@MainActivity).size > 1
+                ) {
                     RoleSelectionScreen(
                         agentName = state.agentName ?: "",
+                        allowedRoles = AgentSession.allowedRolesNow(this@MainActivity),
                         onSelectRole = { role ->
                             lifecycleScope.launch {
                                 AgentSession.saveSelectedRole(this@MainActivity, role)
