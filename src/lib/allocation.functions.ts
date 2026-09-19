@@ -30,7 +30,9 @@ export const myAllocationStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ workDate: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     const me = caller.profile!;
+
     const { dhakaToday } = await import("@/lib/lead-pool.server");
     const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
     const workDate = data.workDate ?? dhakaToday();
