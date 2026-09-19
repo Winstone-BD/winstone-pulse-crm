@@ -69,6 +69,35 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
           "@/lib/lead-eligibility.server"
         );
         const phone = normalizeLeadPhone(body.phone_number);
+
+        // Late call-log reconciliation: if the live receiver already reported a
+        // call to this number around the same minute, that is the same physical
+        // call — reuse it instead of logging the call twice.
+        if (body.source === "call_log") {
+          const centre = new Date(at).getTime();
+          const { data: near } = await supabaseAdmin
+            .from("call_recordings")
+            .select("id, lead_id, external_call_id, call_status")
+            .eq("agent_id", caller.profile.id)
+            .eq("phone_number", phone)
+            .gte("started_at", new Date(centre - 150_000).toISOString())
+            .lte("started_at", new Date(centre + 150_000).toISOString())
+            .limit(1)
+            .maybeSingle();
+          if (near && near.external_call_id !== body.call_uid) {
+            return json({
+              ok: true,
+              call_uid: body.call_uid,
+              lead_id: near.lead_id,
+              lead_created: false,
+              recording_id: near.id,
+              report_id: null,
+              call_status: near.call_status,
+              recording_status: "unknown",
+              duplicate_of: near.external_call_id,
+            });
+          }
+        }
         // A call from a "new" number is matched to an existing lead first, so the
         // same customer never ends up with two lead cards.
         const phoneStatus = await resolveLeadIdByPhone(body.phone_number);
