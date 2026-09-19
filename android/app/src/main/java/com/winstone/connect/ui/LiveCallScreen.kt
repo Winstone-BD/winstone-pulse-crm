@@ -255,9 +255,25 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
         (!received || (temperature != null && grade != null)) &&
         (!needsReason || reason.trim().length > 1)
 
-    ModalBottomSheet(onDismissRequest = { /* বাধ্যতামূলক — বন্ধ করা যাবে না */ }, sheetState = sheet) {
+    if (dismissed) {
+        Column(Modifier.padding(20.dp).fillMaxWidth()) {
+            Text("একটি কলের রিপোর্ট বাকি আছে", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "জমা না দিলে পরের কল শুরু করা যাবে না — লিখে শেষ করতে আবার খুলুন।",
+                fontSize = 12.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { dismissed = false }, modifier = Modifier.fillMaxWidth()) {
+                Text("রিপোর্ট খুলুন")
+            }
+        }
+        return
+    }
+
+    ModalBottomSheet(onDismissRequest = { dismissed = true }, sheetState = sheet) {
         Column(Modifier.padding(20.dp)) {
-            Text("কল রিপোর্ট (বাধ্যতামূলক)", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("কল শেষ — রিপোর্ট পূরণ করুন", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             leadLabel?.let {
                 Spacer(Modifier.height(4.dp))
                 Text(it, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
@@ -267,10 +283,10 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                 if (reportId == null) "রিপোর্ট তৈরি হচ্ছে…" else "ক্যাটাগরি বেছে নিয়ে জমা দিন — জমা না দিলে পরের কল হবে না",
                 fontSize = 12.sp,
             )
-            if (talkSeconds > 0L) {
+            if (reportId != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "এই কলে কথা হয়েছে: ${formatDuration(talkSeconds)}",
+                    "কলের ধরন: ${callTypeLabel ?: "—"} · সময়কাল: ${formatDuration(talkSeconds)}",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
