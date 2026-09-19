@@ -9,7 +9,7 @@ export function HqHeader() {
           <BarChart3 className="size-6" />
         </span>
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="page-title truncate">
             কন্ট্রোল বোর্ড
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">

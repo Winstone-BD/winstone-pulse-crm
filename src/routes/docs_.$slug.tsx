@@ -85,7 +85,7 @@ function DocPage() {
           ) : (
             <>
               <header className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{page.data.title}</h1>
+                <h1 className="page-title">{page.data.title}</h1>
                 {page.data.summary ? (
                   <p className="text-sm text-muted-foreground">{page.data.summary}</p>
                 ) : null}

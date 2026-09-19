@@ -129,7 +129,7 @@ function Dispatcher() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Lead Dispatcher</h1>
+          <h1 className="page-title">Lead Dispatcher</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             {leads.length} leads in the pipeline · {unassigned} waiting for an owner
           </p>

@@ -90,7 +90,7 @@ function Consent() {
   if (!state.signedIn) {
     return (
       <Shell>
-        <h1 className="text-lg font-semibold">Sign in to continue</h1>
+        <h1 className="page-title font-semibold">Sign in to continue</h1>
         <p className="text-sm text-muted-foreground">
           Sign in with your Google account so we know who is connecting to the CRM.
         </p>
@@ -140,7 +140,7 @@ function Consent() {
 
   return (
     <Shell>
-      <h1 className="text-lg font-semibold">Connect {clientName} to Winstone Connect</h1>
+      <h1 className="page-title font-semibold">Connect {clientName} to Winstone Connect</h1>
       <p className="text-sm text-muted-foreground">
         {clientName} will be able to read leads, call and WhatsApp history and floor activity, and
         add new leads — acting as you. Only approved email addresses can actually use these tools.

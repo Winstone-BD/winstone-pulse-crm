@@ -90,7 +90,7 @@ function CoachPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 className="page-title flex items-center gap-2">
               <Brain className="size-5 text-primary" /> AI Sales Coach
             </h1>
             <p className="text-xs text-muted-foreground sm:text-sm">

@@ -59,7 +59,7 @@ function ArticlePage() {
 
         {article.data && (
           <article className="mt-5">
-            <h1 className="text-2xl font-bold tracking-tight">{article.data.title}</h1>
+            <h1 className="page-title">{article.data.title}</h1>
             {article.data.summary && (
               <p className="mt-2 text-sm text-muted-foreground">{article.data.summary}</p>
             )}

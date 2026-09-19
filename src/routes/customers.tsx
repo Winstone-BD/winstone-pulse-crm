@@ -81,7 +81,7 @@ function CustomersPage() {
     <AppShell>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <h1 className="page-title flex items-center gap-2">
             <Users className="size-5 text-primary" /> Support customers
           </h1>
           <p className="text-xs text-muted-foreground">{rows.length} contact records</p>

@@ -43,7 +43,7 @@ export function RoleGate({
         {icon}
       </span>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="page-title">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">

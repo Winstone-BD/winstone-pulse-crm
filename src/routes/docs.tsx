@@ -51,7 +51,7 @@ function DocsIndexPage() {
     <AppShell>
       <div className="mx-auto w-full max-w-3xl space-y-5">
         <header className="space-y-1">
-          <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+          <h1 className="page-title flex items-center gap-2">
             <BookOpen className="size-5" /> ডকুমেন্টেশন
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">

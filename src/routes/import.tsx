@@ -112,7 +112,7 @@ function ImportScreen() {
   return (
     <div className="space-y-5">
       <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <h1 className="page-title flex items-center gap-2">
           <FileUp className="size-5 text-primary" /> লিড ইমপোর্ট
         </h1>
         <p className="text-sm text-muted-foreground">

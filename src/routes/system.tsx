@@ -108,7 +108,7 @@ function SystemBoard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">সিস্টেম ও বিল</h1>
+          <h1 className="page-title">সিস্টেম ও বিল</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             মূল ইঞ্জিনের অবস্থা, ডেটা আসার ঠিকানা আর মাসিক টেলিফোন খরচ।
           </p>

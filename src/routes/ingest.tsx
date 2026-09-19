@@ -57,7 +57,7 @@ function IngestPage() {
               <PlugZap className="size-7" />
             </span>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Ingest Validation</h1>
+              <h1 className="page-title">Ingest Validation</h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Endpoint health, payload checks and data problems. Master or IT PIN required.
               </p>
@@ -105,7 +105,7 @@ function IngestBoard() {
   return (
     <div className="space-y-6">
       <div className="min-w-0">
-        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 className="page-title flex items-center gap-2">
           <Stethoscope className="size-5 text-primary" /> Ingest Validation
         </h1>
         <p className="text-xs text-muted-foreground sm:text-sm">

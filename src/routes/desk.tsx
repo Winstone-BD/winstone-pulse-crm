@@ -219,7 +219,7 @@ function DeskPage() {
           {account?.signedIn ? (
             <>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">
+                <h1 className="page-title">
                   {account.approval === "rejected" ? "প্রবেশ বাতিল" : "অনুমোদনের অপেক্ষায়"}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -235,7 +235,7 @@ function DeskPage() {
           ) : (
             <>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">নিজের ডেস্কে সাইন ইন করুন</h1>
+                <h1 className="page-title">নিজের ডেস্কে সাইন ইন করুন</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।
                 </p>
@@ -260,7 +260,7 @@ function DeskPage() {
         <MyPhoneSetup />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">আমার ডেস্ক</h1>
+            <h1 className="page-title">আমার ডেস্ক</h1>
             <p className="text-xs text-muted-foreground sm:text-sm">
               নিজের লিড, কল, হোয়াটসঅ্যাপ কথা আর নতুন লিড — সব এক জায়গায়।
             </p>

@@ -84,7 +84,7 @@ function CreditsBoard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">ক্রেডিট বিল</h1>
+          <h1 className="page-title">ক্রেডিট বিল</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             এই সিস্টেমের ভেতরের এআই কাজের আসল গণনা থেকে অনুমানিত ক্রেডিট খরচ — টাকার হিসাব নয়।
           </p>
