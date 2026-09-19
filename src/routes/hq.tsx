@@ -23,8 +23,6 @@ import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
-import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
-import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
@@ -90,12 +88,6 @@ function ControlBoard() {
     () => buildAgentStats(profiles, leads, calls, messages),
     [profiles, leads, calls, messages],
   );
-
-  const chartData = stats.map((row) => ({
-    name: row.profile.name.split(" ")[0] ?? row.profile.name,
-    connected: row.connected,
-    talkMinutes: Math.round(row.talkSeconds / 60),
-  }));
 
   const funnelRows = useMemo(() => {
     const order: { key: string; label: string }[] = [
