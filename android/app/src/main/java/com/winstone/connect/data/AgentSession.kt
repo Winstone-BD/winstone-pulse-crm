@@ -155,8 +155,15 @@ object AgentSession {
 
     fun isSignedIn(): Boolean = !employeeId.isNullOrBlank()
 
+    suspend fun saveSelectedRole(context: Context, role: String) {
+        val clean = role.trim().lowercase()
+        selectedRole = clean
+        mirror(context).edit().putString(M_SELECTED_ROLE, clean).commit()
+        context.sessionStore.edit { it[SELECTED_ROLE] = clean }
+    }
+
     suspend fun clear(context: Context) {
-        employeeId = null; agentId = null; agentName = null; deviceToken = null; deviceId = null; simNumber = null
+        employeeId = null; agentId = null; agentName = null; selectedRole = null; deviceToken = null; deviceId = null; simNumber = null
         mirror(context).edit().clear().commit()
         context.sessionStore.edit { it.clear() }
     }
