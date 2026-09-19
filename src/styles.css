@@ -166,6 +166,17 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "cv11", "ss01", "tnum";
+    /* Phones and iPhones: never a sideways scrollbar, and momentum scrolling
+       that respects the notch / home-bar safe areas. */
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Wide data tables scroll inside their own box instead of pushing the page. */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   h1,
