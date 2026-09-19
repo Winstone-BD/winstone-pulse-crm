@@ -83,8 +83,11 @@ export function ExecutiveOverview({
 }) {
   const kpi = useMemo(() => {
     const today = new Date().toDateString();
+    // "যোগাযোগ হয়েছে" = লিডে সত্যিই কল হয়েছে (রিপোর্ট/কল গণনা থেকে),
+    // রেকর্ডিং সিঙ্ক আলাদা হিসাব — সেটা নিচের hint-এ দেখানো হয়।
     const connected = calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
-    const contacted = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
+    const recordedLeads = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
+    const contacted = leads.filter((l) => l.call_attempts > 0 || !!l.last_call_at).length;
     const hot = leads.filter((l) => l.temperature === "hot").length;
     const warm = leads.filter((l) => l.temperature === "warm").length;
     const followUp = leads.filter((l) => l.status === "follow_up").length;
@@ -94,6 +97,7 @@ export function ExecutiveOverview({
     return {
       total: leads.length,
       contacted,
+      recordedLeads,
       qualified: hot + warm,
       followUp,
       won,
@@ -109,7 +113,7 @@ export function ExecutiveOverview({
       { label: "নতুন লিড", value: leads.length },
       {
         label: "যোগাযোগ হয়েছে",
-        value: leads.filter((l) => l.status !== "pending").length,
+        value: leads.filter((l) => l.call_attempts > 0 || !!l.last_call_at).length,
       },
       {
         label: "কোয়ালিফাইড",
@@ -193,7 +197,7 @@ export function ExecutiveOverview({
           icon={<PhoneCall className="size-4" />}
           label="যোগাযোগ হয়েছে"
           value={String(kpi.contacted)}
-          hint={`${kpi.contactRate}% লিডে কথা`}
+          hint={`${kpi.contactRate}% লিডে কল · রেকর্ডিং সিঙ্ক ${kpi.recordedLeads}`}
         />
         <KpiCard
           icon={<Flame className="size-4" />}
