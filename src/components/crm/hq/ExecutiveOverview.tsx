@@ -97,6 +97,7 @@ export function ExecutiveOverview({
     return {
       total: leads.length,
       contacted,
+      recordedLeads,
       qualified: hot + warm,
       followUp,
       won,
