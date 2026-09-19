@@ -135,6 +135,11 @@ export const Route = createFileRoute("/api/public/agent/report")({
             temperature: body.temperature ?? null,
             grade: body.grade ?? null,
             aiDecision: body.ai_decision ?? null,
+            direction: body.direction ?? null,
+            callStatus: body.call_status ?? null,
+            durationSeconds: body.duration_seconds ?? null,
+            followUpNeeded: body.follow_up_needed ?? true,
+            followUpNote: body.follow_up_note ?? null,
           });
           return json({ ...result, ok: true });
         } catch (error) {
