@@ -43,6 +43,7 @@ import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.ed
 import { Route as ApiPublicAgentCallStartRouteImport } from './routes/api/public/agent/call-start'
 import { Route as ApiPublicAgentCallStateRouteImport } from './routes/api/public/agent/call-state'
 import { Route as ApiPublicAgentCoachRouteImport } from './routes/api/public/agent/coach'
+import { Route as ApiPublicAgentDashboardMetricsRouteImport } from './routes/api/public/agent/dashboard-metrics'
 import { Route as ApiPublicAgentDeviceCapabilityRouteImport } from './routes/api/public/agent/device-capability'
 import { Route as ApiPublicAgentIncomingCallRouteImport } from './routes/api/public/agent/incoming-call'
 import { Route as ApiPublicAgentLoginRouteImport } from './routes/api/public/agent/login'
@@ -244,6 +245,12 @@ const ApiPublicAgentCoachRoute = ApiPublicAgentCoachRouteImport.update({
   path: '/api/public/agent/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentDashboardMetricsRoute =
+  ApiPublicAgentDashboardMetricsRouteImport.update({
+    id: '/api/public/agent/dashboard-metrics',
+    path: '/api/public/agent/dashboard-metrics',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAgentDeviceCapabilityRoute =
   ApiPublicAgentDeviceCapabilityRouteImport.update({
     id: '/api/public/agent/device-capability',
@@ -435,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
+  '/api/public/agent/dashboard-metrics': typeof ApiPublicAgentDashboardMetricsRoute
   '/api/public/agent/device-capability': typeof ApiPublicAgentDeviceCapabilityRoute
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
@@ -500,6 +508,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
+  '/api/public/agent/dashboard-metrics': typeof ApiPublicAgentDashboardMetricsRoute
   '/api/public/agent/device-capability': typeof ApiPublicAgentDeviceCapabilityRoute
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
@@ -566,6 +575,7 @@ export interface FileRoutesById {
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
+  '/api/public/agent/dashboard-metrics': typeof ApiPublicAgentDashboardMetricsRoute
   '/api/public/agent/device-capability': typeof ApiPublicAgentDeviceCapabilityRoute
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
+    | '/api/public/agent/dashboard-metrics'
     | '/api/public/agent/device-capability'
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
@@ -698,6 +709,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
+    | '/api/public/agent/dashboard-metrics'
     | '/api/public/agent/device-capability'
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
@@ -763,6 +775,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
+    | '/api/public/agent/dashboard-metrics'
     | '/api/public/agent/device-capability'
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
@@ -829,6 +842,7 @@ export interface RootRouteChildren {
   ApiPublicAgentCallStartRoute: typeof ApiPublicAgentCallStartRoute
   ApiPublicAgentCallStateRoute: typeof ApiPublicAgentCallStateRoute
   ApiPublicAgentCoachRoute: typeof ApiPublicAgentCoachRoute
+  ApiPublicAgentDashboardMetricsRoute: typeof ApiPublicAgentDashboardMetricsRoute
   ApiPublicAgentDeviceCapabilityRoute: typeof ApiPublicAgentDeviceCapabilityRoute
   ApiPublicAgentIncomingCallRoute: typeof ApiPublicAgentIncomingCallRoute
   ApiPublicAgentLoginRoute: typeof ApiPublicAgentLoginRoute
@@ -1100,6 +1114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent/dashboard-metrics': {
+      id: '/api/public/agent/dashboard-metrics'
+      path: '/api/public/agent/dashboard-metrics'
+      fullPath: '/api/public/agent/dashboard-metrics'
+      preLoaderRoute: typeof ApiPublicAgentDashboardMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent/device-capability': {
       id: '/api/public/agent/device-capability'
       path: '/api/public/agent/device-capability'
@@ -1342,6 +1363,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentCallStartRoute: ApiPublicAgentCallStartRoute,
   ApiPublicAgentCallStateRoute: ApiPublicAgentCallStateRoute,
   ApiPublicAgentCoachRoute: ApiPublicAgentCoachRoute,
+  ApiPublicAgentDashboardMetricsRoute: ApiPublicAgentDashboardMetricsRoute,
   ApiPublicAgentDeviceCapabilityRoute: ApiPublicAgentDeviceCapabilityRoute,
   ApiPublicAgentIncomingCallRoute: ApiPublicAgentIncomingCallRoute,
   ApiPublicAgentLoginRoute: ApiPublicAgentLoginRoute,
