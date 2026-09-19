@@ -231,7 +231,7 @@ function SystemBoard() {
           </h3>
           <dl className="mt-2 space-y-1.5 text-sm">
             {sources.length === 0 && (
-              <p className="text-sm text-muted-foreground">এখনো কোনো লিড নেই।</p>
+              <p className="empty-note">এখনো কোনো লিড নেই।</p>
             )}
             {sources.map(([source, total]) => (
               <Row key={source} label={SOURCE_LABELS[source] ?? source} value={String(total)} />

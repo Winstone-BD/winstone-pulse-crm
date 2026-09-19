@@ -67,7 +67,7 @@ export function OpenLeadsCard() {
       {open.isPending ? (
         <p className="mt-4 text-xs text-muted-foreground">লোড হচ্ছে…</p>
       ) : leads.length === 0 ? (
-        <p className="mt-4 text-xs text-muted-foreground">এখন কোনো খালি লিড নেই।</p>
+        <p className="empty-note">এখন কোনো খালি লিড নেই।</p>
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {leads.map((lead) => (

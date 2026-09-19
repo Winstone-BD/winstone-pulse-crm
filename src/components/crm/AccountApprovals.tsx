@@ -55,7 +55,7 @@ export function AccountApprovals() {
       )}
 
       {!list.isPending && accounts.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="empty-note">
           এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}

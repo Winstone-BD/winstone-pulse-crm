@@ -198,7 +198,7 @@ function CreditsBoard() {
                 <Users className="size-4 text-primary" /> এজেন্টভিত্তিক ব্যবহার
               </h2>
               {report.agents.length === 0 && (
-                <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো তথ্য নেই।</p>
+                <p className="empty-note">এখনো কোনো তথ্য নেই।</p>
               )}
               <div className="mt-3 space-y-1.5 text-sm">
                 {report.agents.map((a) => (

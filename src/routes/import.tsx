@@ -241,7 +241,7 @@ function ImportScreen() {
           </header>
 
           {rows.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="empty-note">
               এই ফাইলে নাম ও ফোন নম্বরসহ কোনো সারি নেই।
             </p>
           ) : (

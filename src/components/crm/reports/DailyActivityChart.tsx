@@ -41,7 +41,7 @@ export function DailyActivityChart({
   const labelInterval = Math.max(0, Math.ceil(report.daily.length / 8) - 1);
 
   return (
-    <section className="card-elevated card-pad sm:p-4">
+    <section className="card-elevated card-pad">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <h2 className="section-title">

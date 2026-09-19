@@ -213,7 +213,7 @@ export function LeadDayBoard() {
       )}
 
       {dayLeads.length === 0 ? (
-        <p className="text-sm text-muted-foreground">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
+        <p className="empty-note">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
       ) : (
         <ul className="space-y-2">
           {dayLeads.map((lead) => (

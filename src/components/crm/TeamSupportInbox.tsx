@@ -193,7 +193,7 @@ export function TeamSupportInbox() {
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">এই তালিকায় এখনো কিছু নেই।</p>
+        <p className="empty-note">এই তালিকায় এখনো কিছু নেই।</p>
       ) : (
         <div className="space-y-2">
           {rows.map((ticket) => (

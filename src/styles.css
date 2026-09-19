@@ -293,6 +293,18 @@
   }
 }
 
+/* One calm, truthful "nothing here yet" line — never faked with sample data */
+@utility empty-note {
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background-color: color-mix(in oklab, var(--surface) 55%, transparent);
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground);
+}
+
 @utility tabular {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;

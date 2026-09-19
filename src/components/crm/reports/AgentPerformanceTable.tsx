@@ -24,7 +24,7 @@ export function AgentPerformanceTable({
   onReset: () => void;
 }) {
   return (
-    <section className="card-elevated card-pad sm:p-4">
+    <section className="card-elevated card-pad">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <h2 className="section-title">Agent performance</h2>

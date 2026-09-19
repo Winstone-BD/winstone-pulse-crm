@@ -235,7 +235,7 @@ export function VoiceRecorder() {
             className="h-64 space-y-2 overflow-y-auto p-4 text-lg leading-relaxed"
           >
             {transcript.length === 0 && !partial && (
-              <p className="text-sm text-muted-foreground">এখনো কোনো লেখা নেই।</p>
+              <p className="empty-note">এখনো কোনো লেখা নেই।</p>
             )}
             {transcript.map((line, i) => (
               <p key={i}>{line}</p>

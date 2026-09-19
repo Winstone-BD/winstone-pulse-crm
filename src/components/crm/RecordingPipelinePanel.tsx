@@ -183,7 +183,7 @@ export function RecordingPipelinePanel() {
         <p className="text-sm text-destructive">{(pipeline.error as Error).message}</p>
       )}
       {!pipeline.isLoading && rows.length === 0 && (
-        <p className="text-sm text-muted-foreground">এই ফিল্টারে কোনো কল নেই।</p>
+        <p className="empty-note">এই ফিল্টারে কোনো কল নেই।</p>
       )}
 
       <div className="space-y-3">

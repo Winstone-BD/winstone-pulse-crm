@@ -112,7 +112,7 @@ export function MobileLeadQueue() {
         <div className="rounded-xl border border-dashed p-6 text-center">
           <CheckCircle2 className="mx-auto size-6 text-primary" />
           <p className="mt-2 text-sm font-semibold">কিউ খালি</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="empty-note">
             এই মুহূর্তে হাতে নেওয়ার মতো খোলা লিড নেই।
           </p>
           {queue.length > 0 && (

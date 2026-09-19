@@ -116,7 +116,7 @@ export function AuditTrail() {
       ) : trail.isError ? (
         <p className="text-xs text-destructive">অডিট ইতিহাস আনা যায়নি। আবার চেষ্টা করুন।</p>
       ) : rows.length === 0 ? (
-        <p className="text-xs text-muted-foreground">এখনো কোনো ঘটনা নেই।</p>
+        <p className="empty-note">এখনো কোনো ঘটনা নেই।</p>
       ) : (
         <>
           <div className="hidden overflow-x-auto md:block">

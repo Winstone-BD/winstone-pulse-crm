@@ -284,7 +284,7 @@ export function StaffAccountsTable() {
 
       {list.isPending && <p className="mt-3 text-sm text-muted-foreground">তালিকা আনা হচ্ছে…</p>}
       {!list.isPending && staff.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
+        <p className="empty-note">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
       )}
     </section>
   );

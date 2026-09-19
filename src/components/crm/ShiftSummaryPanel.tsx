@@ -342,7 +342,7 @@ export function ShiftSummaryPanel({ scope }: { scope: "hq" | "it" }) {
 
       {list.isPending && <p className="mt-3 text-sm text-muted-foreground">সামারি আনা হচ্ছে…</p>}
       {!list.isPending && rows.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো শিফট সামারি নেই।</p>
+        <p className="empty-note">এখনো কোনো শিফট সামারি নেই।</p>
       )}
 
       <div className="mt-3 space-y-4">

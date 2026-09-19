@@ -112,7 +112,7 @@ export function AiPerformanceBrief({
   filters: ReportFilters;
 }) {
   return (
-    <section className="card-elevated card-pad sm:p-4">
+    <section className="card-elevated card-pad">
       <h2 className="section-title">
         <Sparkles className="size-4 shrink-0 text-primary" /> AI performance brief
       </h2>
