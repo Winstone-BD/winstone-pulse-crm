@@ -126,11 +126,14 @@ export async function rolloverPendingLeads(workDate: string = dhakaToday()): Pro
 }
 
 /**
- * How many database leads each desk already received for this work date.
- * The daily run tops desks up to their quota instead of handing out a second
- * full round, so calling it twice in one day can never double-assign.
+ * Today's open workload per desk: every lead sitting on today's board that is
+ * still unfinished (pending) — carried-over leftovers AND leads handed out
+ * earlier today alike. The daily run counts this against the quota first, so
+ * pending work is always served before new database leads, and a desk with a
+ * heavy backlog takes fewer (or no) new leads while a light desk is topped up
+ * to the same round number.
  */
-async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
+async function openWorkloadByAgent(workDate: string): Promise<Map<string, number>> {
   const supabaseAdmin = await admin();
   const counts = new Map<string, number>();
   for (let from = 0; ; from += 1000) {
@@ -138,7 +141,7 @@ async function assignedTodayByAgent(workDate: string): Promise<Map<string, numbe
       .from("leads")
       .select("assigned_to")
       .eq("work_date", workDate)
-      .eq("assignment_source", "lead_database")
+      .eq("work_state", "pending")
       .not("assigned_to", "is", null)
       .range(from, from + 999);
     (data ?? []).forEach((row) => {
@@ -149,6 +152,7 @@ async function assignedTodayByAgent(workDate: string): Promise<Map<string, numbe
   }
   return counts;
 }
+
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
