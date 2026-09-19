@@ -327,7 +327,7 @@ fun DeskScreen(
                             if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
                             items(calls) { CallCard(it, leads) }
                         }
-                        TAB_MORE, else -> {
+                        else -> {
                             item { StatusCards(state) }
                             item {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
