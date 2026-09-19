@@ -32,6 +32,11 @@ const Body = z.discriminatedUnion("action", [
     temperature: z.enum(["hot", "warm", "cold"]).nullable().optional(),
     grade: z.enum(["A", "B", "C", "D"]).nullable().optional(),
     ai_decision: z.enum(["accepted", "edited", "rejected"]).nullable().optional(),
+    direction: z.enum(["outgoing", "incoming"]).nullable().optional(),
+    call_status: z.enum(["connected", "no_answer", "busy", "failed"]).nullable().optional(),
+    duration_seconds: z.number().int().min(0).max(86400).nullable().optional(),
+    follow_up_needed: z.boolean().optional(),
+    follow_up_note: z.string().trim().max(500).nullable().optional(),
   }),
 ]);
 
@@ -51,6 +56,36 @@ export const Route = createFileRoute("/api/public/agent/report")({
         if (caller.kind !== "device") return json({ error: "Unauthorized" }, 401);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        // ?list=1 -> the agent's own report history for the in-app list.
+        const url = new URL(request.url);
+        if (url.searchParams.get("list")) {
+          const category = url.searchParams.get("category");
+          const state = url.searchParams.get("state"); // connected | not_connected
+          let listQuery = supabaseAdmin
+            .from("call_reports")
+            .select(
+              "id, lead_id, phone_number, status, category, summary, note, follow_up_at, connected, duration_seconds, call_ended_at, temperature, grade",
+            )
+            .eq("agent_id", caller.profile.id)
+            .order("call_ended_at", { ascending: false })
+            .limit(100);
+          if (category) listQuery = listQuery.eq("category", category);
+          if (state) listQuery = listQuery.eq("connected", state === "connected");
+          const { data: list } = await listQuery;
+          const ids = [...new Set((list ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+          const { data: leads } = ids.length
+            ? await supabaseAdmin.from("leads").select("id, name, phone_number").in("id", ids)
+            : { data: [] };
+          const byId = new Map((leads ?? []).map((l) => [l.id, l]));
+          return json({
+            reports: (list ?? []).map((row) => ({
+              ...row,
+              lead: byId.get(row.lead_id ?? "") ?? null,
+            })),
+          });
+        }
+
         const { data: report } = await supabaseAdmin
           .from("call_reports")
           .select(
@@ -71,7 +106,7 @@ export const Route = createFileRoute("/api/public/agent/report")({
           ? await supabaseAdmin
               .from("call_recordings")
               .select(
-                "id, analysis_status, ai_summary, sentiment, customer_objections, deal_stage, is_two_sided, recorder_source",
+                "id, analysis_status, ai_summary, sentiment, customer_objections, deal_stage, is_two_sided, recorder_source, call_direction, call_status",
               )
               .eq("id", report.recording_id)
               .maybeSingle()
@@ -130,6 +165,11 @@ export const Route = createFileRoute("/api/public/agent/report")({
             temperature: body.temperature ?? null,
             grade: body.grade ?? null,
             aiDecision: body.ai_decision ?? null,
+            direction: body.direction ?? null,
+            callStatus: body.call_status ?? null,
+            durationSeconds: body.duration_seconds ?? null,
+            followUpNeeded: body.follow_up_needed ?? true,
+            followUpNote: body.follow_up_note ?? null,
           });
           return json({ ...result, ok: true });
         } catch (error) {

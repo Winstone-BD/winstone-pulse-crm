@@ -49,6 +49,19 @@ const GRADES = [
   { value: "D", label: "D" },
 ] as const;
 
+/** Call facts — every report must say which way, how it ended, how long. */
+const DIRECTIONS = [
+  { value: "outgoing", label: "আউটগোয়িং — আমি কল করেছি" },
+  { value: "incoming", label: "ইনকামিং — ক্রেতা কল করেছেন" },
+] as const;
+
+const CALL_STATES = [
+  { value: "connected", label: "কথা হয়েছে" },
+  { value: "no_answer", label: "ধরেনি" },
+  { value: "busy", label: "ব্যস্ত ছিল" },
+  { value: "failed", label: "কল যায়নি" },
+] as const;
+
 /**
  * The next-lead lock, on the web desk.
  *
@@ -75,6 +88,12 @@ export function PostCallReportGate() {
   const [reason, setReason] = useState("");
   const [when, setWhen] = useState("");
   const [noFollowUp, setNoFollowUp] = useState(false);
+  const [noFollowUpNote, setNoFollowUpNote] = useState("");
+  const [direction, setDirection] = useState<"outgoing" | "incoming" | null>(null);
+  const [callState, setCallState] = useState<"connected" | "no_answer" | "busy" | "failed" | null>(
+    null,
+  );
+  const [duration, setDuration] = useState("");
   const [temperature, setTemperature] = useState<"hot" | "warm" | "cold" | null>(null);
   const [grade, setGrade] = useState<"A" | "B" | "C" | "D" | null>(null);
   const [aiDecision, setAiDecision] = useState<"accepted" | "edited" | "rejected" | null>(null);
@@ -107,11 +126,20 @@ export function PostCallReportGate() {
       setReason("");
       setWhen("");
       setNoFollowUp(false);
+      setNoFollowUpNote("");
+      setDirection(null);
+      setCallState(null);
+      setDuration("");
       setTemperature(null);
       setGrade(null);
       setAiDecision(null);
       setSmart(null);
+      return;
     }
+    // Whatever the phone already knows is filled in — the agent confirms or corrects it.
+    setDirection(detail.recording?.call_direction === "incoming_callback" ? "incoming" : "outgoing");
+    setCallState(detail.report.connected === false ? "no_answer" : "connected");
+    setDuration(String(detail.report.duration_seconds ?? 0));
   }, [detail?.report?.id, detail]);
 
   // Smart summary from the agent's own words — no transcript needed. Debounced,
@@ -145,7 +173,13 @@ export function PostCallReportGate() {
     temperature,
     grade,
     aiDecision,
+    direction,
+    callStatus: callState,
+    durationSeconds: Math.max(0, Math.round(Number(duration) || 0)),
+    followUpNeeded: !noFollowUp,
+    followUpNote: noFollowUp ? noFollowUpNote.trim() || null : null,
   });
+
 
   const send = useMutation({
     mutationFn: async () => {
@@ -179,14 +213,19 @@ export function PostCallReportGate() {
   const reasonRequired = NEEDS_REASON.has(category);
   // The customer answered -> classification (Hot/Warm/Cold + A/B/C/D) is what
   // turns the lead into COMPLETED. Not answered -> the lead goes back to retry.
-  const received = detail.report.connected !== false;
-  // Category + summary + note are mandatory. Follow-up is OPTIONAL: the agent
-  // either picks a date or explicitly says no follow-up is needed.
+  const received = detail.report.connected !== false || callState === "connected";
+  const seconds = Math.max(0, Math.round(Number(duration) || 0));
+  // Call facts (direction, outcome, length) plus category, summary and note are
+  // all mandatory. Follow-up: either a date, or an explicit written reason why not.
   const ready =
     Boolean(category) &&
+    Boolean(direction) &&
+    Boolean(callState) &&
+    Number.isFinite(Number(duration)) &&
+    (callState !== "connected" || seconds > 0) &&
     summary.trim().length > 1 &&
     note.trim().length > 1 &&
-    (noFollowUp || Boolean(when)) &&
+    (noFollowUp ? noFollowUpNote.trim().length > 1 : Boolean(when)) &&
     (!received || (Boolean(temperature) && Boolean(grade))) &&
     (!reasonRequired || reason.trim().length > 1);
 
@@ -284,6 +323,67 @@ export function PostCallReportGate() {
             </div>
           </div>
         ) : null}
+
+        <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
+          <p className="text-xs font-bold">কলের তথ্য (বাধ্যতামূলক)</p>
+          <div className="space-y-1.5">
+            <Label className="text-xs">কলের দিক</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {DIRECTIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setDirection(item.value)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                    direction === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">কলের অবস্থা</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {CALL_STATES.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setCallState(item.value)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                    callState === item.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="call-duration" className="text-xs">
+              সময়কাল (সেকেন্ড)
+            </Label>
+            <Input
+              id="call-duration"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={duration}
+              onChange={(event) => setDuration(event.target.value)}
+              placeholder="যেমন ১২০"
+            />
+            {callState === "connected" && seconds < 1 ? (
+              <p className="text-[11px] text-destructive">
+                কথা হয়েছে বললে সময়কাল অবশ্যই ১ সেকেন্ড বা বেশি দিন।
+              </p>
+            ) : null}
+          </div>
+        </div>
 
         <div className="space-y-2">
           <Label className="text-xs">কল ক্যাটাগরি (বাধ্যতামূলক)</Label>
@@ -417,7 +517,7 @@ export function PostCallReportGate() {
 
         <div className="space-y-1.5">
           <Label htmlFor="follow-when" className="text-xs">
-            ফলো-আপের তারিখ ও সময়
+            ফলো-আপের তারিখ ও সময় (বাধ্যতামূলক)
           </Label>
           <Input
             id="follow-when"
@@ -438,6 +538,14 @@ export function PostCallReportGate() {
             />
             ফলো-আপ দরকার নেই
           </label>
+          {noFollowUp ? (
+            <Textarea
+              rows={2}
+              value={noFollowUpNote}
+              onChange={(event) => setNoFollowUpNote(event.target.value)}
+              placeholder="ফলো-আপ কেন দরকার নেই, লিখুন (বাধ্যতামূলক)"
+            />
+          ) : null}
         </div>
 
         {reasonRequired ? (

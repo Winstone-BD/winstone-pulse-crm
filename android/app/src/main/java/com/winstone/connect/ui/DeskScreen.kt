@@ -76,6 +76,12 @@ fun DeskScreen(
     var callBlocked by remember { mutableStateOf<String?>(null) }
     var showPendingReport by remember { mutableStateOf(false) }
     var showNewLead by remember { mutableStateOf(false) }
+    // রিপোর্ট ট্যাব — নিজের সব কল রিপোর্ট, ফিল্টার সহ
+    var reports by remember { mutableStateOf<List<ReportRow>>(emptyList()) }
+    var reportsLoading by remember { mutableStateOf(false) }
+    var reportCategory by remember { mutableStateOf("") }
+    var reportState by remember { mutableStateOf("") }
+    var openReportLead by remember { mutableStateOf<Lead?>(null) }
     var whatsappLead by remember { mutableStateOf<Lead?>(null) }
     val context = LocalContext.current
     var update by remember { mutableStateOf<UpdateChecker.Available?>(null) }
@@ -94,7 +100,38 @@ fun DeskScreen(
             vm.clearToast()
         }
     }
-    LaunchedEffect(tab) { if (tab == 3 && state.coach == null) vm.loadCoach() }
+    LaunchedEffect(tab) { if (tab == 4 && state.coach == null) vm.loadCoach() }
+
+    LaunchedEffect(tab, reportCategory, reportState) {
+        if (tab != 2) return@LaunchedEffect
+        reportsLoading = true
+        reports = runCatching {
+            WinstoneApi.listReports(
+                reportCategory.takeIf { it.isNotBlank() },
+                reportState.takeIf { it.isNotBlank() },
+            )
+        }.getOrNull()?.let { body ->
+            val array = body.optJSONArray("reports")
+            (0 until (array?.length() ?: 0)).map { index ->
+                val row = array!!.getJSONObject(index)
+                val lead = row.optJSONObject("lead")
+                ReportRow(
+                    id = row.optString("id"),
+                    leadId = row.optString("lead_id").takeIf { it.isNotBlank() && it != "null" },
+                    leadName = lead?.optString("name")?.takeIf { it.isNotBlank() && it != "null" },
+                    phone = (lead?.optString("phone_number") ?: row.optString("phone_number"))
+                        .takeIf { it.isNotBlank() && it != "null" },
+                    category = row.optString("category").takeIf { it.isNotBlank() && it != "null" },
+                    summary = row.optString("summary").takeIf { it.isNotBlank() && it != "null" },
+                    connected = row.optBoolean("connected", false),
+                    durationSeconds = row.optInt("duration_seconds", 0),
+                    status = row.optString("status"),
+                    endedAt = row.optString("call_ended_at").takeIf { it.isNotBlank() && it != "null" },
+                )
+            }
+        } ?: emptyList()
+        reportsLoading = false
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -163,7 +200,7 @@ fun DeskScreen(
             StatsRow(state)
 
             TabRow(selectedTabIndex = tab, containerColor = MaterialTheme.colorScheme.background) {
-                listOf("লিড", "কল লগ", "স্টেটাস", "AI কোচ").forEachIndexed { i, label ->
+                listOf("লিড", "কল লগ", "রিপোর্ট", "স্টেটাস", "AI কোচ").forEachIndexed { i, label ->
                     Tab(selected = tab == i, onClick = { tab = i }, text = { Text(label, fontSize = 13.sp) })
                 }
             }
@@ -209,6 +246,26 @@ fun DeskScreen(
                             items(calls) { CallCard(it, data?.leads.orEmpty()) }
                         }
                         2 -> {
+                            if (reportsLoading) item { EmptyNote("রিপোর্ট আনা হচ্ছে…") }
+                            item {
+                                ReportFilterRow(
+                                    category = reportCategory,
+                                    state = reportState,
+                                    onCategory = { reportCategory = it },
+                                    onState = { reportState = it },
+                                )
+                            }
+                            if (!reportsLoading && reports.isEmpty()) {
+                                item { EmptyNote("এই ফিল্টারে কোনো রিপোর্ট নেই।") }
+                            }
+                            items(reports) { row ->
+                                ReportRowCard(row) { leadId ->
+                                    data?.leads.orEmpty().firstOrNull { it.id == leadId }
+                                        ?.let { openReportLead = it }
+                                }
+                            }
+                        }
+                        3 -> {
                             item { StatusCards(state) }
                         }
                         else -> {
@@ -234,6 +291,33 @@ fun DeskScreen(
                 vm.submitLead(name, phone, company, notes)
                 showNewLead = false
             },
+        )
+    }
+
+    openReportLead?.let { lead ->
+        AlertDialog(
+            onDismissRequest = { openReportLead = null },
+            title = { Text(lead.name) },
+            text = {
+                Column {
+                    Text(lead.phone, fontSize = 14.sp)
+                    lead.company?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 13.sp) }
+                    lead.notes?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(6.dp))
+                        Text(it, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = openReportLead
+                    openReportLead = null
+                    target?.let {
+                        LiveCallLauncher.call(activity, it.id, it.phone, state.data?.agentId, it.name)
+                    }
+                }) { Text("কল করুন") }
+            },
+            dismissButton = { TextButton(onClick = { openReportLead = null }) { Text("বন্ধ") } },
         )
     }
 
@@ -608,6 +692,84 @@ private fun UpdateBanner(
                 if (!available.mandatory) {
                     TextButton(onClick = onDismiss) { Text("পরে") }
                 }
+            }
+        }
+    }
+}
+
+/** One row of the agent's report history. */
+data class ReportRow(
+    val id: String,
+    val leadId: String?,
+    val leadName: String?,
+    val phone: String?,
+    val category: String?,
+    val summary: String?,
+    val connected: Boolean,
+    val durationSeconds: Int,
+    val status: String,
+    val endedAt: String?,
+)
+
+@Composable
+private fun ReportFilterRow(
+    category: String,
+    state: String,
+    onCategory: (String) -> Unit,
+    onState: (String) -> Unit,
+) {
+    Column {
+        Text("ফিল্টার", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth()) {
+            listOf("" to "সব", "connected" to "কথা হয়েছে", "not_connected" to "কথা হয়নি")
+                .forEach { (value, label) ->
+                    OutlinedButton(
+                        onClick = { onState(value) },
+                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                    ) { Text(if (state == value) "✓ $label" else label, fontSize = 11.sp) }
+                }
+        }
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth()) {
+            listOf("" to "সব ক্যাটাগরি", "hot_lead" to "HOT", "follow_up" to "FOLLOW UP")
+                .forEach { (value, label) ->
+                    OutlinedButton(
+                        onClick = { onCategory(value) },
+                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                    ) { Text(if (category == value) "✓ $label" else label, fontSize = 11.sp) }
+                }
+        }
+    }
+}
+
+@Composable
+private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            Text(
+                row.leadName ?: row.phone ?: "অজানা নম্বর",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            row.phone?.let { Text(it, fontSize = 12.sp) }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                listOfNotNull(
+                    if (row.connected) "কথা হয়েছে" else "কথা হয়নি",
+                    "${row.durationSeconds} সেকেন্ড",
+                    row.category,
+                    if (row.status == "pending") "জমা হয়নি" else null,
+                ).joinToString(" · "),
+                fontSize = 12.sp,
+            )
+            row.summary?.let {
+                Spacer(Modifier.height(4.dp))
+                Text(it, fontSize = 12.sp)
+            }
+            row.leadId?.let { leadId ->
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = { onOpenLead(leadId) }) { Text("লিড খুলুন", fontSize = 12.sp) }
             }
         }
     }

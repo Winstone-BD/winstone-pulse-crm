@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { DayCallExportPanel } from "@/components/crm/DayCallExportPanel";
 import { SyncedCallsPanel } from "@/components/crm/SyncedCallsPanel";
+import { CallReportsPanel } from "@/components/crm/CallReportsPanel";
 import { useMyAccount } from "@/lib/session";
 import { AppShell } from "@/components/crm/AppShell";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
@@ -119,6 +120,8 @@ function ReportsBoard() {
         stamp={stamp}
         onReset={() => setFilters(defaultFilters(30))}
       />
+
+      <CallReportsPanel />
 
       {canSeeDayExport && (
         <div className="space-y-4">

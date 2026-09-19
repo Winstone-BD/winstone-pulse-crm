@@ -74,6 +74,23 @@ object CallSyncQueue {
         )
     }
 
+    /**
+     * Parks a finished post-call report on the phone when there is no network.
+     * The payload is already validated by the sheet, so the queue only has to
+     * replay it; the unique name is the report id, so one report is sent once.
+     */
+    fun queueReportSubmit(context: Context, reportId: String, payloadJson: String) {
+        enqueue(
+            context,
+            unique = "report_submit_$reportId",
+            data = Data.Builder()
+                .putString(KEY_KIND, KIND_REPORT_SUBMIT)
+                .putString(KEY_TEXT, payloadJson)
+                .build(),
+        )
+    }
+
+
     fun queueOutcome(context: Context, leadId: String, outcome: String, notes: String, connected: Boolean) {
         enqueue(
             context,
@@ -182,6 +199,7 @@ object CallSyncQueue {
     const val KIND_RECORDING = "recording"
     const val KIND_OUTCOME = "outcome"
     const val KIND_REPORT_OPEN = "report_open"
+    const val KIND_REPORT_SUBMIT = "report_submit"
     const val KIND_INCOMING_CALL = "incoming_call"
     const val KEY_DIRECTION = "direction"
 }
@@ -258,6 +276,12 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                     Result.success()
                 }
 
+                CallSyncQueue.KIND_REPORT_SUBMIT -> {
+                    val raw = inputData.getString(CallSyncQueue.KEY_TEXT) ?: return Result.failure()
+                    WinstoneApi.submitReportRaw(org.json.JSONObject(raw))
+                    Result.success()
+                }
+
                 CallSyncQueue.KIND_CALL_STATE -> {
                     val callUid = inputData.getString(CallSyncQueue.KEY_CALL_UID)
                     if (leadId == null || callUid == null) return Result.failure()
@@ -287,6 +311,7 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             val keepTrying = !giveUp && (
                 kind == CallSyncQueue.KIND_RECORDING ||
                     kind == CallSyncQueue.KIND_REPORT_OPEN ||
+                    kind == CallSyncQueue.KIND_REPORT_SUBMIT ||
                     kind == CallSyncQueue.KIND_CALL_STATE ||
                     runAttemptCount < 12
                 )

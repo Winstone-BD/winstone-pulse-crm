@@ -188,11 +188,12 @@ export const logAnyNumberCall = createServerFn({ method: "POST" })
     const me = await agentOf(data.adminToken ?? null);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
-    const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+    const { resolveLeadIdByPhone } = await import("@/lib/lead-eligibility.server");
     const { leadOwnerId } = await import("@/lib/lead-access.server");
 
     const phone = normalizeLeadPhone(data.phoneNumber);
-    const status = await getLeadPhoneStatus(data.phoneNumber);
+    // Same number = same lead: an existing lead is reused, never duplicated.
+    const status = await resolveLeadIdByPhone(data.phoneNumber);
     if (status.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
 
     let leadId = status.existingLeadId;
@@ -294,6 +295,11 @@ export const submitMyReport = createServerFn({ method: "POST" })
       temperature: z.enum(["hot", "warm", "cold"]).nullable().optional(),
       grade: z.enum(["A", "B", "C", "D"]).nullable().optional(),
       aiDecision: z.enum(["accepted", "edited", "rejected"]).nullable().optional(),
+      direction: z.enum(["outgoing", "incoming"]).nullable().optional(),
+      callStatus: z.enum(["connected", "no_answer", "busy", "failed"]).nullable().optional(),
+      durationSeconds: z.number().int().min(0).max(86400).nullable().optional(),
+      followUpNeeded: z.boolean().optional(),
+      followUpNote: z.string().trim().max(500).nullable().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -311,6 +317,11 @@ export const submitMyReport = createServerFn({ method: "POST" })
       temperature: data.temperature ?? null,
       grade: data.grade ?? null,
       aiDecision: data.aiDecision ?? null,
+      direction: data.direction ?? null,
+      callStatus: data.callStatus ?? null,
+      durationSeconds: data.durationSeconds ?? null,
+      followUpNeeded: data.followUpNeeded ?? true,
+      followUpNote: data.followUpNote ?? null,
     });
   });
 
@@ -523,4 +534,110 @@ export const syncOfflineCallEvent = createServerFn({ method: "POST" })
     });
 
     return { ok: true as const, duplicate: false as const };
+  });
+
+/**
+ * Every call report, filterable, with the lead attached.
+ *
+ * Agents see their own reports; a coordinator or the authority sees the whole
+ * floor. The lead id travels with each row, so the list can open the lead file
+ * the report belongs to.
+ */
+export const listCallReports = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    Base.extend({
+      fromIso: z.string().nullable().optional(),
+      toIso: z.string().nullable().optional(),
+      category: z.string().max(40).nullable().optional(),
+      direction: z.enum(["outgoing", "incoming"]).nullable().optional(),
+      callState: z.enum(["connected", "not_connected"]).nullable().optional(),
+      status: z.enum(["pending", "submitted"]).nullable().optional(),
+      agentId: z.string().uuid().nullable().optional(),
+      search: z.string().trim().max(60).nullable().optional(),
+      limit: z.number().int().min(1).max(500).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let query = supabaseAdmin
+      .from("call_reports")
+      .select(
+        "id, lead_id, agent_id, recording_id, phone_number, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, call_ended_at, submitted_at, temperature, grade",
+      )
+      .order("call_ended_at", { ascending: false })
+      .limit(data.limit ?? 200);
+
+    // An agent can only ever see their own reports, whatever they ask for.
+    if (caller.scope === "agent" && caller.profile) query = query.eq("agent_id", caller.profile.id);
+    else if (data.agentId) query = query.eq("agent_id", data.agentId);
+
+    if (data.fromIso) query = query.gte("call_ended_at", data.fromIso);
+    if (data.toIso) query = query.lte("call_ended_at", data.toIso);
+    if (data.category) query = query.eq("category", data.category);
+    if (data.status) query = query.eq("status", data.status);
+    if (data.callState) query = query.eq("connected", data.callState === "connected");
+
+    const { data: rows, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const leadIds = [...new Set((rows ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+    const recordingIds = [
+      ...new Set((rows ?? []).map((r) => r.recording_id).filter(Boolean)),
+    ] as string[];
+
+    const { data: leads } = leadIds.length
+      ? await supabaseAdmin
+          .from("leads")
+          .select("id, name, phone_number, company, status, assigned_to")
+          .in("id", leadIds)
+      : { data: [] };
+    const { data: recordings } = recordingIds.length
+      ? await supabaseAdmin
+          .from("call_recordings")
+          .select("id, call_direction, call_status, audio_url")
+          .in("id", recordingIds)
+      : { data: [] };
+    const { data: agents } = await supabaseAdmin.from("profiles").select("id, name, employee_id");
+
+    const leadById = new Map((leads ?? []).map((l) => [l.id, l]));
+    const recById = new Map((recordings ?? []).map((r) => [r.id, r]));
+    const agentById = new Map((agents ?? []).map((a) => [a.id, a]));
+    const needle = data.search?.trim().toLowerCase() ?? "";
+
+    const { reportEditable } = await import("@/lib/call-reports.server");
+    const reports = (rows ?? [])
+      .map((row) => {
+        const rec = row.recording_id ? recById.get(row.recording_id) : null;
+        const lead = leadById.get(row.lead_id ?? "") ?? null;
+        return {
+          ...row,
+          lead,
+          agent: agentById.get(row.agent_id ?? "") ?? null,
+          direction:
+            rec?.call_direction === "incoming_callback"
+              ? ("incoming" as const)
+              : ("outgoing" as const),
+          recordingStatus: rec?.call_status ?? null,
+          hasAudio: Boolean(rec?.audio_url),
+          editable: row.status === "submitted" && reportEditable(row.call_ended_at),
+        };
+      })
+      .filter((row) => (data.direction ? row.direction === data.direction : true))
+      .filter((row) =>
+        needle
+          ? [row.lead?.name, row.lead?.phone_number, row.phone_number, row.agent?.name]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(needle))
+          : true,
+      );
+
+    return {
+      reports,
+      scope: caller.scope,
+      agents: (agents ?? []).map((a) => ({ id: a.id, name: a.name })),
+    };
   });

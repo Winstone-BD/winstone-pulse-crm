@@ -232,7 +232,23 @@ object WinstoneApi {
         }
     }
 
-    /** Submits the report: category + its required fields. */
+    /** The agent's own report history, optionally filtered, for the in-app list. */
+    suspend fun listReports(category: String?, state: String?): JSONObject =
+        withContext(Dispatchers.IO) {
+            val url = StringBuilder("$BASE_URL/api/public/agent/report?list=1")
+            if (!category.isNullOrBlank()) url.append("&category=").append(category)
+            if (!state.isNullOrBlank()) url.append("&state=").append(state)
+            val req = Request.Builder()
+                .url(url.toString())
+                .header("x-device-token", authToken())
+                .get()
+                .build()
+            client.newCall(req).execute().use { res ->
+                runCatching { JSONObject(res.body?.string().orEmpty()) }.getOrElse { JSONObject() }
+            }
+        }
+
+    /** Submits the report: call facts + category + its required fields. */
     suspend fun submitReport(
         reportId: String,
         category: String,
@@ -241,19 +257,61 @@ object WinstoneApi {
         reason: String?,
         followUpAtIso: String?,
         aiDecision: String?,
+        direction: String? = null,
+        callStatus: String? = null,
+        durationSeconds: Int? = null,
+        followUpNeeded: Boolean = true,
+        followUpNote: String? = null,
+        temperature: String? = null,
+        grade: String? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
-        val payload = JSONObject().apply {
-            put("action", "submit")
-            put("report_id", reportId)
-            put("category", category)
-            summary?.let { if (it.isNotBlank()) put("summary", it) }
-            note?.let { if (it.isNotBlank()) put("note", it) }
-            reason?.let { if (it.isNotBlank()) put("reason", it) }
-            followUpAtIso?.let { put("follow_up_at", it) }
-            aiDecision?.let { put("ai_decision", it) }
-        }
-        post("/api/public/agent/report", payload)
+        post("/api/public/agent/report", reportPayload(
+            reportId, category, summary, note, reason, followUpAtIso, aiDecision,
+            direction, callStatus, durationSeconds, followUpNeeded, followUpNote,
+            temperature, grade,
+        ))
     }
+
+    /**
+     * The exact submit payload, so an offline report can be parked in the sync
+     * queue and replayed byte-identically once the connection is back.
+     */
+    fun reportPayload(
+        reportId: String,
+        category: String,
+        summary: String?,
+        note: String?,
+        reason: String?,
+        followUpAtIso: String?,
+        aiDecision: String?,
+        direction: String?,
+        callStatus: String?,
+        durationSeconds: Int?,
+        followUpNeeded: Boolean,
+        followUpNote: String?,
+        temperature: String?,
+        grade: String?,
+    ): JSONObject = JSONObject().apply {
+        put("action", "submit")
+        put("report_id", reportId)
+        put("category", category)
+        summary?.let { if (it.isNotBlank()) put("summary", it) }
+        note?.let { if (it.isNotBlank()) put("note", it) }
+        reason?.let { if (it.isNotBlank()) put("reason", it) }
+        followUpAtIso?.let { put("follow_up_at", it) }
+        aiDecision?.let { put("ai_decision", it) }
+        direction?.let { put("direction", it) }
+        callStatus?.let { put("call_status", it) }
+        durationSeconds?.let { put("duration_seconds", it) }
+        put("follow_up_needed", followUpNeeded)
+        followUpNote?.let { if (it.isNotBlank()) put("follow_up_note", it) }
+        temperature?.let { put("temperature", it) }
+        grade?.let { put("grade", it) }
+    }
+
+    /** Replays a queued submit payload verbatim. */
+    suspend fun submitReportRaw(payload: JSONObject): JSONObject =
+        withContext(Dispatchers.IO) { post("/api/public/agent/report", payload) }
 
     /**
      * Reports an observed call state to the CRM's Phase-1 call-state contract.
