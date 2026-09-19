@@ -204,6 +204,82 @@
   background-size: 22px 22px;
 }
 
+/* ---------------------------------------------------------------------------
+   One layout rhythm for every CRM route. Pages stack their sections with
+   `page-stack`, sections stack their own contents with `section-stack`, and
+   headings use `page-title` / `section-title` so no route invents its own
+   scale. Change the numbers here and the whole product follows.
+   --------------------------------------------------------------------------- */
+@utility page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  @media (min-width: 640px) {
+    gap: 1.75rem;
+  }
+}
+
+@utility section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@utility page-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+@utility section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Equal card padding everywhere a panel body is drawn */
+@utility card-pad {
+  padding: 1rem;
+  @media (min-width: 640px) {
+    padding: 1.25rem;
+  }
+}
+
+/* KPI / tile grids: predictable columns AND equal card heights */
+@utility stat-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  & > * {
+    height: 100%;
+    min-width: 0;
+  }
+}
+
+/* Any grid of panels: no ragged card heights, no overflow from long values */
+@utility panel-grid {
+  display: grid;
+  gap: 1rem;
+  & > * {
+    height: 100%;
+    min-width: 0;
+  }
+}
+
 @utility tabular {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
