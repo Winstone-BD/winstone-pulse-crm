@@ -37,6 +37,45 @@ const WORK_LABELS: Record<string, string> = {
   pending: "বাকি",
 };
 
+const BN_DATE = new Intl.DateTimeFormat("bn-BD", {
+  day: "numeric",
+  month: "short",
+  timeZone: "Asia/Dhaka",
+});
+
+/** Day the lead first entered the floor, in Dhaka time. */
+function startDay(lead: Lead) {
+  return new Date(new Date(lead.created_at).getTime() + 6 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+/** How many days this task has been waiting (0 = came in today). */
+function waitingDays(lead: Lead) {
+  const from = Date.parse(`${startDay(lead)}T00:00:00Z`);
+  const to = Date.parse(`${dhakaToday()}T00:00:00Z`);
+  return Math.max(0, Math.round((to - from) / 86_400_000));
+}
+
+/**
+ * One line of history per task: when it came in, when it was finished (or how
+ * many days it has been waiting), and the note written on it.
+ */
+function taskTrail(lead: Lead) {
+  const parts = [`এসেছে ${BN_DATE.format(new Date(lead.created_at))}`];
+  if (lead.work_state === "completed") {
+    const finishedAt = lead.classified_at ?? lead.last_call_at ?? lead.updated_at;
+    parts.push(`শেষ ${BN_DATE.format(new Date(finishedAt))}`);
+  } else {
+    const days = waitingDays(lead);
+    parts.push(days === 0 ? "আজকের কাজ" : `${days} দিন অপেক্ষায়`);
+  }
+  const note = (lead.classification_note ?? lead.notes ?? "").trim();
+  if (note) parts.push(note);
+  return parts.join(" · ");
+}
+
+
 export function LeadDayBoard() {
   const { leads } = useSnapshot();
   const adminToken = useAdminToken();
