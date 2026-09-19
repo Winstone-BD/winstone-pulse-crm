@@ -40,7 +40,9 @@ export async function intakeLead(input: {
     input.phoneNumber,
   );
   const phone = extractedPhones.length > 1 ? input.phoneNumber.trim() : normalizeLeadPhone(input.phoneNumber);
-  const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
+  const { resolveLeadIdByPhone: getLeadPhoneStatus } = await import(
+    "@/lib/lead-eligibility.server"
+  );
   const phoneStatus = await getLeadPhoneStatus(input.phoneNumber);
   if (phoneStatus.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
   if (phoneStatus.existingLeadId) {

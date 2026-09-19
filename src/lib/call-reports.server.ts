@@ -71,6 +71,29 @@ export const GRADE_LABEL: Record<LeadGrade, string> = {
 
 export type ReportValidationError = { field: string; message: string };
 
+/**
+ * The call facts every report must carry: which way the call went, how it
+ * ended, how long it lasted, and what happens next. They are asked in the
+ * popup and re-checked here, so a report can never be stored without them.
+ */
+export const CALL_DIRECTIONS = ["outgoing", "incoming"] as const;
+export const CALL_OUTCOME_STATES = ["connected", "no_answer", "busy", "failed"] as const;
+
+export type CallDirection = (typeof CALL_DIRECTIONS)[number];
+export type CallOutcomeState = (typeof CALL_OUTCOME_STATES)[number];
+
+export const DIRECTION_LABEL: Record<CallDirection, string> = {
+  outgoing: "আউটগোয়িং — এজেন্ট কল করেছেন",
+  incoming: "ইনকামিং — ক্রেতা কল করেছেন",
+};
+
+export const CALL_STATE_LABEL: Record<CallOutcomeState, string> = {
+  connected: "কথা হয়েছে",
+  no_answer: "ধরেনি",
+  busy: "ব্যস্ত ছিল",
+  failed: "কল যায়নি",
+};
+
 /** Same rules as the database trigger, so the UI can show them before submit. */
 export function validateReport(input: {
   category: string | null;
@@ -82,6 +105,14 @@ export function validateReport(input: {
   connected?: boolean;
   temperature?: string | null;
   grade?: string | null;
+  /** Set on a fresh submit: direction, call state, duration and follow-up are mandatory. */
+  requireCallFacts?: boolean;
+  direction?: string | null;
+  callStatus?: string | null;
+  durationSeconds?: number | null;
+  /** false = the agent explicitly says no follow-up is needed, and says why. */
+  followUpNeeded?: boolean;
+  followUpNote?: string | null;
 }): ReportValidationError | null {
   const category = input.category as CallCategory | null;
   if (!category || !CALL_CATEGORIES.includes(category)) {
@@ -91,9 +122,7 @@ export function validateReport(input: {
   const note = (input.note ?? "").trim();
   const reason = (input.reason ?? "").trim();
 
-  // Every call, every category: summary + note are mandatory. Follow-up is
-  // OPTIONAL — an empty follow_up_at means "no follow-up needed", which is a
-  // complete report, not missing data.
+  // Every call, every category: summary + note are mandatory.
   if (summary.length < 2) return { field: "summary", message: "কলের সারাংশ লিখুন" };
   if (note.length < 2) return { field: "note", message: "নোট লিখুন" };
 
@@ -106,6 +135,29 @@ export function validateReport(input: {
     }
     if (!LEAD_GRADES.includes((input.grade ?? "") as LeadGrade)) {
       return { field: "grade", message: "কথা হওয়া কলে গ্রেড A / B / C / D বাছাই করুন" };
+    }
+  }
+
+  if (input.requireCallFacts) {
+    if (!CALL_DIRECTIONS.includes((input.direction ?? "") as CallDirection)) {
+      return { field: "direction", message: "কলের দিক বাছাই করুন — ইনকামিং না আউটগোয়িং" };
+    }
+    if (!CALL_OUTCOME_STATES.includes((input.callStatus ?? "") as CallOutcomeState)) {
+      return { field: "callStatus", message: "কলের অবস্থা বাছাই করুন" };
+    }
+    const seconds = input.durationSeconds;
+    if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) {
+      return { field: "durationSeconds", message: "কলের সময়কাল (সেকেন্ড) লিখুন" };
+    }
+    if (input.callStatus === "connected" && seconds < 1) {
+      return { field: "durationSeconds", message: "কথা হওয়া কলের সময়কাল ০ হতে পারে না" };
+    }
+    const followUpNote = (input.followUpNote ?? "").trim();
+    if (!input.followUpAt && !(input.followUpNeeded === false && followUpNote.length > 1)) {
+      return {
+        field: "followUpAt",
+        message: "ফলো-আপের তারিখ ও সময় দিন, নয়তো কেন ফলো-আপ দরকার নেই তা লিখুন",
+      };
     }
   }
   return null;
@@ -202,6 +254,12 @@ export async function submitCallReport(input: {
   temperature?: string | null;
   grade?: string | null;
   aiDecision?: "accepted" | "edited" | "rejected" | null;
+  /** Mandatory call facts collected in the popup. */
+  direction?: string | null;
+  callStatus?: string | null;
+  durationSeconds?: number | null;
+  followUpNeeded?: boolean;
+  followUpNote?: string | null;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const category = input.category as CallCategory;
@@ -217,14 +275,27 @@ export async function submitCallReport(input: {
   if (report.status === "submitted") return { ok: true, alreadySubmitted: true as const };
 
   // `connected` is set when the call ends, so the phone cannot skip the
-  // classification requirement by omitting it from the submit payload.
-  const received = report.connected !== false;
-  const invalid = validateReport({ ...input, connected: received });
+  // classification requirement by omitting it from the submit payload. The agent
+  // may only *upgrade* an unanswered call to "কথা হয়েছে", never the other way.
+  const received = report.connected !== false || input.callStatus === "connected";
+  const invalid = validateReport({ ...input, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
 
   const temperature = received ? ((input.temperature ?? null) as LeadTemperature | null) : null;
   const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
   const classified = Boolean(temperature && grade);
+
+  // The stored duration wins whenever the phone actually measured the call; the
+  // agent's number is only used when nothing was measured.
+  const storedSeconds = report.duration_seconds ?? 0;
+  const durationSeconds =
+    storedSeconds > 0 ? storedSeconds : Math.max(0, Math.round(input.durationSeconds ?? 0));
+  const noFollowUpNote = (input.followUpNote ?? "").trim();
+  const note = input.followUpAt
+    ? input.note?.trim() || null
+    : [input.note?.trim(), noFollowUpNote ? `ফলো-আপ দরকার নেই — ${noFollowUpNote}` : null]
+        .filter(Boolean)
+        .join(" — ") || null;
 
   const { error } = await supabaseAdmin
     .from("call_reports")
@@ -232,9 +303,11 @@ export async function submitCallReport(input: {
       status: "submitted",
       category,
       summary: input.summary?.trim() || null,
-      note: input.note?.trim() || null,
+      note,
       reason: input.reason?.trim() || null,
       follow_up_at: input.followUpAt ?? null,
+      connected: received,
+      duration_seconds: durationSeconds,
       temperature,
       grade,
       ai_decision: input.aiDecision ?? null,
@@ -243,6 +316,19 @@ export async function submitCallReport(input: {
     .eq("id", input.reportId)
     .eq("agent_id", input.agentId);
   if (error) throw new Error(error.message);
+
+  // Direction and call state belong to the call itself, so the linked call row
+  // carries what the agent confirmed in the popup.
+  if (report.recording_id && input.direction && input.callStatus) {
+    await supabaseAdmin
+      .from("call_recordings")
+      .update({
+        call_direction: input.direction === "incoming" ? "incoming_callback" : "outgoing",
+        call_status: input.callStatus === "connected" ? "completed" : input.callStatus,
+        duration_seconds: durationSeconds,
+      })
+      .eq("id", report.recording_id);
+  }
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
@@ -519,7 +605,7 @@ export async function loadPendingReportDetail(agentId: string) {
     ? await supabaseAdmin
         .from("call_recordings")
         .select(
-          "id, analysis_status, analysis_error, ai_summary, sentiment, customer_objections, deal_stage, duration_seconds, is_two_sided, recorder_source, ai_temperature, ai_grade",
+          "id, analysis_status, analysis_error, ai_summary, sentiment, customer_objections, deal_stage, duration_seconds, is_two_sided, recorder_source, ai_temperature, ai_grade, call_direction, call_status",
         )
         .eq("id", report.recording_id)
         .maybeSingle()
