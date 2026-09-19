@@ -51,7 +51,9 @@ export const floorAllocation = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ workDate: DATE.optional() }).parse(input))
   .handler(async ({ data }) => {
     const caller = await callerOf(data.adminToken ?? null);
+    if (!caller) return null;
     if (caller.scope === "agent") throw new Error("এই তথ্য দেখার অনুমতি নেই");
+
     const { dhakaToday } = await import("@/lib/lead-pool.server");
     const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
     return floorAllocationStatus(data.workDate ?? dhakaToday());
