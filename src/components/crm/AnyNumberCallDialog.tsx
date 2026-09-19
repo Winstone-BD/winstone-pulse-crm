@@ -76,7 +76,7 @@ export function AnyNumberCallDialog() {
           <span className="hidden sm:inline">কল লগ</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>যেকোনো কল লগ করুন</DialogTitle>
           <DialogDescription>
