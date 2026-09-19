@@ -74,6 +74,23 @@ object CallSyncQueue {
         )
     }
 
+    /**
+     * Parks a finished post-call report on the phone when there is no network.
+     * The payload is already validated by the sheet, so the queue only has to
+     * replay it; the unique name is the report id, so one report is sent once.
+     */
+    fun queueReportSubmit(context: Context, reportId: String, payloadJson: String) {
+        enqueue(
+            context,
+            unique = "report_submit_$reportId",
+            data = Data.Builder()
+                .putString(KEY_KIND, KIND_REPORT_SUBMIT)
+                .putString(KEY_TEXT, payloadJson)
+                .build(),
+        )
+    }
+
+
     fun queueOutcome(context: Context, leadId: String, outcome: String, notes: String, connected: Boolean) {
         enqueue(
             context,
