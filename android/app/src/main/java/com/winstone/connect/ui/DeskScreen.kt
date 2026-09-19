@@ -84,10 +84,6 @@ private const val TAB_LEADS = 1
 private const val TAB_CALLS = 2
 private const val TAB_AI_COACH = 3
 private const val TAB_MORE = 4
-private const val TAB_LEADS = 1
-private const val TAB_FOLLOWUPS = 2
-private const val TAB_PERFORMANCE = 3
-private const val TAB_PROFILE = 4
 
 /**
  * এজেন্ট অ্যাপের প্রধান পর্দা — উপরে ব্র্যান্ড বার, নিচে পাঁচটি ট্যাবের নিচের
