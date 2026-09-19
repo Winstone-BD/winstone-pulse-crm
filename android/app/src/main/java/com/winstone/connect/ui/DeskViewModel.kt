@@ -83,6 +83,14 @@ class DeskViewModel(private val app: Application) : AndroidViewModel(app) {
                     val digitsOnly = trimmed.filter { it.isDigit() }
                     if (digitsOnly.length >= 10) AgentSession.saveSim(app, trimmed)
                     AgentSession.cacheAgent(app, me.agentId, me.name)
+                    AgentSession.saveAllowedRoles(app, me.allowedRoles)
+                    // Single-desk accounts (every sales agent) skip the role
+                    // chooser entirely and land straight on their own desk.
+                    if (me.allowedRoles.size == 1) {
+                        AgentSession.saveSelectedRole(app, me.allowedRoles.first())
+                    } else {
+                        AgentSession.saveSelectedRole(app, "")
+                    }
                     _state.value = _state.value.copy(
                         employeeId = me.employeeId,
                         agentName = me.name,
