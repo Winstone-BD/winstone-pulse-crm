@@ -19,10 +19,11 @@
  * | unassignedLeads   | `leads.assigned_to` is null                                           |
  * | closedWon         | `leads.status = 'closed'` AND `outcome_category = 'deal_won'`         |
  * | callAttempts      | submitted `call_reports` (one report = one attempt)                   |
- * | connectedCalls    | submitted `call_reports` with `connected = true`                       |
+ * | connectedCalls    | submitted `call_reports` with `connection_verified = true` (the phone proved the call was answered) |
+ * | contactedLeadsByCall | distinct leads with at least one verified connected call             |
  * | attemptsToday     | submitted reports whose day (`call_ended_at`, else `submitted_at`) is today |
- * | connectedToday    | as above, `connected = true`                                          |
- * | talkMinutesToday  | sum of `duration_seconds` over today's connected reports, in minutes  |
+ * | connectedToday    | as above, `connection_verified = true`                                 |
+ * | talkMinutesToday  | sum of measured `duration_seconds` over today's verified connected calls; `null` when nothing was measured (unavailable, never 0) |
  * | followUpDue       | open follow-ups (`upcoming`/`pending`) scheduled inside the Dhaka day |
  * | followUpOverdue   | open follow-ups scheduled before now                                  |
  * | visitsCompleted   | completed follow-ups in a site-visit category                        |
@@ -33,6 +34,11 @@
  * - Drafts, pending, cancelled and missed records never inflate a number.
  * - Call recordings are NOT a call count — only a submitted report is an attempt.
  *   Recording sync is reported separately as `recordingSync`.
+ * - A submitted report is NOT proof of a conversation. Connected calls, contacted
+ *   leads and talk time all require telephony evidence (measured duration, synced
+ *   recording, or logged call start) — see src/lib/call-evidence.ts.
+ * - One call session counts once: two uploads of the same call (phone retry plus
+ *   the web popup) are de-duplicated on the recording id.
  */
 
 export type FloorMetrics = {
@@ -56,8 +62,12 @@ export type FloorMetrics = {
   connectedCalls: number;
   attemptsToday: number;
   connectedToday: number;
-  /** Minutes actually spent talking today (connected reports' durations). */
-  talkMinutesToday: number;
+  /** Distinct leads with at least one verified connected call. */
+  contactedLeadsByCall: number;
+  /** Minutes of measured talk today; `null` = no measured duration available. */
+  talkMinutesToday: number | null;
+  /** Today's connected calls that carried a measured duration. */
+  talkTimeMeasuredToday: number;
   followUpDue: number;
   followUpOverdue: number;
   visitsCompleted: number;
@@ -71,8 +81,10 @@ export type FloorMetrics = {
     attempts: number;
     connected: number;
     bookings: number;
-    /** Minutes talked on connected calls, all time. */
-    talkMinutes: number;
+    /** Distinct leads this agent actually spoke to. */
+    contactedLeads: number;
+    /** Minutes talked on measured connected calls; `null` = unavailable. */
+    talkMinutes: number | null;
   }[];
 };
 
