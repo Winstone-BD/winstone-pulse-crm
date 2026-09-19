@@ -105,11 +105,12 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       category: string | null;
       call_ended_at: string | null;
       submitted_at: string | null;
+      duration_seconds: number | null;
     }[] = [];
     for (let from = 0; from < 40_000; from += page) {
       const chunk = await supabaseAdmin
         .from("call_reports")
-        .select("lead_id, agent_id, connected, category, call_ended_at, submitted_at")
+        .select("lead_id, agent_id, connected, category, call_ended_at, submitted_at, duration_seconds")
         .eq("status", "submitted")
         .order("submitted_at", { ascending: false })
         .range(from, from + page - 1);
