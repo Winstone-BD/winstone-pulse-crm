@@ -80,10 +80,17 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
           .lt("call_ended_at", end),
       ),
       count(() =>
-        followUps().eq("status", "pending").gte("scheduled_at", start).lt("scheduled_at", end),
+        followUps()
+          .in("status", OPEN_FOLLOW_UP_STATES)
+          .gte("scheduled_at", start)
+          .lt("scheduled_at", end),
       ),
-      count(() => followUps().eq("status", "pending").lt("scheduled_at", nowIso)),
-      count(() => followUps().eq("status", "completed").in("category", SITE_VISIT_CATEGORIES)),
+      count(() =>
+        followUps().in("status", OPEN_FOLLOW_UP_STATES).lt("scheduled_at", nowIso),
+      ),
+      count(() =>
+        followUps().in("status", DONE_FOLLOW_UP_STATES).in("category", SITE_VISIT_CATEGORIES),
+      ),
       count(() =>
         supabaseAdmin.from("call_recordings").select("id", { count: "exact", head: true }),
       ),
