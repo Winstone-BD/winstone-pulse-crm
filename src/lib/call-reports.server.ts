@@ -713,7 +713,7 @@ export async function loadPendingReportDetail(agentId: string) {
       .eq("id", report.id);
   }
 
-  return { report, lead, recording, suggestion };
+  return { report, lead, recording, suggestion, queuedCount: queuedCount ?? 0 };
 }
 
 /**
