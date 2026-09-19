@@ -90,33 +90,50 @@ fun parseAllocation(body: org.json.JSONObject?): Allocation? {
     )
 }
 
-/** Dashboard metrics returned by /api/public/agent/dashboard-metrics. */
+/**
+ * আজকের হিসাব — /api/public/agent/dashboard-metrics থেকে আসা সার্ভারের গণনা।
+ * অ্যাপ নিজে কিছু হিসাব করে না; লক্ষ্য (কাজের পরিমাণ) আর আসল কাজ আলাদা রাখা হয়,
+ * কারণ ৩০টি লিড পাওয়া মানে ৩০টি কল করা নয়।
+ */
 data class DashboardMetrics(
+    /** লক্ষ্যের কত অংশে আসলে কল হয়েছে (দখল নয়)। */
     val progressPercent: Int,
+    val target: Int,
     val assigned: Int,
     val called: Int,
     val connected: Int,
-    val interested: Int,
-    val followUp: Int,
-    val siteVisit: Int,
-    val hotLeads: Int,
+    val qualified: Int,
+    val followUpsCompleted: Int,
     val followUpsDue: Int,
-    val newAssigned: Int,
-    val missedRetry: Int,
+    val siteVisitsScheduled: Int,
+    val siteVisitsCompleted: Int,
+    val bookings: Int,
+    val talkMinutes: Int,
+    val carriedOver: Int,
+    val newFromDatabase: Int,
+    val excessPending: Int,
+    val connectRate: Int,
+    val conversionRate: Int,
 ) {
     companion object {
         fun fromJson(obj: org.json.JSONObject): DashboardMetrics = DashboardMetrics(
             progressPercent = obj.optInt("progress_percent", 0),
+            target = obj.optInt("target", 0),
             assigned = obj.optInt("assigned", 0),
             called = obj.optInt("called", 0),
             connected = obj.optInt("connected", 0),
-            interested = obj.optInt("interested", 0),
-            followUp = obj.optInt("follow_up", 0),
-            siteVisit = obj.optInt("site_visit", 0),
-            hotLeads = obj.optInt("hot_leads", 0),
+            qualified = obj.optInt("qualified", 0),
+            followUpsCompleted = obj.optInt("follow_ups_completed", 0),
             followUpsDue = obj.optInt("follow_ups_due", 0),
-            newAssigned = obj.optInt("new_assigned", 0),
-            missedRetry = obj.optInt("missed_retry", 0),
+            siteVisitsScheduled = obj.optInt("site_visits_scheduled", 0),
+            siteVisitsCompleted = obj.optInt("site_visits_completed", 0),
+            bookings = obj.optInt("bookings", 0),
+            talkMinutes = obj.optInt("talk_minutes", 0),
+            carriedOver = obj.optInt("carried_over", 0),
+            newFromDatabase = obj.optInt("new_from_database", 0),
+            excessPending = obj.optInt("excess_pending", 0),
+            connectRate = obj.optInt("connect_rate", 0),
+            conversionRate = obj.optInt("conversion_rate", 0),
         )
     }
 }

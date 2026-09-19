@@ -59,6 +59,8 @@ export type DailyPerformance = {
   /** Distinct leads moved to a promising outcome today. */
   qualifiedLeads: number;
   followUpsCompleted: number;
+  /** Follow-ups still due today — work waiting, not work done. */
+  followUpsDue: number;
   siteVisitsScheduled: number;
   siteVisitsCompleted: number;
   /** Distinct leads sold/closed today. */
@@ -169,6 +171,12 @@ export function dailyPerformanceOf(input: {
       .map((event) => event.id),
   ).size;
 
+  const followUpsDue = new Set(
+    mine
+      .filter((event) => event.status === "pending" && withinDay(event.scheduledAt, dateKey))
+      .map((event) => event.id),
+  ).size;
+
   const siteVisitsScheduled = new Set(
     mine
       .filter(
@@ -202,6 +210,7 @@ export function dailyPerformanceOf(input: {
     connectedCalls: connected.length,
     qualifiedLeads: qualified.size,
     followUpsCompleted,
+    followUpsDue,
     siteVisitsScheduled,
     siteVisitsCompleted,
     bookings: booked.size,
@@ -230,6 +239,7 @@ export function floorTotals(rows: DailyPerformance[]) {
     connectedCalls: connected,
     qualifiedLeads: sum((row) => row.qualifiedLeads),
     followUpsCompleted: sum((row) => row.followUpsCompleted),
+    followUpsDue: sum((row) => row.followUpsDue),
     siteVisitsScheduled: sum((row) => row.siteVisitsScheduled),
     siteVisitsCompleted: sum((row) => row.siteVisitsCompleted),
     bookings,
