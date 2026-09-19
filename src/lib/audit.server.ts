@@ -61,7 +61,8 @@ export type AuditAction =
   | "service_payout_recorded"
   | "service_bill_alert_raised"
   | "pin_rotated"
-  | "pin_revealed";
+  | "pin_revealed"
+  | "lead_rescued_to_pool";
 
 export async function logAudit(input: {
   action: AuditAction;
