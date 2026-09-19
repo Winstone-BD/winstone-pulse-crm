@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         }
         // A call from a "new" number is matched to an existing lead first, so the
         // same customer never ends up with two lead cards.
-        const phoneStatus = await resolveLeadIdByPhone(body.phone_number);
+        const phoneStatus = await resolveLeadIdByPhone(body.phone_number, caller.profile.id);
         const { data: found } = phoneStatus.existingLeadId
           ? await supabaseAdmin
               .from("leads")
