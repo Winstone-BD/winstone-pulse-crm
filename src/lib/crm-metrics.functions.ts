@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+
+import { callSessionKey } from "@/lib/call-evidence";
 import { z } from "zod";
 
 import {
@@ -68,7 +70,8 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       count(() => leads().not("assigned_to", "is", null)),
       count(() => leads().eq("status", "closed").eq("outcome_category", "deal_won")),
       count(() => reports().eq("status", "submitted")),
-      count(() => reports().eq("status", "submitted").eq("connected", true)),
+      // Connected = the phone proved the customer answered, not a typed claim.
+      count(() => reports().eq("status", "submitted").eq("connection_verified", true)),
       count(() =>
         followUps()
           .in("status", OPEN_FOLLOW_UP_STATES)
@@ -99,9 +102,12 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
     ).start;
     const page = 1000;
     const rows: {
+      id: string;
       lead_id: string | null;
       agent_id: string | null;
       connected: boolean | null;
+      connection_verified: boolean | null;
+      recording_id: string | null;
       category: string | null;
       call_ended_at: string | null;
       submitted_at: string | null;
@@ -110,7 +116,9 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
     for (let from = 0; from < 40_000; from += page) {
       const chunk = await supabaseAdmin
         .from("call_reports")
-        .select("lead_id, agent_id, connected, category, call_ended_at, submitted_at, duration_seconds")
+        .select(
+          "id, lead_id, agent_id, recording_id, connected, connection_verified, category, call_ended_at, submitted_at, duration_seconds",
+        )
         .eq("status", "submitted")
         .order("submitted_at", { ascending: false })
         .range(from, from + page - 1);
@@ -119,40 +127,70 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       if ((chunk.data ?? []).length < page) break;
     }
 
-    const byDay = new Map<string, { attempts: number; connected: number; talkSeconds: number }>();
+    // One call session counts once, however many times it was uploaded.
+    const seenSessions = new Set<string>();
+    const contactedLeadIds = new Set<string>();
+    const byDay = new Map<
+      string,
+      { attempts: number; connected: number; talkSeconds: number; unmeasured: number }
+    >();
     for (let i = 13; i >= 0; i -= 1) {
       byDay.set(dhakaDateKey(new Date(Date.now() - i * 86_400_000)), {
         attempts: 0,
         connected: 0,
         talkSeconds: 0,
+        unmeasured: 0,
       });
     }
     const agentAgg = new Map<
       string,
-      { attempts: number; connected: number; talkSeconds: number; bookingLeads: Set<string> }
+      {
+        attempts: number;
+        connected: number;
+        talkSeconds: number;
+        unmeasured: number;
+        bookingLeads: Set<string>;
+        contactedLeads: Set<string>;
+      }
     >();
     for (const row of rows) {
+      const sessionKey = callSessionKey({ reportId: row.id, recordingId: row.recording_id });
+      if (seenSessions.has(sessionKey)) continue;
+      seenSessions.add(sessionKey);
       const at = row.call_ended_at ?? row.submitted_at;
-      const talk = row.connected ? Math.max(0, row.duration_seconds ?? 0) : 0;
+      const verified = !!row.connection_verified;
+      const measured = Math.max(0, row.duration_seconds ?? 0);
+      const talk = verified ? measured : 0;
+      if (verified && row.lead_id) contactedLeadIds.add(row.lead_id);
       if (at && at >= windowStart) {
         const key = dhakaDateKey(new Date(at));
         const bucket = byDay.get(key);
         if (bucket) {
           bucket.attempts += 1;
-          if (row.connected) {
+          if (verified) {
             bucket.connected += 1;
             bucket.talkSeconds += talk;
+            if (measured === 0) bucket.unmeasured += 1;
           }
         }
       }
       if (!row.agent_id) continue;
       const agg =
         agentAgg.get(row.agent_id) ??
-        { attempts: 0, connected: 0, talkSeconds: 0, bookingLeads: new Set<string>() };
+        {
+          attempts: 0,
+          connected: 0,
+          talkSeconds: 0,
+          unmeasured: 0,
+          bookingLeads: new Set<string>(),
+          contactedLeads: new Set<string>(),
+        };
       agg.attempts += 1;
-      if (row.connected) {
+      if (verified) {
         agg.connected += 1;
         agg.talkSeconds += talk;
+        if (measured === 0) agg.unmeasured += 1;
+        if (row.lead_id) agg.contactedLeads.add(row.lead_id);
       }
       if (row.category === BOOKING_CATEGORY && row.lead_id) agg.bookingLeads.add(row.lead_id);
       agentAgg.set(row.agent_id, agg);
@@ -160,10 +198,14 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
 
     // "Today" comes from the same canonical day bucketing as the trend, so a
     // report with no call_ended_at (older rows) still lands on its real day.
-    const todayBucket = byDay.get(dateKey) ?? { attempts: 0, connected: 0, talkSeconds: 0 };
+    const todayBucket =
+      byDay.get(dateKey) ?? { attempts: 0, connected: 0, talkSeconds: 0, unmeasured: 0 };
     const attemptsToday = todayBucket.attempts;
     const connectedToday = todayBucket.connected;
-    const talkMinutesToday = Math.round(todayBucket.talkSeconds / 60);
+    // Talk time is only reportable when at least one of today's connected calls
+    // carried a measured duration — otherwise it stays unavailable, never 0.
+    const talkMeasuredToday = todayBucket.connected - todayBucket.unmeasured;
+    const talkMinutesToday = talkMeasuredToday > 0 ? Math.round(todayBucket.talkSeconds / 60) : null;
 
     const profiles = await supabaseAdmin.from("profiles").select("id, name, employee_id");
     if (profiles.error) throw new Error(profiles.error.message);
@@ -177,7 +219,8 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
         attempts: agg.attempts,
         connected: agg.connected,
         bookings: agg.bookingLeads.size,
-        talkMinutes: Math.round(agg.talkSeconds / 60),
+        contactedLeads: agg.contactedLeads.size,
+        talkMinutes: agg.connected - agg.unmeasured > 0 ? Math.round(agg.talkSeconds / 60) : null,
       }))
       .sort((a, b) => b.connected - a.connected || b.attempts - a.attempts);
 
@@ -205,6 +248,8 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       followUpOverdue,
       visitsCompleted,
       recordingSync,
+      contactedLeadsByCall: contactedLeadIds.size,
+      talkTimeMeasuredToday: talkMeasuredToday,
       trend: [...byDay.entries()].map(([key, v]) => ({ dateKey: key, ...v })),
       agents,
     };

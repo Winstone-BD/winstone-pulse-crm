@@ -14,6 +14,7 @@ import {
   type DailyPerformance,
   type FollowUpEvent,
 } from "@/lib/daily-performance";
+import { callEvidence } from "@/lib/call-evidence";
 import type { FloorAllocationStatus } from "@/lib/workday-allocation.server";
 
 async function admin() {
@@ -51,7 +52,7 @@ export async function dailyPerformanceBoard(
     supabaseAdmin
       .from("call_reports")
       .select(
-        "id, lead_id, agent_id, status, connected, duration_seconds, category, temperature, grade, call_ended_at, submitted_at",
+        "id, lead_id, agent_id, recording_id, status, connected, connection_verified, duration_seconds, category, temperature, grade, call_started_at, call_ended_at, submitted_at",
       )
       // Older reports carry no call_ended_at, so the submission time stands in —
       // otherwise a real day of work would silently count as zero.
@@ -77,8 +78,19 @@ export async function dailyPerformanceBoard(
     id: row.id,
     leadId: row.lead_id,
     agentId: row.agent_id,
+    recordingId: row.recording_id,
     status: row.status,
     connected: !!row.connected,
+    // Stored evidence wins; older rows are re-read from the facts on the row so
+    // no historical call is silently downgraded.
+    connectionVerified: callEvidence({
+      claimedConnected: !!row.connected,
+      measuredSeconds: row.duration_seconds,
+      hasRecording: Boolean(row.recording_id),
+      callStartedAt: row.call_started_at,
+      callEndedAt: row.call_ended_at,
+    }).connected,
+    verifiedSeconds: (row.duration_seconds ?? 0) > 0 ? row.duration_seconds : null,
     durationSeconds: row.duration_seconds,
     category: row.category,
     at: row.call_ended_at ?? row.submitted_at,

@@ -10,6 +10,12 @@
  * both the web desk and the Android app, so neither can bypass the rule.
  */
 
+import {
+  callEvidence,
+  isNotConnectedOutcome,
+  TASK_STATE_MESSAGE,
+  taskState,
+} from "@/lib/call-evidence";
 import { nextRetryAt, needsSupervisorDecision, reportTrust } from "@/lib/call-retry";
 
 
@@ -359,13 +365,36 @@ export async function submitCallReport(input: {
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
   // may only *upgrade* an unanswered call to "কথা হয়েছে", never the other way.
-  const received = report.connected !== false || input.callStatus === "connected";
-  const invalid = validateReport({ ...input, connected: received, requireCallFacts: true });
+  const claimedConnected =
+    !isNotConnectedOutcome(input.callStatus) &&
+    (report.connected !== false || input.callStatus === "connected");
+  const invalid = validateReport({ ...input, connected: claimedConnected, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
 
-  const temperature = received ? ((input.temperature ?? null) as LeadTemperature | null) : null;
-  const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
+  const temperature = claimedConnected
+    ? ((input.temperature ?? null) as LeadTemperature | null)
+    : null;
+  const grade = claimedConnected ? ((input.grade ?? null) as LeadGrade | null) : null;
   const classified = Boolean(temperature && grade);
+
+  // The phone's own record decides whether the call was really answered. A claim
+  // with no measured call, no recording and no call log never completes a task —
+  // the report is still stored, so nothing real is ever lost.
+  const evidence = callEvidence({
+    claimedConnected,
+    callStatus: input.callStatus ?? null,
+    measuredSeconds: report.duration_seconds,
+    hasRecording: Boolean(report.recording_id),
+    callStartedAt: report.call_started_at,
+    callEndedAt: report.call_ended_at,
+  });
+  const received = evidence.connected;
+  const taskOutcome = taskState({
+    connected: received,
+    classified,
+    evidence: evidence.evidence,
+    claimedConnected,
+  });
 
   // The stored duration wins whenever the phone actually measured the call; the
   // agent's number is only used when nothing was measured.
@@ -388,7 +417,8 @@ export async function submitCallReport(input: {
       note,
       reason: input.reason?.trim() || null,
       follow_up_at: input.followUpAt ?? null,
-      connected: received,
+      connected: claimedConnected,
+      connection_verified: received,
       duration_seconds: durationSeconds,
       temperature,
       grade,
@@ -602,7 +632,7 @@ export async function submitCallReport(input: {
   // on a phone that failed to measure the duration is still accepted — but a
   // "কথা হয়েছে" with no evidence at all is flagged and the agent is warned.
   const trust = reportTrust({
-    claimedConnected: received,
+    claimedConnected,
     measuredSeconds: report.duration_seconds ?? 0,
     declaredSeconds: input.durationSeconds ?? 0,
     hasRecording: Boolean(report.recording_id),
@@ -640,9 +670,11 @@ export async function submitCallReport(input: {
     sheet,
     review,
     nextReportId: nextQueued,
-    workState: received && classified ? ("completed" as const) : ("pending" as const),
-    retryQueued: !(received && classified),
-    warning: trust.warning,
+    workState: taskOutcome === "completed" ? ("completed" as const) : ("pending" as const),
+    taskState: taskOutcome,
+    retryQueued: taskOutcome !== "completed",
+    // The task contract speaks first, then the honesty check.
+    warning: TASK_STATE_MESSAGE[taskOutcome] ?? trust.warning,
   };
 
 }

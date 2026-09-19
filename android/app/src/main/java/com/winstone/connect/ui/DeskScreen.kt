@@ -606,19 +606,16 @@ private fun SectionTitle(title: String, action: String?, onAction: () -> Unit) {
 /** ছয়টি টাইলে আজকের অবস্থা — স্ক্রিনশটের KPI গ্রিডের মতো। */
 @Composable
 private fun KpiGrid(leads: List<Lead>, calls: List<CallRow>) {
-    val connected = calls.count { it.durationSeconds > 0 }
-    val talkMinutes = calls.sumOf { it.durationSeconds } / 60
-    val avgSeconds = if (calls.isNotEmpty()) calls.sumOf { it.durationSeconds } / calls.size else 0
+    // কল ও কথার হিসাব ফোনে গোনা হয় না — সেটা সার্ভারের এক হিসাব (ড্যাশবোর্ড টাইল)।
+    // এখানে শুধু হাতে থাকা লিডের অবস্থা, আর ফোনে জমা থাকা কলের সংখ্যা।
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             KpiTile("নতুন লিড", leads.count { it.status == "pending" }.toString(), "অপেক্ষমাণ", Modifier.weight(1f))
-            KpiTile("আজকের কল", calls.size.toString(), "$connected কথা", Modifier.weight(1f))
             KpiTile("ফলো-আপ", leads.count { it.status == "follow_up" }.toString(), "নির্ধারিত", Modifier.weight(1f))
+            KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
-            KpiTile("কথা", "$talkMinutes মি.", "মোট", Modifier.weight(1f))
-            KpiTile("গড় সময়", "$avgSeconds সে.", "প্রতি কলে", Modifier.weight(1f))
+            KpiTile("আজকের কল লগ", calls.size.toString(), "ফোনে জমা", Modifier.weight(1f))
         }
     }
 }

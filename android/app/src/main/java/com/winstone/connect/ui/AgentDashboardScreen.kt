@@ -204,6 +204,25 @@ fun AgentDashboardScreen(
                         accent = WinGreen,
                     )
                     MetricBox(
+                        label = "শেষ টাস্ক",
+                        value = metrics?.completedTasks?.toString() ?: "0",
+                        hint = if (metrics?.talkTimeAvailable == true)
+                            "${metrics.talkMinutes} মিনিট কথা"
+                        else
+                            "কথার সময় অনুপলব্ধ",
+                        modifier = Modifier.weight(1f),
+                        accent = WinGreen,
+                    )
+                    MetricBox(
+                        label = "ধরেনি",
+                        value = metrics?.unansweredCalls?.toString() ?: "0",
+                        hint = "আবার কল হবে",
+                        modifier = Modifier.weight(1f),
+                        accent = WinRed,
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MetricBox(
                         label = "অতিরিক্ত পেন্ডিং",
                         value = metrics?.excessPending?.toString() ?: "0",
                         hint = "মীমাংসাধীন",

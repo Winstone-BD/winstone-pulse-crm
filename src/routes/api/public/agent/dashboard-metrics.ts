@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { talkTimeAvailable } from "@/lib/daily-performance";
+
 /**
  * Agent dashboard numbers for the Android app.
  *
@@ -74,7 +76,15 @@ export const Route = createFileRoute("/api/public/agent/dashboard-metrics")({
           site_visits_scheduled: me.siteVisitsScheduled,
           site_visits_completed: me.siteVisitsCompleted,
           bookings: me.bookings,
+          /** Finished tasks: connected AND classified — never a typed report alone. */
+          completed_tasks: me.completedTasks,
+          /** Attempts nobody answered — the lead went back into the queue. */
+          unanswered_calls: me.unansweredCalls,
+          /** Distinct leads actually spoken to today. */
+          contacted_leads: me.contactedLeads,
           talk_minutes: me.talkMinutes,
+          /** false = the phone measured no duration, so talk time is unavailable. */
+          talk_time_available: talkTimeAvailable(me),
           carried_over: me.carriedOverPending,
           new_from_database: me.newFromDatabase,
           reassigned_in: me.reassignedIn,

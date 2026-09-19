@@ -112,7 +112,14 @@ data class DashboardMetrics(
     val siteVisitsScheduled: Int,
     val siteVisitsCompleted: Int,
     val bookings: Int,
+    /** কথা হয়ে শ্রেণিবিন্যাস হওয়া লিড — শেষ হওয়া টাস্ক। */
+    val completedTasks: Int,
+    /** কেউ ধরেনি — টাস্ক শেষ হয়নি, লিড আবার কিউতে। */
+    val unansweredCalls: Int,
+    val contactedLeads: Int,
     val talkMinutes: Int,
+    /** false = ফোন থেকে কথার সময় পাওয়া যায়নি, তাই মিনিট দেখানো হবে না। */
+    val talkTimeAvailable: Boolean,
     val carriedOver: Int,
     val newFromDatabase: Int,
     val excessPending: Int,
@@ -132,7 +139,11 @@ data class DashboardMetrics(
             siteVisitsScheduled = obj.optInt("site_visits_scheduled", 0),
             siteVisitsCompleted = obj.optInt("site_visits_completed", 0),
             bookings = obj.optInt("bookings", 0),
+            completedTasks = obj.optInt("completed_tasks", 0),
+            unansweredCalls = obj.optInt("unanswered_calls", 0),
+            contactedLeads = obj.optInt("contacted_leads", 0),
             talkMinutes = obj.optInt("talk_minutes", 0),
+            talkTimeAvailable = obj.optBoolean("talk_time_available", false),
             carriedOver = obj.optInt("carried_over", 0),
             newFromDatabase = obj.optInt("new_from_database", 0),
             excessPending = obj.optInt("excess_pending", 0),
