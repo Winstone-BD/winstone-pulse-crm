@@ -357,6 +357,33 @@ fun DeskScreen(
         )
     }
 
+    leadDetail?.let { lead ->
+        AlertDialog(
+            onDismissRequest = { leadDetail = null },
+            title = { Text(lead.name) },
+            text = {
+                Column {
+                    Text(lead.phone, fontSize = 14.sp)
+                    lead.company?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 13.sp) }
+                    lead.notes?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(6.dp))
+                        Text(it, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = leadDetail
+                    leadDetail = null
+                    target?.let {
+                        LiveCallLauncher.call(activity, it.id, it.phone, state.data?.agentId, it.name)
+                    }
+                }) { Text("কল করুন") }
+            },
+            dismissButton = { TextButton(onClick = { leadDetail = null }) { Text("বন্ধ") } },
+        )
+    }
+
     openReportLead?.let { lead ->
         AlertDialog(
             onDismissRequest = { openReportLead = null },
