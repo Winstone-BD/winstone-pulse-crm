@@ -124,14 +124,16 @@ export async function backupRecordingToDrive(recordingId: string) {
   // The audio is backup-ready as soon as the file itself is in storage. Older
   // rows use recording_status "stored", newer ones "available", and some only
   // record it through upload_status — the storage path is the real signal.
-  const uploaded =
-    !!recording.storage_path &&
+  const storagePath = recording.storage_path;
+  const backupReady =
+    !!storagePath &&
     (recording.upload_status === "uploaded" ||
       recording.recording_status === "stored" ||
       recording.recording_status === "available");
-  if (!uploaded) {
+  if (!storagePath || !backupReady) {
     throw new Error(`রেকর্ডিং এখনো জমা হয়নি — অবস্থা: ${recording.recording_status ?? "unknown"}`);
   }
+
 
 
   const [{ data: leads }, { data: agents }] = await Promise.all([
