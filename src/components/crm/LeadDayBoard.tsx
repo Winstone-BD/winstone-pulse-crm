@@ -57,6 +57,21 @@ function waitingDays(lead: Lead) {
   return Math.max(0, Math.round((to - from) / 86_400_000));
 }
 
+const BN_TIME = new Intl.DateTimeFormat("bn-BD", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Dhaka",
+});
+
+/** Waiting for the next try: nobody answered and the gap has not passed yet. */
+function retryWaiting(lead: Lead) {
+  return (
+    lead.work_state !== "completed" &&
+    Boolean(lead.retry_after) &&
+    Date.parse(lead.retry_after!) > Date.now()
+  );
+}
+
 /**
  * One line of history per task: when it came in, when it was finished (or how
  * many days it has been waiting), and the note written on it.
@@ -69,6 +84,14 @@ function taskTrail(lead: Lead) {
   } else {
     const days = waitingDays(lead);
     parts.push(days === 0 ? "আজকের কাজ" : `${days} দিন অপেক্ষায়`);
+    const tries = lead.unanswered_attempts ?? 0;
+    if (tries > 0) {
+      parts.push(
+        lead.retry_after && Date.parse(lead.retry_after) > Date.now()
+          ? `${tries} বার ধরেনি — ${BN_TIME.format(new Date(lead.retry_after))}-এর পর আবার কল`
+          : `${tries} বার ধরেনি — এখন আবার কল করা যাবে`,
+      );
+    }
   }
   const note = (lead.classification_note ?? lead.notes ?? "").trim();
   if (note) parts.push(note);
@@ -98,7 +121,13 @@ export function LeadDayBoard() {
     () =>
       leads
         .filter((lead) => dayOf(lead) === day)
-        .sort((a, b) => (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true })),
+        // Leads waiting for their next try sit at the end of the queue, so an
+        // untried lead is always called before a number that just rang out.
+        .sort((a, b) => {
+          const wait = Number(retryWaiting(a)) - Number(retryWaiting(b));
+          if (wait !== 0) return wait;
+          return (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true });
+        }),
     [leads, day],
   );
 
