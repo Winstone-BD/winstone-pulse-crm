@@ -112,6 +112,45 @@ export function CallReportsPanel() {
           </select>
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="report-from" className="text-xs">
+            তারিখ থেকে
+          </Label>
+          <Input
+            id="report-from"
+            type="date"
+            value={fromDate}
+            onChange={(event) => setFromDate(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="report-to" className="text-xs">
+            তারিখ পর্যন্ত
+          </Label>
+          <Input
+            id="report-to"
+            type="date"
+            value={toDate}
+            onChange={(event) => setToDate(event.target.value)}
+          />
+        </div>
+        {canFilterAgent ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs">এজেন্ট</Label>
+            <select
+              value={agentId}
+              onChange={(event) => setAgentId(event.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">সব এজেন্ট</option>
+              {(data?.agents ?? []).map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+        <div className="space-y-1.5">
           <Label htmlFor="report-search" className="text-xs">
             নাম বা নম্বর
           </Label>
@@ -127,6 +166,8 @@ export function CallReportsPanel() {
           </div>
         </div>
       </div>
+
+      {!isPending ? <CallReportSummary reports={reports} /> : null}
 
       {isPending ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
