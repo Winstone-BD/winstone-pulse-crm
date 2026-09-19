@@ -69,6 +69,20 @@ object WinstoneApi {
         }
     }
 
+    /** Agent dashboard KPIs for the V2 home screen. */
+    suspend fun fetchDashboardMetrics(): JSONObject = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
+            .url("$BASE_URL/api/public/agent/dashboard-metrics")
+            .header("x-device-token", authToken())
+            .get()
+            .build()
+        client.newCall(req).execute().use { res ->
+            val body = runCatching { JSONObject(res.body?.string().orEmpty()) }.getOrElse { JSONObject() }
+            if (!res.isSuccessful) error(body.optString("error", "HTTP ${res.code}"))
+            body
+        }
+    }
+
     /** Upload a finished call recording; the CRM transcribes + audits it. */
     suspend fun uploadRecording(
         leadId: String?,
