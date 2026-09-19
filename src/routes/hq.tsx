@@ -168,7 +168,6 @@ function ControlBoard() {
         <HqMixCards
           funnelRows={funnelRows}
           sourceRows={sourceRows}
-          sentimentRows={sentimentRows}
           loading={isPending}
           onDrill={setDrill}
         />
