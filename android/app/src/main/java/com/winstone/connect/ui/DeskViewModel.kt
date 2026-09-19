@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 data class DeskUiState(
     val employeeId: String? = null,
+    val agentName: String? = null,
     val loading: Boolean = false,
     val data: DeskData? = null,
     val error: String? = null,
