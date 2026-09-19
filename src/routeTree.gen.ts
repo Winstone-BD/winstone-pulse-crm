@@ -47,6 +47,7 @@ import { Route as ApiPublicAgentDeviceCapabilityRouteImport } from './routes/api
 import { Route as ApiPublicAgentIncomingCallRouteImport } from './routes/api/public/agent/incoming-call'
 import { Route as ApiPublicAgentLoginRouteImport } from './routes/api/public/agent/login'
 import { Route as ApiPublicAgentPresenceRouteImport } from './routes/api/public/agent/presence'
+import { Route as ApiPublicAgentRemindersRouteImport } from './routes/api/public/agent/reminders'
 import { Route as ApiPublicAgentReportRouteImport } from './routes/api/public/agent/report'
 import { Route as ApiPublicAgentSupportRouteImport } from './routes/api/public/agent/support'
 import { Route as ApiPublicAgentVersionRouteImport } from './routes/api/public/agent/version'
@@ -56,6 +57,7 @@ import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
+import { Route as ApiPublicHooksRemindersRouteImport } from './routes/api/public/hooks/reminders'
 import { Route as ApiPublicHooksServiceBillingRouteImport } from './routes/api/public/hooks/service-billing'
 import { Route as ApiPublicHooksShiftSummaryRouteImport } from './routes/api/public/hooks/shift-summary'
 import { Route as ApiPublicIngestAnalyzeRouteImport } from './routes/api/public/ingest/analyze'
@@ -264,6 +266,11 @@ const ApiPublicAgentPresenceRoute = ApiPublicAgentPresenceRouteImport.update({
   path: '/api/public/agent/presence',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentRemindersRoute = ApiPublicAgentRemindersRouteImport.update({
+  id: '/api/public/agent/reminders',
+  path: '/api/public/agent/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAgentReportRoute = ApiPublicAgentReportRouteImport.update({
   id: '/api/public/agent/report',
   path: '/api/public/agent/report',
@@ -311,6 +318,11 @@ const ApiPublicHooksLeadDistributionRoute =
     path: '/api/public/hooks/lead-distribution',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRemindersRoute = ApiPublicHooksRemindersRouteImport.update({
+  id: '/api/public/hooks/reminders',
+  path: '/api/public/hooks/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksServiceBillingRoute =
   ApiPublicHooksServiceBillingRouteImport.update({
     id: '/api/public/hooks/service-billing',
@@ -427,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
+  '/api/public/agent/reminders': typeof ApiPublicAgentRemindersRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
@@ -436,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
@@ -490,6 +504,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
+  '/api/public/agent/reminders': typeof ApiPublicAgentRemindersRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
@@ -499,6 +514,7 @@ export interface FileRoutesByTo {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
@@ -554,6 +570,7 @@ export interface FileRoutesById {
   '/api/public/agent/incoming-call': typeof ApiPublicAgentIncomingCallRoute
   '/api/public/agent/login': typeof ApiPublicAgentLoginRoute
   '/api/public/agent/presence': typeof ApiPublicAgentPresenceRoute
+  '/api/public/agent/reminders': typeof ApiPublicAgentRemindersRoute
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
@@ -563,6 +580,7 @@ export interface FileRoutesById {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
@@ -619,6 +637,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
+    | '/api/public/agent/reminders'
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
@@ -628,6 +647,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
@@ -682,6 +702,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
+    | '/api/public/agent/reminders'
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
@@ -691,6 +712,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
@@ -745,6 +767,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/incoming-call'
     | '/api/public/agent/login'
     | '/api/public/agent/presence'
+    | '/api/public/agent/reminders'
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
@@ -754,6 +777,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
     | '/api/public/ingest/analyze'
@@ -809,6 +833,7 @@ export interface RootRouteChildren {
   ApiPublicAgentIncomingCallRoute: typeof ApiPublicAgentIncomingCallRoute
   ApiPublicAgentLoginRoute: typeof ApiPublicAgentLoginRoute
   ApiPublicAgentPresenceRoute: typeof ApiPublicAgentPresenceRoute
+  ApiPublicAgentRemindersRoute: typeof ApiPublicAgentRemindersRoute
   ApiPublicAgentReportRoute: typeof ApiPublicAgentReportRoute
   ApiPublicAgentSupportRoute: typeof ApiPublicAgentSupportRoute
   ApiPublicAgentVersionRoute: typeof ApiPublicAgentVersionRoute
@@ -818,6 +843,7 @@ export interface RootRouteChildren {
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
+  ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
   ApiPublicHooksServiceBillingRoute: typeof ApiPublicHooksServiceBillingRoute
   ApiPublicHooksShiftSummaryRoute: typeof ApiPublicHooksShiftSummaryRoute
   ApiPublicIngestAnalyzeRoute: typeof ApiPublicIngestAnalyzeRoute
@@ -1102,6 +1128,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentPresenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent/reminders': {
+      id: '/api/public/agent/reminders'
+      path: '/api/public/agent/reminders'
+      fullPath: '/api/public/agent/reminders'
+      preLoaderRoute: typeof ApiPublicAgentRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent/report': {
       id: '/api/public/agent/report'
       path: '/api/public/agent/report'
@@ -1163,6 +1196,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/lead-distribution'
       fullPath: '/api/public/hooks/lead-distribution'
       preLoaderRoute: typeof ApiPublicHooksLeadDistributionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/reminders': {
+      id: '/api/public/hooks/reminders'
+      path: '/api/public/hooks/reminders'
+      fullPath: '/api/public/hooks/reminders'
+      preLoaderRoute: typeof ApiPublicHooksRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/service-billing': {
@@ -1306,6 +1346,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentIncomingCallRoute: ApiPublicAgentIncomingCallRoute,
   ApiPublicAgentLoginRoute: ApiPublicAgentLoginRoute,
   ApiPublicAgentPresenceRoute: ApiPublicAgentPresenceRoute,
+  ApiPublicAgentRemindersRoute: ApiPublicAgentRemindersRoute,
   ApiPublicAgentReportRoute: ApiPublicAgentReportRoute,
   ApiPublicAgentSupportRoute: ApiPublicAgentSupportRoute,
   ApiPublicAgentVersionRoute: ApiPublicAgentVersionRoute,
@@ -1315,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
+  ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
   ApiPublicHooksServiceBillingRoute: ApiPublicHooksServiceBillingRoute,
   ApiPublicHooksShiftSummaryRoute: ApiPublicHooksShiftSummaryRoute,
   ApiPublicIngestAnalyzeRoute: ApiPublicIngestAnalyzeRoute,
