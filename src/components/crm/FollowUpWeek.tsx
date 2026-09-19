@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, PhoneCall } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,11 +174,13 @@ export function FollowUpWeek() {
                     </div>
                     {event.phone_number && (
                       <div className="mt-2.5 flex items-center gap-2">
-                        <Button asChild className="h-11 flex-1 rounded-xl text-base font-semibold">
-                          <a href={`tel:${event.phone_number}`}>
-                            <PhoneCall className="size-5" /> কল
-                          </a>
-                        </Button>
+                        {/* Every follow-up call goes through the report gate. */}
+                        <WebCallButton
+                          leadId={event.lead_id ?? null}
+                          phone={event.phone_number}
+                          name={event.customer_name ?? null}
+                          label="কল"
+                        />
                         <WhatsAppAction
                           phone={event.phone_number}
                           leadId={event.lead_id ?? null}

@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, Check, PhoneCall } from "lucide-react";
+import { CalendarClock, Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,11 +119,14 @@ export function FollowUpCalendar() {
                 <Badge className={STATE_TONE[event.state]}>{STATE_LABEL[event.state]}</Badge>
                 {event.phone_number ? (
                   <>
-                    <Button asChild size="sm" variant="secondary" className="gap-1">
-                      <a href={`tel:${event.phone_number}`}>
-                        <PhoneCall className="size-3.5" /> কল
-                      </a>
-                    </Button>
+                    {/* Every follow-up call goes through the report gate. */}
+                    <WebCallButton
+                      leadId={event.lead_id ?? null}
+                      phone={event.phone_number}
+                      name={event.customer_name ?? null}
+                      label="কল"
+                      className="h-8 flex-none rounded-lg px-3 text-xs"
+                    />
                     <WhatsAppAction
                       phone={event.phone_number}
                       leadId={event.lead_id ?? null}
