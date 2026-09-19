@@ -27,6 +27,7 @@ object AgentSession {
     private val DEVICE_TOKEN = stringPreferencesKey("device_token")
     private val DEVICE_ID = stringPreferencesKey("device_id")
     private val SIM_NUMBER = stringPreferencesKey("sim_number")
+    private val SELECTED_ROLE = stringPreferencesKey("selected_role")
 
     private const val MIRROR = "winstone_session_mirror"
     private const val M_EMPLOYEE = "employee_id"
@@ -35,6 +36,7 @@ object AgentSession {
     private const val M_DEVICE_TOKEN = "device_token"
     private const val M_DEVICE_ID = "device_id"
     private const val M_SIM = "sim_number"
+    private const val M_SELECTED_ROLE = "selected_role"
 
     @Volatile var employeeId: String? = null; private set
     @Volatile var agentId: String? = null; private set
