@@ -58,11 +58,13 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { leadOwnerId } = await import("@/lib/lead-access.server");
         const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
-        const { getLeadPhoneStatus, eligibleLeadIds } = await import(
+        const { resolveLeadIdByPhone, eligibleLeadIds } = await import(
           "@/lib/lead-eligibility.server"
         );
         const phone = normalizeLeadPhone(body.phone_number);
-        const phoneStatus = await getLeadPhoneStatus(body.phone_number);
+        // A call from a "new" number is matched to an existing lead first, so the
+        // same customer never ends up with two lead cards.
+        const phoneStatus = await resolveLeadIdByPhone(body.phone_number);
         const { data: found } = phoneStatus.existingLeadId
           ? await supabaseAdmin
               .from("leads")
