@@ -12,6 +12,7 @@ import {
   runAnalysisSweep,
 } from "@/lib/ops.functions";
 import { useAdminToken } from "@/lib/local-session";
+import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const RECORDING_LABEL: Record<string, string> = {
   two_sided: "রেকর্ডিং: দুই পাশের কথা",
@@ -229,15 +230,23 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                           ? new Date(device.lastSeenAt).toLocaleString("bn-BD")
                           : "—"}
                       {showControls && !device.revoked ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 gap-1 px-2 text-[11px]"
+                        <ConfirmAction
+                          title="ফোনটির অনুমতি বাতিল করবেন?"
+                          description="এই ফোন থেকে আর কল বা রেকর্ডিং CRM-এ আসবে না। এজেন্টকে আবার সাইন ইন করে ফোন যুক্ত করতে হবে।"
+                          confirmLabel="হ্যাঁ, বাতিল করুন"
                           disabled={revokeDevice.isPending}
-                          onClick={() => revokeDevice.mutate(device.id)}
-                        >
-                          <ShieldOff className="size-3" /> বাতিল করুন
-                        </Button>
+                          onConfirm={() => revokeDevice.mutate(device.id)}
+                          trigger={
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 gap-1 px-2 text-[11px]"
+                              disabled={revokeDevice.isPending}
+                            >
+                              <ShieldOff className="size-3" /> বাতিল করুন
+                            </Button>
+                          }
+                        />
                       ) : null}
                     </span>
                   </li>

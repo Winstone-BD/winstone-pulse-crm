@@ -16,6 +16,7 @@ import { decideAccount, listAccountRequests } from "@/lib/accounts.functions";
 import { getSystemNotices } from "@/lib/notices.functions";
 import type { NoticeLevel, SystemNotice } from "@/lib/notices-types";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
+import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const STYLES: Record<NoticeLevel, { row: string; icon: string }> = {
   critical: {
@@ -150,15 +151,23 @@ function PendingAccountActions() {
               >
                 কোঅর্ডিনেটর
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-9 gap-1 text-xs"
+              <ConfirmAction
+                title="অ্যাকাউন্টটি বাদ দেবেন?"
+                description={`${account.name}-এর অনুরোধ বাতিল হবে এবং তিনি ডেস্কে ঢুকতে পারবেন না। প্রয়োজনে পরে আবার অনুরোধ করতে হবে।`}
+                confirmLabel="হ্যাঁ, বাদ দিন"
                 disabled={busyId !== null}
-                onClick={() => act.mutate({ profileId: account.id, decision: "reject" })}
-              >
-                <X className="size-3.5" /> বাদ দিন
-              </Button>
+                onConfirm={() => act.mutate({ profileId: account.id, decision: "reject" })}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-9 gap-1 text-xs"
+                    disabled={busyId !== null}
+                  >
+                    <X className="size-3.5" /> বাদ দিন
+                  </Button>
+                }
+              />
             </div>
           )}
         </li>

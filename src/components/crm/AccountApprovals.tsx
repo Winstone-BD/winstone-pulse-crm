@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { decideAccount, listAccountRequests } from "@/lib/accounts.functions";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
+import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "অপেক্ষমাণ",
@@ -99,14 +100,18 @@ export function AccountApprovals() {
                 >
                   কোঅর্ডিনেটর
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <ConfirmAction
+                  title="অ্যাকাউন্টটি বাদ দেবেন?"
+                  description={`${account.name}-এর অনুরোধ বাতিল হবে এবং তিনি ডেস্কে ঢুকতে পারবেন না।`}
+                  confirmLabel="হ্যাঁ, বাদ দিন"
                   disabled={act.isPending}
-                  onClick={() => act.mutate({ profileId: account.id, decision: "reject" })}
-                >
-                  <X className="size-3.5" /> বাদ দিন
-                </Button>
+                  onConfirm={() => act.mutate({ profileId: account.id, decision: "reject" })}
+                  trigger={
+                    <Button size="sm" variant="ghost" disabled={act.isPending}>
+                      <X className="size-3.5" /> বাদ দিন
+                    </Button>
+                  }
+                />
               </div>
             )}
           </li>
