@@ -29,6 +29,8 @@ export type CallReportEvent = {
   category: string | null;
   /** When the call ended (falls back to submission time). */
   at: string | null;
+  /** A received call that the agent classified (temperature + grade) — a finished task. */
+  classified: boolean;
 };
 
 /** A follow-up, site visit or reminder with its own lifecycle. */
@@ -56,6 +58,10 @@ export type DailyPerformance = {
   callsAttempted: number;
   /** Attempts the call record confirms were answered. */
   connectedCalls: number;
+  /** Finished tasks: distinct leads talked to AND classified today. */
+  completedTasks: number;
+  /** Calls nobody answered — the lead went back to the retry queue, not done. */
+  unansweredCalls: number;
   /** Distinct leads moved to a promising outcome today. */
   qualifiedLeads: number;
   followUpsCompleted: number;
@@ -72,6 +78,11 @@ export type DailyPerformance = {
   target: number;
   /** Share of the target actually worked on (attempted), capped at 100. */
   activityPercent: number;
+  /**
+   * The real performance figure: finished tasks against the target. An
+   * unanswered call is dialling, not work, so it is deliberately excluded.
+   */
+  performancePercent: number;
   /** Connected ÷ attempted, as a percentage. */
   connectRate: number;
   /** Bookings ÷ attempted, as a percentage. */
@@ -214,6 +225,13 @@ export function dailyPerformanceOf(input: {
       .map((event) => event.id),
   ).size;
 
+  // A task is only finished when the customer was actually spoken to and the
+  // lead was classified. An unanswered call returns to the queue instead.
+  const completedLeads = new Set<string>();
+  for (const report of attempts) {
+    if (report.connected && report.classified && report.leadId) completedLeads.add(report.leadId);
+  }
+
   const callsAttempted = attempts.length;
   const target = workload.target;
 
@@ -226,6 +244,8 @@ export function dailyPerformanceOf(input: {
     reassignedOut: workload.reassignedOut,
     callsAttempted,
     connectedCalls: connected.length,
+    completedTasks: completedLeads.size,
+    unansweredCalls: attempts.length - connected.length,
     qualifiedLeads: qualified.size,
     followUpsCompleted,
     followUpsDue,
@@ -236,6 +256,8 @@ export function dailyPerformanceOf(input: {
     excessPending: workload.excessPending,
     target,
     activityPercent: target > 0 ? Math.min(100, Math.round((callsAttempted / target) * 100)) : 0,
+    performancePercent:
+      target > 0 ? Math.min(100, Math.round((completedLeads.size / target) * 100)) : 0,
     connectRate: callsAttempted > 0 ? Math.round((connected.length / callsAttempted) * 100) : 0,
     conversionRate: callsAttempted > 0 ? Math.round((booked.size / callsAttempted) * 100) : 0,
   };
@@ -255,6 +277,8 @@ export function floorTotals(rows: DailyPerformance[]) {
     reassigned: sum((row) => row.reassignedIn),
     callsAttempted: attempted,
     connectedCalls: connected,
+    completedTasks: sum((row) => row.completedTasks),
+    unansweredCalls: sum((row) => row.unansweredCalls),
     qualifiedLeads: sum((row) => row.qualifiedLeads),
     followUpsCompleted: sum((row) => row.followUpsCompleted),
     followUpsDue: sum((row) => row.followUpsDue),
