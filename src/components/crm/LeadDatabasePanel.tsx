@@ -154,6 +154,16 @@ export function LeadDatabasePanel() {
         </div>
       ) : null}
 
+      {status.data && poolCount === 0 ? (
+        <p className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-muted-foreground">
+          ডেটাবেজ এখন খালি — আপলোড করা সব লিড ইতিমধ্যে এজেন্টদের কাছে চলে গেছে (মোট{" "}
+          {status.data.agents.reduce((sum, agent) => sum + agent.total, 0)}টি এজেন্টের হাতে)। নতুন
+          লিড আপলোড করলে সেগুলো এখানে দেখা যাবে।
+        </p>
+      ) : null}
+
+
+
       {status.data && status.data.preview.length > 0 ? (
         <details className="rounded-xl border border-border px-3 py-2">
           <summary className="cursor-pointer text-xs font-medium">
