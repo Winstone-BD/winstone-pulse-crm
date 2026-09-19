@@ -291,7 +291,7 @@ fun DeskScreen(
                                 )
                             }
                         }
-                        TAB_FOLLOWUPS -> {
+                        TAB_CALLS -> {
                             if (followUpLeads.isNotEmpty()) {
                                 item { SectionTitle("আজকের ফলো-আপ", null) {} }
                                 items(followUpLeads) { lead ->
@@ -317,7 +317,7 @@ fun DeskScreen(
                                 }
                             }
                         }
-                        TAB_PERFORMANCE -> {
+                        TAB_AI_COACH -> {
                             item { KpiGrid(leads = leads, calls = calls) }
                             item { SectionTitle("AI কোচ", null) {} }
                             if (state.coachLoading) item { EmptyNote("AI কোচ তৈরি হচ্ছে…") }
@@ -331,7 +331,7 @@ fun DeskScreen(
                             if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
                             items(calls) { CallCard(it, leads) }
                         }
-                        else -> {
+                        TAB_MORE, else -> {
                             item { StatusCards(state) }
                             item {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
