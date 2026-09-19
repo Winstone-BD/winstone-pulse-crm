@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import type { CallRecording, Lead, Profile, WhatsappMessage } from "@/lib/crm-data";
+import { callEvidence, callSessionKey } from "@/lib/call-evidence";
+import type { CallRecording, CanonicalCall, Lead, Profile, WhatsappMessage } from "@/lib/crm-data";
 import { buildReport, defaultFilters, isoDay, reportToCsv } from "@/lib/crm-reports";
 import { PROFILE_SAFE_COLUMNS } from "@/lib/profile-columns";
 
@@ -64,17 +65,53 @@ export const Route = createFileRoute("/api/public/reports/summary")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const [profilesRes, leadsRes, callsRes, messagesRes] = await Promise.all([
+        const [profilesRes, leadsRes, callsRes, reportsRes, messagesRes] = await Promise.all([
           supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS),
           supabaseAdmin.from("leads").select("*"),
           supabaseAdmin.from("call_recordings").select("*").gte("created_at", `${from}T00:00:00Z`),
+          supabaseAdmin
+            .from("call_reports")
+            .select(
+              "id, agent_id, lead_id, connected, connection_verified, duration_seconds, recording_id, call_started_at, call_ended_at, submitted_at",
+            )
+            .eq("status", "submitted")
+            .gte("submitted_at", `${from}T00:00:00Z`),
           supabaseAdmin
             .from("whatsapp_interactions")
             .select("*")
             .gte("created_at", `${from}T00:00:00Z`),
         ]);
-        const failed = [profilesRes, leadsRes, callsRes, messagesRes].find((r) => r.error);
+        const failed = [profilesRes, leadsRes, callsRes, reportsRes, messagesRes].find(
+          (r) => r.error,
+        );
         if (failed?.error) return json({ error: failed.error.message }, 500);
+
+        // Same canonical call layer the web board uses: one submitted report per
+        // call session, connected only with telephony evidence.
+        const seen = new Set<string>();
+        const callEvents: CanonicalCall[] = [];
+        for (const row of reportsRes.data ?? []) {
+          const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id });
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const measured = row.duration_seconds ?? 0;
+          const verified = callEvidence({
+            claimedConnected: row.connected !== false,
+            measuredSeconds: row.duration_seconds,
+            hasRecording: Boolean(row.recording_id),
+            callStartedAt: row.call_started_at,
+            callEndedAt: row.call_ended_at,
+          }).connected;
+          callEvents.push({
+            id: row.id,
+            agentId: row.agent_id,
+            leadId: row.lead_id,
+            at: row.call_ended_at ?? row.submitted_at ?? `${from}T00:00:00Z`,
+            verifiedConnected: row.connection_verified === true || verified,
+            verifiedSeconds: measured > 0 ? measured : null,
+            recordingId: row.recording_id,
+          });
+        }
 
         const profiles = (profilesRes.data ?? []) as Profile[];
         let agentId: string | "all" = "all";
@@ -91,6 +128,7 @@ export const Route = createFileRoute("/api/public/reports/summary")({
             profiles,
             leads: (leadsRes.data ?? []) as Lead[],
             calls: (callsRes.data ?? []) as CallRecording[],
+            callEvents,
             messages: (messagesRes.data ?? []) as WhatsappMessage[],
           },
           { from, to, agentId, source: q.source, status: q.status },
