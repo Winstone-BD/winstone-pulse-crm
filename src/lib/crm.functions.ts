@@ -30,16 +30,19 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
 
     // The Data API caps a single response at 1000 rows, which silently truncated
     // the floor to "1000 leads". Page through so every KPI counts every lead.
+    const page = 1000;
+    const fetchLeadPage = (from: number) =>
+      supabaseAdmin
+        .from("leads")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .range(from, from + page - 1);
     const allLeads = async () => {
-      const page = 1000;
-      const rows: Awaited<ReturnType<typeof fetchPage>>["data"] = [];
-      const fetchPage = (from: number) =>
-        supabaseAdmin
-          .from("leads")
-          .select("*")
-          .order("updated_at", { ascending: false })
-          .range(from, from + page - 1);
-      for (let from = 0; from < 20_000; from += page) {
+      const first = await fetchLeadPage(0);
+      if (first.error) return first;
+      const rows = [...(first.data ?? [])];
+      if (rows.length < page) return { data: rows, error: null };
+      for (let from = page; from < 20_000; from += page) {
         const result = await fetchPage(from);
         if (result.error) return result;
         rows.push(...(result.data ?? []));
