@@ -139,15 +139,14 @@ export function LeadDossier({
                 সব মাধ্যমের টাইমলাইন
               </h3>
 
-              {timeline.length === 0 && (
+              {timeline.filter((entry) => entry.kind !== "call").length === 0 && (
                 <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                  এই লিডের এখনো কোনো কল বা মেসেজ জমা হয়নি।
+                  এখনো কোনো মেসেজ বা ধাপ জমা হয়নি।
                 </p>
               )}
 
-              {timeline.map((entry) => {
-                if (entry.kind === "call")
-                  return <CallEntry key={entry.call.id} call={entry.call} />;
+              {/* Calls live in the history block above, from the submitted reports. */}
+              {timeline.filter((entry) => entry.kind !== "call").map((entry) => {
                 if (entry.kind === "message")
                   return <MessageEntry key={entry.message.id} message={entry.message} />;
                 return <LifecycleEntry key={entry.event.id} event={entry.event} />;
