@@ -155,8 +155,6 @@ function ControlBoard() {
         <HqHeader />
 
         <ExecutiveOverview
-
-        <FloorAllocationPanel />
           profiles={profiles}
           leads={leads}
           calls={calls}
@@ -164,6 +162,8 @@ function ControlBoard() {
           events={events}
           onSelectAgent={setOpenAgentId}
         />
+
+        <FloorAllocationPanel />
 
         <SmartInsightStrip scope="floor" />
 
