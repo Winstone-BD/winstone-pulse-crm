@@ -48,8 +48,23 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
           const rolledOver = await rolloverPendingLeads(today);
           const plan = await dailyPlan();
           if (plan.lastRunDate === today) {
-            return Response.json({ ok: true, skipped: "already_done_today", today, rolledOver });
+            // The hand-out is done for today, but the board can still have
+            // leftover excess or a shortage — recount and tell HQ once.
+            const { floorAllocationStatus, notifyAllocationProblems } = await import(
+              "@/lib/workday-allocation.server"
+            );
+            const status = await floorAllocationStatus(today);
+            await notifyAllocationProblems(status);
+            return Response.json({
+              ok: true,
+              skipped: "already_done_today",
+              today,
+              rolledOver,
+              excess: status.totals.excess,
+              shortage: status.shortage,
+            });
           }
+
 
           const before = await usablePoolCount();
           if (before === 0) {

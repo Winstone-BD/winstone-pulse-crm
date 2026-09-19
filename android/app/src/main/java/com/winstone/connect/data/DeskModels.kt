@@ -45,7 +45,50 @@ data class DeskData(
     val leads: List<Lead>,
     val calls: List<CallRow>,
     val messages: List<MessageRow>,
+    /** Server-computed workday allocation; null until the phone syncs. */
+    val allocation: Allocation? = null,
 )
+
+/**
+ * The workday allocation numbers exactly as the server counted them.
+ *
+ * The app only displays these — it never works out a target, a pending count or
+ * an excess of its own, and it never decides allocation from the device clock.
+ * Offline the phone keeps showing the last synced numbers and commits nothing;
+ * the next successful sync reconciles it with the server.
+ */
+data class Allocation(
+    val workDate: String,
+    val quota: Int,
+    val pending: Int,
+    val carriedOver: Int,
+    val carriedFrom: String?,
+    val newFromDatabase: Int,
+    val receivedFromOthers: Int,
+    val movedToOthers: Int,
+    val completed: Int,
+    val excess: Int,
+    val gap: Int,
+    val poolShortage: Int,
+)
+
+fun parseAllocation(body: org.json.JSONObject?): Allocation? {
+    val me = body?.optJSONObject("me") ?: return null
+    return Allocation(
+        workDate = body.optString("work_date"),
+        quota = me.optInt("quota"),
+        pending = me.optInt("pending"),
+        carriedOver = me.optInt("carriedOver"),
+        carriedFrom = me.optString("carriedFrom").takeIf { it.isNotBlank() && it != "null" },
+        newFromDatabase = me.optInt("newFromDatabase"),
+        receivedFromOthers = me.optInt("receivedFromOthers"),
+        movedToOthers = me.optInt("movedToOthers"),
+        completed = me.optInt("completed"),
+        excess = me.optInt("excess"),
+        gap = me.optInt("gap"),
+        poolShortage = body.optInt("shortage"),
+    )
+}
 
 /** Dashboard metrics returned by /api/public/agent/dashboard-metrics. */
 data class DashboardMetrics(

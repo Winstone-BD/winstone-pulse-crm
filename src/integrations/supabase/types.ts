@@ -1336,6 +1336,7 @@ export type Database = {
           assignment_source: string | null
           call_attempts: number
           call_count: number | null
+          carried_from_date: string | null
           classification_note: string | null
           classified_at: string | null
           classified_by: string | null
@@ -1365,6 +1366,7 @@ export type Database = {
           assignment_source?: string | null
           call_attempts?: number
           call_count?: number | null
+          carried_from_date?: string | null
           classification_note?: string | null
           classified_at?: string | null
           classified_by?: string | null
@@ -1394,6 +1396,7 @@ export type Database = {
           assignment_source?: string | null
           call_attempts?: number
           call_count?: number | null
+          carried_from_date?: string | null
           classification_note?: string | null
           classified_at?: string | null
           classified_by?: string | null
