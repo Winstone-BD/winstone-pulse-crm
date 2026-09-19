@@ -253,20 +253,29 @@ export const importLeads = createServerFn({ method: "POST" })
     let excludedAlreadyWorkedOrAssigned = 0;
     let excludedDuplicate = 0;
     const seen = new Set<string>();
-    for (const row of data.rows) {
-      const status = await getLeadPhoneStatus(row.phone_number);
+
+    // Eligibility is one DB round trip per row, so run them in small parallel
+    // batches — a few thousand rows checked strictly one by one would outlive
+    // the request and leave a half-finished import.
+    const CHECK_CONCURRENCY = 25;
+    const statuses: { existingLeadId: string | null; alreadyWorked: boolean }[] = [];
+    for (let i = 0; i < data.rows.length; i += CHECK_CONCURRENCY) {
+      const slice = data.rows.slice(i, i + CHECK_CONCURRENCY);
+      statuses.push(
+        ...(await Promise.all(slice.map((row) => getLeadPhoneStatus(row.phone_number)))),
+      );
+    }
+
+    data.rows.forEach((row, index) => {
+      const status = statuses[index]!;
       const phones = extractBangladeshPhones(row.phone_number);
       if (status.alreadyWorked) {
         excludedAlreadyWorkedOrAssigned += 1;
-        continue;
+        return;
       }
-      if (
-        phones.length === 0 ||
-        status.existingLeadId ||
-        phones.some((phone) => seen.has(phone))
-      ) {
+      if (phones.length === 0 || status.existingLeadId || phones.some((p) => seen.has(p))) {
         excludedDuplicate += 1;
-        continue;
+        return;
       }
       phones.forEach((phone) => seen.add(phone));
       toInsert.push({
@@ -282,14 +291,25 @@ export const importLeads = createServerFn({ method: "POST" })
         assigned_to: agents.length ? agents[toInsert.length % agents.length]!.id : null,
         assignment_source: agents.length ? "coordinator" : null,
       });
-    }
+    });
 
+    // Bulk insert in chunks; if a chunk trips a duplicate-phone guard, retry
+    // that chunk row by row so one bad number cannot drop the rest.
     let eligibleNew = 0;
-    for (const lead of toInsert) {
-      const { error } = await supabaseAdmin.from("leads").insert(lead);
-      if (!error) eligibleNew += 1;
-      else if (error.code === "23505") excludedDuplicate += 1;
-      else throw new Error(error.message);
+    const INSERT_CHUNK = 100;
+    for (let i = 0; i < toInsert.length; i += INSERT_CHUNK) {
+      const chunk = toInsert.slice(i, i + INSERT_CHUNK);
+      const { error } = await supabaseAdmin.from("leads").insert(chunk);
+      if (!error) {
+        eligibleNew += chunk.length;
+        continue;
+      }
+      for (const lead of chunk) {
+        const { error: rowError } = await supabaseAdmin.from("leads").insert(lead);
+        if (!rowError) eligibleNew += 1;
+        else if (rowError.code === "23505" || rowError.code === "22023") excludedDuplicate += 1;
+        else throw new Error(rowError.message);
+      }
     }
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
