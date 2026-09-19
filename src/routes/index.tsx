@@ -49,7 +49,7 @@ function EntryHall() {
             alt="Winstone Properties Ltd. — Find. Build. Invest."
             className="size-16 rounded-full object-cover shadow-sm ring-2 ring-primary/20"
           />
-          <h1 className="page-title mt-4">Winstone Connect</h1>
+          <h1 className="hero-title mt-4">Winstone Connect</h1>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Tele-Sales Operating System
           </p>

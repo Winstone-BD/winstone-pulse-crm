@@ -28,7 +28,7 @@ function PrivacyPage() {
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
           ← Back to Winstone Connect
         </Link>
-        <h1 className="page-title mt-4 font-display">Privacy Policy</h1>
+        <h1 className="hero-title mt-4">Privacy Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">Effective date: 10 September 2026</p>
 
         <div className="mt-8 space-y-6 text-sm leading-7 text-foreground">

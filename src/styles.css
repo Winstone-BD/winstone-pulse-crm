@@ -237,6 +237,19 @@
   }
 }
 
+/* Public / marketing + auth hero headline */
+@utility hero-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 2.125rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  @media (min-width: 640px) {
+    font-size: 2.25rem;
+    line-height: 2.625rem;
+  }
+}
+
 @utility section-title {
   display: flex;
   align-items: center;
