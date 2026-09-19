@@ -50,9 +50,17 @@ export async function dailyPerformanceBoard(
     floorAllocationStatus(dateKey),
     supabaseAdmin
       .from("call_reports")
-      .select("id, lead_id, agent_id, status, connected, duration_seconds, category, call_ended_at, submitted_at")
-      .gte("call_ended_at", start)
-      .lt("call_ended_at", end),
+      .select(
+        "id, lead_id, agent_id, status, connected, duration_seconds, category, temperature, grade, call_ended_at, submitted_at",
+      )
+      // Older reports carry no call_ended_at, so the submission time stands in —
+      // otherwise a real day of work would silently count as zero.
+      .or(
+        [
+          `and(call_ended_at.gte.${start},call_ended_at.lt.${end})`,
+          `and(call_ended_at.is.null,submitted_at.gte.${start},submitted_at.lt.${end})`,
+        ].join(","),
+      ),
     supabaseAdmin
       .from("follow_up_events")
       .select("id, lead_id, agent_id, category, status, scheduled_at, completed_at, created_at")
@@ -74,6 +82,7 @@ export async function dailyPerformanceBoard(
     durationSeconds: row.duration_seconds,
     category: row.category,
     at: row.call_ended_at ?? row.submitted_at,
+    classified: Boolean(row.temperature && row.grade),
   }));
   const followUps: FollowUpEvent[] = (followUpRows.data ?? []).map((row) => ({
     id: row.id,
