@@ -266,26 +266,18 @@ fun DeskScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     when (tab) {
-                        TAB_DASHBOARD -> {
+                        TAB_HOME -> {
                             item {
-                                WelcomeCard(
+                                AgentDashboardScreen(
+                                    activity = activity,
                                     agentName = data?.agentName ?: "…",
                                     employeeId = state.employeeId.orEmpty(),
-                                    online = state.error == null,
-                                    targetLine = "লক্ষ্য: ${leads.size} লিড · ${followUpLeads.size} ফলো-আপ",
+                                    leads = leads,
+                                    onLeadDetail = { leadDetail = it },
+                                    onViewAllLeads = { tab = TAB_LEADS },
+                                    onViewAllFollowUps = { tab = TAB_CALLS },
                                 )
                             }
-                            item { SectionTitle("আজকের KPI", "সব লিড") { tab = TAB_LEADS } }
-                            item { KpiGrid(leads = leads, calls = calls) }
-                            item {
-                                SectionTitle("আজকের নির্ধারিত কল", "সব ফলো-আপ") { tab = TAB_FOLLOWUPS }
-                            }
-                            val queue = (followUpLeads + leads.filter { it.status == "pending" }).take(5)
-                            if (queue.isEmpty()) item { EmptyNote("আজ নির্ধারিত কোনো কল নেই।") }
-                            items(queue) { lead ->
-                                ScheduledCallRow(lead = lead, onCall = { startCall(lead) })
-                            }
-                            item { InfoBanner() }
                         }
                         TAB_LEADS -> {
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
