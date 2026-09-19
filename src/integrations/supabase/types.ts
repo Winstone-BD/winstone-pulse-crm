@@ -583,6 +583,7 @@ export type Database = {
           call_started_at: string | null
           category: string | null
           connected: boolean
+          connection_verified: boolean
           created_at: string
           device_id: string | null
           duration_seconds: number
@@ -608,6 +609,7 @@ export type Database = {
           call_started_at?: string | null
           category?: string | null
           connected?: boolean
+          connection_verified?: boolean
           created_at?: string
           device_id?: string | null
           duration_seconds?: number
@@ -633,6 +635,7 @@ export type Database = {
           call_started_at?: string | null
           category?: string | null
           connected?: boolean
+          connection_verified?: boolean
           created_at?: string
           device_id?: string | null
           duration_seconds?: number
