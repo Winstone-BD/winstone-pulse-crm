@@ -32,6 +32,11 @@ const Body = z.discriminatedUnion("action", [
     temperature: z.enum(["hot", "warm", "cold"]).nullable().optional(),
     grade: z.enum(["A", "B", "C", "D"]).nullable().optional(),
     ai_decision: z.enum(["accepted", "edited", "rejected"]).nullable().optional(),
+    direction: z.enum(["outgoing", "incoming"]).nullable().optional(),
+    call_status: z.enum(["connected", "no_answer", "busy", "failed"]).nullable().optional(),
+    duration_seconds: z.number().int().min(0).max(86400).nullable().optional(),
+    follow_up_needed: z.boolean().optional(),
+    follow_up_note: z.string().trim().max(500).nullable().optional(),
   }),
 ]);
 
