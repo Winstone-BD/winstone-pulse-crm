@@ -659,11 +659,11 @@ private fun DeskBottomBar(
 ) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         val items = listOf(
-            Triple("ড্যাশবোর্ড", Icons.Filled.GridView, 0),
-            Triple("লিড", Icons.Filled.Groups, leadBadge),
-            Triple("ফলো-আপ", Icons.Filled.CalendarMonth, followUpBadge),
-            Triple("পারফরম্যান্স", Icons.Filled.BarChart, 0),
-            Triple("প্রোফাইল", Icons.Filled.Person, 0),
+            Triple("Home", Icons.Filled.GridView, 0),
+            Triple("Leads", Icons.Filled.Groups, leadBadge),
+            Triple("Calls", Icons.Filled.CalendarMonth, followUpBadge),
+            Triple("AI Coach", Icons.Filled.BarChart, 0),
+            Triple("More", Icons.Filled.Person, 0),
         )
         items.forEachIndexed { index, (label, icon, badge) ->
             NavigationBarItem(
