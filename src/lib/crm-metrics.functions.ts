@@ -53,8 +53,6 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       closedWon,
       callAttempts,
       connectedCalls,
-      attemptsToday,
-      connectedToday,
       followUpDue,
       followUpOverdue,
       visitsCompleted,
@@ -71,16 +69,6 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       count(() => leads().eq("status", "closed").eq("outcome_category", "deal_won")),
       count(() => reports().eq("status", "submitted")),
       count(() => reports().eq("status", "submitted").eq("connected", true)),
-      count(() =>
-        reports().eq("status", "submitted").gte("call_ended_at", start).lt("call_ended_at", end),
-      ),
-      count(() =>
-        reports()
-          .eq("status", "submitted")
-          .eq("connected", true)
-          .gte("call_ended_at", start)
-          .lt("call_ended_at", end),
-      ),
       count(() =>
         followUps()
           .in("status", OPEN_FOLLOW_UP_STATES)
@@ -117,11 +105,12 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       category: string | null;
       call_ended_at: string | null;
       submitted_at: string | null;
+      duration_seconds: number | null;
     }[] = [];
     for (let from = 0; from < 40_000; from += page) {
       const chunk = await supabaseAdmin
         .from("call_reports")
-        .select("lead_id, agent_id, connected, category, call_ended_at, submitted_at")
+        .select("lead_id, agent_id, connected, category, call_ended_at, submitted_at, duration_seconds")
         .eq("status", "submitted")
         .order("submitted_at", { ascending: false })
         .range(from, from + page - 1);
@@ -130,36 +119,51 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       if ((chunk.data ?? []).length < page) break;
     }
 
-    const byDay = new Map<string, { attempts: number; connected: number }>();
+    const byDay = new Map<string, { attempts: number; connected: number; talkSeconds: number }>();
     for (let i = 13; i >= 0; i -= 1) {
       byDay.set(dhakaDateKey(new Date(Date.now() - i * 86_400_000)), {
         attempts: 0,
         connected: 0,
+        talkSeconds: 0,
       });
     }
     const agentAgg = new Map<
       string,
-      { attempts: number; connected: number; bookingLeads: Set<string> }
+      { attempts: number; connected: number; talkSeconds: number; bookingLeads: Set<string> }
     >();
     for (const row of rows) {
       const at = row.call_ended_at ?? row.submitted_at;
+      const talk = row.connected ? Math.max(0, row.duration_seconds ?? 0) : 0;
       if (at && at >= windowStart) {
         const key = dhakaDateKey(new Date(at));
         const bucket = byDay.get(key);
         if (bucket) {
           bucket.attempts += 1;
-          if (row.connected) bucket.connected += 1;
+          if (row.connected) {
+            bucket.connected += 1;
+            bucket.talkSeconds += talk;
+          }
         }
       }
       if (!row.agent_id) continue;
       const agg =
         agentAgg.get(row.agent_id) ??
-        { attempts: 0, connected: 0, bookingLeads: new Set<string>() };
+        { attempts: 0, connected: 0, talkSeconds: 0, bookingLeads: new Set<string>() };
       agg.attempts += 1;
-      if (row.connected) agg.connected += 1;
+      if (row.connected) {
+        agg.connected += 1;
+        agg.talkSeconds += talk;
+      }
       if (row.category === BOOKING_CATEGORY && row.lead_id) agg.bookingLeads.add(row.lead_id);
       agentAgg.set(row.agent_id, agg);
     }
+
+    // "Today" comes from the same canonical day bucketing as the trend, so a
+    // report with no call_ended_at (older rows) still lands on its real day.
+    const todayBucket = byDay.get(dateKey) ?? { attempts: 0, connected: 0, talkSeconds: 0 };
+    const attemptsToday = todayBucket.attempts;
+    const connectedToday = todayBucket.connected;
+    const talkMinutesToday = Math.round(todayBucket.talkSeconds / 60);
 
     const profiles = await supabaseAdmin.from("profiles").select("id, name, employee_id");
     if (profiles.error) throw new Error(profiles.error.message);
@@ -173,6 +177,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
         attempts: agg.attempts,
         connected: agg.connected,
         bookings: agg.bookingLeads.size,
+        talkMinutes: Math.round(agg.talkSeconds / 60),
       }))
       .sort((a, b) => b.connected - a.connected || b.attempts - a.attempts);
 
@@ -195,6 +200,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       connectedCalls,
       attemptsToday,
       connectedToday,
+      talkMinutesToday,
       followUpDue,
       followUpOverdue,
       visitsCompleted,
