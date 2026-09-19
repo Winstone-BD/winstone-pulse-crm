@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRightLeft, CalendarClock, Inbox, Target } from "lucide-react";
 
 import { floorAllocation, myAllocationStatus } from "@/lib/allocation.functions";
-import { useAdminToken } from "@/lib/admin-token";
+import { useAdminToken } from "@/lib/local-session";
 import { useMyAccount } from "@/lib/session";
 
 /**
