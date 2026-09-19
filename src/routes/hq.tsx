@@ -71,21 +71,6 @@ function ControlBoard() {
   /** Which number card / mix-card row the executive drilled into. */
   const [drill, setDrill] = useState<DrillSpec | null>(null);
 
-  const agents = useMemo(
-    () =>
-      profiles.filter(
-        (p) =>
-          (p.role === "agent" || p.role === "team_leader") &&
-          p.is_active &&
-          p.approval_status === "approved",
-      ),
-    [profiles],
-  );
-  const stats = useMemo(
-    () => buildAgentStats(profiles, leads, calls, messages),
-    [profiles, leads, calls, messages],
-  );
-
   const funnelRows = useMemo(() => {
     const order: { key: string; label: string }[] = [
       { key: "pending", label: "নতুন / বাকি" },
