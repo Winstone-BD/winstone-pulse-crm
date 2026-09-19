@@ -99,6 +99,10 @@ export function PostCallReportGate() {
   const [aiDecision, setAiDecision] = useState<"accepted" | "edited" | "rejected" | null>(null);
   const [smart, setSmart] = useState<string | null>(null);
   const [smartBusy, setSmartBusy] = useState(false);
+  // The agent may close an unfinished report to look something up; it stays
+  // pending on the server and reopens from the floating button (and still
+  // blocks the next call).
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
 
   const detail = pending.data;
   const suggestion = detail?.suggestion ?? null;
@@ -141,6 +145,12 @@ export function PostCallReportGate() {
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
   }, [detail?.report?.id, detail]);
+
+  // A new pending report always opens — the dismissed flag applies to one
+  // report only, never silences the next call's report.
+  useEffect(() => {
+    setDismissedId(null);
+  }, [detail?.report?.id]);
 
   // Smart summary from the agent's own words — no transcript needed. Debounced,
   // so a long note costs one short AI call after the agent pauses, not one per key.
@@ -210,6 +220,17 @@ export function PostCallReportGate() {
 
   if (!detail || queuedReportIds.includes(detail.report.id)) return null;
 
+  const isDismissed = dismissedId === detail.report.id;
+  const callTypeLabel =
+    detail.recording?.call_direction === "incoming_callback"
+      ? "ইনকামিং — ক্রেতা কল করেছেন"
+      : "আউটগোয়িং — আমি কল করেছি";
+  const callSeconds = Math.max(0, detail.report.duration_seconds ?? 0);
+  const callDurationLabel =
+    callSeconds >= 60
+      ? `${Math.floor(callSeconds / 60)} মিনিট ${callSeconds % 60} সেকেন্ড`
+      : `${callSeconds} সেকেন্ড`;
+
   const reasonRequired = NEEDS_REASON.has(category);
   // The customer answered -> classification (Hot/Warm/Cold + A/B/C/D) is what
   // turns the lead into COMPLETED. Not answered -> the lead goes back to retry.
@@ -248,20 +269,50 @@ export function PostCallReportGate() {
   };
 
   return (
-    <Dialog open>
+    <>
+      {isDismissed ? (
+        <Button
+          className="fixed bottom-4 right-4 z-50 gap-1.5 shadow-lg"
+          onClick={() => setDismissedId(null)}
+        >
+          <AlertTriangle className="size-4" />
+          কল রিপোর্ট বাকি আছে — খুলুন
+        </Button>
+      ) : null}
+      <Dialog
+        open={!isDismissed}
+        onOpenChange={(open) => {
+          if (!open) setDismissedId(detail.report.id);
+        }}
+      >
       <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-lg overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="size-4 text-warning" />
-            কল রিপোর্ট বাকি আছে
+            কল শেষ — রিপোর্ট পূরণ করুন
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
-          {detail.lead?.name ?? "লিড"} —{" "}
-          {detail.lead?.phone_number ?? detail.report.phone_number ?? ""} ·{" "}
-          {detail.report.duration_seconds}s{detail.report.connected ? "" : " · কথা হয়নি"}
-        </p>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary/20 bg-muted/40 p-3 text-xs sm:grid-cols-3">
+          <div className="min-w-0">
+            <p className="text-muted-foreground">লিড</p>
+            <p className="truncate font-semibold">{detail.lead?.name ?? "লিড"}</p>
+            <p className="truncate tabular-nums text-muted-foreground">
+              {detail.lead?.phone_number ?? detail.report.phone_number ?? ""}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">কলের ধরন</p>
+            <p className="font-semibold">{callTypeLabel}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">কলের সময়কাল</p>
+            <p className="font-semibold tabular-nums">
+              {callDurationLabel}
+              {detail.report.connected ? "" : " · কথা হয়নি"}
+            </p>
+          </div>
+        </div>
 
         {(detail.queuedCount ?? 0) > 0 ? (
           <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
@@ -580,9 +631,11 @@ export function PostCallReportGate() {
           রিপোর্ট জমা দিন
         </Button>
         <p className="text-center text-[11px] text-muted-foreground">
-          রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না।
+          রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না। বন্ধ করলেও ডান-নিচের বাটন থেকে আবার
+          খুলতে পারবেন।
         </p>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }
