@@ -121,8 +121,15 @@ export async function sweepReminders(now = new Date()) {
   let reportPushes = 0;
 
   for (const agent of agents ?? []) {
-    const reminders = await remindersFor(agent.id, now);
-    for (const item of reminders) {
+    const all = await remindersFor(agent.id, now);
+    // Only fresh items buzz the phone: a follow-up older than the window is
+    // backlog, and it is still listed in the app. Cap the burst per sweep.
+    const fresh = all.filter(
+      (item) =>
+        item.kind === "report" ||
+        now.getTime() - new Date(item.dueAt).getTime() <= FOLLOW_UP_PUSH_WINDOW_HOURS * 3_600_000,
+    );
+    for (const item of fresh.slice(0, MAX_PUSH_PER_SWEEP)) {
       const eventKey =
         item.kind === "follow_up"
           ? `follow_up_due:${item.id}`
