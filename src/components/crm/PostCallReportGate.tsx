@@ -517,7 +517,7 @@ export function PostCallReportGate() {
 
         <div className="space-y-1.5">
           <Label htmlFor="follow-when" className="text-xs">
-            ফলো-আপের তারিখ ও সময়
+            ফলো-আপের তারিখ ও সময় (বাধ্যতামূলক)
           </Label>
           <Input
             id="follow-when"
@@ -538,6 +538,14 @@ export function PostCallReportGate() {
             />
             ফলো-আপ দরকার নেই
           </label>
+          {noFollowUp ? (
+            <Textarea
+              rows={2}
+              value={noFollowUpNote}
+              onChange={(event) => setNoFollowUpNote(event.target.value)}
+              placeholder="ফলো-আপ কেন দরকার নেই, লিখুন (বাধ্যতামূলক)"
+            />
+          ) : null}
         </div>
 
         {reasonRequired ? (
