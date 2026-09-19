@@ -105,6 +105,9 @@ object CallLogSweeper {
         }
 
         if (newest > cursor) prefs.edit().putLong(KEY_CURSOR, newest).apply()
+        // A call found afterwards (app was closed, call placed from WhatsApp or
+        // the phone dialer) also owes a report: prompt for it on the phone.
+        if (queued > 0) PendingReportWorker.prompt(context, delaySeconds = 10)
         return queued
     }
 
