@@ -100,6 +100,7 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
     ).start;
     const page = 1000;
     const rows: {
+      id: string;
       lead_id: string | null;
       agent_id: string | null;
       connected: boolean | null;
