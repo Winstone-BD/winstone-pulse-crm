@@ -41,6 +41,8 @@ object AgentSession {
     @Volatile var employeeId: String? = null; private set
     @Volatile var agentId: String? = null; private set
     @Volatile var agentName: String? = null; private set
+    /** Currently selected desk role: agent | coordinator | executive | it_console. */
+    @Volatile var selectedRole: String? = null; private set
 
     /**
      * Per-device token issued by the CRM at sign-in. This replaces the old
