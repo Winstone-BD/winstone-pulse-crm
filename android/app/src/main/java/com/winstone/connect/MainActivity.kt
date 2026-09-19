@@ -82,7 +82,13 @@ class MainActivity : ComponentActivity() {
                         activity = this,
                         vm = vm,
                         reportPending = pendingReport,
-                        onReportSubmitted = { pendingReport = false },
+                        onReportSubmitted = {
+                            pendingReport = false
+                            PendingReportWorker.clear(this@MainActivity)
+                            // Another call may have rung meanwhile: re-check so its
+                            // own report opens straight away.
+                            reportTick.value = reportTick.value + 1
+                        },
                     )
                 }
             }
@@ -96,7 +102,20 @@ class MainActivity : ComponentActivity() {
      */
     override fun onResume() {
         super.onResume()
+        reportTick.value = reportTick.value + 1
         Thread { runCatching { com.winstone.connect.telephony.CallLogSweeper.sweep(this) } }.start()
+    }
+
+    /** The report notification reopens the running app: re-check immediately. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        reportTick.value = reportTick.value + 1
+    }
+
+    private companion object {
+        /** Bumped to force a fresh pending-report check. */
+        val reportTick = MutableStateFlow(0)
     }
 
     private fun requestCallPermissions() {
