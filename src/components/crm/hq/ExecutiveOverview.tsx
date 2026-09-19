@@ -197,7 +197,7 @@ export function ExecutiveOverview({
           icon={<PhoneCall className="size-4" />}
           label="যোগাযোগ হয়েছে"
           value={String(kpi.contacted)}
-          hint={`${kpi.contactRate}% লিডে কথা`}
+          hint={`${kpi.contactRate}% লিডে কল · রেকর্ডিং সিঙ্ক ${kpi.recordedLeads}`}
         />
         <KpiCard
           icon={<Flame className="size-4" />}
