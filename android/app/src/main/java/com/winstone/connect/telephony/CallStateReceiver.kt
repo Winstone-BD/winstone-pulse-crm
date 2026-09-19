@@ -7,6 +7,7 @@ import android.telephony.TelephonyManager
 import com.winstone.connect.data.AgentSession
 import com.winstone.connect.data.remote.WinstoneApi
 import com.winstone.connect.data.sync.CallSyncQueue
+import com.winstone.connect.data.sync.PendingReportWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -138,6 +139,10 @@ class CallStateReceiver : BroadcastReceiver() {
                         connected = wasOnCall,
                     )
                 }
+                // Any number, any direction, app open or not: the mandatory
+                // report is pushed to the front of the phone once the CRM has
+                // opened it. Idempotent — nothing shows if none is pending.
+                PendingReportWorker.prompt(app)
                 scope.launch {
                     runCatching { WinstoneApi.postPresence(employeeId, "idle", leadId = endedLeadId) }
                 }

@@ -1,6 +1,7 @@
 package com.winstone.connect
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.winstone.connect.data.AgentSession
+import com.winstone.connect.data.sync.PendingReportWorker
 import com.winstone.connect.telephony.CallPhase
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.ui.DeskScreen
@@ -24,6 +26,7 @@ import com.winstone.connect.ui.RoleSelectionScreen
 import com.winstone.connect.ui.SignInScreen
 import com.winstone.connect.ui.collectAsStateSafe
 import com.winstone.connect.ui.theme.WinstoneTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -41,13 +44,18 @@ class MainActivity : ComponentActivity() {
                 // Mandatory post-call report gate: even if the app was closed
                 // after the call, the report opens itself on the next launch
                 // and no new call is possible before it is submitted.
+                // `reportTick` is bumped on every resume and whenever the report
+                // notification reopens the app, so a call made from the phone's
+                // own dialer is re-checked instead of only on first composition.
+                val tick by reportTick.collectAsStateSafe()
                 var pendingReport by remember { mutableStateOf(false) }
-                LaunchedEffect(phase, state.employeeId) {
+                LaunchedEffect(phase, state.employeeId, tick) {
                     if (phase == CallPhase.Idle && !state.employeeId.isNullOrBlank()) {
                         val body = runCatching {
                             com.winstone.connect.data.remote.WinstoneApi.pendingReport()
                         }.getOrNull()
                         pendingReport = body?.optJSONObject("pending") != null
+                        if (!pendingReport) PendingReportWorker.clear(this@MainActivity)
                     }
                 }
 
@@ -77,7 +85,13 @@ class MainActivity : ComponentActivity() {
                         activity = this,
                         vm = vm,
                         reportPending = pendingReport,
-                        onReportSubmitted = { pendingReport = false },
+                        onReportSubmitted = {
+                            pendingReport = false
+                            PendingReportWorker.clear(this@MainActivity)
+                            // Another call may have rung meanwhile: re-check so its
+                            // own report opens straight away.
+                            reportTick.value = reportTick.value + 1
+                        },
                     )
                 }
             }
@@ -91,7 +105,20 @@ class MainActivity : ComponentActivity() {
      */
     override fun onResume() {
         super.onResume()
+        reportTick.value = reportTick.value + 1
         Thread { runCatching { com.winstone.connect.telephony.CallLogSweeper.sweep(this) } }.start()
+    }
+
+    /** The report notification reopens the running app: re-check immediately. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        reportTick.value = reportTick.value + 1
+    }
+
+    private companion object {
+        /** Bumped to force a fresh pending-report check. */
+        val reportTick = MutableStateFlow(0)
     }
 
     private fun requestCallPermissions() {

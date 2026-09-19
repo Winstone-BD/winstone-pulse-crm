@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.provider.CallLog
 import androidx.core.content.ContextCompat
 import com.winstone.connect.data.sync.CallSyncQueue
+import com.winstone.connect.data.sync.PendingReportWorker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -105,6 +106,9 @@ object CallLogSweeper {
         }
 
         if (newest > cursor) prefs.edit().putLong(KEY_CURSOR, newest).apply()
+        // A call found afterwards (app was closed, call placed from WhatsApp or
+        // the phone dialer) also owes a report: prompt for it on the phone.
+        if (queued > 0) PendingReportWorker.prompt(context, delaySeconds = 10)
         return queued
     }
 
