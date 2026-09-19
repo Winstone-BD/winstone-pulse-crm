@@ -163,17 +163,17 @@ export function dailyPerformanceOf(input: {
   const mine = input.followUps.filter((event) => event.agentId === agentId);
   const isVisit = (event: FollowUpEvent) =>
     SITE_VISIT_CATEGORIES.includes((event.category ?? "").toLowerCase());
-  const live = (event: FollowUpEvent) => event.status !== "cancelled";
+  const live = (event: FollowUpEvent) => !CANCELLED_FOLLOW_UP_STATES.includes(event.status);
 
   const followUpsCompleted = new Set(
     mine
-      .filter((event) => event.status === "completed" && withinDay(event.completedAt, dateKey))
+      .filter((event) => isDoneFollowUp(event.status) && withinDay(event.completedAt, dateKey))
       .map((event) => event.id),
   ).size;
 
   const followUpsDue = new Set(
     mine
-      .filter((event) => event.status === "pending" && withinDay(event.scheduledAt, dateKey))
+      .filter((event) => isOpenFollowUp(event.status) && withinDay(event.scheduledAt, dateKey))
       .map((event) => event.id),
   ).size;
 
