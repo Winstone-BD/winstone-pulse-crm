@@ -493,6 +493,15 @@ export async function distributeDailyLeads(options: {
   if (shortage)
     await raiseShortageAlert({ remaining, need: fullRound, perAgent: options.perAgent });
 
+  // Recount from the database after the moves, and tell HQ only when something
+  // genuinely needs a human: excess that could not be handed over, or a shortage.
+  {
+    const { floorAllocationStatus, notifyAllocationProblems } = await import(
+      "@/lib/workday-allocation.server"
+    );
+    await notifyAllocationProblems(await floorAllocationStatus(today));
+  }
+
   return {
     moved,
     agents: agents.length,
