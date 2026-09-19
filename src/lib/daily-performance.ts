@@ -16,15 +16,23 @@
  * - Lead-shaped figures (qualified, bookings) are counted once per lead, so a
  *   second call about the same lead cannot double the total.
  */
+import { callSessionKey, talkTimeOf } from "@/lib/call-evidence";
 
 /** A submitted post-call report — the authoritative record of one call attempt. */
 export type CallReportEvent = {
   id: string;
   leadId: string | null;
   agentId: string | null;
+  /** The call session this report belongs to — two uploads of one call count once. */
+  recordingId?: string | null;
   /** Only "submitted" reports count; drafts and pending ones are still in progress. */
   status: string;
+  /** What the agent claimed in the popup. */
   connected: boolean;
+  /** The phone proved the call was answered (see src/lib/call-evidence.ts). */
+  connectionVerified: boolean;
+  /** Talk seconds the phone measured; null = never measured, so unavailable. */
+  verifiedSeconds?: number | null;
   durationSeconds: number | null;
   category: string | null;
   /** When the call ended (falls back to submission time). */
@@ -56,8 +64,12 @@ export type DailyPerformance = {
   reassignedOut: number;
   /** Real call attempts confirmed by a submitted report. */
   callsAttempted: number;
-  /** Attempts the call record confirms were answered. */
+  /** Attempts the phone's own record confirms were answered. */
   connectedCalls: number;
+  /** Distinct leads with at least one verified connected call today. */
+  contactedLeads: number;
+  /** Reports claiming a conversation the phone carries no evidence of. */
+  unverifiedReports: number;
   /** Finished tasks: distinct leads talked to AND classified today. */
   completedTasks: number;
   /** Calls nobody answered — the lead went back to the retry queue, not done. */
@@ -72,6 +84,8 @@ export type DailyPerformance = {
   /** Distinct leads sold/closed today. */
   bookings: number;
   talkMinutes: number;
+  /** Connected calls whose duration the phone never measured — talk time unknown. */
+  talkTimeUnmeasuredCalls: number;
   /** Pending work above the day's target — never silently dropped. */
   excessPending: number;
   /** The day's target. Reaching it is not the same as doing the work. */
@@ -115,6 +129,11 @@ export function isDoneFollowUp(status: string | null): boolean {
 }
 
 const SUBMITTED = "submitted";
+
+/** Talk time is only reportable when at least one connected call was measured. */
+export function talkTimeAvailable(row: Pick<DailyPerformance, "connectedCalls" | "talkTimeUnmeasuredCalls">): boolean {
+  return row.connectedCalls > row.talkTimeUnmeasuredCalls;
+}
 
 /** Dhaka day boundaries as real UTC instants (UTC+6, no daylight saving). */
 export function dhakaDayWindow(dateKey: string): { start: string; end: string } {
@@ -166,19 +185,33 @@ export function dailyPerformanceOf(input: {
 }): DailyPerformance {
   const { agentId, dateKey, workload } = input;
 
-  // Credit belongs to whoever did the work, on this day, once per record.
-  const seenReports = new Set<string>();
+  // Credit belongs to whoever did the work, on this day, once per call session:
+  // the same call arriving twice (phone retry + web popup) is still one call.
+  const seenSessions = new Set<string>();
   const attempts: CallReportEvent[] = [];
   for (const report of input.reports) {
     if (report.agentId !== agentId) continue;
     if (!countsAsAttempt(report, dateKey)) continue;
-    if (seenReports.has(report.id)) continue;
-    seenReports.add(report.id);
+    const key = callSessionKey({ reportId: report.id, recordingId: report.recordingId ?? null });
+    if (seenSessions.has(key)) continue;
+    seenSessions.add(key);
     attempts.push(report);
   }
 
-  const connected = attempts.filter((report) => report.connected);
-  const talkSeconds = connected.reduce((sum, report) => sum + Math.max(0, report.durationSeconds ?? 0), 0);
+  // Only calls the phone proves were answered count as connected work.
+  const connected = attempts.filter((report) => report.connectionVerified);
+  const talk = talkTimeOf(
+    attempts.map((report) => ({
+      connected: report.connectionVerified,
+      verifiedSeconds: report.verifiedSeconds ?? null,
+    })),
+  );
+  const contactedLeads = new Set(
+    connected.map((report) => report.leadId).filter((id): id is string => Boolean(id)),
+  );
+  const unverifiedReports = attempts.filter(
+    (report) => report.connected && !report.connectionVerified,
+  ).length;
 
   // Lead-shaped outcomes are counted once per lead, however many calls it took.
   const qualified = new Set<string>();
@@ -229,7 +262,8 @@ export function dailyPerformanceOf(input: {
   // lead was classified. An unanswered call returns to the queue instead.
   const completedLeads = new Set<string>();
   for (const report of attempts) {
-    if (report.connected && report.classified && report.leadId) completedLeads.add(report.leadId);
+    if (report.connectionVerified && report.classified && report.leadId)
+      completedLeads.add(report.leadId);
   }
 
   const callsAttempted = attempts.length;
@@ -244,6 +278,8 @@ export function dailyPerformanceOf(input: {
     reassignedOut: workload.reassignedOut,
     callsAttempted,
     connectedCalls: connected.length,
+    contactedLeads: contactedLeads.size,
+    unverifiedReports,
     completedTasks: completedLeads.size,
     unansweredCalls: attempts.length - connected.length,
     qualifiedLeads: qualified.size,
@@ -252,7 +288,8 @@ export function dailyPerformanceOf(input: {
     siteVisitsScheduled,
     siteVisitsCompleted,
     bookings: booked.size,
-    talkMinutes: Math.round(talkSeconds / 60),
+    talkMinutes: Math.round(talk.seconds / 60),
+    talkTimeUnmeasuredCalls: talk.unmeasuredCalls,
     excessPending: workload.excessPending,
     target,
     activityPercent: target > 0 ? Math.min(100, Math.round((callsAttempted / target) * 100)) : 0,
@@ -277,6 +314,8 @@ export function floorTotals(rows: DailyPerformance[]) {
     reassigned: sum((row) => row.reassignedIn),
     callsAttempted: attempted,
     connectedCalls: connected,
+    contactedLeads: sum((row) => row.contactedLeads),
+    unverifiedReports: sum((row) => row.unverifiedReports),
     completedTasks: sum((row) => row.completedTasks),
     unansweredCalls: sum((row) => row.unansweredCalls),
     qualifiedLeads: sum((row) => row.qualifiedLeads),
@@ -286,6 +325,7 @@ export function floorTotals(rows: DailyPerformance[]) {
     siteVisitsCompleted: sum((row) => row.siteVisitsCompleted),
     bookings,
     talkMinutes: sum((row) => row.talkMinutes),
+    talkTimeUnmeasuredCalls: sum((row) => row.talkTimeUnmeasuredCalls),
     excessPending: sum((row) => row.excessPending),
     target: sum((row) => row.target),
     connectRate: attempted > 0 ? Math.round((connected / attempted) * 100) : 0,
