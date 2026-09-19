@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 data class DeskUiState(
     val employeeId: String? = null,
+    val agentName: String? = null,
     val loading: Boolean = false,
     val data: DeskData? = null,
     val error: String? = null,
@@ -66,21 +67,27 @@ class DeskViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun signIn(phone: String, password: String) {
-        val digits = phone.filter { it.isDigit() }
-        if (digits.length < 6 || password.length < 6) {
-            _state.value = _state.value.copy(error = "সঠিক ফোন নম্বর ও পাসওয়ার্ড দিন")
+    fun signIn(employeeIdOrPhone: String, password: String) {
+        val trimmed = employeeIdOrPhone.trim()
+        if (trimmed.length < 4 || password.length < 6) {
+            _state.value = _state.value.copy(error = "সঠিক Employee ID/ফোন ও পাসওয়ার্ড দিন")
             return
         }
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
-            runCatching { WinstoneAgentApi.signIn(phone.trim(), password) }
+            runCatching { WinstoneAgentApi.signIn(trimmed, password) }
                 .onSuccess { me ->
                     AgentSession.saveDevice(app, me.deviceToken, me.deviceId)
                     AgentSession.saveEmployeeId(app, me.employeeId)
-                    AgentSession.saveSim(app, phone.trim())
+                    // SIM is only sent when the identifier is a phone number.
+                    val digitsOnly = trimmed.filter { it.isDigit() }
+                    if (digitsOnly.length >= 10) AgentSession.saveSim(app, trimmed)
                     AgentSession.cacheAgent(app, me.agentId, me.name)
-                    _state.value = _state.value.copy(employeeId = me.employeeId, error = null)
+                    _state.value = _state.value.copy(
+                        employeeId = me.employeeId,
+                        agentName = me.name,
+                        error = null,
+                    )
                     refresh()
                 }
                 .onFailure { e ->

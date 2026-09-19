@@ -79,11 +79,11 @@ import com.winstone.connect.ui.theme.WinInkMuted
 import com.winstone.connect.ui.theme.WinLive
 import com.winstone.connect.ui.theme.WinRed
 
-private const val TAB_DASHBOARD = 0
+private const val TAB_HOME = 0
 private const val TAB_LEADS = 1
-private const val TAB_FOLLOWUPS = 2
-private const val TAB_PERFORMANCE = 3
-private const val TAB_PROFILE = 4
+private const val TAB_CALLS = 2
+private const val TAB_AI_COACH = 3
+private const val TAB_MORE = 4
 
 /**
  * এজেন্ট অ্যাপের প্রধান পর্দা — উপরে ব্র্যান্ড বার, নিচে পাঁচটি ট্যাবের নিচের
@@ -99,7 +99,7 @@ fun DeskScreen(
 ) {
     val state by vm.state.collectAsStateSafe()
     val snackbar = remember { SnackbarHostState() }
-    var tab by remember { mutableStateOf(TAB_DASHBOARD) }
+    var tab by remember { mutableStateOf(TAB_HOME) }
     val callScope = rememberCoroutineScope()
     var callBlocked by remember { mutableStateOf<String?>(null) }
     var showPendingReport by remember { mutableStateOf(false) }
@@ -110,6 +110,7 @@ fun DeskScreen(
     var reportCategory by remember { mutableStateOf("") }
     var reportState by remember { mutableStateOf("") }
     var openReportLead by remember { mutableStateOf<Lead?>(null) }
+    var leadDetail by remember { mutableStateOf<Lead?>(null) }
     var whatsappLead by remember { mutableStateOf<Lead?>(null) }
     val context = LocalContext.current
     var update by remember { mutableStateOf<UpdateChecker.Available?>(null) }
@@ -128,10 +129,10 @@ fun DeskScreen(
             vm.clearToast()
         }
     }
-    LaunchedEffect(tab) { if (tab == TAB_PERFORMANCE && state.coach == null) vm.loadCoach() }
+    LaunchedEffect(tab) { if (tab == TAB_AI_COACH && state.coach == null) vm.loadCoach() }
 
     LaunchedEffect(tab, reportCategory, reportState) {
-        if (tab != TAB_FOLLOWUPS) return@LaunchedEffect
+        if (tab != TAB_CALLS) return@LaunchedEffect
         reportsLoading = true
         reports = runCatching {
             WinstoneApi.listReports(
@@ -192,7 +193,7 @@ fun DeskScreen(
             )
         },
         floatingActionButton = {
-            if (tab == TAB_DASHBOARD || tab == TAB_LEADS) {
+            if (tab == TAB_HOME || tab == TAB_LEADS) {
                 ExtendedFloatingActionButton(
                     onClick = { showNewLead = true },
                     containerColor = WinGreen,
@@ -261,26 +262,18 @@ fun DeskScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     when (tab) {
-                        TAB_DASHBOARD -> {
+                        TAB_HOME -> {
                             item {
-                                WelcomeCard(
+                                AgentDashboardScreen(
+                                    activity = activity,
                                     agentName = data?.agentName ?: "…",
                                     employeeId = state.employeeId.orEmpty(),
-                                    online = state.error == null,
-                                    targetLine = "লক্ষ্য: ${leads.size} লিড · ${followUpLeads.size} ফলো-আপ",
+                                    leads = leads,
+                                    onLeadDetail = { leadDetail = it },
+                                    onViewAllLeads = { tab = TAB_LEADS },
+                                    onViewAllFollowUps = { tab = TAB_CALLS },
                                 )
                             }
-                            item { SectionTitle("আজকের KPI", "সব লিড") { tab = TAB_LEADS } }
-                            item { KpiGrid(leads = leads, calls = calls) }
-                            item {
-                                SectionTitle("আজকের নির্ধারিত কল", "সব ফলো-আপ") { tab = TAB_FOLLOWUPS }
-                            }
-                            val queue = (followUpLeads + leads.filter { it.status == "pending" }).take(5)
-                            if (queue.isEmpty()) item { EmptyNote("আজ নির্ধারিত কোনো কল নেই।") }
-                            items(queue) { lead ->
-                                ScheduledCallRow(lead = lead, onCall = { startCall(lead) })
-                            }
-                            item { InfoBanner() }
                         }
                         TAB_LEADS -> {
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
@@ -294,7 +287,7 @@ fun DeskScreen(
                                 )
                             }
                         }
-                        TAB_FOLLOWUPS -> {
+                        TAB_CALLS -> {
                             if (followUpLeads.isNotEmpty()) {
                                 item { SectionTitle("আজকের ফলো-আপ", null) {} }
                                 items(followUpLeads) { lead ->
@@ -320,7 +313,7 @@ fun DeskScreen(
                                 }
                             }
                         }
-                        TAB_PERFORMANCE -> {
+                        TAB_AI_COACH -> {
                             item { KpiGrid(leads = leads, calls = calls) }
                             item { SectionTitle("AI কোচ", null) {} }
                             if (state.coachLoading) item { EmptyNote("AI কোচ তৈরি হচ্ছে…") }
@@ -357,6 +350,33 @@ fun DeskScreen(
                 vm.submitLead(name, phone, company, notes)
                 showNewLead = false
             },
+        )
+    }
+
+    leadDetail?.let { lead ->
+        AlertDialog(
+            onDismissRequest = { leadDetail = null },
+            title = { Text(lead.name) },
+            text = {
+                Column {
+                    Text(lead.phone, fontSize = 14.sp)
+                    lead.company?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 13.sp) }
+                    lead.notes?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(6.dp))
+                        Text(it, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = leadDetail
+                    leadDetail = null
+                    target?.let {
+                        LiveCallLauncher.call(activity, it.id, it.phone, state.data?.agentId, it.name)
+                    }
+                }) { Text("কল করুন") }
+            },
+            dismissButton = { TextButton(onClick = { leadDetail = null }) { Text("বন্ধ") } },
         )
     }
 
@@ -662,11 +682,11 @@ private fun DeskBottomBar(
 ) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         val items = listOf(
-            Triple("ড্যাশবোর্ড", Icons.Filled.GridView, 0),
-            Triple("লিড", Icons.Filled.Groups, leadBadge),
-            Triple("ফলো-আপ", Icons.Filled.CalendarMonth, followUpBadge),
-            Triple("পারফরম্যান্স", Icons.Filled.BarChart, 0),
-            Triple("প্রোফাইল", Icons.Filled.Person, 0),
+            Triple("Home", Icons.Filled.GridView, 0),
+            Triple("Leads", Icons.Filled.Groups, leadBadge),
+            Triple("Calls", Icons.Filled.CalendarMonth, followUpBadge),
+            Triple("AI Coach", Icons.Filled.BarChart, 0),
+            Triple("More", Icons.Filled.Person, 0),
         )
         items.forEachIndexed { index, (label, icon, badge) ->
             NavigationBarItem(

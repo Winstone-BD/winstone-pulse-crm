@@ -12,15 +12,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.winstone.connect.data.AgentSession
 import com.winstone.connect.telephony.CallPhase
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.ui.DeskScreen
 import com.winstone.connect.ui.LiveCallScreen
 import com.winstone.connect.ui.DeskViewModel
+import com.winstone.connect.ui.RoleSelectionScreen
 import com.winstone.connect.ui.SignInScreen
 import com.winstone.connect.ui.collectAsStateSafe
 import com.winstone.connect.ui.theme.WinstoneTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -53,7 +57,16 @@ class MainActivity : ComponentActivity() {
                     SignInScreen(
                         error = state.error,
                         loading = state.loading,
-                        onSignIn = vm::signIn,
+                        onSignIn = { id, pass -> vm.signIn(id, pass) },
+                    )
+                } else if (AgentSession.selectedRoleNow(this@MainActivity).isNullOrBlank()) {
+                    RoleSelectionScreen(
+                        agentName = state.agentName ?: "",
+                        onSelectRole = { role ->
+                            lifecycleScope.launch {
+                                AgentSession.saveSelectedRole(this@MainActivity, role)
+                            }
+                        },
                     )
                 } else {
                     DeskScreen(
