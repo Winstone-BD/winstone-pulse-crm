@@ -57,7 +57,7 @@ export function AccountApprovals() {
 
       {!list.isPending && accounts.length === 0 && (
         <p className="empty-note">
-          এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
+          এখনো কোনো অনুরোধ নেই। নতুন এজেন্ট সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}
 
@@ -89,16 +89,6 @@ export function AccountApprovals() {
                     <Check className="size-3.5" />
                   )}
                   এজেন্ট
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={act.isPending}
-                  onClick={() =>
-                    act.mutate({ profileId: account.id, decision: "approve_coordinator" })
-                  }
-                >
-                  কোঅর্ডিনেটর
                 </Button>
                 <ConfirmAction
                   title="অ্যাকাউন্টটি বাদ দেবেন?"

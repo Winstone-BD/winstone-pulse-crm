@@ -90,15 +90,8 @@ function EntryHall() {
             description="Assign and balance leads, import lists and watch the whole floor queue."
             primary={
               <Button asChild className="flex-1">
-                <Link to="/auth" search={{ role: "coordinator", mode: "signin" }}>
+                <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
-                </Link>
-              </Button>
-            }
-            secondary={
-              <Button asChild variant="secondary" className="flex-1">
-                <Link to="/auth" search={{ role: "coordinator", mode: "signup" }}>
-                  Create account
                 </Link>
               </Button>
             }
