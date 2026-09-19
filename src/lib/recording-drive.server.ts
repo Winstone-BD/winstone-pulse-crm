@@ -152,12 +152,13 @@ export async function backupRecordingToDrive(recordingId: string) {
   const datePart = (recording.started_at ?? recording.created_at).slice(0, 10);
   const agentName = agents?.name ?? "অজানা-এজেন্ট";
   const leadName = leads?.name ?? "অজানা-লিড";
-  const ext = (recording.file_name ?? recording.storage_path).split(".").pop() || "mp3";
+  const ext = (recording.file_name ?? storagePath).split(".").pop() || "mp3";
   const driveFileName = `${datePart}_${slug(agentName)}_${slug(leadName)}_${slug(recording.phone_number)}_call.${ext}`;
 
   const { data: audioBlob, error: downloadError } = await supabaseAdmin.storage
     .from("call-audio")
-    .download(recording.storage_path);
+    .download(storagePath);
+
   if (downloadError || !audioBlob) {
     throw new Error(`অডিও ডাউনলোড ব্যর্থ: ${downloadError?.message ?? "empty"}`);
   }
