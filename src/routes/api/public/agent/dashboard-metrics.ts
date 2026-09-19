@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 /**
- * Agent dashboard KPIs for the Android V2 home screen.
+ * Agent dashboard numbers for the Android app.
  *
  * GET /api/public/agent/dashboard-metrics
  * Header: x-device-token
  *
- * Returns today's progress counts: assigned, called, connected, interested,
- * follow-up, site-visit, plus priority buckets.
+ * Every figure comes from the shared server calculation the web CRM uses, for
+ * the Asia/Dhaka business day decided here — the phone never counts anything
+ * itself and never uses the device date. Target (workload) and actual activity
+ * are reported separately, so receiving 30 leads is never mistaken for 30 calls.
  */
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -24,57 +26,63 @@ export const Route = createFileRoute("/api/public/agent/dashboard-metrics")({
         const caller = await resolveApiCaller(request);
         if (caller.kind !== "device") return json({ error: "Unauthorized" }, 401);
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const agentId = caller.profile.id;
+        const { agentDailyPerformance } = await import("@/lib/daily-performance.server");
+        const day = await agentDailyPerformance(caller.profile.id);
+        const me = day.me;
 
-        const todayStart = new Date();
-        todayStart.setUTCHours(0, 0, 0, 0);
-        const todayIso = todayStart.toISOString();
-
-        const [{ data: leads }, { data: reports }] = await Promise.all([
-          supabaseAdmin
-            .from("leads")
-            .select("id, status, created_at, updated_at")
-            .or(`assigned_to.eq.${agentId},assigned_agent_id.eq.${agentId}`),
-          supabaseAdmin
-            .from("call_reports")
-            .select("id, connected, duration_seconds, category, created_at")
-            .eq("agent_id", agentId)
-            .gte("created_at", todayIso),
-        ]);
-
-        const assigned = (leads ?? []).length;
-        const calledToday = reports ?? [];
-        const called = calledToday.length;
-        const connected = calledToday.filter((r) => r.connected).length;
-        const interested = calledToday.filter((r) => r.category === "interested" || r.category === "hot_lead").length;
-        const followUp = calledToday.filter((r) => r.category === "follow_up").length;
-        const siteVisit = calledToday.filter((r) => r.category === "site_visit").length;
-
-        // Priority buckets
-        const hotLeads = (leads ?? []).filter((l) => l.status === "pending").length;
-        const followUpsDue = (leads ?? []).filter((l) => l.status === "follow_up").length;
-        const newAssigned = (leads ?? []).filter((l) => {
-          const created = l.created_at ? new Date(l.created_at).getTime() : 0;
-          return created >= todayStart.getTime();
-        }).length;
-        const missedRetry = calledToday.filter((r) => r.category === "no_answer" || r.category === "callback").length;
-
-        const progressPercent = assigned > 0 ? Math.min(100, Math.round((called / assigned) * 100)) : 0;
+        if (!me) {
+          return json({
+            ok: true,
+            date_key: day.dateKey,
+            time_zone: day.timeZone,
+            progress_percent: 0,
+            target: 0,
+            assigned: 0,
+            called: 0,
+            connected: 0,
+            qualified: 0,
+            follow_ups_completed: 0,
+            follow_ups_due: 0,
+            site_visits_scheduled: 0,
+            site_visits_completed: 0,
+            bookings: 0,
+            talk_minutes: 0,
+            carried_over: 0,
+            new_from_database: 0,
+            reassigned_in: 0,
+            reassigned_out: 0,
+            excess_pending: 0,
+            connect_rate: 0,
+            conversion_rate: 0,
+            pool_shortage: day.poolShortage,
+          });
+        }
 
         return json({
           ok: true,
-          progress_percent: progressPercent,
-          assigned,
-          called,
-          connected,
-          interested,
-          follow_up: followUp,
-          site_visit: siteVisit,
-          hot_leads: hotLeads,
-          follow_ups_due: followUpsDue,
-          new_assigned: newAssigned,
-          missed_retry: missedRetry,
+          date_key: day.dateKey,
+          time_zone: day.timeZone,
+          /** Share of the day's target actually worked on — not possession. */
+          progress_percent: me.activityPercent,
+          target: me.target,
+          assigned: me.leadsAssigned,
+          called: me.callsAttempted,
+          connected: me.connectedCalls,
+          qualified: me.qualifiedLeads,
+          follow_ups_completed: me.followUpsCompleted,
+          follow_ups_due: me.followUpsDue,
+          site_visits_scheduled: me.siteVisitsScheduled,
+          site_visits_completed: me.siteVisitsCompleted,
+          bookings: me.bookings,
+          talk_minutes: me.talkMinutes,
+          carried_over: me.carriedOverPending,
+          new_from_database: me.newFromDatabase,
+          reassigned_in: me.reassignedIn,
+          reassigned_out: me.reassignedOut,
+          excess_pending: me.excessPending,
+          connect_rate: me.connectRate,
+          conversion_rate: me.conversionRate,
+          pool_shortage: day.poolShortage,
         });
       },
     },

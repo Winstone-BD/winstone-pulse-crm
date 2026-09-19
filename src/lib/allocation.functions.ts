@@ -50,3 +50,32 @@ export const floorAllocation = createServerFn({ method: "POST" })
     const { floorAllocationStatus } = await import("@/lib/workday-allocation.server");
     return floorAllocationStatus(data.workDate ?? dhakaToday());
   });
+
+/**
+ * This desk's own day of real work — attempts, connections, qualified leads,
+ * follow-ups, visits and bookings — from the same server calculation the
+ * Android app and Executive HQ read.
+ */
+export const myDailyPerformance = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
+  .handler(async ({ data }) => {
+    const caller = await callerOf(data.adminToken ?? null);
+    const { agentDailyPerformance } = await import("@/lib/daily-performance.server");
+    const { dhakaDateKey } = await import("@/lib/daily-performance");
+    return agentDailyPerformance(caller.profile!.id, data.dateKey ?? dhakaDateKey());
+  });
+
+/** The whole floor's day — coordinator, Executive HQ and IT Console only. */
+export const floorDailyPerformance = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.extend({ dateKey: DATE.optional() }).parse(input))
+  .handler(async ({ data }) => {
+    const caller = await callerOf(data.adminToken ?? null);
+    if (caller.scope === "agent") throw new Error("এই তথ্য দেখার অনুমতি নেই");
+    const { dailyPerformanceBoard } = await import("@/lib/daily-performance.server");
+    const { dhakaDateKey } = await import("@/lib/daily-performance");
+    const board = await dailyPerformanceBoard(data.dateKey ?? dhakaDateKey());
+    // The allocation detail is available through floorAllocation; keep this
+    // response focused on performance so the two cannot drift.
+    const { allocation, ...rest } = board;
+    return { ...rest, poolAvailable: allocation.poolAvailable, poolShortage: allocation.shortage };
+  });

@@ -109,7 +109,7 @@ fun AgentDashboardScreen(
         item {
             ProgressCard(
                 percent = metrics?.progressPercent ?: 0,
-                assigned = metrics?.assigned ?: leads.size,
+                assigned = metrics?.target ?: 0,
                 called = metrics?.called ?: 0,
                 connected = metrics?.connected ?: 0,
             )
@@ -117,9 +117,10 @@ fun AgentDashboardScreen(
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                KpiTile("Interested", metrics?.interested ?: 0, "আগ্রহী", Modifier.weight(1f), WinAmber)
-                KpiTile("Follow-up", metrics?.followUp ?: 0, "ফলো-আপ", Modifier.weight(1f), WinGreen)
-                KpiTile("Site Visit", metrics?.siteVisit ?: 0, "সাইট ভিজিট", Modifier.weight(1f), WinLive)
+                // সব সংখ্যা সার্ভারের গণনা — বাস্তবে যা হয়েছে, তাই।
+                KpiTile("Qualified", metrics?.qualified ?: 0, "সম্ভাবনাময়", Modifier.weight(1f), WinAmber)
+                KpiTile("Follow-up", metrics?.followUpsCompleted ?: 0, "ফলো-আপ শেষ", Modifier.weight(1f), WinGreen)
+                KpiTile("Booking", metrics?.bookings ?: 0, "বুকিং", Modifier.weight(1f), WinLive)
             }
         }
 
@@ -154,8 +155,8 @@ fun AgentDashboardScreen(
 
         item {
             PriorityCard(
-                label = "Hot Leads",
-                count = metrics?.hotLeads ?: leads.count { it.status == "pending" },
+                label = "আগের দিনের বাকি",
+                count = metrics?.carriedOver ?: 0,
                 icon = Icons.Filled.Person,
                 color = WinRed,
                 onClick = onViewAllLeads,
@@ -164,7 +165,7 @@ fun AgentDashboardScreen(
         item {
             PriorityCard(
                 label = "Follow-ups Due",
-                count = metrics?.followUpsDue ?: leads.count { it.status == "follow_up" },
+                count = metrics?.followUpsDue ?: 0,
                 icon = Icons.Filled.Notifications,
                 color = WinAmber,
                 onClick = onViewAllFollowUps,
@@ -172,8 +173,8 @@ fun AgentDashboardScreen(
         }
         item {
             PriorityCard(
-                label = "New Assigned Leads",
-                count = metrics?.newAssigned ?: 0,
+                label = "ডেটাবেজ থেকে নতুন",
+                count = metrics?.newFromDatabase ?: 0,
                 icon = Icons.Filled.Person,
                 color = WinGreen,
                 onClick = onViewAllLeads,
@@ -181,8 +182,8 @@ fun AgentDashboardScreen(
         }
         item {
             PriorityCard(
-                label = "Missed / Retry Calls",
-                count = metrics?.missedRetry ?: 0,
+                label = "অতিরিক্ত পেন্ডিং (মীমাংসাধীন)",
+                count = metrics?.excessPending ?: 0,
                 icon = Icons.Filled.Call,
                 color = WinInkMuted,
                 onClick = onViewAllFollowUps,

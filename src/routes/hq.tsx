@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
 import { FloorAllocationPanel } from "@/components/crm/AllocationStatusCard";
+import { FloorPerformancePanel } from "@/components/crm/DailyPerformanceCard";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
 import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
@@ -164,6 +165,8 @@ function ControlBoard() {
         />
 
         <FloorAllocationPanel />
+
+        <FloorPerformancePanel />
 
         <SmartInsightStrip scope="floor" />
 
