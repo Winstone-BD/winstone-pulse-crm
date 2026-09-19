@@ -61,7 +61,7 @@ function SecurityBoard() {
   const view = views.find((item) => item.key === active) ?? views[0];
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div>
         <h1 className="page-title">পিন ও অ্যাক্সেস</h1>
         <p className="text-xs text-muted-foreground sm:text-sm">

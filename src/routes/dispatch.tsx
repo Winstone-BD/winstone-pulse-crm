@@ -126,7 +126,7 @@ function Dispatcher() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="page-title">Lead Dispatcher</h1>

@@ -75,7 +75,7 @@ function DocsAdmin() {
   }, [docs.data, term, status]);
 
   return (
-    <div className="space-y-4">
+    <div className="page-stack">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title">ডকুমেন্টেশন ব্যবস্থাপনা</h1>

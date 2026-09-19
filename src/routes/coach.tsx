@@ -87,7 +87,7 @@ function CoachPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="page-stack">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="page-title flex items-center gap-2">
@@ -146,7 +146,7 @@ function CoachPage() {
 function BriefingView({ briefing }: { briefing: Briefing }) {
   const m = briefing.metrics;
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <div className="card-elevated space-y-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="rounded-full">

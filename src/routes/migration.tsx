@@ -109,7 +109,7 @@ function MigrationBoard() {
     MIGRATION_CHECKLIST.filter((i) => i.kind === kind).length;
 
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <section className="rounded-2xl border border-border/60 bg-card/60 p-4 sm:p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">

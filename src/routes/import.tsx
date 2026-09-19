@@ -110,7 +110,7 @@ function ImportScreen() {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <header className="space-y-1">
         <h1 className="page-title flex items-center gap-2">
           <FileUp className="size-5 text-primary" /> লিড ইমপোর্ট

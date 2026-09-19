@@ -254,7 +254,7 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="page-stack">
         <LeadDeadlineBanner />
         <MyProfileCard />
         <MyPhoneSetup />

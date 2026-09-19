@@ -105,7 +105,7 @@ function SystemBoard() {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="page-title">সিস্টেম ও বিল</h1>

@@ -86,7 +86,7 @@ function ReportsBoard() {
   const hasActivity = report.totals.dials > 0 || report.totals.newLeads > 0;
 
   return (
-    <div className="space-y-5">
+    <div className="page-stack">
       <ReportsHeader
         onToggleFilters={() => setShowFilters((v) => !v)}
         onExport={() => downloadCsv(`winstone-report_${stamp}.csv`, reportToCsv(report))}

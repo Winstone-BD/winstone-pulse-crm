@@ -103,7 +103,7 @@ function IngestBoard() {
   const health = diagnostics.data;
 
   return (
-    <div className="space-y-6">
+    <div className="page-stack">
       <div className="min-w-0">
         <h1 className="page-title flex items-center gap-2">
           <Stethoscope className="size-5 text-primary" /> Ingest Validation
