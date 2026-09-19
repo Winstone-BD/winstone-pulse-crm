@@ -540,13 +540,19 @@ export async function submitCallReport(input: {
     };
   }
 
+  // The next queued call becomes the open report right away, so the popup
+  // returns for every call that happened while this one was being written.
+  const nextQueued = await promoteNextQueuedReport(input.agentId);
+
   return {
     ok: true,
     followUpId,
     sheet,
     review,
+    nextReportId: nextQueued,
     workState: received && classified ? ("completed" as const) : ("pending" as const),
   };
+
 }
 
 /**
