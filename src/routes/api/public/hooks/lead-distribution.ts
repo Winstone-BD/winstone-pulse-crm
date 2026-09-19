@@ -42,6 +42,11 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
           const { distributeDailyLeads, dailyPlan, saveDailyPlan, dhakaToday, usablePoolCount } =
             await import("@/lib/lead-pool.server");
           const today = dhakaToday();
+          // Leads nobody could ever reach, and leads that sat on a desk for days
+          // without a single call, go back to the head database first so today's
+          // hand-out can give them to a desk that will work them.
+          const { sweepLeadRescue } = await import("@/lib/lead-rescue.server");
+          const rescue = await sweepLeadRescue(today);
           // Yesterday's (and earlier) unfinished leads move onto today's board
           // first — this runs even on a same-day retry, it only touches the past.
           const { rolloverPendingLeads } = await import("@/lib/lead-pool.server");
@@ -60,6 +65,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
               skipped: "already_done_today",
               today,
               rolledOver,
+              rescue,
               excess: status.totals.excess,
               shortage: status.shortage,
             });
@@ -75,7 +81,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
               need: agents.length * plan.perAgent,
               perAgent: plan.perAgent,
             });
-            return Response.json({ ok: true, skipped: "database_empty", today });
+            return Response.json({ ok: true, skipped: "database_empty", today, rescue });
           }
 
           const result = await distributeDailyLeads({
@@ -84,7 +90,7 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
             trigger: "daily_auto",
           });
           await saveDailyPlan({ perAgent: plan.perAgent, lastRunDate: today });
-          return Response.json({ ok: true, ...result });
+          return Response.json({ ok: true, rescue, rolledOver, ...result });
         } catch (error) {
           console.error("daily lead distribution failed", error);
           return new Response(

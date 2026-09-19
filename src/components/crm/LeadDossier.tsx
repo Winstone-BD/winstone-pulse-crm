@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Activity,
@@ -40,7 +40,12 @@ import {
 } from "@/lib/whatsapp-status";
 import { LEAD_EVENT_LABELS } from "@/lib/crm-data";
 import { reanalyzeRecording } from "@/lib/crm.functions";
-import { getAdminToken } from "@/lib/local-session";
+import { getAdminToken, useAdminToken } from "@/lib/local-session";
+import {
+  getLeadCallHistory,
+  type LeadCall,
+  type LeadCallRecordingEvidence,
+} from "@/lib/lead-history.functions";
 import {
   clockTime,
   dayLabel,
@@ -128,36 +133,20 @@ export function LeadDossier({
             <div className="space-y-4 px-5 py-5">
               <PreCallBriefCard leadId={lead.id} />
 
+              <CallHistory leadId={lead.id} />
+
               <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 সব মাধ্যমের টাইমলাইন
               </h3>
 
-              {(() => {
-                const calls = timeline.filter((e) => e.kind === "call");
-                if (calls.length === 0) return null;
-                const totalSeconds = calls.reduce(
-                  (sum, e) => sum + (e.kind === "call" ? (e.call.duration_seconds ?? 0) : 0),
-                  0,
-                );
-                return (
-                  <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm">
-                    <span className="font-semibold">মোট {calls.length}টি কল</span>
-                    <span className="text-muted-foreground">
-                      মোট কথা {formatDuration(totalSeconds)}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {timeline.length === 0 && (
+              {timeline.filter((entry) => entry.kind !== "call").length === 0 && (
                 <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                  এই লিডের এখনো কোনো কল বা মেসেজ জমা হয়নি।
+                  এখনো কোনো মেসেজ বা ধাপ জমা হয়নি।
                 </p>
               )}
 
-              {timeline.map((entry) => {
-                if (entry.kind === "call")
-                  return <CallEntry key={entry.call.id} call={entry.call} />;
+              {/* Calls live in the history block above, from the submitted reports. */}
+              {timeline.filter((entry) => entry.kind !== "call").map((entry) => {
                 if (entry.kind === "message")
                   return <MessageEntry key={entry.message.id} message={entry.message} />;
                 return <LifecycleEntry key={entry.event.id} event={entry.event} />;
@@ -440,6 +429,219 @@ function MessageEntry({ message }: { message: WhatsappMessage }) {
           )}
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Every call on this lead, straight from the submitted call reports — that is
+ * the one place the whole CRM counts a call from. The recording file is extra
+ * evidence shown when the phone managed to sync the audio, and the AI summary /
+ * tone only appears once the analysis finished. Nothing is guessed: a missing
+ * recording and a pending analysis both say so plainly.
+ */
+function CallHistory({ leadId }: { leadId: string }) {
+  const token = useAdminToken();
+  const load = useServerFn(getLeadCallHistory);
+  const query = useQuery({
+    queryKey: ["lead-call-history", leadId, token ? "authority" : "session"],
+    queryFn: () => load({ data: { leadId, token } }),
+    staleTime: 5_000,
+    refetchInterval: 30_000,
+  });
+
+  if (query.isPending) {
+    return (
+      <p className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+        <Loader2 className="size-4 animate-spin" /> কলের হিসাব আনা হচ্ছে…
+      </p>
+    );
+  }
+  if (query.isError) {
+    return (
+      <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        কলের হিসাব আনা যায়নি — আবার চেষ্টা করুন।
+      </p>
+    );
+  }
+
+  const calls = query.data?.calls ?? [];
+  const orphans = query.data?.orphanRecordings ?? [];
+  if (calls.length === 0 && orphans.length === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
+        এই লিডে এখনো কোনো কল রিপোর্ট জমা হয়নি।
+      </p>
+    );
+  }
+
+  const connected = calls.filter((c) => c.connected).length;
+  const totalSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
+  const withAudio = calls.filter((c) => c.recording?.hasAudio).length + orphans.length;
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm">
+        <span className="font-semibold">মোট {calls.length}টি কল</span>
+        <span className="text-muted-foreground">
+          কথা হয়েছে {connected}টিতে · মোট {formatDuration(totalSeconds)} · রেকর্ডিং {withAudio}টি
+        </span>
+      </div>
+
+      {calls.map((call) => (
+        <ReportCallCard key={call.id} call={call} />
+      ))}
+
+      {orphans.map((recording) => (
+        <article key={recording.id} className="card-elevated p-4">
+          <p className="text-sm font-medium">রিপোর্ট ছাড়া সিঙ্ক হওয়া রেকর্ডিং</p>
+          <p className="tabular mt-1 text-xs text-muted-foreground">
+            {dayLabel(recording.createdAt)} · {clockTime(recording.createdAt)} ·{" "}
+            {formatDuration(recording.durationSeconds)}
+          </p>
+          <div className="mt-3">
+            <RecordingEvidence recording={recording} />
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function ReportCallCard({ call }: { call: LeadCall }) {
+  return (
+    <article className="card-elevated">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border/70 px-4 py-3">
+        <span className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary">
+          <PhoneOutgoing className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium">
+            {call.connected ? "কথা হয়েছে" : "কেউ ধরেনি"}
+            {call.category ? ` · ${CATEGORY_LABEL_CLIENT[call.category] ?? call.category}` : ""}
+          </p>
+          <p className="tabular text-xs text-muted-foreground">
+            {dayLabel(call.at)} · {clockTime(call.at)} · {formatDuration(call.durationSeconds)}
+          </p>
+        </div>
+        {(call.temperature || call.grade) && (
+          <span className="ml-auto rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs">
+            {[call.temperature, call.grade].filter(Boolean).join(" · ")}
+          </span>
+        )}
+      </header>
+
+      <div className="space-y-3 p-4">
+        {call.summary && <p className="text-sm">{call.summary}</p>}
+        {call.note && <p className="text-sm text-muted-foreground">নোট: {call.note}</p>}
+        {call.reason && <p className="text-sm text-muted-foreground">কারণ: {call.reason}</p>}
+        {call.followUpAt && (
+          <p className="tabular text-xs text-muted-foreground">
+            পরের ফলো-আপ: {dayLabel(call.followUpAt)} · {clockTime(call.followUpAt)}
+          </p>
+        )}
+        {call.recording ? (
+          <RecordingEvidence recording={call.recording} />
+        ) : (
+          <p className="flex items-center gap-2 rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+            <AlertTriangle className="size-4" /> এই কলের অডিও ফাইল ফোন থেকে সিঙ্ক হয়নি।
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+/** The recording file plus its AI analysis — each part only when it truly exists. */
+function RecordingEvidence({ recording }: { recording: LeadCallRecordingEvidence }) {
+  const bullets = summaryBullets(recording.aiSummary);
+  const analysing =
+    recording.analysisStatus === "pending" || recording.analysisStatus === "processing";
+
+  return (
+    <div className="space-y-3">
+      {recording.hasAudio ? (
+        <CallAudioPlayer
+          recordingId={recording.id}
+          fallbackDuration={recording.durationSeconds}
+        />
+      ) : (
+        <p className="flex items-center gap-2 rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+          <AlertTriangle className="size-4" /> রেকর্ডিং সারি হয়েছে, অডিও ফাইল এখনো আসেনি।
+        </p>
+      )}
+
+      <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span
+          className={cn(
+            "rounded-full border px-2 py-0.5",
+            recording.isTwoSided
+              ? "border-verified/30 bg-verified/10 text-verified"
+              : "border-idle/30 bg-idle/10 text-idle",
+          )}
+        >
+          {recording.isTwoSided ? (
+            <>
+              <BadgeCheck className="mr-1 inline size-3" />
+              দুই পক্ষের অডিও
+            </>
+          ) : (
+            <>
+              <ShieldAlert className="mr-1 inline size-3" />
+              এক পক্ষের অডিও
+            </>
+          )}
+        </span>
+        <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5">
+          সিঙ্ক: {recording.syncStatus}
+        </span>
+      </p>
+
+      {bullets.length > 0 ? (
+        <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Sparkles className="size-4" /> এআই কথাবার্তার সারসংক্ষেপ
+            </p>
+            {recording.sentiment && (
+              <span
+                className={cn(
+                  "rounded-full border px-2.5 py-0.5 text-xs capitalize",
+                  SENTIMENT_STYLES[recording.sentiment],
+                )}
+              >
+                {recording.sentiment}
+              </span>
+            )}
+          </div>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {bullets.slice(0, 4).map((bullet) => (
+              <li key={bullet} className="flex gap-2">
+                <span className="text-primary">•</span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+          {recording.aiIntent && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              ক্রেতার উদ্দেশ্য: <span className="text-foreground">{recording.aiIntent}</span>
+            </p>
+          )}
+          {recording.aiNextAction && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              পরের ধাপ: <span className="text-foreground">{recording.aiNextAction}</span>
+            </p>
+          )}
+        </div>
+      ) : (
+        recording.hasAudio && (
+          <p className="text-xs text-muted-foreground">
+            {analysing
+              ? "এআই সারসংক্ষেপ ও সুর বিশ্লেষণ তৈরি হচ্ছে — শেষ হলে এখানেই দেখা যাবে।"
+              : "এই রেকর্ডিংয়ের এআই বিশ্লেষণ এখনো হয়নি।"}
+          </p>
+        )
+      )}
     </div>
   );
 }
