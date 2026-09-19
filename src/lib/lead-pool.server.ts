@@ -126,11 +126,14 @@ export async function rolloverPendingLeads(workDate: string = dhakaToday()): Pro
 }
 
 /**
- * How many database leads each desk already received for this work date.
- * The daily run tops desks up to their quota instead of handing out a second
- * full round, so calling it twice in one day can never double-assign.
+ * Today's open workload per desk: every lead sitting on today's board that is
+ * still unfinished (pending) — carried-over leftovers AND leads handed out
+ * earlier today alike. The daily run counts this against the quota first, so
+ * pending work is always served before new database leads, and a desk with a
+ * heavy backlog takes fewer (or no) new leads while a light desk is topped up
+ * to the same round number.
  */
-async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
+async function openWorkloadByAgent(workDate: string): Promise<Map<string, number>> {
   const supabaseAdmin = await admin();
   const counts = new Map<string, number>();
   for (let from = 0; ; from += 1000) {
@@ -138,7 +141,7 @@ async function assignedTodayByAgent(workDate: string): Promise<Map<string, numbe
       .from("leads")
       .select("assigned_to")
       .eq("work_date", workDate)
-      .eq("assignment_source", "lead_database")
+      .eq("work_state", "pending")
       .not("assigned_to", "is", null)
       .range(from, from + 999);
     (data ?? []).forEach((row) => {
@@ -149,6 +152,106 @@ async function assignedTodayByAgent(workDate: string): Promise<Map<string, numbe
   }
   return counts;
 }
+
+/**
+ * Balancing step, run before any database lead is handed out.
+ *
+ * A desk carrying MORE pending work than its quota gives its surplus (the
+ * newest, never-called leads only) to desks sitting BELOW their quota. Nobody
+ * loses a lead they already worked on, and the transfer is recorded on the
+ * lead's own history so the change is traceable.
+ */
+async function rebalanceSurplusPending(input: {
+  workDate: string;
+  agents: PoolAgent[];
+  quotas: Map<string, number>;
+  held: Map<string, number>;
+}): Promise<number> {
+  const supabaseAdmin = await admin();
+  const { workDate, agents, quotas, held } = input;
+
+  const donors = agents
+    .map((a) => ({ agent: a, surplus: (held.get(a.id) ?? 0) - (quotas.get(a.id) ?? 0) }))
+    .filter((row) => row.surplus > 0)
+    .sort((a, b) => b.surplus - a.surplus);
+  const receivers = agents
+    .map((a) => ({ agent: a, gap: (quotas.get(a.id) ?? 0) - (held.get(a.id) ?? 0) }))
+    .filter((row) => row.gap > 0)
+    .sort((a, b) => b.gap - a.gap);
+  if (donors.length === 0 || receivers.length === 0) return 0;
+
+  let moved = 0;
+  let receiverIndex = 0;
+
+  for (const donor of donors) {
+    let surplus = donor.surplus;
+    if (surplus <= 0) continue;
+    const { data: spare } = await supabaseAdmin
+      .from("leads")
+      .select("id")
+      .eq("assigned_to", donor.agent.id)
+      .eq("work_date", workDate)
+      .eq("work_state", "pending")
+      .eq("call_attempts", 0)
+      .is("last_call_at", null)
+      .order("created_at", { ascending: false })
+      .limit(surplus);
+    const spareIds = (spare ?? []).map((row) => row.id);
+    let cursor = 0;
+
+    while (cursor < spareIds.length && receiverIndex < receivers.length) {
+      const receiver = receivers[receiverIndex]!;
+      if (receiver.gap <= 0) {
+        receiverIndex += 1;
+        continue;
+      }
+      const batch = spareIds.slice(cursor, cursor + Math.min(receiver.gap, 100));
+      if (batch.length === 0) break;
+      const { data: updated } = await supabaseAdmin
+        .from("leads")
+        .update({
+          assigned_to: receiver.agent.id,
+          assigned_agent_id: receiver.agent.id,
+          work_date: workDate,
+        })
+        .in("id", batch)
+        .eq("assigned_to", donor.agent.id)
+        .eq("work_state", "pending")
+        .select("id");
+      const movedIds = (updated ?? []).map((row) => row.id);
+      cursor += batch.length;
+      if (movedIds.length === 0) continue;
+
+      await supabaseAdmin.from("lead_assignments").insert(
+        movedIds.map((leadId) => ({
+          lead_id: leadId,
+          from_agent_id: donor.agent.id,
+          to_agent_id: receiver.agent.id,
+          source: "rebalance",
+          note: `ভারসাম্য: ${donor.agent.name} → ${receiver.agent.name} (${workDate})`,
+        })),
+      );
+      await supabaseAdmin.from("lead_events").insert(
+        movedIds.map((leadId) => ({
+          lead_id: leadId,
+          agent_id: receiver.agent.id,
+          kind: "workday_moved" as const,
+          detail: `অতিরিক্ত পেন্ডিং লিড ${donor.agent.name} থেকে ${receiver.agent.name}-কে দেওয়া হয়েছে (${workDate})`,
+        })),
+      );
+
+      moved += movedIds.length;
+      receiver.gap -= movedIds.length;
+      surplus -= movedIds.length;
+      held.set(donor.agent.id, (held.get(donor.agent.id) ?? 0) - movedIds.length);
+      held.set(receiver.agent.id, (held.get(receiver.agent.id) ?? 0) + movedIds.length);
+      if (receiver.gap <= 0) receiverIndex += 1;
+      if (surplus <= 0) break;
+    }
+  }
+  return moved;
+}
+
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
@@ -170,9 +273,15 @@ export async function distributeDailyLeads(options: {
   const { quotaFor } = await import("@/lib/lead-quota");
   const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
 
-  // Idempotency: what each desk already holds for today is subtracted from its
-  // quota, so a second run (cron retry, double click) only fills real gaps.
-  const held = await assignedTodayByAgent(today);
+  // Pending first: today's unfinished leads fill the quota, and only the gap
+  // left over is topped up from the database. Idempotent — a second run in the
+  // same day fills real gaps only.
+  const held = await openWorkloadByAgent(today);
+
+  // Balance first: a desk over its quota passes its untouched surplus to desks
+  // under theirs, so the database is only tapped for what the floor truly lacks.
+  await rebalanceSurplusPending({ workDate: today, agents, quotas, held });
+
   const shortfallByAgent = new Map<string, number>();
   for (const agent of agents) {
     const quota = quotas.get(agent.id) ?? options.perAgent;
@@ -419,7 +528,7 @@ export async function dailyPlan(): Promise<{ perAgent: number; lastRunDate: stri
     .eq("id", "lead_pool_daily")
     .maybeSingle();
   const state = (data?.data ?? {}) as { perAgent?: number; lastRunDate?: string };
-  return { perAgent: state.perAgent ?? 25, lastRunDate: state.lastRunDate ?? null };
+  return { perAgent: state.perAgent ?? 30, lastRunDate: state.lastRunDate ?? null };
 }
 
 export async function saveDailyPlan(input: { perAgent: number; lastRunDate?: string | null }) {
