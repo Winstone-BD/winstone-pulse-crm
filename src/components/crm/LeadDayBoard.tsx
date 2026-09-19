@@ -236,6 +236,16 @@ export function LeadDayBoard() {
                   {lead.phone_number}
                   {lead.call_attempts ? ` · ${lead.call_attempts} বার চেষ্টা` : ""}
                 </p>
+                <p
+                  className={`truncate text-xs ${
+                    lead.work_state !== "completed" && waitingDays(lead) >= 2
+                      ? "font-semibold text-destructive"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {taskTrail(lead)}
+                </p>
+
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <WebCallButton
