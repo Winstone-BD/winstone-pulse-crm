@@ -196,6 +196,14 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     var aiSummary by remember { mutableStateOf<String?>(null) }
     var aiCategory by remember { mutableStateOf<String?>(null) }
     var talkSeconds by remember { mutableLongStateOf(0L) }
+    // কলের তথ্য — বাধ্যতামূলক
+    var direction by remember { mutableStateOf("outgoing") }
+    var callState by remember { mutableStateOf("connected") }
+    var duration by remember { mutableStateOf("") }
+    var noFollowUp by remember { mutableStateOf(false) }
+    var noFollowUpNote by remember { mutableStateOf("") }
+    var temperature by remember { mutableStateOf<String?>(null) }
+    var grade by remember { mutableStateOf<String?>(null) }
 
     // Wait for the server-side report (opened by the sync worker when the call ended).
     LaunchedEffect(Unit) {
@@ -204,6 +212,8 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                 body.optJSONObject("pending")?.let { pending ->
                     reportId = pending.optString("id").takeIf { it.isNotBlank() }
                     talkSeconds = pending.optLong("duration_seconds", 0L)
+                    if (duration.isBlank()) duration = talkSeconds.toString()
+                    if (!pending.optBoolean("connected", true)) callState = "no_answer"
                     pending.optJSONObject("lead")?.let { lead ->
                         leadLabel = listOfNotNull(
                             lead.optString("name").takeIf { it.isNotBlank() && it != "null" },
@@ -212,6 +222,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                     }
                     pending.optJSONObject("recording")?.let { rec ->
                         aiSummary = rec.optString("ai_summary").takeIf { it.isNotBlank() && it != "null" }
+                        if (rec.optString("call_direction") == "incoming_callback") direction = "incoming"
                     }
                     pending.optJSONObject("ai_suggestion")?.let { suggestion ->
                         aiCategory = suggestion.optString("suggestedCategory").takeIf { it.isNotBlank() }
@@ -222,12 +233,16 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
         }
     }
 
-    // প্রতিটি কলে: ক্যাটাগরি + সারাংশ + নোট + ফলো-আপ তারিখ — সবই বাধ্যতামূলক
+    // প্রতিটি কলে: কলের দিক + অবস্থা + সময়কাল + ক্যাটাগরি + সারাংশ + নোট + ফলো-আপ — সবই বাধ্যতামূলক
     val needsReason = category == "not_interested" || category == "wrong_number"
+    val seconds = duration.trim().toIntOrNull() ?: -1
+    val received = callState == "connected"
     val ready = category.isNotBlank() &&
-        date.length == 10 && time.length == 5 &&
+        seconds >= 0 && (!received || seconds >= 1) &&
         summary.trim().length > 1 &&
         note.trim().length > 1 &&
+        (if (noFollowUp) noFollowUpNote.trim().length > 1 else (date.length == 10 && time.length == 5)) &&
+        (!received || (temperature != null && grade != null)) &&
         (!needsReason || reason.trim().length > 1)
 
     ModalBottomSheet(onDismissRequest = { /* বাধ্যতামূলক — বন্ধ করা যাবে না */ }, sheetState = sheet) {
@@ -261,6 +276,48 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
             }
 
             Spacer(Modifier.height(12.dp))
+            Text("কলের দিক (বাধ্যতামূলক)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            DIRECTIONS.forEach { (value, label) ->
+                OutlinedButton(
+                    onClick = { direction = value },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                ) { Text(if (direction == value) "✓ $label" else label) }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("কলের অবস্থা (বাধ্যতামূলক)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            CALL_STATES.forEach { (value, label) ->
+                OutlinedButton(
+                    onClick = { callState = value },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                ) { Text(if (callState == value) "✓ $label" else label) }
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = duration,
+                onValueChange = { duration = it.filter { ch -> ch.isDigit() } },
+                label = { Text("সময়কাল — সেকেন্ড (বাধ্যতামূলক)") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (received) {
+                Spacer(Modifier.height(8.dp))
+                Text("শ্রেণিবিন্যাস (কথা হয়েছে — বাধ্যতামূলক)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                TEMPERATURES.forEach { (value, label) ->
+                    OutlinedButton(
+                        onClick = { temperature = value },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    ) { Text(if (temperature == value) "✓ $label" else label) }
+                }
+                Row(Modifier.fillMaxWidth()) {
+                    listOf("A", "B", "C", "D").forEach { value ->
+                        OutlinedButton(
+                            onClick = { grade = value },
+                            modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                        ) { Text(if (grade == value) "✓ $value" else value) }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
             CATEGORIES.forEach { (value, label) ->
                 OutlinedButton(
                     onClick = { category = value },
@@ -277,18 +334,32 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                 minLines = 2,
             )
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = date,
-                onValueChange = { date = it },
-                label = { Text("ফলো-আপ তারিখ (2026-05-20) — বাধ্যতামূলক") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedTextField(
-                value = time,
-                onValueChange = { time = it },
-                label = { Text("সময় (14:30) — বাধ্যতামূলক") },
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (!noFollowUp) {
+                OutlinedTextField(
+                    value = date,
+                    onValueChange = { date = it },
+                    label = { Text("ফলো-আপ তারিখ (2026-05-20) — বাধ্যতামূলক") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = time,
+                    onValueChange = { time = it },
+                    label = { Text("সময় (14:30) — বাধ্যতামূলক") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            OutlinedButton(
+                onClick = { noFollowUp = !noFollowUp; if (noFollowUp) { date = ""; time = "" } },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+            ) { Text(if (noFollowUp) "✓ ফলো-আপ দরকার নেই" else "ফলো-আপ দরকার নেই") }
+            if (noFollowUp) {
+                OutlinedTextField(
+                    value = noFollowUpNote,
+                    onValueChange = { noFollowUpNote = it },
+                    label = { Text("কেন দরকার নেই (বাধ্যতামূলক)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             if (needsReason) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
@@ -319,21 +390,40 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                     val id = reportId ?: return@Button
                     busy = true; error = null
                     scope.launch {
-                    val followUp = "${date}T${time}:00+06:00"
-                    val result = runCatching {
-                            WinstoneApi.submitReport(
-                                reportId = id,
-                                category = category,
-                                summary = summary,
-                                note = note,
-                                reason = reason,
-                                followUpAtIso = followUp,
-                                aiDecision = if (aiCategory != null && aiCategory == category) "accepted" else "edited",
-                            )
-                        }
+                        val followUp = if (noFollowUp) null else "${date}T${time}:00+06:00"
+                        val payload = WinstoneApi.reportPayload(
+                            reportId = id,
+                            category = category,
+                            summary = summary,
+                            note = note,
+                            reason = reason,
+                            followUpAtIso = followUp,
+                            aiDecision = if (aiCategory != null && aiCategory == category) "accepted" else "edited",
+                            direction = direction,
+                            callStatus = callState,
+                            durationSeconds = seconds,
+                            followUpNeeded = !noFollowUp,
+                            followUpNote = if (noFollowUp) noFollowUpNote else null,
+                            temperature = temperature,
+                            grade = grade,
+                        )
+                        val result = runCatching { WinstoneApi.submitReportRaw(payload) }
                         busy = false
                         result.onSuccess { LiveCallLauncher.clear(); onSubmitted() }
-                            .onFailure { error = it.message ?: "রিপোর্ট জমা হয়নি" }
+                            .onFailure { failure ->
+                                val message = failure.message.orEmpty()
+                                // নেটওয়ার্কের সমস্যা হলে রিপোর্ট ফোনেই জমা থাকবে,
+                                // নেট ফিরলে নিজে থেকেই CRM-এ চলে যাবে।
+                                if (message.contains("Invalid payload") || message.contains("Unauthorized") ||
+                                    message.contains("রিপোর্ট")
+                                ) {
+                                    error = message.ifBlank { "রিপোর্ট জমা হয়নি" }
+                                } else {
+                                    CallSyncQueue.queueReportSubmit(context, id, payload.toString())
+                                    LiveCallLauncher.clear()
+                                    onSubmitted()
+                                }
+                            }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -342,6 +432,24 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
         }
     }
 }
+
+private val DIRECTIONS = listOf(
+    "outgoing" to "আউটগোয়িং — আমি কল করেছি",
+    "incoming" to "ইনকামিং — ক্রেতা কল করেছেন",
+)
+
+private val CALL_STATES = listOf(
+    "connected" to "কথা হয়েছে",
+    "no_answer" to "ধরেনি",
+    "busy" to "ব্যস্ত ছিল",
+    "failed" to "কল যায়নি",
+)
+
+private val TEMPERATURES = listOf(
+    "hot" to "HOT — গরম",
+    "warm" to "WARM — কিছুটা আগ্রহী",
+    "cold" to "COLD — ঠান্ডা",
+)
 
 private val CATEGORIES = listOf(
     "hot_lead" to "HOT LEAD — খুব সম্ভাবনাময়",
