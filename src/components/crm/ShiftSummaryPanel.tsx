@@ -210,7 +210,7 @@ export function ShiftSummaryPanel({ scope }: { scope: "hq" | "it" }) {
     : null;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <CalendarClock className="size-4 text-primary" />
         <h2 className="section-title">

@@ -57,7 +57,7 @@ export function MyProfileCard() {
   if (!profile) return null;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <span

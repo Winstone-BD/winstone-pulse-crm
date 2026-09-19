@@ -52,7 +52,7 @@ export function DocSummaryPanel() {
   };
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <FileText className="size-4 text-primary" />
         <h2 className="section-title">নথি আপলোড ও স্মার্ট সারসংক্ষেপ</h2>

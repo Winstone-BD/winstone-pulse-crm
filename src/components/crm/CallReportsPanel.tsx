@@ -87,7 +87,7 @@ export function CallReportsPanel() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stat-grid">
         <div className="space-y-1.5">
           <Label className="text-xs">ক্যাটাগরি</Label>
           <select

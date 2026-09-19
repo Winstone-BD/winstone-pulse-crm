@@ -43,7 +43,7 @@ export function AccountApprovals() {
   const pending = accounts.filter((a) => a.approval_status === "pending");
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex items-center gap-2">
         <ShieldCheck className="size-4 text-primary" />
         <h2 className="section-title">অ্যাকাউন্ট অনুমোদন</h2>

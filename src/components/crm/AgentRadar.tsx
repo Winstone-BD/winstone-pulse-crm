@@ -63,7 +63,7 @@ export function AgentRadar({
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stat-grid">
         {agents.map((agent) => {
           const style = PRESENCE[agent.presence];
           const lastCall = calls

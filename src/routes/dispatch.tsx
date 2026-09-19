@@ -148,7 +148,7 @@ function Dispatcher() {
 
       <TeamSupportInbox />
 
-      <section className="card-elevated p-4">
+      <section className="card-elevated card-pad">
         <h2 className="section-title">Bulk push</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Select value={agentId} onValueChange={setAgentId}>

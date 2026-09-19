@@ -128,9 +128,9 @@ function IngestBoard() {
         {diagnostics.isError && (
           <p className="text-sm text-destructive">{(diagnostics.error as Error).message}</p>
         )}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="stat-grid">
           {(health?.checks ?? []).map((c) => (
-            <div key={c.key} className="card-elevated p-4">
+            <div key={c.key} className="card-elevated card-pad">
               <div className="flex items-center gap-2">
                 {c.ok ? (
                   <CheckCircle2 className="size-4 text-live" />
@@ -146,7 +146,7 @@ function IngestBoard() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h2 className="section-title">
             <ShieldAlert className="size-4 text-warning" /> Data problems
           </h2>

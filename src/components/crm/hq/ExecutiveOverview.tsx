@@ -222,7 +222,7 @@ export function ExecutiveOverview({
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <div className="flex items-end justify-between gap-2">
             <h3 className="text-sm font-semibold">সেলস পাইপলাইন</h3>
             <span className="text-[11px] text-muted-foreground">মোট লিড: {kpi.total}</span>
@@ -245,7 +245,7 @@ export function ExecutiveOverview({
           </ul>
         </div>
 
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">লিড সোর্স</h3>
           <div className="mt-2 flex flex-col items-center gap-3 sm:flex-row">
             <div className="relative h-40 w-40 shrink-0">
@@ -301,7 +301,7 @@ export function ExecutiveOverview({
           </div>
         </div>
 
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">টিম পারফরম্যান্স</h3>
           <ol className="mt-3 space-y-2.5">
             {team.map((row, i) => {
@@ -341,7 +341,7 @@ export function ExecutiveOverview({
       </div>
 
       <div className="grid gap-3 xl:grid-cols-3">
-        <div className="card-elevated p-4 xl:col-span-1">
+        <div className="card-elevated card-pad xl:col-span-1">
           <h3 className="text-sm font-semibold">কল অ্যাক্টিভিটি ট্রেন্ড</h3>
           <div className="mt-2 h-40">
             <ResponsiveContainer width="100%" height="100%">
@@ -387,7 +387,7 @@ export function ExecutiveOverview({
           </div>
         </div>
 
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">রূপান্তরের হার</h3>
           <div className="mt-3 grid grid-cols-3 gap-2">
             <Gauge label="কথা হওয়ার হার" value={kpi.contactRate} color="var(--chart-1)" />
@@ -396,7 +396,7 @@ export function ExecutiveOverview({
           </div>
         </div>
 
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h3 className="text-sm font-semibold">সাম্প্রতিক কাজ</h3>
           <ul className="mt-3 space-y-2">
             {recent.map((row) => (

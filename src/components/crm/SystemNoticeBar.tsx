@@ -223,7 +223,7 @@ export function SystemNoticeBar({ surface }: { surface: "it" | "hq" }) {
 
   return (
     <>
-      <section className="card-elevated p-4">
+      <section className="card-elevated card-pad">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="section-title">
             {allClear ? (

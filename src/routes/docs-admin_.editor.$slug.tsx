@@ -200,7 +200,7 @@ function Editor() {
       </div>
 
       {preview ? (
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <MarkdownView source={body} />
         </div>
       ) : (

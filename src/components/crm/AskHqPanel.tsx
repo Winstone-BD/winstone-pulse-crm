@@ -42,7 +42,7 @@ export function AskHqPanel() {
   const hasChart = chart && chart.kind !== "none" && chart.data.length > 0;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex items-center gap-2">
         <Sparkles className="size-4 text-primary" />
         <h2 className="section-title">এইচকিউ-কে জিজ্ঞেস করুন</h2>

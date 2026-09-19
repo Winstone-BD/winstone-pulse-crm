@@ -93,7 +93,7 @@ function DocPage() {
                   সর্বশেষ হালনাগাদ: {new Date(page.data.updated_at).toLocaleString("bn-BD")}
                 </p>
               </header>
-              <div className="card-elevated p-4">
+              <div className="card-elevated card-pad">
                 <MarkdownView source={page.data.body_markdown} />
               </div>
             </>

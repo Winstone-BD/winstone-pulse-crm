@@ -152,7 +152,7 @@ export function TeamSupportPanel() {
         </Button>
       </section>
 
-      <section className="card-elevated p-4">
+      <section className="card-elevated card-pad">
         <h2 className="section-title">আমার অনুরোধ</h2>
         {query.isPending ? (
           <div className="mt-3 space-y-2">

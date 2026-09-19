@@ -22,7 +22,7 @@ export function MixCard({
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   const max = rows.reduce((m, r) => Math.max(m, r.value), 0);
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="section-title">{title}</h2>

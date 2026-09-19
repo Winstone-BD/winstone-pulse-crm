@@ -180,7 +180,7 @@ function SystemBoard() {
             </label>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="stat-grid">
           <Tile
             label="করা কল"
             value={String(billing.dials)}
@@ -205,7 +205,7 @@ function SystemBoard() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h2 className="section-title">
             <Database className="size-4 text-primary" /> ডেটার অবস্থা
           </h2>
@@ -239,7 +239,7 @@ function SystemBoard() {
           </dl>
         </div>
 
-        <div className="card-elevated p-4">
+        <div className="card-elevated card-pad">
           <h2 className="section-title">
             <Radio className="size-4 text-primary" /> ডেটা আসার ঠিকানা
           </h2>
@@ -273,7 +273,7 @@ function SystemBoard() {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="card-elevated p-4">
+    <div className="card-elevated card-pad">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="tabular mt-1 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>

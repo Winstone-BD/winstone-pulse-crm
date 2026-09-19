@@ -67,7 +67,7 @@ export function ExecutiveBrief() {
 
   if (!data) {
     return (
-      <section className="card-elevated p-6">
+      <section className="card-elevated card-pad">
         <p className="text-sm text-muted-foreground">প্রেজেন্টেশন তৈরি হচ্ছে…</p>
       </section>
     );

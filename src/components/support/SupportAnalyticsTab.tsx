@@ -52,7 +52,7 @@ export function SupportAnalyticsTab() {
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stat-grid">
         <SupportStat label="Conversations" value={String(totals.conversations)} />
         <SupportStat label="Resolved" value={String(totals.resolved)} />
         <SupportStat label="Handled without a human" value={percent(totals.deflectionRate)} />

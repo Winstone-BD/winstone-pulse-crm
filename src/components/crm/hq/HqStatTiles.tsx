@@ -23,7 +23,7 @@ export function HqStatTiles({
   const unassigned = leads.filter((l) => l.assigned_to === null).length;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="stat-grid">
       <StatTile
         icon={<PhoneCall className="size-4" />}
         label="মোট কল"

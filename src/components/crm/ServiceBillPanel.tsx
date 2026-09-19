@@ -169,7 +169,7 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
       </div>
 
       {current ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="stat-grid">
           <Field label="পিরিয়ড" value={current.period} />
           <Field label="পরিমাণ" value={taka(current.amountBdt)} />
           <Field

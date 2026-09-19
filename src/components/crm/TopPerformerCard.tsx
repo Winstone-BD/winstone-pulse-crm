@@ -102,7 +102,7 @@ export function TopPerformerCard() {
 
   if (!data.revealed) {
     return (
-      <section className="card-elevated p-4 sm:p-5">
+      <section className="card-elevated card-pad sm:p-5">
         <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
             <Clock className="size-5" />

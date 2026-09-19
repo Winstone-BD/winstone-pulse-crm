@@ -112,7 +112,7 @@ export function DayCallExportPanel() {
   });
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <FileAudio className="size-4 text-primary" />
         <h2 className="section-title">এক দিনের কল ও রেকর্ডিং সামারি</h2>

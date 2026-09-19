@@ -40,7 +40,7 @@ export function OpenLeadsCard() {
   const leads = open.data ?? [];
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="section-title">খালি লিড — নিজে নিন</h2>

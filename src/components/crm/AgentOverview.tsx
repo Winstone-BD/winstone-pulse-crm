@@ -31,7 +31,7 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <div className="card-elevated p-3">
+    <div className="card-elevated card-pad">
       <div className="flex items-center gap-2">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
           {icon}
@@ -198,7 +198,7 @@ export function AgentOverview() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="card-elevated p-4 lg:col-span-2">
+        <div className="card-elevated card-pad lg:col-span-2">
           <h3 className="text-sm font-semibold">আজকের কাজের ধারা</h3>
           <ul className="mt-3 space-y-2">
             {activity.map((row) => (

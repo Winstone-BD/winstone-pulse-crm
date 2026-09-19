@@ -121,7 +121,7 @@ function CreditsBoard() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="stat-grid">
             <Tile
               label={`${report.monthLabel} — মোট`}
               value={`${report.totals.credits} ক্রেডিট`}
@@ -148,7 +148,7 @@ function CreditsBoard() {
             />
           </div>
 
-          <section className="card-elevated p-4">
+          <section className="card-elevated card-pad">
             <h2 className="section-title">
               <Coins className="size-4 text-primary" /> হার (প্রতি কাজে)
             </h2>
@@ -175,7 +175,7 @@ function CreditsBoard() {
           </section>
 
           <section className="grid gap-4 lg:grid-cols-2">
-            <div className="card-elevated p-4">
+            <div className="card-elevated card-pad">
               <h2 className="section-title">দিনভিত্তিক খরচ</h2>
               {report.daily.length === 0 && (
                 <p className="mt-3 text-sm text-muted-foreground">
@@ -193,7 +193,7 @@ function CreditsBoard() {
               </div>
             </div>
 
-            <div className="card-elevated p-4">
+            <div className="card-elevated card-pad">
               <h2 className="section-title">
                 <Users className="size-4 text-primary" /> এজেন্টভিত্তিক ব্যবহার
               </h2>
@@ -227,7 +227,7 @@ function CreditsBoard() {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="card-elevated p-4">
+    <div className="card-elevated card-pad">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="tabular mt-1 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>

@@ -27,7 +27,7 @@ export function HqRecentSummaries({
                 key={call.id}
                 onClick={() => lead && onSelectLead(lead.id)}
                 aria-label={`${lead?.name ?? "লিড"} — কথাবার্তার সারসংক্ষেপ ও পুরো ফাইল / Open call summary and lead file`}
-                className="card-elevated p-4 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                className="card-elevated card-pad text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
               >
                 <p className="font-medium">{lead?.name ?? "লিড"}</p>
                 <p className="text-xs text-muted-foreground">{agent?.name}</p>

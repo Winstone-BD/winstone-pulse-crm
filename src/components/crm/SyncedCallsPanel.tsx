@@ -46,7 +46,7 @@ export function SyncedCallsPanel() {
   const data = query.data;
 
   return (
-    <section className="card-elevated p-4">
+    <section className="card-elevated card-pad">
       <header className="flex flex-wrap items-center gap-2">
         <PhoneCall className="size-4 text-primary" />
         <h2 className="section-title">সিংক হওয়া কল · সময়, কথার সময় ও রেকর্ডিং</h2>

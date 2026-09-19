@@ -221,7 +221,7 @@ export function RecordingPipelinePanel() {
                 </span>
               </div>
 
-              <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-2 stat-grid">
                 {row.stages.map((s) => (
                   <div key={s.key} className="rounded-lg bg-surface-2 px-2.5 py-1.5">
                     <div className="flex items-center justify-between gap-2">

@@ -128,7 +128,7 @@ export function QueueBoard({
 
       {isPending && <SnapshotSkeleton />}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stat-grid">
         {LEAD_STATUSES.map((status) => {
           const columnLeads = filtered.filter((lead) => lead.status === status.key);
           return (
