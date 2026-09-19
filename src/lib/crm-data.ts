@@ -30,6 +30,22 @@ export type CrmSnapshot = Awaited<ReturnType<typeof getCrmSnapshot>>;
  * Authority PIN and coordinators see the whole floor, an agent sees only
  * their own leads, and anyone else receives an empty snapshot.
  */
+/**
+ * One submitted call report = one call attempt. `verifiedConnected` means the
+ * phone proved the call was answered (measured duration, synced recording or a
+ * logged call start) — a written report alone never counts as a conversation.
+ * `verifiedSeconds` is null when no duration was measured (talk time unavailable).
+ */
+export type CanonicalCall = {
+  id: string;
+  agentId: string | null;
+  leadId: string | null;
+  at: string;
+  verifiedConnected: boolean;
+  verifiedSeconds: number | null;
+  recordingId: string | null;
+};
+
 export const snapshotQueryFor = (scope: { token: string | null }) =>
   queryOptions({
     queryKey: ["crm-snapshot", scope.token ? "authority" : "session"],
@@ -42,6 +58,7 @@ const EMPTY_SNAPSHOT = {
   profiles: [] as Profile[],
   leads: [] as Lead[],
   calls: [] as CallRecording[],
+  callEvents: [] as CanonicalCall[],
   messages: [] as WhatsappMessage[],
   events: [] as LeadEvent[],
 };
