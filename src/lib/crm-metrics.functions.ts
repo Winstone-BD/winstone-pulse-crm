@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import {
   BOOKING_CATEGORY,
+  DONE_FOLLOW_UP_STATES,
+  OPEN_FOLLOW_UP_STATES,
   SITE_VISIT_CATEGORIES,
   dhakaDateKey,
   dhakaDayWindow,
