@@ -208,6 +208,8 @@ object CallSyncQueue {
     const val KIND_REPORT_SUBMIT = "report_submit"
     const val KIND_INCOMING_CALL = "incoming_call"
     const val KEY_DIRECTION = "direction"
+    const val KEY_CALL_SOURCE = "call_source"
+    const val KEY_AT = "at"
 }
 
 class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
