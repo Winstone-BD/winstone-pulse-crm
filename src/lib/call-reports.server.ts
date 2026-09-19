@@ -410,7 +410,7 @@ export async function submitCallReport(input: {
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
-    .select("id, name, phone_number, status")
+    .select("id, name, phone_number, status, unanswered_attempts")
     .eq("id", report.lead_id)
     .maybeSingle();
 
@@ -447,8 +447,11 @@ export async function submitCallReport(input: {
       classified_at: nowIso,
     });
   } else {
-    // Not received: the lead stays in the working queue for a retry call and is
-    // never silently completed.
+    // Not received: the task is NOT finished. The lead goes back into the working
+    // queue behind the untried leads and becomes callable again after a waiting
+    // gap that grows with every unanswered try. It is never silently completed.
+    const unanswered = Math.max(0, lead?.unanswered_attempts ?? 0) + 1;
+    const retryAt = nextRetryAt(unanswered, new Date(nowIso));
     await supabaseAdmin
       .from("leads")
       .update({
@@ -457,8 +460,31 @@ export async function submitCallReport(input: {
         notes,
         last_call_at: nowIso,
         work_state: "pending",
+        unanswered_attempts: unanswered,
+        retry_after: retryAt,
       })
       .eq("id", report.lead_id);
+
+    const { logLeadEvent: logRetryEvent } = await import("@/lib/lead-events.server");
+    await logRetryEvent({
+      leadId: report.lead_id,
+      agentId: input.agentId,
+      recordingId: report.recording_id,
+      kind: "outcome_logged",
+      detail: `কল ধরা হয়নি (${unanswered}তম বার) — টাস্ক শেষ হয়নি, লিড আবার কিউতে গেল, ${new Date(
+        retryAt,
+      ).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}-এর পর আবার কল করা যাবে`,
+    });
+
+    if (needsSupervisorDecision(unanswered)) {
+      await supabaseAdmin.from("system_alerts").insert({
+        code: "lead_unreachable",
+        severity: "warning",
+        title: "একই লিডে বারবার কল — কেউ ধরছে না",
+        detail: `লিড ${lead?.name ?? report.lead_id} (${lead?.phone_number ?? report.phone_number ?? "—"}) ${unanswered} বার চেষ্টা করেও ধরা যায়নি — lead:${report.lead_id}`,
+        action: "কোঅর্ডিনেটর সিদ্ধান্ত নিন: আবার চেষ্টা, অন্য এজেন্ট, নাকি বাদ",
+      });
+    }
   }
 
   let followUpId: string | null = null;
