@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 
+import { AgentOverview } from "@/components/crm/AgentOverview";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { MyCallLog } from "@/components/crm/MyCallLog";
@@ -269,6 +270,8 @@ function DeskPage() {
             <NewLeadDialog />
           </div>
         </div>
+
+        <AgentOverview />
 
         <DeskStats />
 
