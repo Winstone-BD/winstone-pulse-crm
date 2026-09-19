@@ -1,6 +1,7 @@
 package com.winstone.connect
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.winstone.connect.data.AgentSession
+import com.winstone.connect.data.sync.PendingReportWorker
 import com.winstone.connect.telephony.CallPhase
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.ui.DeskScreen
@@ -24,6 +26,7 @@ import com.winstone.connect.ui.RoleSelectionScreen
 import com.winstone.connect.ui.SignInScreen
 import com.winstone.connect.ui.collectAsStateSafe
 import com.winstone.connect.ui.theme.WinstoneTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
