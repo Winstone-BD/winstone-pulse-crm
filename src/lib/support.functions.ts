@@ -263,9 +263,25 @@ export const submitSupportCsat = createServerFn({ method: "POST" })
 
 /** Signed download links for attachments on a thread the token owns. */
 export const getSupportAttachmentUrl = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ path: z.string().min(3) }).parse(input))
+  .inputValidator((input: unknown) =>
+    tokenInput.extend({ path: z.string().min(3).max(400) }).parse(input),
+  )
   .handler(async ({ data }) => {
+    const { conversationByToken } = await import("@/lib/support.server");
+    const conversation = await conversationByToken(data.token);
+    if (!conversation) throw new Error("This conversation link is no longer valid");
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Only mint a link when this exact file belongs to a message in this conversation.
+    const { data: match } = await supabaseAdmin
+      .from("support_messages")
+      .select("id")
+      .eq("conversation_id", conversation.id)
+      .contains("attachments", [{ path: data.path }])
+      .limit(1)
+      .maybeSingle();
+    if (!match) throw new Error("This file is not part of your conversation");
+
     const { data: signed, error } = await supabaseAdmin.storage
       .from("support-attachments")
       .createSignedUrl(data.path, 300);
