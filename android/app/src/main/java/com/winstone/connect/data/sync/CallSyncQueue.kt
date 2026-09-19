@@ -256,6 +256,8 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                             else null,
                         recordingNote = inputData.getString(CallSyncQueue.KEY_REC_NOTE),
                         direction = inputData.getString(CallSyncQueue.KEY_DIRECTION) ?: "incoming",
+                        source = inputData.getString(CallSyncQueue.KEY_CALL_SOURCE) ?: "realtime",
+                        atIso = inputData.getString(CallSyncQueue.KEY_AT),
                     )
                     Result.success()
                 }
