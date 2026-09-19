@@ -60,6 +60,17 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
+/**
+ * Which desks a CRM role may open in the Android app.
+ * Agents are limited to their own desk: Executive HQ and IT Console are never
+ * offered to them, on the server side, so a tampered APK gains nothing.
+ */
+function allowedRolesFor(role: string | null): string[] {
+  if (role === "admin") return ["agent", "coordinator", "executive", "it_console"];
+  if (role === "team_leader") return ["agent", "coordinator"];
+  return ["agent"];
+}
+
 function isNewKey(value: string) {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
 }
@@ -173,6 +184,9 @@ export const Route = createFileRoute("/api/public/agent/login")({
             phone: profile.phone,
             sim_number: "sim" in preCheck ? preCheck.sim : profile.sim_number,
             role: profile.role,
+            // Least privilege: the phone only ever shows the desks this role
+            // owns. A plain agent gets exactly one — never HQ or IT Console.
+            allowed_roles: allowedRolesFor(profile.role),
           },
         });
       },
