@@ -20,8 +20,9 @@
  * | closedWon         | `leads.status = 'closed'` AND `outcome_category = 'deal_won'`         |
  * | callAttempts      | submitted `call_reports` (one report = one attempt)                   |
  * | connectedCalls    | submitted `call_reports` with `connected = true`                       |
- * | attemptsToday     | submitted reports whose `call_ended_at` falls in the Dhaka day        |
+ * | attemptsToday     | submitted reports whose day (`call_ended_at`, else `submitted_at`) is today |
  * | connectedToday    | as above, `connected = true`                                          |
+ * | talkMinutesToday  | sum of `duration_seconds` over today's connected reports, in minutes  |
  * | followUpDue       | open follow-ups (`upcoming`/`pending`) scheduled inside the Dhaka day |
  * | followUpOverdue   | open follow-ups scheduled before now                                  |
  * | visitsCompleted   | completed follow-ups in a site-visit category                        |
@@ -55,6 +56,8 @@ export type FloorMetrics = {
   connectedCalls: number;
   attemptsToday: number;
   connectedToday: number;
+  /** Minutes actually spent talking today (connected reports' durations). */
+  talkMinutesToday: number;
   followUpDue: number;
   followUpOverdue: number;
   visitsCompleted: number;
@@ -68,6 +71,8 @@ export type FloorMetrics = {
     attempts: number;
     connected: number;
     bookings: number;
+    /** Minutes talked on connected calls, all time. */
+    talkMinutes: number;
   }[];
 };
 
