@@ -9,6 +9,7 @@ import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
 import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
+import { ReminderBell } from "@/components/crm/ReminderBell";
 import { InstallAppButton } from "@/components/crm/InstallAppButton";
 import { AgentSelector } from "@/components/crm/AgentSelector";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
@@ -141,6 +142,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             {adminToken && <AgentSelector />}
+
+            {scope !== "none" && <ReminderBell />}
 
             {scope !== "none" && <AnyNumberCallDialog />}
 

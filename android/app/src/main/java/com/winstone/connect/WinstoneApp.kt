@@ -3,6 +3,7 @@ package com.winstone.connect
 import android.app.Application
 import com.winstone.connect.data.AgentSession
 import com.winstone.connect.data.sync.CallLogSweepWorker
+import com.winstone.connect.data.sync.ReminderWorker
 import com.winstone.connect.telephony.CallLogSweeper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,5 +20,6 @@ class WinstoneApp : Application() {
             runCatching { CallLogSweeper.sweep(this@WinstoneApp) }
         }
         CallLogSweepWorker.schedule(this)
+        ReminderWorker.schedule(this)
     }
 }
