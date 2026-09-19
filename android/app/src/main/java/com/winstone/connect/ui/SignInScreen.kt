@@ -151,7 +151,7 @@ fun SignInScreen(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
             } else {
                 Text("Authenticate & Launch Deck", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.size(width = 8.dp, height = 0.dp))
                 Icon(Icons.Filled.ArrowForward, contentDescription = null)
             }
         }
