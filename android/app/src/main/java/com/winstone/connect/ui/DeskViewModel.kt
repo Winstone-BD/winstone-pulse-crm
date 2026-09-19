@@ -180,6 +180,8 @@ class DeskViewModel(private val app: Application) : AndroidViewModel(app) {
                             leads = parseLeads(ws.leads),
                             calls = parseCalls(ws.calls),
                             messages = parseMessages(ws.whatsapp),
+                            allocation = com.winstone.connect.data.parseAllocation(ws.allocation)
+                                ?: _state.value.data?.allocation,
                         ),
                     )
                 }
