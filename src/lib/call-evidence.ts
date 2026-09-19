@@ -198,7 +198,7 @@ export function reportConnected(row: CallReportRow): boolean {
   return callEvidence({
     claimedConnected: row.connected !== false,
     callStatus: row.call_status ?? null,
-    measuredSeconds: row.duration_seconds,
+    measuredSeconds: row.duration_seconds ?? null,
     hasRecording: Boolean(row.recording_id),
     callStartedAt: row.call_started_at ?? null,
     callEndedAt: row.call_ended_at ?? null,
@@ -210,7 +210,7 @@ export function canonicalCallsOf(rows: CallReportRow[]): CanonicalCall[] {
   const seen = new Set<string>();
   const calls: CanonicalCall[] = [];
   for (const row of rows) {
-    const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id });
+    const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id ?? null });
     if (seen.has(key)) continue;
     seen.add(key);
     const measured = row.duration_seconds ?? 0;
