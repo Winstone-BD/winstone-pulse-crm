@@ -1,14 +1,7 @@
-import {
-  AlertTriangle,
-  CalendarClock,
-  CheckCircle2,
-  Flame,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Flame, ListTodo } from "lucide-react";
 import { useMemo } from "react";
 
-import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
+import { useSnapshot } from "@/lib/crm-data";
 import { leadOwner } from "@/lib/lead-owner";
 
 type Insight = {
@@ -24,57 +17,44 @@ const TONE: Record<Insight["tone"], string> = {
   urgent: "border-destructive/40 bg-destructive/[0.08] text-destructive",
 };
 
-function sameDay(iso: string, ref: Date) {
-  return new Date(iso).toDateString() === ref.toDateString();
-}
-
 /**
- * Reads the same live snapshot the boards already use and turns it into a few
- * plain-Bengali lines: what changed since yesterday, what is overdue, and what
- * to do next. Every number comes from real rows — nothing is invented.
+ * Next-action guidance built only from lead fields that are actually written by
+ * the app: temperature, work state, attempt counters and last call time.
+ *
+ * Call volume and talk time are deliberately NOT used here — recordings are not
+ * reliably synced, so those numbers live only in the canonical daily
+ * performance board (src/lib/daily-performance.ts), which reads submitted call
+ * reports on the server.
  */
 export function SmartInsightStrip({ scope }: { scope: "desk" | "floor" }) {
-  const { leads, calls, isPending } = useSnapshot();
+  const { leads, isPending } = useSnapshot();
 
   const insights = useMemo<Insight[]>(() => {
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 86_400_000);
+    const yesterday = new Date(Date.now() - 86_400_000);
+    const owned = leads.filter((l) => leadOwner(l));
 
-    const todayCalls = calls.filter((c) => sameDay(c.created_at, now));
-    const yesterdayCalls = calls.filter((c) => sameDay(c.created_at, yesterday));
-    const conn = (rows: typeof calls) =>
-      rows.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length;
-    const todayConnected = conn(todayCalls);
-    const yesterdayConnected = conn(yesterdayCalls);
-    const delta = todayConnected - yesterdayConnected;
-
-    const followUpsDue = leads.filter(
+    const openWork = owned.filter((l) => l.work_state !== "completed").length;
+    const hot = leads.filter((l) => l.temperature === "hot" && l.status !== "closed").length;
+    const staleFollowUp = leads.filter(
       (l) => l.status === "follow_up" && (!l.last_call_at || new Date(l.last_call_at) < yesterday),
     ).length;
-    const unfinished = leads.filter((l) => l.work_state !== "completed" && leadOwner(l)).length;
-    const hot = leads.filter((l) => l.temperature === "hot" && l.status !== "closed").length;
-    const untouched = leads.filter((l) => (l.call_count ?? 0) === 0 && leadOwner(l)).length;
+    const untouched = owned.filter(
+      (l) => (l.call_attempts ?? 0) === 0 && !l.last_call_at && l.work_state !== "completed",
+    ).length;
 
     const rows: Insight[] = [];
 
-    rows.push(
-      delta >= 0
-        ? {
-            tone: "good",
-            icon: <TrendingUp className="size-4" />,
-            title: `আজ ${todayConnected}টি কলে কথা হয়েছে`,
-            detail:
-              delta === 0
-                ? "গতকালের সমান গতি — ছন্দ ধরে রাখুন।"
-                : `গতকালের চেয়ে ${delta}টি বেশি। ভালো এগোচ্ছে।`,
-          }
-        : {
-            tone: "watch",
-            icon: <TrendingDown className="size-4" />,
-            title: `আজ ${todayConnected}টি কলে কথা হয়েছে`,
-            detail: `গতকালের চেয়ে ${Math.abs(delta)}টি কম — এখনই কয়েকটি কল সেরে নিন।`,
-          },
-    );
+    rows.push({
+      tone: openWork > 0 ? "watch" : "good",
+      icon: <ListTodo className="size-4" />,
+      title: openWork > 0 ? `${openWork}টি লিডের কাজ বাকি` : "হাতে বাকি কাজ নেই",
+      detail:
+        openWork > 0
+          ? scope === "floor"
+            ? "নিচের ভাগের হিসাব দেখে ভারসাম্য করে নিন।"
+            : "আজকের তালিকা ধরে একে একে শেষ করুন।"
+          : "নতুন তালিকা আসা পর্যন্ত পরিষ্কার।",
+    });
 
     if (hot > 0) {
       rows.push({
@@ -85,12 +65,12 @@ export function SmartInsightStrip({ scope }: { scope: "desk" | "floor" }) {
       });
     }
 
-    if (followUpsDue > 0) {
+    if (staleFollowUp > 0) {
       rows.push({
-        tone: followUpsDue > 5 ? "urgent" : "watch",
+        tone: staleFollowUp > 5 ? "urgent" : "watch",
         icon: <CalendarClock className="size-4" />,
-        title: `${followUpsDue}টি ফলো-আপ সময় পেরিয়ে গেছে`,
-        detail: "একদিনের বেশি পুরোনো ফলো-আপ ঠান্ডা হয়ে যায়।",
+        title: `${staleFollowUp}টি ফলো-আপ একদিনের বেশি পুরোনো`,
+        detail: "পুরোনো ফলো-আপ ঠান্ডা হয়ে যায় — আজই ধরুন।",
       });
     }
 
@@ -106,17 +86,17 @@ export function SmartInsightStrip({ scope }: { scope: "desk" | "floor" }) {
       });
     }
 
-    if (rows.length < 3 && unfinished === 0) {
+    if (rows.length === 1 && openWork === 0) {
       rows.push({
         tone: "good",
         icon: <CheckCircle2 className="size-4" />,
         title: "সব লিডের কাজ শেষ",
-        detail: "নতুন তালিকা আসা পর্যন্ত পরিষ্কার — চমৎকার।",
+        detail: "কোনো হট লিড বা পুরোনো ফলো-আপ বাকি নেই।",
       });
     }
 
     return rows.slice(0, 4);
-  }, [calls, leads, scope]);
+  }, [leads, scope]);
 
   if (isPending) {
     return (
