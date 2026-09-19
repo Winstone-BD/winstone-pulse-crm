@@ -1,3 +1,4 @@
+import { talkTimeAvailable } from "@/lib/daily-performance";
 import { useQuery } from "@tanstack/react-query";
 
 import { floorDailyPerformance, myDailyPerformance } from "@/lib/allocation.functions";
@@ -56,7 +57,11 @@ export function MyPerformanceCard() {
         <Metric
           label="কথা হয়েছে"
           value={`${me.connectedCalls}টি`}
-          hint={`${me.connectRate}% সংযোগ · ${me.talkMinutes} মিনিট কথা`}
+          hint={
+            talkTimeAvailable(me)
+              ? `${me.connectRate}% সংযোগ · ${me.talkMinutes} মিনিট কথা`
+              : `${me.connectRate}% সংযোগ · কথার সময় ফোন থেকে পাওয়া যায়নি`
+          }
         />
         <Metric
           label="শেষ হওয়া টাস্ক"
@@ -148,7 +153,9 @@ export function FloorPerformancePanel() {
                 <td className="tabular px-2 py-2 text-right">{row.target}</td>
                 <td className="tabular px-2 py-2 text-right font-semibold">{row.callsAttempted}</td>
                 <td className="tabular px-2 py-2 text-right">{row.connectedCalls}</td>
-                <td className="tabular px-2 py-2 text-right">{row.talkMinutes}</td>
+                <td className="tabular px-2 py-2 text-right">
+                  {talkTimeAvailable(row) ? row.talkMinutes : "—"}
+                </td>
                 <td className="tabular px-2 py-2 text-right font-semibold">{row.completedTasks}</td>
                 <td className="tabular px-2 py-2 text-right">{row.unansweredCalls}</td>
                 <td className="tabular px-2 py-2 text-right">{row.qualifiedLeads}</td>
@@ -170,7 +177,7 @@ export function FloorPerformancePanel() {
 
       <p className="text-xs text-muted-foreground">
         মোট: লক্ষ্য {t.target}টি · কল {t.callsAttempted}টি · কথা {t.connectedCalls}টি (
-        {t.connectRate}%) · {t.talkMinutes} মিনিট কথা · শেষ টাস্ক {t.completedTasks}টি · ধরেনি{" "}
+        {t.connectRate}%) · {talkTimeAvailable(t) ? `${t.talkMinutes} মিনিট কথা` : "কথার সময় অনুপলব্ধ"} · শেষ টাস্ক {t.completedTasks}টি · ধরেনি{" "}
         {t.unansweredCalls}টি · সম্ভাবনাময় {t.qualifiedLeads}টি · বুকিং {t.bookings}টি (
         {t.conversionRate}%) · অতিরিক্ত পেন্ডিং {t.excessPending}টি
       </p>
