@@ -17,6 +17,10 @@ data class Lead(
     val createdAt: String? = null,
     val lastCallAt: String? = null,
     val classifiedAt: String? = null,
+    /** কেউ ধরেনি — এই সময়ের পর আবার কল করা যাবে (সার্ভারের হিসাব)। */
+    val retryAfter: String? = null,
+    /** কতবার কল করে কেউ ধরেনি। */
+    val unansweredAttempts: Int = 0,
 )
 
 data class CallRow(
@@ -155,6 +159,8 @@ fun parseLeads(arr: JSONArray): List<Lead> = (0 until arr.length()).map { i ->
         createdAt = o.str("created_at"),
         lastCallAt = o.str("last_call_at"),
         classifiedAt = o.str("classified_at"),
+        retryAfter = o.str("retry_after"),
+        unansweredAttempts = o.optInt("unanswered_attempts"),
     )
 }
 
@@ -214,6 +220,13 @@ fun isUpcomingTask(lead: Lead, today: String = dhakaToday()): Boolean {
     return day > today
 }
 
+/** কেউ ধরেনি, আর পরের চেষ্টার সময় এখনো আসেনি — লিডটি কিউর পেছনে। */
+fun isRetryWaiting(lead: Lead, now: java.time.Instant = java.time.Instant.now()): Boolean {
+    if (lead.workState == "completed") return false
+    val at = runCatching { java.time.Instant.parse(lead.retryAfter) }.getOrNull() ?: return false
+    return at.isAfter(now)
+}
+
 /** টাস্ক শেষ হয়েছে কি না। */
 fun isTaskDone(lead: Lead): Boolean =
     lead.workState == "completed" || lead.status == "closed"
@@ -243,6 +256,13 @@ fun taskTrail(lead: Lead, today: String = dhakaToday()): String {
         else -> {
             val days = waitingDays(lead, today)
             parts += if (days > 0) "${days} দিন অপেক্ষায়" else "অপেক্ষমাণ"
+        }
+    }
+    if (lead.unansweredAttempts > 0 && !isTaskDone(lead)) {
+        parts += if (isRetryWaiting(lead)) {
+            "${lead.unansweredAttempts} বার ধরেনি · ${shortTime(lead.retryAfter ?: "")}-এর পর আবার কল"
+        } else {
+            "${lead.unansweredAttempts} বার ধরেনি · এখন আবার কল করা যাবে"
         }
     }
     return parts.joinToString(" · ")
