@@ -46,7 +46,7 @@ export function AccountApprovals() {
     <section className="card-elevated p-4">
       <header className="flex items-center gap-2">
         <ShieldCheck className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">অ্যাকাউন্ট অনুমোদন</h2>
+        <h2 className="section-title">অ্যাকাউন্ট অনুমোদন</h2>
         <span className="ml-auto text-xs text-muted-foreground">{pending.length}টি অপেক্ষমাণ</span>
       </header>
 

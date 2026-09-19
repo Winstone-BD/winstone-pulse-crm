@@ -213,7 +213,7 @@ export function ShiftSummaryPanel({ scope }: { scope: "hq" | "it" }) {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <CalendarClock className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">
+        <h2 className="section-title">
           শিফট সামারি {scope === "hq" ? "(চলতি মাস)" : "(সম্পূর্ণ সংরক্ষণ)"}
         </h2>
         <span className="ml-auto text-xs text-muted-foreground">{rows.length}টি</span>

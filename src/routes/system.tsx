@@ -160,7 +160,7 @@ function SystemBoard() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <h2 className="section-title">
             <Receipt className="size-4 text-primary" /> {billing.monthLabel} মাসের বিল
           </h2>
           <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ function SystemBoard() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card-elevated p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <h2 className="section-title">
             <Database className="size-4 text-primary" /> ডেটার অবস্থা
           </h2>
           <dl className="mt-3 space-y-1.5 text-sm">
@@ -240,7 +240,7 @@ function SystemBoard() {
         </div>
 
         <div className="card-elevated p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <h2 className="section-title">
             <Radio className="size-4 text-primary" /> ডেটা আসার ঠিকানা
           </h2>
           <p className="mt-2 text-xs text-muted-foreground">

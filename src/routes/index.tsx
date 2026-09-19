@@ -191,7 +191,7 @@ function EntryCard({
         {icon}
       </span>
       <div>
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <h2 className="section-title">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="mt-auto flex flex-wrap gap-2 pt-2">

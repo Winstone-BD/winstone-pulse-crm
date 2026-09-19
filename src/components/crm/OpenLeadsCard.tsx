@@ -43,7 +43,7 @@ export function OpenLeadsCard() {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-bold tracking-tight">খালি লিড — নিজে নিন</h2>
+          <h2 className="section-title">খালি লিড — নিজে নিন</h2>
           <p className="text-xs text-muted-foreground">
             কারও নামে দেওয়া হয়নি এমন লিড। “নিজের নামে নিন” চাপলেই আপনার তালিকায় যোগ হবে।
           </p>

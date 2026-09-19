@@ -45,7 +45,7 @@ export function AskHqPanel() {
     <section className="card-elevated p-4">
       <header className="flex items-center gap-2">
         <Sparkles className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">এইচকিউ-কে জিজ্ঞেস করুন</h2>
+        <h2 className="section-title">এইচকিউ-কে জিজ্ঞেস করুন</h2>
       </header>
       <p className="mt-1 text-xs text-muted-foreground">
         সাধারণ ভাষায় যে কোনো রিপোর্ট চান। উত্তর আর চার্ট তৈরি হবে সরাসরি লাইভ তথ্য থেকে।

@@ -14,7 +14,7 @@ export function HqRecentSummaries({
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold">সর্বশেষ কথাবার্তার সারসংক্ষেপ</h2>
+      <h2 className="section-title">সর্বশেষ কথাবার্তার সারসংক্ষেপ</h2>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {calls
           .filter((c) => c.ai_summary)

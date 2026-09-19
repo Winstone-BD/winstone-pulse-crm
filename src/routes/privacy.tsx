@@ -33,7 +33,7 @@ function PrivacyPage() {
 
         <div className="mt-8 space-y-6 text-sm leading-7 text-foreground">
           <section>
-            <h2 className="text-lg font-semibold">1. Information we collect</h2>
+            <h2 className="section-title">1. Information we collect</h2>
             <p className="mt-2 text-muted-foreground">
               Winstone Connect collects lead contact details (name, phone number, company, notes),
               call recordings, WhatsApp interaction logs, and agent activity timestamps. All data is
@@ -42,7 +42,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">2. How we use your data</h2>
+            <h2 className="section-title">2. How we use your data</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
               <li>Manage and assign sales leads across the tele-sales floor.</li>
               <li>Record, transcribe and analyse cellular calls for quality assurance.</li>
@@ -52,7 +52,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">3. Storage and security</h2>
+            <h2 className="section-title">3. Storage and security</h2>
             <p className="mt-2 text-muted-foreground">
               Data is stored in encrypted cloud databases and private object storage. Access is
               controlled through role-based permissions and server-verified PIN tokens. Call
@@ -62,7 +62,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">4. Data sharing</h2>
+            <h2 className="section-title">4. Data sharing</h2>
             <p className="mt-2 text-muted-foreground">
               We do not sell or share lead, agent or call data with third parties. AI transcription
               and analysis is processed through the platform's managed AI gateway; raw recordings
@@ -71,7 +71,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">5. Retention and deletion</h2>
+            <h2 className="section-title">5. Retention and deletion</h2>
             <p className="mt-2 text-muted-foreground">
               Call recordings and interaction logs are retained for as long as the account requires
               them for compliance and coaching. Administrators may request deletion of records at
@@ -81,7 +81,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">6. Your rights</h2>
+            <h2 className="section-title">6. Your rights</h2>
             <p className="mt-2 text-muted-foreground">
               Depending on your jurisdiction, you may have the right to access, correct, export or
               delete personal data. Please contact the system administrator or the data controller
@@ -90,7 +90,7 @@ function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">7. Contact</h2>
+            <h2 className="section-title">7. Contact</h2>
             <p className="mt-2 text-muted-foreground">
               For privacy-related questions, contact the Winstone Connect administrator at{" "}
               <a

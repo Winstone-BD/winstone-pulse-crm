@@ -143,7 +143,7 @@ export function TeamSupportInbox() {
             <Inbox className="size-4" />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold">টিম সাপোর্ট ইনবক্স</h2>
+            <h2 className="section-title truncate">টিম সাপোর্ট ইনবক্স</h2>
             <p className="truncate text-xs text-muted-foreground">
               এজেন্টদের সমস্যা ও অভিযোগ — ওয়েব ও অ্যান্ড্রয়েড একসাথে
             </p>

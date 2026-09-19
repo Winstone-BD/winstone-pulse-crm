@@ -44,7 +44,7 @@ function BreakdownCard({
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   return (
     <div className="card-elevated flex flex-col p-3 sm:p-4">
-      <h2 className="text-sm font-semibold">{title}</h2>
+      <h2 className="section-title">{title}</h2>
       <p className="text-xs text-muted-foreground">{subtitle}</p>
       {total === 0 ? (
         <EmptyBlock title="No data for this period" hint={emptyHint} compact />
@@ -113,7 +113,7 @@ export function AiPerformanceBrief({
 }) {
   return (
     <section className="card-elevated p-3 sm:p-4">
-      <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+      <h2 className="section-title">
         <Sparkles className="size-4 shrink-0 text-primary" /> AI performance brief
       </h2>
       <p className="text-xs text-muted-foreground">

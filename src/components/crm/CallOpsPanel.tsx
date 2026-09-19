@@ -78,7 +78,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
     <section className="card-elevated space-y-4 p-4">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
+          <h2 className="section-title">
             <Activity className="size-4" /> কল রিপোর্ট, রেকর্ডিং ও AI অবস্থা
           </h2>
           <p className="text-xs text-muted-foreground">

@@ -27,7 +27,7 @@ export function AssignmentHistory() {
   return (
     <section className="card-elevated space-y-3 p-4">
       <header>
-        <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
+        <h2 className="section-title">
           <History className="size-4" /> অ্যাসাইনমেন্ট ইতিহাস
         </h2>
         <p className="text-xs text-muted-foreground">

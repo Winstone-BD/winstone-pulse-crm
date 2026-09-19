@@ -112,7 +112,7 @@ export function RecordingPipelinePanel() {
     <section className="card-elevated space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <h2 className="section-title">
             <ListChecks className="size-4 text-primary" /> রেকর্ডিং পাইপলাইন ও রিট্রাই কিউ
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">

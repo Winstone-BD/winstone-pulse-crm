@@ -93,7 +93,7 @@ function HelpCentre() {
               if (!items.length) return null;
               return (
                 <section key={category.id ?? "uncategorised"}>
-                  <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h2 className="section-title uppercase tracking-wide text-muted-foreground">
                     <BookOpen className="size-4" />
                     {category.name}
                   </h2>

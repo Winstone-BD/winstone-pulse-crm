@@ -155,7 +155,7 @@ function ImportScreen() {
 
       <section className="card-elevated space-y-3 p-4">
         <header className="space-y-1">
-          <h2 className="flex items-center gap-2 text-sm font-bold tracking-tight">
+          <h2 className="section-title">
             <Sheet className="size-4 text-primary" /> Google Sheet থেকে লিড আনুন
           </h2>
           <p className="text-xs text-muted-foreground">
@@ -207,7 +207,7 @@ function ImportScreen() {
         <section className="card-elevated space-y-3 p-4">
           <header className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-sm font-bold tracking-tight">প্রিভিউ</h2>
+              <h2 className="section-title">প্রিভিউ</h2>
               <p className="text-xs text-muted-foreground">
                 {fileName} · {rows.length}টি লিড
               </p>

@@ -87,7 +87,7 @@ function SecurityBoard() {
       {view && (
         <section className="card-elevated space-y-4 p-4">
           <div>
-            <h2 className="text-lg font-semibold">{view.label}</h2>
+            <h2 className="section-title">{view.label}</h2>
             <p className="text-xs text-muted-foreground">{view.subtitle}</p>
           </div>
           <div className="rounded-xl bg-surface-2 px-3 py-2 text-sm">

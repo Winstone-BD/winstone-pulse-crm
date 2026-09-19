@@ -128,7 +128,7 @@ export function DriveBackupPanel() {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Cloud className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">Google Drive ব্যাকআপ</h2>
+        <h2 className="section-title">Google Drive ব্যাকআপ</h2>
       </header>
 
       <p className="mt-1 text-xs text-muted-foreground">

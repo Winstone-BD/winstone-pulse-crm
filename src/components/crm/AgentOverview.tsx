@@ -136,7 +136,7 @@ export function AgentOverview() {
     <section className="space-y-3">
       <div className="card-elevated flex flex-wrap items-end justify-between gap-3 p-4">
         <div>
-          <h2 className="text-lg font-bold tracking-tight sm:text-xl">এজেন্ট ড্যাশবোর্ড</h2>
+          <h2 className="section-title">এজেন্ট ড্যাশবোর্ড</h2>
           <p className="text-xs text-muted-foreground">
             স্বাগতম, <span className="font-semibold text-foreground">{name}</span>
             {employeeId ? ` (${employeeId})` : ""} — আজকের লক্ষ্য পূরণ করে ফেলুন!

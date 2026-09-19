@@ -53,7 +53,7 @@ export function AgentRadar({
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold sm:text-lg">লাইভ এজেন্ট রাডার</h2>
+          <h2 className="section-title">লাইভ এজেন্ট রাডার</h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
             এই মুহূর্তে কে কথা বলছে, কতক্ষণ ধরে
           </p>

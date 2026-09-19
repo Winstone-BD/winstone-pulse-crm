@@ -149,7 +149,7 @@ function CreditsBoard() {
           </div>
 
           <section className="card-elevated p-4">
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <h2 className="section-title">
               <Coins className="size-4 text-primary" /> হার (প্রতি কাজে)
             </h2>
             <dl className="mt-3 space-y-1.5 text-sm">
@@ -176,7 +176,7 @@ function CreditsBoard() {
 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="card-elevated p-4">
-              <h2 className="text-sm font-semibold">দিনভিত্তিক খরচ</h2>
+              <h2 className="section-title">দিনভিত্তিক খরচ</h2>
               {report.daily.length === 0 && (
                 <p className="mt-3 text-sm text-muted-foreground">
                   এই মাসে এখনো কোনো এআই কাজ হয়নি।
@@ -194,7 +194,7 @@ function CreditsBoard() {
             </div>
 
             <div className="card-elevated p-4">
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <h2 className="section-title">
                 <Users className="size-4 text-primary" /> এজেন্টভিত্তিক ব্যবহার
               </h2>
               {report.agents.length === 0 && (

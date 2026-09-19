@@ -59,7 +59,7 @@ export function AuditTrail() {
     <section className="card-elevated space-y-4 p-4">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
+          <h2 className="section-title">
             <ScrollText className="size-4" /> সাম্প্রতিক অডিট ঘটনা
           </h2>
           <p className="text-xs text-muted-foreground">

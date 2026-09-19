@@ -149,7 +149,7 @@ function Dispatcher() {
       <TeamSupportInbox />
 
       <section className="card-elevated p-4">
-        <h2 className="text-sm font-semibold">Bulk push</h2>
+        <h2 className="section-title">Bulk push</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Select value={agentId} onValueChange={setAgentId}>
             <SelectTrigger className="w-full sm:w-[240px]">
@@ -208,7 +208,7 @@ function Dispatcher() {
       <SelfClaimsFeed />
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Team load</h2>
+        <h2 className="section-title">Team load</h2>
         <div className="overflow-x-auto card-elevated">
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted-foreground">

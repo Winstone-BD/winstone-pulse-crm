@@ -159,7 +159,7 @@ function BriefingView({ briefing }: { briefing: Briefing }) {
             {new Date(briefing.generatedAt).toLocaleTimeString()}
           </span>
         </div>
-        <h2 className="text-lg font-bold tracking-tight sm:text-xl">{briefing.headline}</h2>
+        <h2 className="section-title">{briefing.headline}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">{briefing.summary}</p>
       </div>
 

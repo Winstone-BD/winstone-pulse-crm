@@ -92,7 +92,7 @@ export function TeamSupportPanel() {
             <LifeBuoy className="size-4" />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold">নতুন অনুরোধ পাঠান</h2>
+            <h2 className="section-title truncate">নতুন অনুরোধ পাঠান</h2>
             <p className="text-xs text-muted-foreground">
               CRM, অ্যাপ, কল, লিড বা যেকোনো কাজের সমস্যা — সরাসরি Sales Team Admin-এর কাছে যাবে।
             </p>
@@ -153,7 +153,7 @@ export function TeamSupportPanel() {
       </section>
 
       <section className="card-elevated p-4">
-        <h2 className="text-sm font-semibold">আমার অনুরোধ</h2>
+        <h2 className="section-title">আমার অনুরোধ</h2>
         {query.isPending ? (
           <div className="mt-3 space-y-2">
             {[0, 1, 2].map((i) => (

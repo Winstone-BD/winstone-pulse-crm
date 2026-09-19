@@ -44,7 +44,7 @@ export function DailyActivityChart({
     <section className="card-elevated p-3 sm:p-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <h2 className="section-title">
             <TrendingUp className="size-4 shrink-0 text-primary" /> Daily activity
           </h2>
           <p className="text-xs text-muted-foreground">

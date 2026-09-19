@@ -34,7 +34,7 @@ function TermsPage() {
 
         <div className="mt-8 space-y-6 text-sm leading-7 text-foreground">
           <section>
-            <h2 className="text-lg font-semibold">1. Acceptance of terms</h2>
+            <h2 className="section-title">1. Acceptance of terms</h2>
             <p className="mt-2 text-muted-foreground">
               By accessing or using Winstone Connect (the "Service"), you agree to be bound by these
               Terms of Service. If you do not agree, do not use the Service.
@@ -42,7 +42,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">2. Description of service</h2>
+            <h2 className="section-title">2. Description of service</h2>
             <p className="mt-2 text-muted-foreground">
               Winstone Connect is a tele-sales operations system that provides lead management,
               agent assignment, call/WhatsApp logging, audio transcription, AI coaching insights and
@@ -51,7 +51,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">3. User accounts and roles</h2>
+            <h2 className="section-title">3. User accounts and roles</h2>
             <p className="mt-2 text-muted-foreground">
               Access is granted through role-based controls: Sales Agents, Team Coordinators and
               Executive Authorities. You are responsible for keeping your PIN and device secure. The
@@ -60,7 +60,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">4. Acceptable use</h2>
+            <h2 className="section-title">4. Acceptable use</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
               <li>Use the Service only for lawful sales and customer-service purposes.</li>
               <li>Do not upload malicious files, spam or unrelated content.</li>
@@ -73,7 +73,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">5. Data ownership and confidentiality</h2>
+            <h2 className="section-title">5. Data ownership and confidentiality</h2>
             <p className="mt-2 text-muted-foreground">
               You retain ownership of the customer and business data you enter. Winstone Connect
               processes and stores this data on your behalf. We will not use your data to train
@@ -82,7 +82,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">6. Billing and carrier costs</h2>
+            <h2 className="section-title">6. Billing and carrier costs</h2>
             <p className="mt-2 text-muted-foreground">
               Estimated carrier costs shown in the Service are calculated from connected call
               duration and an editable per-minute rate. These estimates are for internal planning
@@ -91,7 +91,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">7. Limitation of liability</h2>
+            <h2 className="section-title">7. Limitation of liability</h2>
             <p className="mt-2 text-muted-foreground">
               To the fullest extent permitted by law, Winstone Connect and its developers are not
               liable for indirect, incidental or consequential damages arising from your use of the
@@ -100,7 +100,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">8. Changes to terms</h2>
+            <h2 className="section-title">8. Changes to terms</h2>
             <p className="mt-2 text-muted-foreground">
               We may update these terms from time to time. Continued use of the Service after
               changes are posted constitutes acceptance of the revised terms.
@@ -108,7 +108,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">9. Governing law</h2>
+            <h2 className="section-title">9. Governing law</h2>
             <p className="mt-2 text-muted-foreground">
               These terms are governed by the laws of Bangladesh. Any disputes shall be resolved in
               the courts of Dhaka, Bangladesh.
@@ -116,7 +116,7 @@ function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">10. Contact</h2>
+            <h2 className="section-title">10. Contact</h2>
             <p className="mt-2 text-muted-foreground">
               For questions about these terms, contact{" "}
               <a

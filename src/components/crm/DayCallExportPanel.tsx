@@ -115,7 +115,7 @@ export function DayCallExportPanel() {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <FileAudio className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">এক দিনের কল ও রেকর্ডিং সামারি</h2>
+        <h2 className="section-title">এক দিনের কল ও রেকর্ডিং সামারি</h2>
         <input
           type="date"
           value={dateKey}

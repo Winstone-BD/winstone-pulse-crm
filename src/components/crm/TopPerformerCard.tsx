@@ -108,7 +108,7 @@ export function TopPerformerCard() {
             <Clock className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+            <h2 className="section-title truncate">
               আজকের সেরা পারফর্মার
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
@@ -146,7 +146,7 @@ export function TopPerformerCard() {
           <Trophy className="size-5" />
         </span>
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+          <h2 className="section-title truncate">
             {dayLabel} Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">

@@ -49,7 +49,7 @@ export function SyncedCallsPanel() {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <PhoneCall className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">সিংক হওয়া কল · সময়, কথার সময় ও রেকর্ডিং</h2>
+        <h2 className="section-title">সিংক হওয়া কল · সময়, কথার সময় ও রেকর্ডিং</h2>
         {data && (
           <span className="text-xs text-muted-foreground">
             {data.totals.calls}টি কল · কথা {data.totals.talkLabel} · {data.totals.recordings}টি

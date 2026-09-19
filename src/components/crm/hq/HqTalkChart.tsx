@@ -8,7 +8,7 @@ export function HqTalkChart({ chartData }: { chartData: TalkChartRow[] }) {
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold">কথা হওয়া কল ও কথার মিনিট</h2>
+          <h2 className="section-title">কথা হওয়া কল ও কথার মিনিট</h2>
           <p className="text-sm text-muted-foreground">প্রতি এজেন্টের সব রেকর্ড করা কাজ</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">

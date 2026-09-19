@@ -78,7 +78,7 @@ function DocsIndexPage() {
         ) : (
           grouped.map(([category, pages]) => (
             <section key={category} className="card-elevated space-y-2 p-4">
-              <h2 className="text-sm font-bold tracking-tight">{category}</h2>
+              <h2 className="section-title">{category}</h2>
               <ul className="space-y-1.5">
                 {pages.map((page) => (
                   <li key={page.slug}>

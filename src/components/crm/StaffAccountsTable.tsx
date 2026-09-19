@@ -109,7 +109,7 @@ export function StaffAccountsTable() {
     <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Users className="size-4 text-primary" />
-        <h2 className="text-sm font-semibold">এজেন্ট অ্যাকাউন্ট</h2>
+        <h2 className="section-title">এজেন্ট অ্যাকাউন্ট</h2>
         <span className="ml-auto text-xs text-muted-foreground">{staff.length} জন</span>
       </header>
 

@@ -115,7 +115,7 @@ function IngestBoard() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Pipe health</h2>
+          <h2 className="section-title">Pipe health</h2>
           <Button
             variant="outline"
             size="sm"
@@ -147,7 +147,7 @@ function IngestBoard() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card-elevated p-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <h2 className="section-title">
             <ShieldAlert className="size-4 text-warning" /> Data problems
           </h2>
           <ul className="mt-3 space-y-2 text-sm">
@@ -193,7 +193,7 @@ function IngestBoard() {
         </div>
 
         <div className="card-elevated space-y-3 p-4">
-          <h2 className="text-sm font-semibold">Payload tester</h2>
+          <h2 className="section-title">Payload tester</h2>
           <p className="text-xs text-muted-foreground">
             Paste what the phone app sends. Nothing is saved — it only reports what would be
             rejected.

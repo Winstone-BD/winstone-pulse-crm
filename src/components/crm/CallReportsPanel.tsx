@@ -79,7 +79,7 @@ export function CallReportsPanel() {
   return (
     <section className="space-y-4 rounded-2xl border bg-card p-4">
       <div>
-        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
+        <h2 className="section-title">
           <ClipboardList className="size-5 text-primary" /> সব কল রিপোর্ট
         </h2>
         <p className="text-xs text-muted-foreground sm:text-sm">
