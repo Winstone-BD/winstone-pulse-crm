@@ -53,8 +53,6 @@ export const getFloorMetrics = createServerFn({ method: "POST" })
       closedWon,
       callAttempts,
       connectedCalls,
-      attemptsToday,
-      connectedToday,
       followUpDue,
       followUpOverdue,
       visitsCompleted,
