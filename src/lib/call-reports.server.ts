@@ -671,6 +671,9 @@ function suggestionFrom(recording: {
 /** The open report plus lead, recording state and the AI suggestion. */
 export async function loadPendingReportDetail(agentId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // A queued call becomes the open report here too, so the popup always shows
+  // the next unreported call even if the promotion after submit was missed.
+  await promoteNextQueuedReport(agentId);
   const { data: report } = await supabaseAdmin
     .from("call_reports")
     .select("*")
@@ -678,6 +681,12 @@ export async function loadPendingReportDetail(agentId: string) {
     .eq("status", "pending")
     .maybeSingle();
   if (!report) return null;
+  const { count: queuedCount } = await supabaseAdmin
+    .from("call_reports")
+    .select("id", { count: "exact", head: true })
+    .eq("agent_id", agentId)
+    .eq("status", "queued");
+
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
