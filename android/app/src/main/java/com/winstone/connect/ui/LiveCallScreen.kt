@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.AudioManager
 import android.os.Build
 import android.telecom.TelecomManager
+import android.widget.Toast
+import com.winstone.connect.data.sync.PendingReportWorker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -447,6 +449,12 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                                 } else {
                                     CallSyncQueue.queueReportSubmit(context, id, payload.toString())
                                     LiveCallLauncher.clear()
+                                    PendingReportWorker.clear(context)
+                                    Toast.makeText(
+                                        context,
+                                        "ইন্টারনেট নেই — রিপোর্ট ফোনে জমা থাকল, সংযোগ ফিরলেই নিজে থেকে CRM-এ চলে যাবে।",
+                                        Toast.LENGTH_LONG,
+                                    ).show()
                                     onSubmitted()
                                 }
                             }
