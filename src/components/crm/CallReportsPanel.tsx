@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ClipboardList, Loader2, PhoneIncoming, PhoneOutgoing, Search } from "lucide-react";
 import { useState } from "react";
 
+import { CallReportSummary } from "@/components/crm/CallReportSummary";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,14 @@ export function CallReportsPanel() {
   const [direction, setDirection] = useState<"" | "outgoing" | "incoming">("");
   const [callState, setCallState] = useState<"" | "connected" | "not_connected">("");
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [agentId, setAgentId] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
+
+  // A calendar day is a Dhaka day — the whole floor works on that clock.
+  const fromIso = fromDate ? `${fromDate}T00:00:00+06:00` : null;
+  const toIso = toDate ? `${toDate}T23:59:59+06:00` : null;
 
   // The lead file is drawn from the shared snapshot the rest of the desk uses.
   const snapshot = useSnapshot();
@@ -44,6 +52,9 @@ export function CallReportsPanel() {
       direction,
       callState,
       search,
+      fromIso,
+      toIso,
+      agentId,
     ],
     queryFn: () =>
       fetchList({
@@ -53,12 +64,17 @@ export function CallReportsPanel() {
           direction: direction || null,
           callState: callState || null,
           search: search.trim() || null,
+          fromIso,
+          toIso,
+          agentId: agentId || null,
         },
       }),
     refetchInterval: 60_000,
   });
 
   const reports = data?.reports ?? [];
+  // Agents only ever see their own reports, so they get no agent picker.
+  const canFilterAgent = data ? data.scope !== "agent" && data.scope !== "none" : false;
 
   return (
     <section className="space-y-4 rounded-2xl border bg-card p-4">
@@ -112,6 +128,45 @@ export function CallReportsPanel() {
           </select>
         </div>
         <div className="space-y-1.5">
+          <Label htmlFor="report-from" className="text-xs">
+            তারিখ থেকে
+          </Label>
+          <Input
+            id="report-from"
+            type="date"
+            value={fromDate}
+            onChange={(event) => setFromDate(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="report-to" className="text-xs">
+            তারিখ পর্যন্ত
+          </Label>
+          <Input
+            id="report-to"
+            type="date"
+            value={toDate}
+            onChange={(event) => setToDate(event.target.value)}
+          />
+        </div>
+        {canFilterAgent ? (
+          <div className="space-y-1.5">
+            <Label className="text-xs">এজেন্ট</Label>
+            <select
+              value={agentId}
+              onChange={(event) => setAgentId(event.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            >
+              <option value="">সব এজেন্ট</option>
+              {(data?.agents ?? []).map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+        <div className="space-y-1.5">
           <Label htmlFor="report-search" className="text-xs">
             নাম বা নম্বর
           </Label>
@@ -127,6 +182,8 @@ export function CallReportsPanel() {
           </div>
         </div>
       </div>
+
+      {!isPending ? <CallReportSummary reports={reports} /> : null}
 
       {isPending ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
