@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DeskPage } from "@/routes/desk";
 
-export const Route = createFileRoute("/desk/reports")({
+export const Route = createFileRoute("/desk_/reports")({
   head: () => ({
     meta: [
       { title: "আমার রিপোর্ট — Winstone Connect" },

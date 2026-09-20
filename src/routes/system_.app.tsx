@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { SystemPage } from "@/routes/system";
 
-export const Route = createFileRoute("/system/app")({
+export const Route = createFileRoute("/system_/app")({
   head: () => ({
     meta: [
       { title: "অ্যান্ড্রয়েড ও অ্যাপ — Winstone Connect" },

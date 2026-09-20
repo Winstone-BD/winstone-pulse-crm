@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DeskPage } from "@/routes/desk";
 
-export const Route = createFileRoute("/desk/messages")({
+export const Route = createFileRoute("/desk_/messages")({
   head: () => ({
     meta: [
       { title: "আমার বার্তা — Winstone Connect" },

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { SystemPage } from "@/routes/system";
 
-export const Route = createFileRoute("/system/billing")({
+export const Route = createFileRoute("/system_/billing")({
   head: () => ({
     meta: [
       { title: "বিল ও আর্কাইভ — Winstone Connect" },

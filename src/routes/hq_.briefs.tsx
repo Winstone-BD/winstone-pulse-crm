@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ControlBoardPage } from "@/routes/hq";
 
-export const Route = createFileRoute("/hq/briefs")({
+export const Route = createFileRoute("/hq_/briefs")({
   head: () => ({
     meta: [
       { title: "HQ ব্রিফ ও বিল — Winstone Connect" },

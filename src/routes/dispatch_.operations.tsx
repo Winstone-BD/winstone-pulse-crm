@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DispatchPage } from "@/routes/dispatch";
 
-export const Route = createFileRoute("/dispatch/operations")({
+export const Route = createFileRoute("/dispatch_/operations")({
   head: () => ({
     meta: [
       { title: "কোঅর্ডিনেটর অপারেশন — Winstone Connect" },

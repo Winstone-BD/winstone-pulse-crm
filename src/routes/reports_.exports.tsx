@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { ReportsPage } from "@/routes/reports";
 
-export const Route = createFileRoute("/reports/exports")({
+export const Route = createFileRoute("/reports_/exports")({
   head: () => ({
     meta: [
       { title: "রিপোর্ট এক্সপোর্ট — Winstone Connect" },
