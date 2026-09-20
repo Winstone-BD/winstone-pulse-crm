@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -20,6 +20,7 @@ import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
+import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 
 import { buildTimeline, useSnapshot } from "@/lib/crm-data";
 
@@ -48,7 +49,14 @@ export const Route = createFileRoute("/hq")({
   component: ControlBoardPage,
 });
 
-function ControlBoardPage() {
+const HQ_NAV = [
+  { to: "/hq", label: "লাইভ সারাংশ" },
+  { to: "/hq/performance", label: "পারফরম্যান্স" },
+  { to: "/hq/operations", label: "অপারেশন" },
+  { to: "/hq/briefs", label: "ব্রিফ ও বিল" },
+] as const;
+
+export function ControlBoardPage() {
   return (
     <AppShell>
       <RoleGate
@@ -65,6 +73,7 @@ function ControlBoardPage() {
 }
 
 function ControlBoard() {
+  const { pathname } = useLocation();
   const { profiles, leads, calls, callEvents, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
@@ -109,33 +118,16 @@ function ControlBoard() {
     <>
       <div className="page-stack">
         <HqHeader />
-
-        <ExecutiveOverview leads={leads} events={events} />
-
-        <FloorAllocationPanel />
-
-        <FloorPerformancePanel />
-
-        <SmartInsightStrip scope="floor" />
-
-        <ExecutiveBrief />
-
-        <ServiceBillPanel mode="hq" />
-
-        <ShiftSummaryPanel scope="hq" />
-
-        <CommandAgentPanel surface="hq" />
-
-        <AskHqPanel />
-
-        <HqClassificationTiles leads={leads} onDrill={setDrill} />
-
-        <HqMixCards
+         <DashboardSubnav label="এক্সিকিউটিভ এইচকিউ অংশ" items={HQ_NAV} />
+         {pathname === "/hq" && <><ExecutiveOverview leads={leads} events={events} /><FloorPerformancePanel /><SmartInsightStrip scope="floor" /></>}
+         {pathname === "/hq/operations" && <><FloorAllocationPanel /><CommandAgentPanel surface="hq" /><AskHqPanel /></>}
+         {pathname === "/hq/briefs" && <><ExecutiveBrief /><ShiftSummaryPanel scope="hq" /><ServiceBillPanel mode="hq" /></>}
+         {pathname === "/hq/performance" && <><HqClassificationTiles leads={leads} onDrill={setDrill} /><HqMixCards
           funnelRows={funnelRows}
           sourceRows={sourceRows}
           loading={isPending}
           onDrill={setDrill}
-        />
+         /></>}
       </div>
 
       <LeadDossier
