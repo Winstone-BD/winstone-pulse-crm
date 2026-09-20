@@ -13,6 +13,7 @@
 import {
   callEvidence,
   isNotConnectedOutcome,
+  reportConnected,
   TASK_STATE_MESSAGE,
   taskState,
 } from "@/lib/call-evidence";
