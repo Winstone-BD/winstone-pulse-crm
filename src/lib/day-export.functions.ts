@@ -232,6 +232,7 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
       }
     }
 
+    const { callEvidence, isNotConnectedOutcome } = await import("@/lib/call-evidence");
     const calls = list.map((row) => {
       const agent = row.agent_id ? agentMap.get(row.agent_id) : undefined;
       const audio = row.audio_url ? (signedByPath.get(row.audio_url) ?? null) : null;
@@ -250,6 +251,14 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
         durationLabel: hms(row.duration_seconds ?? 0),
         recordingStatus: row.recording_status ?? "—",
         uploadStatus: row.upload_status ?? "—",
+        connected: callEvidence({
+          claimedConnected: !isNotConnectedOutcome(row.call_status ?? null),
+          callStatus: row.call_status ?? null,
+          measuredSeconds: row.duration_seconds ?? null,
+          hasRecording: Boolean(row.audio_url),
+          callStartedAt: row.started_at ?? null,
+          callEndedAt: null,
+        }).connected,
         audioUrl: audio,
         transcript: !!row.transcription_text,
         summary: row.ai_summary ?? "",
