@@ -140,6 +140,32 @@ export type TalkTime = {
   measuredCalls: number;
 };
 
+/**
+ * Average talk time (ATA) is counted only from this Dhaka date — the day the
+ * verified-call contract went live. Earlier days never produced phone-measured
+ * durations, so an ATA for them would be invented.
+ */
+export const VERIFIED_TALK_START_DATE = "2026-09-20";
+
+/**
+ * ATA: average verified talk seconds per connected call the phone actually
+ * measured. Unmeasured connected calls are excluded from both sides — dividing
+ * proven seconds by all connected calls would understate the real average.
+ * Returns null when nothing was measured (show "unavailable", never 0).
+ */
+export function averageTalkSecondsOf(
+  calls: { verifiedConnected: boolean; verifiedSeconds: number | null }[],
+): number | null {
+  let total = 0;
+  let measured = 0;
+  for (const call of calls) {
+    if (!call.verifiedConnected || call.verifiedSeconds === null) continue;
+    total += call.verifiedSeconds;
+    measured += 1;
+  }
+  return measured ? Math.round(total / measured) : null;
+}
+
 /** Talk time over a set of calls — proven seconds only, with the gap reported. */
 export function talkTimeOf(calls: { connected: boolean; verifiedSeconds: number | null }[]): TalkTime {
   let seconds = 0;
