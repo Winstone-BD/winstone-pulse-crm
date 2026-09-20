@@ -20,7 +20,6 @@ export type AuditAction =
   | "lead_pool_distributed"
   | "lead_self_claimed"
   | "call_report_submitted"
-  | "call_report_unverified"
   | "call_report_edited"
   | "device_registered"
   | "device_revoked"
@@ -61,8 +60,7 @@ export type AuditAction =
   | "service_payout_recorded"
   | "service_bill_alert_raised"
   | "pin_rotated"
-  | "pin_revealed"
-  | "lead_rescued_to_pool";
+  | "pin_revealed";
 
 export async function logAudit(input: {
   action: AuditAction;

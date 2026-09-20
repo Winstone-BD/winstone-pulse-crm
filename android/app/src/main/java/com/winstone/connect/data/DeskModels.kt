@@ -11,32 +11,17 @@ data class Lead(
     val status: String,
     val attempts: Int,
     val notes: String?,
-    /** কাজের দিন (YYYY-MM-DD, ঢাকা সময়) — আজ, আগের দিন বা আগামী দিনের টাস্ক। */
-    val workDate: String? = null,
-    val workState: String? = null,
-    val createdAt: String? = null,
-    val lastCallAt: String? = null,
-    val classifiedAt: String? = null,
-    /** কেউ ধরেনি — এই সময়ের পর আবার কল করা যাবে (সার্ভারের হিসাব)। */
-    val retryAfter: String? = null,
-    /** কতবার কল করে কেউ ধরেনি। */
-    val unansweredAttempts: Int = 0,
 )
 
 data class CallRow(
     val id: String,
     val leadId: String?,
     val phone: String,
-    /** ফোনে মাপা কথার সময়; না মাপা হলে null — কখনো বানানো ০ নয়। */
-    val verifiedSeconds: Int?,
-    /** সার্ভারের এক হিসাব: ফোনের প্রমাণে কথা হয়েছে কি না। */
-    val connected: Boolean,
+    val durationSeconds: Int,
     val direction: String,
-    /** "report_only" = রিপোর্ট গেছে, অডিও ফাইল যায়নি। */
     val syncStatus: String,
     val summary: String?,
     val sentiment: String?,
-    val analysisStatus: String?,
     val createdAt: String,
 )
 
@@ -54,106 +39,35 @@ data class DeskData(
     val leads: List<Lead>,
     val calls: List<CallRow>,
     val messages: List<MessageRow>,
-    /** Server-computed workday allocation; null until the phone syncs. */
-    val allocation: Allocation? = null,
 )
 
-/**
- * The workday allocation numbers exactly as the server counted them.
- *
- * The app only displays these — it never works out a target, a pending count or
- * an excess of its own, and it never decides allocation from the device clock.
- * Offline the phone keeps showing the last synced numbers and commits nothing;
- * the next successful sync reconciles it with the server.
- */
-data class Allocation(
-    val workDate: String,
-    val quota: Int,
-    val pending: Int,
-    val carriedOver: Int,
-    val carriedFrom: String?,
-    val newFromDatabase: Int,
-    val receivedFromOthers: Int,
-    val movedToOthers: Int,
-    val completed: Int,
-    val excess: Int,
-    val gap: Int,
-    val poolShortage: Int,
-)
-
-fun parseAllocation(body: org.json.JSONObject?): Allocation? {
-    val me = body?.optJSONObject("me") ?: return null
-    return Allocation(
-        workDate = body.optString("work_date"),
-        quota = me.optInt("quota"),
-        pending = me.optInt("pending"),
-        carriedOver = me.optInt("carriedOver"),
-        carriedFrom = me.optString("carriedFrom").takeIf { it.isNotBlank() && it != "null" },
-        newFromDatabase = me.optInt("newFromDatabase"),
-        receivedFromOthers = me.optInt("receivedFromOthers"),
-        movedToOthers = me.optInt("movedToOthers"),
-        completed = me.optInt("completed"),
-        excess = me.optInt("excess"),
-        gap = me.optInt("gap"),
-        poolShortage = body.optInt("shortage"),
-    )
-}
-
-/**
- * আজকের হিসাব — /api/public/agent/dashboard-metrics থেকে আসা সার্ভারের গণনা।
- * অ্যাপ নিজে কিছু হিসাব করে না; লক্ষ্য (কাজের পরিমাণ) আর আসল কাজ আলাদা রাখা হয়,
- * কারণ ৩০টি লিড পাওয়া মানে ৩০টি কল করা নয়।
- */
+/** Dashboard metrics returned by /api/public/agent/dashboard-metrics. */
 data class DashboardMetrics(
-    /** লক্ষ্যের কত অংশে আসলে কল হয়েছে (দখল নয়)। */
     val progressPercent: Int,
-    val target: Int,
     val assigned: Int,
     val called: Int,
     val connected: Int,
-    val qualified: Int,
-    val followUpsCompleted: Int,
+    val interested: Int,
+    val followUp: Int,
+    val siteVisit: Int,
+    val hotLeads: Int,
     val followUpsDue: Int,
-    val siteVisitsScheduled: Int,
-    val siteVisitsCompleted: Int,
-    val bookings: Int,
-    /** কথা হয়ে শ্রেণিবিন্যাস হওয়া লিড — শেষ হওয়া টাস্ক। */
-    val completedTasks: Int,
-    /** কেউ ধরেনি — টাস্ক শেষ হয়নি, লিড আবার কিউতে। */
-    val unansweredCalls: Int,
-    val contactedLeads: Int,
-    val talkMinutes: Int,
-    /** false = ফোন থেকে কথার সময় পাওয়া যায়নি, তাই মিনিট দেখানো হবে না। */
-    val talkTimeAvailable: Boolean,
-    val carriedOver: Int,
-    val newFromDatabase: Int,
-    val excessPending: Int,
-    val connectRate: Int,
-    val conversionRate: Int,
+    val newAssigned: Int,
+    val missedRetry: Int,
 ) {
     companion object {
         fun fromJson(obj: org.json.JSONObject): DashboardMetrics = DashboardMetrics(
             progressPercent = obj.optInt("progress_percent", 0),
-            target = obj.optInt("target", 0),
             assigned = obj.optInt("assigned", 0),
             called = obj.optInt("called", 0),
             connected = obj.optInt("connected", 0),
-            qualified = obj.optInt("qualified", 0),
-            followUpsCompleted = obj.optInt("follow_ups_completed", 0),
+            interested = obj.optInt("interested", 0),
+            followUp = obj.optInt("follow_up", 0),
+            siteVisit = obj.optInt("site_visit", 0),
+            hotLeads = obj.optInt("hot_leads", 0),
             followUpsDue = obj.optInt("follow_ups_due", 0),
-            siteVisitsScheduled = obj.optInt("site_visits_scheduled", 0),
-            siteVisitsCompleted = obj.optInt("site_visits_completed", 0),
-            bookings = obj.optInt("bookings", 0),
-            completedTasks = obj.optInt("completed_tasks", 0),
-            unansweredCalls = obj.optInt("unanswered_calls", 0),
-            contactedLeads = obj.optInt("contacted_leads", 0),
-            talkMinutes = obj.optInt("talk_minutes", 0),
-            talkTimeAvailable = obj.optBoolean("talk_time_available", false),
-            carriedOver = obj.optInt("carried_over", 0),
-            newFromDatabase = obj.optInt("new_from_database", 0),
-            excessPending = obj.optInt("excess_pending", 0),
-            connectRate = obj.optInt("connect_rate", 0),
-            conversionRate = obj.optInt("conversion_rate", 0),
+            newAssigned = obj.optInt("new_assigned", 0),
+            missedRetry = obj.optInt("missed_retry", 0),
         )
     }
 }
@@ -170,13 +84,6 @@ fun parseLeads(arr: JSONArray): List<Lead> = (0 until arr.length()).map { i ->
         status = o.optString("status", "pending"),
         attempts = o.optInt("call_attempts"),
         notes = o.str("notes"),
-        workDate = o.str("work_date"),
-        workState = o.str("work_state"),
-        createdAt = o.str("created_at"),
-        lastCallAt = o.str("last_call_at"),
-        classifiedAt = o.str("classified_at"),
-        retryAfter = o.str("retry_after"),
-        unansweredAttempts = o.optInt("unanswered_attempts"),
     )
 }
 
@@ -186,13 +93,11 @@ fun parseCalls(arr: JSONArray): List<CallRow> = (0 until arr.length()).map { i -
         id = o.optString("id"),
         leadId = o.str("lead_id"),
         phone = o.optString("phone_number"),
-        verifiedSeconds = if (o.isNull("verified_seconds")) null else o.optInt("verified_seconds"),
-        connected = o.optBoolean("connected", false),
+        durationSeconds = o.optInt("duration_seconds"),
         direction = o.optString("call_direction", "outgoing"),
-        syncStatus = o.optString("sync_status", "report_only"),
+        syncStatus = o.optString("sync_status", "uploaded"),
         summary = o.str("ai_summary"),
         sentiment = o.str("sentiment"),
-        analysisStatus = o.str("analysis_status"),
         createdAt = o.optString("created_at"),
     )
 }
@@ -218,70 +123,3 @@ fun statusLabel(status: String): String = when (status) {
 
 fun shortTime(iso: String): String =
     iso.replace("T", " ").take(16)
-
-/** আজকের তারিখ, ঢাকা সময়ে (YYYY-MM-DD)। */
-fun dhakaToday(): String =
-    java.time.LocalDate.now(java.time.ZoneId.of("Asia/Dhaka")).toString()
-
-private fun dayOf(iso: String?): java.time.LocalDate? = runCatching {
-    when {
-        iso == null || iso.isBlank() -> null
-        iso.length == 10 -> java.time.LocalDate.parse(iso)
-        else -> java.time.Instant.parse(iso.replace(" ", "T"))
-            .atZone(java.time.ZoneId.of("Asia/Dhaka")).toLocalDate()
-    }
-}.getOrNull()
-
-/** টাস্কটি আগামী দিনের কাজ কি না (কাজের দিন আজকের পরে)। */
-fun isUpcomingTask(lead: Lead, today: String = dhakaToday()): Boolean {
-    val day = lead.workDate ?: return false
-    return day > today
-}
-
-/** কেউ ধরেনি, আর পরের চেষ্টার সময় এখনো আসেনি — লিডটি কিউর পেছনে। */
-fun isRetryWaiting(lead: Lead, now: java.time.Instant = java.time.Instant.now()): Boolean {
-    if (lead.workState == "completed") return false
-    val at = runCatching { java.time.Instant.parse(lead.retryAfter) }.getOrNull() ?: return false
-    return at.isAfter(now)
-}
-
-/** টাস্ক শেষ হয়েছে কি না। */
-fun isTaskDone(lead: Lead): Boolean =
-    lead.workState == "completed" || lead.status == "closed"
-
-/** টাস্কটি কত দিন ধরে অপেক্ষা করছে (যেদিন এসেছে সেদিন থেকে আজ পর্যন্ত)। */
-fun waitingDays(lead: Lead, today: String = dhakaToday()): Int {
-    val start = dayOf(lead.createdAt) ?: return 0
-    val now = dayOf(today) ?: return 0
-    val days = java.time.temporal.ChronoUnit.DAYS.between(start, now).toInt()
-    return if (days < 0) 0 else days
-}
-
-/** টাস্কের সময়রেখা: কবে এসেছে, শেষ হয়েছে কি না, আর কত দিন অপেক্ষায়। */
-fun taskTrail(lead: Lead, today: String = dhakaToday()): String {
-    val parts = mutableListOf<String>()
-    dayOf(lead.createdAt)?.let { parts += "এসেছে ${it}" }
-    when {
-        isTaskDone(lead) -> {
-            val done = dayOf(lead.classifiedAt) ?: dayOf(lead.lastCallAt)
-            parts += if (done != null) "শেষ ${done}" else "শেষ হয়েছে"
-        }
-        isUpcomingTask(lead, today) -> parts += "আগামী দিনের কাজ (${lead.workDate})"
-        lead.workDate == today -> {
-            val days = waitingDays(lead, today)
-            parts += if (days > 0) "আজকের কাজ · ${days} দিন অপেক্ষায়" else "আজকের কাজ"
-        }
-        else -> {
-            val days = waitingDays(lead, today)
-            parts += if (days > 0) "${days} দিন অপেক্ষায়" else "অপেক্ষমাণ"
-        }
-    }
-    if (lead.unansweredAttempts > 0 && !isTaskDone(lead)) {
-        parts += if (isRetryWaiting(lead)) {
-            "${lead.unansweredAttempts} বার ধরেনি · ${shortTime(lead.retryAfter ?: "")}-এর পর আবার কল"
-        } else {
-            "${lead.unansweredAttempts} বার ধরেনি · এখন আবার কল করা যাবে"
-        }
-    }
-    return parts.joinToString(" · ")
-}

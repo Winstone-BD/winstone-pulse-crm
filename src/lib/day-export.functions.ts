@@ -115,9 +115,7 @@ export const dayCallExport = createServerFn({ method: "POST" })
       }
     }
 
-    // Connection follows the canonical rule (call-evidence), never a duration
-    // threshold: the phone's own outcome decides whether a call connected.
-    const { callEvidence, isNotConnectedOutcome } = await import("@/lib/call-evidence");
+    const CONNECTED_SECONDS = 30;
     const calls: DayCallRow[] = inDay.map((row) => {
       const agent = row.agent_id ? agentMap.get(row.agent_id) : undefined;
       const audio = row.audio_url ? (signedByPath.get(row.audio_url) ?? null) : null;
@@ -133,14 +131,7 @@ export const dayCallExport = createServerFn({ method: "POST" })
         callStatus: row.call_status ?? "—",
         durationSeconds: row.duration_seconds ?? 0,
         durationLabel: hms(row.duration_seconds ?? 0),
-        connected: callEvidence({
-          claimedConnected: !isNotConnectedOutcome(row.call_status ?? null),
-          callStatus: row.call_status ?? null,
-          measuredSeconds: row.duration_seconds ?? null,
-          hasRecording: Boolean(row.audio_url),
-          callStartedAt: row.started_at ?? null,
-          callEndedAt: null,
-        }).connected,
+        connected: (row.duration_seconds ?? 0) > CONNECTED_SECONDS,
         recordingStatus: row.recording_status ?? "—",
         audioUrl: audio,
         audioExpiresInMinutes: audio ? SIGNED_URL_SECONDS / 60 : null,
@@ -150,11 +141,7 @@ export const dayCallExport = createServerFn({ method: "POST" })
       };
     });
 
-    // Talk time counts connected calls with a measured duration only.
-    const talkSeconds = calls.reduce(
-      (sum, c) => sum + (c.connected ? c.durationSeconds : 0),
-      0,
-    );
+    const talkSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
     const withAudio = calls.filter((c) => c.audioUrl).length;
 
     return {
@@ -232,7 +219,6 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
       }
     }
 
-    const { callEvidence, isNotConnectedOutcome } = await import("@/lib/call-evidence");
     const calls = list.map((row) => {
       const agent = row.agent_id ? agentMap.get(row.agent_id) : undefined;
       const audio = row.audio_url ? (signedByPath.get(row.audio_url) ?? null) : null;
@@ -251,14 +237,6 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
         durationLabel: hms(row.duration_seconds ?? 0),
         recordingStatus: row.recording_status ?? "—",
         uploadStatus: row.upload_status ?? "—",
-        connected: callEvidence({
-          claimedConnected: !isNotConnectedOutcome(row.call_status ?? null),
-          callStatus: row.call_status ?? null,
-          measuredSeconds: row.duration_seconds ?? null,
-          hasRecording: Boolean(row.audio_url),
-          callStartedAt: row.started_at ?? null,
-          callEndedAt: null,
-        }).connected,
         audioUrl: audio,
         transcript: !!row.transcription_text,
         summary: row.ai_summary ?? "",
@@ -266,11 +244,7 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
       };
     });
 
-    // Talk time counts connected calls with a measured duration only.
-    const talkSeconds = calls.reduce(
-      (sum, c) => sum + (c.connected ? c.durationSeconds : 0),
-      0,
-    );
+    const talkSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
 
     return {
       generatedAt: new Date().toISOString(),

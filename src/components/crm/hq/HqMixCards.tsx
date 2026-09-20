@@ -2,20 +2,22 @@ import type { DrillSpec } from "@/components/crm/HqDrillSheet";
 
 import { MixCard, type MixRow } from "./MixCard";
 
-/** Funnel and source intelligence cards, each drilling into its rows. */
+/** Funnel / source / sentiment intelligence cards, each drilling into its rows. */
 export function HqMixCards({
   funnelRows,
   sourceRows,
+  sentimentRows,
   loading,
   onDrill,
 }: {
   funnelRows: MixRow[];
   sourceRows: MixRow[];
+  sentimentRows: MixRow[];
   loading: boolean;
   onDrill: (spec: DrillSpec) => void;
 }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-3 lg:grid-cols-3">
       <MixCard
         title="লিড ফানেল"
         subtitle="নতুন লিড থেকে ডিল পর্যন্ত"
@@ -41,6 +43,21 @@ export function HqMixCards({
             subtitle: "এই সোর্স থেকে আসা লিড",
             kind: "leads",
             leads: row.leads ?? [],
+          })
+        }
+      />
+      <MixCard
+        title="কলের সুর"
+        subtitle="AI-বিশ্লেষিত কথাবার্তা"
+        rows={sentimentRows}
+        loading={loading}
+        emptyLabel="এখনো লাইভ ডেটা নেই"
+        onSelectRow={(row) =>
+          onDrill({
+            title: `কলের সুর · ${row.label}`,
+            subtitle: "এই সুরের সব কল",
+            kind: "calls",
+            calls: row.calls ?? [],
           })
         }
       />

@@ -71,7 +71,7 @@ function TicketsPage() {
     <AppShell>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-lg font-bold tracking-tight">
             <TicketCheck className="size-5 text-primary" /> Support tickets
           </h1>
           <p className="text-xs text-muted-foreground">

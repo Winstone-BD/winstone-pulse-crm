@@ -83,7 +83,7 @@ export function PinVaultPanel() {
   return (
     <section className="card-elevated space-y-5 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="section-title">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
           <ShieldCheck className="size-4 text-primary" /> সুরক্ষিত পিন ভল্ট
         </h2>
         <p className="text-xs text-muted-foreground">

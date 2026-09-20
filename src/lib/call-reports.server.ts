@@ -10,17 +10,6 @@
  * both the web desk and the Android app, so neither can bypass the rule.
  */
 
-import {
-  callEvidence,
-  isNotConnectedOutcome,
-  reportConnected,
-  TASK_STATE_MESSAGE,
-  taskState,
-} from "@/lib/call-evidence";
-import { nextRetryAt, needsSupervisorDecision, reportTrust } from "@/lib/call-retry";
-
-
-
 export const CALL_CATEGORIES = [
   "hot_lead",
   "follow_up",
@@ -366,36 +355,13 @@ export async function submitCallReport(input: {
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
   // may only *upgrade* an unanswered call to "কথা হয়েছে", never the other way.
-  const claimedConnected =
-    !isNotConnectedOutcome(input.callStatus) &&
-    (report.connected !== false || input.callStatus === "connected");
-  const invalid = validateReport({ ...input, connected: claimedConnected, requireCallFacts: true });
+  const received = report.connected !== false || input.callStatus === "connected";
+  const invalid = validateReport({ ...input, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
 
-  const temperature = claimedConnected
-    ? ((input.temperature ?? null) as LeadTemperature | null)
-    : null;
-  const grade = claimedConnected ? ((input.grade ?? null) as LeadGrade | null) : null;
+  const temperature = received ? ((input.temperature ?? null) as LeadTemperature | null) : null;
+  const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
   const classified = Boolean(temperature && grade);
-
-  // The phone's own record decides whether the call was really answered. A claim
-  // with no measured call, no recording and no call log never completes a task —
-  // the report is still stored, so nothing real is ever lost.
-  const evidence = callEvidence({
-    claimedConnected,
-    callStatus: input.callStatus ?? null,
-    measuredSeconds: report.duration_seconds,
-    hasRecording: Boolean(report.recording_id),
-    callStartedAt: report.call_started_at,
-    callEndedAt: report.call_ended_at,
-  });
-  const received = evidence.connected;
-  const taskOutcome = taskState({
-    connected: received,
-    classified,
-    evidence: evidence.evidence,
-    claimedConnected,
-  });
 
   // The stored duration wins whenever the phone actually measured the call; the
   // agent's number is only used when nothing was measured.
@@ -418,8 +384,7 @@ export async function submitCallReport(input: {
       note,
       reason: input.reason?.trim() || null,
       follow_up_at: input.followUpAt ?? null,
-      connected: claimedConnected,
-      connection_verified: received,
+      connected: received,
       duration_seconds: durationSeconds,
       temperature,
       grade,
@@ -445,7 +410,7 @@ export async function submitCallReport(input: {
 
   const { data: lead } = await supabaseAdmin
     .from("leads")
-    .select("id, name, phone_number, status, unanswered_attempts")
+    .select("id, name, phone_number, status")
     .eq("id", report.lead_id)
     .maybeSingle();
 
@@ -468,7 +433,6 @@ export async function submitCallReport(input: {
         classified_at: nowIso,
         classified_by: input.agentId,
         work_state: "completed",
-        retry_after: null,
       })
       .eq("id", report.lead_id);
 
@@ -483,11 +447,8 @@ export async function submitCallReport(input: {
       classified_at: nowIso,
     });
   } else {
-    // Not received: the task is NOT finished. The lead goes back into the working
-    // queue behind the untried leads and becomes callable again after a waiting
-    // gap that grows with every unanswered try. It is never silently completed.
-    const unanswered = Math.max(0, lead?.unanswered_attempts ?? 0) + 1;
-    const retryAt = nextRetryAt(unanswered, new Date(nowIso));
+    // Not received: the lead stays in the working queue for a retry call and is
+    // never silently completed.
     await supabaseAdmin
       .from("leads")
       .update({
@@ -496,31 +457,8 @@ export async function submitCallReport(input: {
         notes,
         last_call_at: nowIso,
         work_state: "pending",
-        unanswered_attempts: unanswered,
-        retry_after: retryAt,
       })
       .eq("id", report.lead_id);
-
-    const { logLeadEvent: logRetryEvent } = await import("@/lib/lead-events.server");
-    await logRetryEvent({
-      leadId: report.lead_id,
-      agentId: input.agentId,
-      recordingId: report.recording_id,
-      kind: "outcome_logged",
-      detail: `কল ধরা হয়নি (${unanswered}তম বার) — টাস্ক শেষ হয়নি, লিড আবার কিউতে গেল, ${new Date(
-        retryAt,
-      ).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}-এর পর আবার কল করা যাবে`,
-    });
-
-    if (needsSupervisorDecision(unanswered)) {
-      await supabaseAdmin.from("system_alerts").insert({
-        code: "lead_unreachable",
-        severity: "warning",
-        title: "একই লিডে বারবার কল — কেউ ধরছে না",
-        detail: `লিড ${lead?.name ?? report.lead_id} (${lead?.phone_number ?? report.phone_number ?? "—"}) ${unanswered} বার চেষ্টা করেও ধরা যায়নি — lead:${report.lead_id}`,
-        action: "কোঅর্ডিনেটর সিদ্ধান্ত নিন: আবার চেষ্টা, অন্য এজেন্ট, নাকি বাদ",
-      });
-    }
   }
 
   let followUpId: string | null = null;
@@ -629,38 +567,6 @@ export async function submitCallReport(input: {
     };
   }
 
-  // Honesty check: does the phone's own record support the report? A real call
-  // on a phone that failed to measure the duration is still accepted — but a
-  // "কথা হয়েছে" with no evidence at all is flagged and the agent is warned.
-  const trust = reportTrust({
-    claimedConnected,
-    measuredSeconds: report.duration_seconds ?? 0,
-    declaredSeconds: input.durationSeconds ?? 0,
-    hasRecording: Boolean(report.recording_id),
-    callStartedAt: report.call_started_at ?? null,
-  });
-  if (trust.suspicious) {
-    try {
-      await supabaseAdmin.from("system_alerts").insert({
-        code: "call_report_unverified",
-        severity: "warning",
-        title: "কল রিপোর্ট ফোনের রেকর্ডের সঙ্গে মেলেনি",
-        detail: `${trust.reasons.join("; ")} — report:${report.id}`,
-        action: "এজেন্টের সঙ্গে কথা বলুন — কল না করে রিপোর্ট দেওয়া হয়েছে কি না যাচাই করুন",
-      });
-      const { logAudit: logTrustAudit } = await import("@/lib/audit.server");
-      await logTrustAudit({
-        action: "call_report_unverified",
-        entityType: "call_report",
-        entityId: report.id,
-        actorProfileId: input.agentId,
-        metadata: { leadId: report.lead_id, reasons: trust.reasons, category },
-      });
-    } catch (alertError) {
-      console.error("unverified report alert failed:", alertError);
-    }
-  }
-
   // The next queued call becomes the open report right away, so the popup
   // returns for every call that happened while this one was being written.
   const nextQueued = await promoteNextQueuedReport(input.agentId);
@@ -671,11 +577,7 @@ export async function submitCallReport(input: {
     sheet,
     review,
     nextReportId: nextQueued,
-    workState: taskOutcome === "completed" ? ("completed" as const) : ("pending" as const),
-    taskState: taskOutcome,
-    retryQueued: taskOutcome !== "completed",
-    // The task contract speaks first, then the honesty check.
-    warning: TASK_STATE_MESSAGE[taskOutcome] ?? trust.warning,
+    workState: received && classified ? ("completed" as const) : ("pending" as const),
   };
 
 }
@@ -863,9 +765,7 @@ export async function editSubmittedReport(input: {
     throw new Error("সংশোধনের সময় শেষ — সকাল ৯:০০ থেকে ১২:৪৫ পর্যন্ত একই দিনের রিপোর্ট বদলানো যায়");
   }
 
-  // The same verified-connection rule as submission: an edit can never turn a
-  // call the phone never proved into a completed conversation.
-  const received = reportConnected(report);
+  const received = report.connected !== false;
   const invalid = validateReport({ ...input, connected: received });
   if (invalid) throw new Error(invalid.message);
 

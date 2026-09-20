@@ -50,7 +50,7 @@ export function MyPhoneSetup() {
   const open = editing || !saved;
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <div className="flex flex-wrap items-center gap-3">
         <span className="grid size-10 place-items-center rounded-full bg-primary/15 text-primary">
           <Smartphone className="size-5" />

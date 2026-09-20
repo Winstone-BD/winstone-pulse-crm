@@ -162,7 +162,7 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
           .select("id")
           .eq("is_active", true)
           .eq("approval_status", "approved")
-          .eq("role", "agent")
+          .in("role", ["agent", "team_leader"])
           .order("name"),
         supabaseAdmin.from("leads").select("id").is("assigned_to", null).order("created_at"),
       ]);

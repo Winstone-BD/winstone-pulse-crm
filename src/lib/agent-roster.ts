@@ -22,7 +22,7 @@ export function selectableAgents(profiles: Profile[]): Profile[] {
       (p) =>
         p.is_active &&
         p.approval_status === "approved" &&
-        p.role === "agent",
+        (p.role === "agent" || p.role === "team_leader"),
     )
     .filter((p) => {
       const key = personKey(p);

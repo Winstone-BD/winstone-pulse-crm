@@ -144,7 +144,7 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
             <Receipt className="size-4" />
           </span>
           <div className="min-w-0">
-            <h2 className="section-title truncate">মাসিক সার্ভিস বিল</h2>
+            <h2 className="truncate text-base font-semibold">মাসিক সার্ভিস বিল</h2>
             <p className="truncate text-xs text-muted-foreground">
               {taka(query.data?.monthlyAmountBdt ?? 4000)}/মাস · প্রতি মাসের ১৫ তারিখে বিল
             </p>
@@ -169,7 +169,7 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
       </div>
 
       {current ? (
-        <div className="stat-grid">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Field label="পিরিয়ড" value={current.period} />
           <Field label="পরিমাণ" value={taka(current.amountBdt)} />
           <Field

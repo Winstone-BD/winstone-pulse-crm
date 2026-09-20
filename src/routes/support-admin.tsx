@@ -53,7 +53,7 @@ function SupportAdminPage() {
 
   return (
     <AppShell>
-      <h1 className="page-title">Support admin</h1>
+      <h1 className="text-lg font-bold tracking-tight">Support admin</h1>
       <p className="text-xs text-muted-foreground">
         Knowledge base, saved replies, assistant behaviour and performance.
       </p>

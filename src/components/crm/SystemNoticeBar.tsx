@@ -16,7 +16,6 @@ import { decideAccount, listAccountRequests } from "@/lib/accounts.functions";
 import { getSystemNotices } from "@/lib/notices.functions";
 import type { NoticeLevel, SystemNotice } from "@/lib/notices-types";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
-import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const STYLES: Record<NoticeLevel, { row: string; icon: string }> = {
   critical: {
@@ -104,7 +103,7 @@ function PendingAccountActions() {
             <p className="truncate text-xs font-semibold">{account.name}</p>
             <p className="truncate text-[11px] text-muted-foreground">
               {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-              এজেন্ট
+              {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
             </p>
           </div>
           {done[account.id] ? (
@@ -151,23 +150,15 @@ function PendingAccountActions() {
               >
                 কোঅর্ডিনেটর
               </Button>
-              <ConfirmAction
-                title="অ্যাকাউন্টটি বাদ দেবেন?"
-                description={`${account.name}-এর অনুরোধ বাতিল হবে এবং তিনি ডেস্কে ঢুকতে পারবেন না। প্রয়োজনে পরে আবার অনুরোধ করতে হবে।`}
-                confirmLabel="হ্যাঁ, বাদ দিন"
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-9 gap-1 text-xs"
                 disabled={busyId !== null}
-                onConfirm={() => act.mutate({ profileId: account.id, decision: "reject" })}
-                trigger={
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="h-9 gap-1 text-xs"
-                    disabled={busyId !== null}
-                  >
-                    <X className="size-3.5" /> বাদ দিন
-                  </Button>
-                }
-              />
+                onClick={() => act.mutate({ profileId: account.id, decision: "reject" })}
+              >
+                <X className="size-3.5" /> বাদ দিন
+              </Button>
             </div>
           )}
         </li>
@@ -232,9 +223,9 @@ export function SystemNoticeBar({ surface }: { surface: "it" | "hq" }) {
 
   return (
     <>
-      <section className="card-elevated card-pad">
+      <section className="card-elevated p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
             {allClear ? (
               <CheckCircle2 className="size-4 text-live" />
             ) : (

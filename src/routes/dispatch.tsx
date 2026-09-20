@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Lock, Send, Shuffle, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,7 +19,6 @@ import { CsvImportDialog } from "@/components/crm/CsvImportDialog";
 import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
-import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,13 +59,7 @@ export const Route = createFileRoute("/dispatch")({
   component: DispatchPage,
 });
 
-const DISPATCH_NAV = [
-  { to: "/dispatch", label: "বিতরণ" },
-  { to: "/dispatch/team", label: "টিম" },
-  { to: "/dispatch/operations", label: "অপারেশন" },
-] as const;
-
-export function DispatchPage() {
+function DispatchPage() {
   return (
     <AppShell>
       <RoleGate
@@ -82,15 +75,14 @@ export function DispatchPage() {
 }
 
 function Dispatcher() {
-  const { pathname } = useLocation();
-  const { profiles, leads, calls, callEvents, messages } = useSnapshot();
+  const { profiles, leads, calls, messages } = useSnapshot();
   const queryClient = useQueryClient();
   const assign = useServerFn(assignLeadsToAgent);
   const distribute = useServerFn(autoDistributeLeads);
 
   const stats = useMemo(
-    () => buildAgentStats(profiles, leads, callEvents, messages, false, calls),
-    [profiles, leads, callEvents, messages, calls],
+    () => buildAgentStats(profiles, leads, calls, messages),
+    [profiles, leads, calls, messages],
   );
   const agents = stats.map((s) => s.profile);
   const [agentId, setAgentId] = useState(agents[0]?.id ?? "");
@@ -134,10 +126,10 @@ function Dispatcher() {
   });
 
   return (
-    <div className="page-stack">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="page-title">Lead Dispatcher</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Lead Dispatcher</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             {leads.length} leads in the pipeline · {unassigned} waiting for an owner
           </p>
@@ -147,17 +139,17 @@ function Dispatcher() {
           <CopilotDrawer />
         </div>
       </div>
-      <DashboardSubnav label="কোঅর্ডিনেটর ডেস্কের অংশ" items={DISPATCH_NAV} />
 
-      {pathname === "/dispatch" && <>
       <SmartInsightStrip scope="floor" />
 
       <LeadDatabasePanel />
 
       <ExtraLeadPanel />
 
-      <section className="card-elevated card-pad">
-        <h2 className="section-title">Bulk push</h2>
+      <TeamSupportInbox />
+
+      <section className="card-elevated p-4">
+        <h2 className="text-sm font-semibold">Bulk push</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Select value={agentId} onValueChange={setAgentId}>
             <SelectTrigger className="w-full sm:w-[240px]">
@@ -206,14 +198,17 @@ function Dispatcher() {
           </Button>
         </div>
       </section>
-      </>}
-      {pathname === "/dispatch/team" && <>
+
+      <CommandAgentPanel surface="dispatch" />
+
+      <CallOpsPanel />
+
       <AssignmentHistory />
 
       <SelfClaimsFeed />
 
       <section className="space-y-3">
-        <h2 className="section-title">Team load</h2>
+        <h2 className="text-lg font-semibold">Team load</h2>
         <div className="overflow-x-auto card-elevated">
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted-foreground">
@@ -263,15 +258,10 @@ function Dispatcher() {
           </table>
         </div>
       </section>
-      </>}
-      {pathname === "/dispatch/operations" && <>
-      <CommandAgentPanel surface="dispatch" />
-      <CallOpsPanel />
-      <TeamSupportInbox />
+
       <section className="border-t border-border pt-6">
         <QueueBoard title="Agent Queue" canSeeAllAgents showManualLog />
       </section>
-      </>}
     </div>
   );
 }

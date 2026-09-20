@@ -118,7 +118,7 @@ export const registerMyAccount = createServerFn({ method: "POST" })
       phone: data.phone || null,
       email,
       role: rostered ?? "agent",
-      requested_role: rostered ?? "agent",
+      requested_role: rostered ?? (data.requestedRole === "coordinator" ? "team_leader" : "agent"),
       approval_status: "pending",
       is_active: true,
     });
@@ -220,8 +220,10 @@ export const decideAccount = createServerFn({ method: "POST" })
         : {
             approval_status: "approved",
             is_active: true,
-            // Coordinator role removed system-wide: approvals create agents only.
-            role: "agent" as const,
+            role:
+              data.decision === "approve_coordinator"
+                ? ("team_leader" as const)
+                : ("agent" as const),
           };
 
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.profileId);
@@ -339,7 +341,7 @@ export const createStaffAccount = createServerFn({ method: "POST" })
       throw new Error(created.error?.message ?? "সাইন-ইন অ্যাকাউন্ট তৈরি হয়নি");
     }
 
-    const role = "agent" as const;
+    const role = data.role === "coordinator" ? ("team_leader" as const) : ("agent" as const);
     const { data: profile, error } = await supabaseAdmin
       .from("profiles")
       .insert({

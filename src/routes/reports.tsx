@@ -1,4 +1,4 @@
-import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -15,7 +15,6 @@ import { ReportsKpiStrip } from "@/components/crm/reports/ReportsKpiStrip";
 import { DailyActivityChart } from "@/components/crm/reports/DailyActivityChart";
 import { IntelligenceCards, AiPerformanceBrief } from "@/components/crm/reports/IntelligenceCards";
 import { AgentPerformanceTable } from "@/components/crm/reports/AgentPerformanceTable";
-import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { useSnapshot } from "@/lib/crm-data";
 import {
   buildReport,
@@ -52,14 +51,7 @@ export const Route = createFileRoute("/reports")({
   component: ReportsPage,
 });
 
-const REPORTS_NAV = [
-  { to: "/reports", label: "পারফরম্যান্স" },
-  { to: "/reports/agents", label: "এজেন্ট" },
-  { to: "/reports/calls", label: "কল রিপোর্ট" },
-  { to: "/reports/exports", label: "এক্সপোর্ট" },
-] as const;
-
-export function ReportsPage() {
+function ReportsPage() {
   return (
     <AppShell>
       <RoleGate
@@ -75,7 +67,6 @@ export function ReportsPage() {
 }
 
 function ReportsBoard() {
-  const { pathname } = useLocation();
   const data = useSnapshot();
   const { scope } = useMyAccount();
   const canSeeDayExport = scope === "authority" || scope === "coordinator";
@@ -85,7 +76,7 @@ function ReportsBoard() {
 
   const sources = useMemo(() => leadSources(data.leads), [data.leads]);
   const agents = useMemo(
-    () => data.profiles.filter((p) => p.role === "agent"),
+    () => data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader"),
     [data.profiles],
   );
   const report = useMemo(() => buildReport(data, filters), [data, filters]);
@@ -95,14 +86,12 @@ function ReportsBoard() {
   const hasActivity = report.totals.dials > 0 || report.totals.newLeads > 0;
 
   return (
-    <div className="page-stack">
+    <div className="space-y-5">
       <ReportsHeader
         onToggleFilters={() => setShowFilters((v) => !v)}
         onExport={() => downloadCsv(`winstone-report_${stamp}.csv`, reportToCsv(report))}
       />
-      <DashboardSubnav label="রিপোর্টের অংশ" items={REPORTS_NAV} />
 
-      {(pathname === "/reports" || pathname === "/reports/agents") && (
       <ReportsFilterBar
         filters={filters}
         patch={patch}
@@ -111,9 +100,7 @@ function ReportsBoard() {
         sources={sources}
         visible={showFilters}
       />
-      )}
 
-      {pathname === "/reports" && <>
       <ReportsKpiStrip report={report} />
 
       <DailyActivityChart
@@ -123,8 +110,7 @@ function ReportsBoard() {
         hasActivity={hasActivity}
         onReset={() => setFilters(defaultFilters(30))}
       />
-      </>}
-      {pathname === "/reports/agents" && <>
+
       <IntelligenceCards report={report} />
 
       <AiPerformanceBrief report={report} filters={filters} />
@@ -134,16 +120,14 @@ function ReportsBoard() {
         stamp={stamp}
         onReset={() => setFilters(defaultFilters(30))}
       />
-      </>}
-      {pathname === "/reports/calls" && <CallReportsPanel />}
-      {pathname === "/reports/exports" && canSeeDayExport && (
+
+      <CallReportsPanel />
+
+      {canSeeDayExport && (
         <div className="space-y-4">
           <DayCallExportPanel />
           <SyncedCallsPanel />
         </div>
-      )}
-      {pathname === "/reports/exports" && !canSeeDayExport && (
-        <p className="empty-note">এই এক্সপোর্ট শুধু অনুমোদিত কোঅর্ডিনেটর ও অথরিটির জন্য।</p>
       )}
     </div>
   );

@@ -105,7 +105,7 @@ export function YearArchivePanel() {
     <section className="card-elevated space-y-3 p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Archive className="size-4 text-primary" />
-        <h2 className="section-title">বার্ষিক সংরক্ষণ (এক বছর পর)</h2>
+        <h2 className="text-sm font-semibold">বার্ষিক সংরক্ষণ (এক বছর পর)</h2>
         <span className="ml-auto text-xs text-muted-foreground">
           {archives.data?.length ?? 0}টি বছর সংরক্ষিত
         </span>

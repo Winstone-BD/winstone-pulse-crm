@@ -96,7 +96,7 @@ export function MobileLeadQueue() {
     <section className="card-elevated space-y-3 p-3 md:hidden">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0">
-          <h2 className="section-title truncate">
+          <h2 className="flex items-center gap-1.5 truncate text-sm font-bold tracking-tight">
             <Sparkles className="size-4 shrink-0 text-primary" /> দ্রুত লিড কিউ
           </h2>
           <p className="text-[11px] text-muted-foreground">
@@ -112,7 +112,7 @@ export function MobileLeadQueue() {
         <div className="rounded-xl border border-dashed p-6 text-center">
           <CheckCircle2 className="mx-auto size-6 text-primary" />
           <p className="mt-2 text-sm font-semibold">কিউ খালি</p>
-          <p className="empty-note">
+          <p className="text-xs text-muted-foreground">
             এই মুহূর্তে হাতে নেওয়ার মতো খোলা লিড নেই।
           </p>
           {queue.length > 0 && (

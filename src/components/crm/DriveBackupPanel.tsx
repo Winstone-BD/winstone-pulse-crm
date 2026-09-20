@@ -1,4 +1,3 @@
-import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Cloud, FolderSync, Loader2, Save, Settings, Users } from "lucide-react";
@@ -22,7 +21,7 @@ import {
 import { useAdminToken } from "@/lib/local-session";
 
 function todayDhaka() {
-  return dhakaDateKey();
+  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 export function DriveBackupPanel() {
@@ -126,10 +125,10 @@ export function DriveBackupPanel() {
   const folderIdValue = folderIdDraft || settings?.folderId || "";
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Cloud className="size-4 text-primary" />
-        <h2 className="section-title">Google Drive ব্যাকআপ</h2>
+        <h2 className="text-sm font-semibold">Google Drive ব্যাকআপ</h2>
       </header>
 
       <p className="mt-1 text-xs text-muted-foreground">

@@ -45,12 +45,6 @@ object WinstoneApi {
         val calls: JSONArray,
         val whatsapp: JSONArray,
         val roster: JSONArray,
-        /**
-         * The server's own workday allocation state (target, pending, carried
-         * over, excess, shortage). The app NEVER computes these numbers and
-         * never uses the device date, so the phone always matches the web CRM.
-         */
-        val allocation: JSONObject?,
     )
 
     /** Agent Workspace: this agent's own leads + call / WhatsApp logs. */
@@ -71,7 +65,6 @@ object WinstoneApi {
                 calls = body.optJSONArray("calls") ?: JSONArray(),
                 whatsapp = body.optJSONArray("whatsapp") ?: JSONArray(),
                 roster = body.optJSONArray("roster") ?: JSONArray(),
-                allocation = body.optJSONObject("allocation"),
             )
         }
     }

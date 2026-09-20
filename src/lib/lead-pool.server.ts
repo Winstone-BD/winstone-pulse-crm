@@ -112,53 +112,25 @@ export async function distributionRun(workDate: string = dhakaToday()) {
  * Day rollover: unfinished (pending) leads from earlier working days become
  * today's task. The lead stays with the same agent — only its listed working
  * day moves forward, so yesterday's leftovers appear on today's board.
- *
- * The day the lead was FIRST listed under is kept in `carried_from_date`, so the
- * board can say "carried over from 19 September" instead of pretending the lead
- * arrived today. Safe to call repeatedly: leads already on today are untouched
- * and an existing carry-over date is never overwritten.
+ * Safe to call repeatedly; leads already on today are untouched.
  */
 export async function rolloverPendingLeads(workDate: string = dhakaToday()): Promise<number> {
   const supabaseAdmin = await admin();
-  let moved = 0;
-
-  // Stamp the origin day first (per earlier workday), then move the board day.
-  const { data: stale } = await supabaseAdmin
-    .from("leads")
-    .select("work_date")
-    .eq("work_state", "pending")
-    .lt("work_date", workDate)
-    .is("carried_from_date", null)
-    .limit(5000);
-  const days = [...new Set((stale ?? []).map((row) => row.work_date).filter(Boolean))] as string[];
-  for (const day of days) {
-    await supabaseAdmin
-      .from("leads")
-      .update({ carried_from_date: day })
-      .eq("work_state", "pending")
-      .eq("work_date", day)
-      .is("carried_from_date", null);
-  }
-
   const { data } = await supabaseAdmin
     .from("leads")
     .update({ work_date: workDate })
     .eq("work_state", "pending")
     .lt("work_date", workDate)
     .select("id");
-  moved = (data ?? []).length;
-  return moved;
+  return (data ?? []).length;
 }
 
 /**
- * Today's open workload per desk: every lead sitting on today's board that is
- * still unfinished (pending) — carried-over leftovers AND leads handed out
- * earlier today alike. The daily run counts this against the quota first, so
- * pending work is always served before new database leads, and a desk with a
- * heavy backlog takes fewer (or no) new leads while a light desk is topped up
- * to the same round number.
+ * How many database leads each desk already received for this work date.
+ * The daily run tops desks up to their quota instead of handing out a second
+ * full round, so calling it twice in one day can never double-assign.
  */
-async function openWorkloadByAgent(workDate: string): Promise<Map<string, number>> {
+async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
   const supabaseAdmin = await admin();
   const counts = new Map<string, number>();
   for (let from = 0; ; from += 1000) {
@@ -166,7 +138,7 @@ async function openWorkloadByAgent(workDate: string): Promise<Map<string, number
       .from("leads")
       .select("assigned_to")
       .eq("work_date", workDate)
-      .eq("work_state", "pending")
+      .eq("assignment_source", "lead_database")
       .not("assigned_to", "is", null)
       .range(from, from + 999);
     (data ?? []).forEach((row) => {
@@ -177,98 +149,6 @@ async function openWorkloadByAgent(workDate: string): Promise<Map<string, number
   }
   return counts;
 }
-
-/**
- * Balancing step, run before any database lead is handed out.
- *
- * A desk carrying MORE pending work than its target hands its movable excess to
- * desks sitting BELOW their target, exactly up to each receiver's free capacity
- * — so nobody is pushed past the target and nobody loses a lead they already
- * worked on. What may move is decided by `movableExcessLeadIds` (pending, never
- * called, no call in flight, not a protected manual hand-out) and every move is
- * written to the lead's assignment history and timeline.
- */
-async function rebalanceSurplusPending(input: {
-  workDate: string;
-  agents: PoolAgent[];
-  quotas: Map<string, number>;
-  held: Map<string, number>;
-}): Promise<number> {
-  const supabaseAdmin = await admin();
-  const { workDate, agents, quotas, held } = input;
-  const { planAllocation } = await import("@/lib/workday-allocation");
-  const { movableExcessLeadIds } = await import("@/lib/workday-allocation.server");
-
-  // What each desk may actually give away, proven lead by lead.
-  const loads = [];
-  const movableIds = new Map<string, string[]>();
-  for (const agent of agents) {
-    const quota = quotas.get(agent.id) ?? 0;
-    const pending = held.get(agent.id) ?? 0;
-    const excess = Math.max(0, pending - quota);
-    const ids = excess > 0 ? await movableExcessLeadIds(agent.id, workDate, excess) : [];
-    movableIds.set(agent.id, ids);
-    loads.push({ id: agent.id, quota, pending, movableExcess: ids.length });
-  }
-
-  // The plan never exceeds a receiver's capacity, so no desk can pass its target.
-  const plan = planAllocation(loads, 0);
-  if (plan.transfers.length === 0) return 0;
-
-  const nameOf = new Map(agents.map((a) => [a.id, a.name]));
-  let moved = 0;
-
-  for (const transfer of plan.transfers) {
-    const queue = movableIds.get(transfer.from) ?? [];
-    const batchIds = queue.splice(0, transfer.count);
-    for (let start = 0; start < batchIds.length; start += 100) {
-      const ids = batchIds.slice(start, start + 100);
-      // The `assigned_to = donor` + `pending` guard makes a retry, a cron rerun
-      // or a simultaneous web/app run harmless: a lead already moved is skipped.
-      const { data: updated } = await supabaseAdmin
-        .from("leads")
-        .update({
-          assigned_to: transfer.to,
-          assigned_agent_id: transfer.to,
-          work_date: workDate,
-        })
-        .in("id", ids)
-        .eq("assigned_to", transfer.from)
-        .eq("work_state", "pending")
-        .eq("call_attempts", 0)
-        .is("last_call_at", null)
-        .select("id");
-      const movedIds = (updated ?? []).map((row) => row.id);
-      if (movedIds.length === 0) continue;
-
-      const fromName = nameOf.get(transfer.from) ?? "—";
-      const toName = nameOf.get(transfer.to) ?? "—";
-      await supabaseAdmin.from("lead_assignments").insert(
-        movedIds.map((leadId) => ({
-          lead_id: leadId,
-          from_agent_id: transfer.from,
-          to_agent_id: transfer.to,
-          source: "rebalance",
-          note: `ভারসাম্য: ${fromName} → ${toName} (${workDate})`,
-        })),
-      );
-      await supabaseAdmin.from("lead_events").insert(
-        movedIds.map((leadId) => ({
-          lead_id: leadId,
-          agent_id: transfer.to,
-          kind: "workday_moved" as const,
-          detail: `স্বয়ংক্রিয় ভারসাম্য: অতিরিক্ত পেন্ডিং লিড ${fromName} থেকে ${toName}-কে দেওয়া হয়েছে (${workDate})`,
-        })),
-      );
-
-      moved += movedIds.length;
-      held.set(transfer.from, (held.get(transfer.from) ?? 0) - movedIds.length);
-      held.set(transfer.to, (held.get(transfer.to) ?? 0) + movedIds.length);
-    }
-  }
-  return moved;
-}
-
 
 /**
  * Hands `perAgent` database leads to every active agent for today.
@@ -290,15 +170,9 @@ export async function distributeDailyLeads(options: {
   const { quotaFor } = await import("@/lib/lead-quota");
   const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
 
-  // Pending first: today's unfinished leads fill the quota, and only the gap
-  // left over is topped up from the database. Idempotent — a second run in the
-  // same day fills real gaps only.
-  const held = await openWorkloadByAgent(today);
-
-  // Balance first: a desk over its quota passes its untouched surplus to desks
-  // under theirs, so the database is only tapped for what the floor truly lacks.
-  await rebalanceSurplusPending({ workDate: today, agents, quotas, held });
-
+  // Idempotency: what each desk already holds for today is subtracted from its
+  // quota, so a second run (cron retry, double click) only fills real gaps.
+  const held = await assignedTodayByAgent(today);
   const shortfallByAgent = new Map<string, number>();
   for (const agent of agents) {
     const quota = quotas.get(agent.id) ?? options.perAgent;
@@ -493,15 +367,6 @@ export async function distributeDailyLeads(options: {
   if (shortage)
     await raiseShortageAlert({ remaining, need: fullRound, perAgent: options.perAgent });
 
-  // Recount from the database after the moves, and tell HQ only when something
-  // genuinely needs a human: excess that could not be handed over, or a shortage.
-  {
-    const { floorAllocationStatus, notifyAllocationProblems } = await import(
-      "@/lib/workday-allocation.server"
-    );
-    await notifyAllocationProblems(await floorAllocationStatus(today));
-  }
-
   return {
     moved,
     agents: agents.length,
@@ -554,7 +419,7 @@ export async function dailyPlan(): Promise<{ perAgent: number; lastRunDate: stri
     .eq("id", "lead_pool_daily")
     .maybeSingle();
   const state = (data?.data ?? {}) as { perAgent?: number; lastRunDate?: string };
-  return { perAgent: state.perAgent ?? 30, lastRunDate: state.lastRunDate ?? null };
+  return { perAgent: state.perAgent ?? 25, lastRunDate: state.lastRunDate ?? null };
 }
 
 export async function saveDailyPlan(input: { perAgent: number; lastRunDate?: string | null }) {

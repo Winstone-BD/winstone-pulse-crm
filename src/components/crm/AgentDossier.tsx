@@ -3,14 +3,8 @@ import { useMemo } from "react";
 
 import { CallEntry } from "@/components/crm/LeadDossier";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { talkTimeOf } from "@/lib/call-evidence";
-import type {
-  CallRecording,
-  CanonicalCall,
-  Lead,
-  Profile,
-  WhatsappMessage,
-} from "@/lib/crm-data";
+import type { CallRecording, Lead, Profile, WhatsappMessage } from "@/lib/crm-data";
+import { CONNECTED_THRESHOLD_SECONDS } from "@/lib/crm-data";
 import { formatDuration, formatTalkTime, relativeTime } from "@/lib/crm-format";
 
 /** Full audit trail for one agent: every recording with AI audit cards and transcript. */
@@ -18,7 +12,6 @@ export function AgentDossier({
   agent,
   leads,
   calls,
-  callEvents,
   messages,
   open,
   onOpenChange,
@@ -26,7 +19,6 @@ export function AgentDossier({
   agent: Profile | null;
   leads: Lead[];
   calls: CallRecording[];
-  callEvents: CanonicalCall[];
   messages: WhatsappMessage[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,17 +33,8 @@ export function AgentDossier({
   const touches = messages.filter(
     (m) => m.agent_id === agent?.id && m.sender_type === "agent",
   ).length;
-  // Attempts, conversations and talk time come from the canonical call layer —
-  // the same numbers the agent desk, HQ and the daily report show.
-  const myCalls = useMemo(
-    () => callEvents.filter((c) => c.agentId === agent?.id),
-    [callEvents, agent?.id],
-  );
-  const connectedCount = myCalls.filter((c) => c.verifiedConnected).length;
-  const talkTime = talkTimeOf(
-    myCalls.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
-  );
-  const talk = talkTime.seconds;
+  const connected = agentCalls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
+  const talk = agentCalls.reduce((s, c) => s + c.duration_seconds, 0);
   const verified = agentCalls.filter((c) => c.is_two_sided || c.sync_status === "verified").length;
 
   return (
@@ -73,16 +56,12 @@ export function AgentDossier({
                 <Stat
                   icon={<PhoneCall className="size-3" />}
                   label="কল / কথা হয়েছে"
-                  value={`${myCalls.length} / ${connectedCount}`}
+                  value={`${agentCalls.length} / ${connected.length}`}
                 />
                 <Stat
                   icon={<Timer className="size-3" />}
                   label="কথা · গড়"
-                  value={
-                    talkTime.measuredCalls
-                      ? `${formatTalkTime(talk)} · ${formatDuration(talk / talkTime.measuredCalls)}`
-                      : "সময় অনুপলব্ধ"
-                  }
+                  value={`${formatTalkTime(talk)} · ${connected.length ? formatDuration(talk / connected.length) : "--:--"}`}
                 />
                 <Stat
                   icon={<MessageCircle className="size-3" />}

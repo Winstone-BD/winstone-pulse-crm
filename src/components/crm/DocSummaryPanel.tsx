@@ -52,10 +52,10 @@ export function DocSummaryPanel() {
   };
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <FileText className="size-4 text-primary" />
-        <h2 className="section-title">নথি আপলোড ও স্মার্ট সারসংক্ষেপ</h2>
+        <h2 className="text-sm font-semibold">নথি আপলোড ও স্মার্ট সারসংক্ষেপ</h2>
       </header>
       <p className="mt-1 text-xs text-muted-foreground">
         ডক, এক্সেল, পিডিএফ বা ছবি আপলোড করুন — AI এজেন্টের নাম অনুযায়ী সাজানো সারসংক্ষেপ দেবে।

@@ -53,13 +53,4 @@
 - [ ] ঝুলে থাকা সংযোগ (docs/integrations.md-এ তালিকাভুক্ত): Firebase পুশ, Paddle go-live, ইমেইল DNS — সবই ব্যবহারকারীর অনুমোদন/ধাপের অপেক্ষায়
 # Roadmap
 - [x] Release APK with black-gold theme (in progress)
-- [ ] Daily balanced lead distribution — pending-first, exact quota, idempotent, no silent reassignment
-- [ ] Android APK v2.10 (versionCode 21) — daily KPI tiles matching authoritative web API (target/assigned/calls/connected/qualified/follow-ups/site-visits/bookings/excess-pending)
-- [ ] Verify Android KPI numbers against web API; offline-safe reconciliation
-- [ ] Connect Google Docs, Google Drive, Google Sheets in real workspace (after above)
-- [ ] Fix runtime error: TypeError: Importing a module script failed
-
-## 2026-09-20 — Dashboard subpages
-- [x] Agent, Coordinator, HQ, Reports ও IT Console-কে URL-ভিত্তিক সাবপেজে ভাগ করা
-- [x] সব পুরোনো dashboard URL, role gate ও canonical data logic অক্ষত রাখা
-- [x] mobile/desktop navigation ও child-route metadata যাচাই
+- [x] Connect Google Docs, Google Drive, Google Sheets (new workspace)

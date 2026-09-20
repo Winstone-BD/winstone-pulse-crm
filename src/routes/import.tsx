@@ -110,9 +110,9 @@ function ImportScreen() {
   });
 
   return (
-    <div className="page-stack">
+    <div className="space-y-5">
       <header className="space-y-1">
-        <h1 className="page-title flex items-center gap-2">
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight">
           <FileUp className="size-5 text-primary" /> লিড ইমপোর্ট
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -155,7 +155,7 @@ function ImportScreen() {
 
       <section className="card-elevated space-y-3 p-4">
         <header className="space-y-1">
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-sm font-bold tracking-tight">
             <Sheet className="size-4 text-primary" /> Google Sheet থেকে লিড আনুন
           </h2>
           <p className="text-xs text-muted-foreground">
@@ -207,7 +207,7 @@ function ImportScreen() {
         <section className="card-elevated space-y-3 p-4">
           <header className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="section-title">প্রিভিউ</h2>
+              <h2 className="text-sm font-bold tracking-tight">প্রিভিউ</h2>
               <p className="text-xs text-muted-foreground">
                 {fileName} · {rows.length}টি লিড
               </p>
@@ -241,7 +241,7 @@ function ImportScreen() {
           </header>
 
           {rows.length === 0 ? (
-            <p className="empty-note">
+            <p className="text-xs text-muted-foreground">
               এই ফাইলে নাম ও ফোন নম্বরসহ কোনো সারি নেই।
             </p>
           ) : (

@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { decideAccount, listAccountRequests } from "@/lib/accounts.functions";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
-import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "অপেক্ষমাণ",
@@ -44,10 +43,10 @@ export function AccountApprovals() {
   const pending = accounts.filter((a) => a.approval_status === "pending");
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <header className="flex items-center gap-2">
         <ShieldCheck className="size-4 text-primary" />
-        <h2 className="section-title">অ্যাকাউন্ট অনুমোদন</h2>
+        <h2 className="text-sm font-semibold">অ্যাকাউন্ট অনুমোদন</h2>
         <span className="ml-auto text-xs text-muted-foreground">{pending.length}টি অপেক্ষমাণ</span>
       </header>
 
@@ -56,8 +55,8 @@ export function AccountApprovals() {
       )}
 
       {!list.isPending && accounts.length === 0 && (
-        <p className="empty-note">
-          এখনো কোনো অনুরোধ নেই। নতুন এজেন্ট সাইন আপ করলে এখানে দেখা যাবে।
+        <p className="mt-3 text-sm text-muted-foreground">
+          এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}
 
@@ -68,13 +67,13 @@ export function AccountApprovals() {
               <p className="truncate text-sm font-medium">{account.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-                এজেন্ট ·{" "}
+                {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"} ·{" "}
                 {STATUS_LABELS[account.approval_status] ?? account.approval_status}
               </p>
             </div>
             {account.approval_status === "approved" ? (
               <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                এজেন্ট
+                {account.role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
               </span>
             ) : (
               <div className="flex gap-1.5">
@@ -90,18 +89,24 @@ export function AccountApprovals() {
                   )}
                   এজেন্ট
                 </Button>
-                <ConfirmAction
-                  title="অ্যাকাউন্টটি বাদ দেবেন?"
-                  description={`${account.name}-এর অনুরোধ বাতিল হবে এবং তিনি ডেস্কে ঢুকতে পারবেন না।`}
-                  confirmLabel="হ্যাঁ, বাদ দিন"
+                <Button
+                  size="sm"
+                  variant="secondary"
                   disabled={act.isPending}
-                  onConfirm={() => act.mutate({ profileId: account.id, decision: "reject" })}
-                  trigger={
-                    <Button size="sm" variant="ghost" disabled={act.isPending}>
-                      <X className="size-3.5" /> বাদ দিন
-                    </Button>
+                  onClick={() =>
+                    act.mutate({ profileId: account.id, decision: "approve_coordinator" })
                   }
-                />
+                >
+                  কোঅর্ডিনেটর
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={act.isPending}
+                  onClick={() => act.mutate({ profileId: account.id, decision: "reject" })}
+                >
+                  <X className="size-3.5" /> বাদ দিন
+                </Button>
               </div>
             )}
           </li>

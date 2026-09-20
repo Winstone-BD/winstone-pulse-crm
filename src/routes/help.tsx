@@ -56,7 +56,7 @@ function HelpCentre() {
           <span className="grid mx-auto size-12 place-items-center rounded-full bg-primary/10">
             <LifeBuoy className="size-5 text-primary" />
           </span>
-          <h1 className="hero-title mt-4">Help centre</h1>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">Help centre</h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
             Search our guides, or{" "}
             <Link to="/support" className="text-primary underline-offset-2 hover:underline">
@@ -93,7 +93,7 @@ function HelpCentre() {
               if (!items.length) return null;
               return (
                 <section key={category.id ?? "uncategorised"}>
-                  <h2 className="section-title uppercase tracking-wide text-muted-foreground">
+                  <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                     <BookOpen className="size-4" />
                     {category.name}
                   </h2>

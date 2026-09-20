@@ -13,9 +13,7 @@ import {
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { talkTimeOf } from "@/lib/call-evidence";
-import { useSnapshot } from "@/lib/crm-data";
-import { dhakaDateKey } from "@/lib/daily-performance";
+import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
 import { useMyAccount } from "@/lib/session";
 
@@ -33,7 +31,7 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <div className="card-elevated card-pad">
+    <div className="card-elevated p-3">
       <div className="flex items-center gap-2">
         <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
           {icon}
@@ -62,23 +60,18 @@ function StatCard({
 /** Reference-style agent dashboard hero: greeting, KPI tiles, activity feed, quick actions. */
 export function AgentOverview() {
   const { account } = useMyAccount();
-  const { leads, callEvents, messages } = useSnapshot();
+  const { leads, calls, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    // Asia/Dhaka day + canonical calls, so this tile matches HQ and the report.
-    const today = dhakaDateKey();
-    const yesterday = dhakaDateKey(new Date(Date.now() - 86_400_000));
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => dhakaDateKey(new Date(r.created_at)) === day);
+      rows.filter((r) => new Date(r.created_at).toDateString() === day);
 
-    const todayCalls = callEvents.filter((c) => dhakaDateKey(new Date(c.at)) === today);
-    const connected = todayCalls.filter((c) => c.verifiedConnected).length;
-    const talkTime = talkTimeOf(
-      todayCalls.map((c) => ({
-        connected: c.verifiedConnected,
-        verifiedSeconds: c.verifiedSeconds,
-      })),
-    );
+    const todayCalls = onDay(calls, today);
+    const connected = todayCalls.filter(
+      (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
+    ).length;
     const newLeads = onDay(leads, today).length;
     const target = Math.max(leads.filter((l) => l.work_state !== "completed").length, 1);
     const done = leads.filter((l) => l.work_state === "completed").length;
@@ -89,28 +82,26 @@ export function AgentOverview() {
       todayCalls: todayCalls.length,
       connected,
       connectRate: todayCalls.length ? Math.round((connected / todayCalls.length) * 100) : 0,
-      talk: talkTime.seconds,
-      talkAvailable: talkTime.measuredCalls > 0,
+      talk: todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0),
       newLeads,
       newLeadsDelta: newLeads - onDay(leads, yesterday).length,
       hot: leads.filter((l) => l.temperature === "hot").length,
       followUp: leads.filter((l) => l.status === "follow_up").length,
       whatsapp: onDay(messages, today).length,
     };
-  }, [callEvents, leads, messages]);
+  }, [calls, leads, messages]);
 
   const score = stats.target ? Math.round((stats.done / stats.target) * 100) : 0;
 
   const activity = useMemo(() => {
     const rows = [
-      ...callEvents.map((c) => ({
+      ...calls.map((c) => ({
         id: `c-${c.id}`,
-        at: c.at,
-        title: c.verifiedConnected
-          ? c.verifiedSeconds !== null
-            ? `কথা হয়েছে · ${formatTalkTime(c.verifiedSeconds)}`
-            : "কথা হয়েছে · সময় অনুপলব্ধ"
-          : "কেউ ধরেনি — আবার কল হবে",
+        at: c.created_at,
+        title:
+          c.duration_seconds > CONNECTED_THRESHOLD_SECONDS
+            ? `কল হয়েছে · ${formatTalkTime(c.duration_seconds)}`
+            : "কল ধরা হয়নি",
         icon: <PhoneCall className="size-3.5" />,
       })),
       ...messages.map((m) => ({
@@ -136,7 +127,7 @@ export function AgentOverview() {
           minute: "2-digit",
         }),
       }));
-  }, [callEvents, leads, messages]);
+  }, [calls, leads, messages]);
 
   const name = account?.profile?.name ?? "এজেন্ট";
   const employeeId = account?.profile?.employee_id ?? "";
@@ -145,7 +136,7 @@ export function AgentOverview() {
     <section className="space-y-3">
       <div className="card-elevated flex flex-wrap items-end justify-between gap-3 p-4">
         <div>
-          <h2 className="section-title">এজেন্ট ড্যাশবোর্ড</h2>
+          <h2 className="text-lg font-bold tracking-tight sm:text-xl">এজেন্ট ড্যাশবোর্ড</h2>
           <p className="text-xs text-muted-foreground">
             স্বাগতম, <span className="font-semibold text-foreground">{name}</span>
             {employeeId ? ` (${employeeId})` : ""} — আজকের লক্ষ্য পূরণ করে ফেলুন!
@@ -207,7 +198,7 @@ export function AgentOverview() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <div className="card-elevated card-pad lg:col-span-2">
+        <div className="card-elevated p-4 lg:col-span-2">
           <h3 className="text-sm font-semibold">আজকের কাজের ধারা</h3>
           <ul className="mt-3 space-y-2">
             {activity.map((row) => (
@@ -229,17 +220,17 @@ export function AgentOverview() {
           <h3 className="text-sm font-semibold">দ্রুত কাজ</h3>
           <div className="grid gap-2">
             <Button asChild size="sm" className="justify-start">
-              <Link to="/desk/leads">
+              <Link to="/desk" hash="leads">
                 <PhoneCall className="size-4" /> কল শুরু করুন
               </Link>
             </Button>
             <Button asChild size="sm" variant="secondary" className="justify-start">
-              <Link to="/desk/follow-ups">
+              <Link to="/desk" hash="calendar">
                 <CalendarClock className="size-4" /> ফলো-আপ দেখুন
               </Link>
             </Button>
             <Button asChild size="sm" variant="secondary" className="justify-start">
-              <Link to="/desk/messages">
+              <Link to="/desk" hash="whatsapp">
                 <MessageCircle className="size-4" /> হোয়াটসঅ্যাপ ইনবক্স
               </Link>
             </Button>
@@ -248,9 +239,7 @@ export function AgentOverview() {
             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Timer className="size-3.5" /> আজকের কথার সময়
             </p>
-            <p className="tabular mt-1 text-lg font-bold">
-              {stats.talkAvailable ? formatTalkTime(stats.talk) : "সময় অনুপলব্ধ"}
-            </p>
+            <p className="tabular mt-1 text-lg font-bold">{formatTalkTime(stats.talk)}</p>
             <p className="text-[10px] text-muted-foreground">
               {stats.whatsapp}টি হোয়াটসঅ্যাপ মেসেজ আজ
             </p>

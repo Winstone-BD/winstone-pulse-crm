@@ -62,12 +62,6 @@ import com.winstone.connect.data.CallRow
 import com.winstone.connect.data.Lead
 import com.winstone.connect.data.shortTime
 import com.winstone.connect.data.statusLabel
-import com.winstone.connect.data.dhakaToday
-import com.winstone.connect.data.isTaskDone
-import com.winstone.connect.data.isRetryWaiting
-import com.winstone.connect.data.isUpcomingTask
-import com.winstone.connect.data.taskTrail
-import com.winstone.connect.data.waitingDays
 import com.winstone.connect.data.remote.WinstoneApi
 import androidx.compose.ui.platform.LocalContext
 import com.winstone.connect.data.AgentSession
@@ -282,22 +276,8 @@ fun DeskScreen(
                             }
                         }
                         TAB_LEADS -> {
-                            // আজকের/বকেয়া কাজ আগে, তার নিচে আগামী দিনের টাস্ক আলাদা করে।
-                            val today = dhakaToday()
-                            val upcoming = leads.filter { isUpcomingTask(it, today) && !isTaskDone(it) }
-                            // যে নম্বরে কেউ ধরেনি সেটি কিউর পেছনে — আগে না-করা কল।
-                            val current = leads
-                                .filter { !isUpcomingTask(it, today) || isTaskDone(it) }
-                                .sortedBy { if (isRetryWaiting(it)) 1 else 0 }
-                            // সার্ভারের হিসাব — ওয়েব CRM-এ ঠিক এই সংখ্যাগুলোই দেখায়।
-                            state.data?.allocation?.let { alloc ->
-                                item { AllocationBanner(alloc) }
-                            }
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
-                            if (current.isNotEmpty()) {
-                                item { SectionTitle("আজকের কাজ (${current.count { !isTaskDone(it) }})", null) {} }
-                            }
-                            items(current) { lead ->
+                            items(leads) { lead ->
                                 LeadCard(
                                     lead = lead,
                                     recordingMode = state.recordingMode,
@@ -305,18 +285,6 @@ fun DeskScreen(
                                     onWhatsApp = { whatsappLead = lead },
                                     onCall = { startCall(lead) },
                                 )
-                            }
-                            if (upcoming.isNotEmpty()) {
-                                item { SectionTitle("পরের দিনের টাস্ক (${upcoming.size})", null) {} }
-                                items(upcoming) { lead ->
-                                    LeadCard(
-                                        lead = lead,
-                                        recordingMode = state.recordingMode,
-                                        recordingReason = state.recordingReason,
-                                        onWhatsApp = { whatsappLead = lead },
-                                        onCall = { startCall(lead) },
-                                    )
-                                }
                             }
                         }
                         TAB_CALLS -> {
@@ -356,7 +324,7 @@ fun DeskScreen(
                                 if (coach.nextSteps.isNotEmpty()) item { CoachCard("পরবর্তী ধাপ", coach.nextSteps) }
                             }
                             item { SectionTitle("আজকের কল লগ", null) {} }
-                            if (calls.isEmpty()) item { EmptyNote("এখনো কোনো কল রিপোর্ট জমা হয়নি।") }
+                            if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
                             items(calls) { CallCard(it, leads) }
                         }
                         else -> {
@@ -606,22 +574,19 @@ private fun SectionTitle(title: String, action: String?, onAction: () -> Unit) {
 /** ছয়টি টাইলে আজকের অবস্থা — স্ক্রিনশটের KPI গ্রিডের মতো। */
 @Composable
 private fun KpiGrid(leads: List<Lead>, calls: List<CallRow>) {
-    // কল ও কথার হিসাব ফোনে গোনা হয় না — সেটা সার্ভারের এক হিসাব (ড্যাশবোর্ড টাইল)।
-    // এখানে শুধু হাতে থাকা লিডের অবস্থা, আর ফোনে জমা থাকা কলের সংখ্যা।
+    val connected = calls.count { it.durationSeconds > 0 }
+    val talkMinutes = calls.sumOf { it.durationSeconds } / 60
+    val avgSeconds = if (calls.isNotEmpty()) calls.sumOf { it.durationSeconds } / calls.size else 0
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             KpiTile("নতুন লিড", leads.count { it.status == "pending" }.toString(), "অপেক্ষমাণ", Modifier.weight(1f))
+            KpiTile("আজকের কল", calls.size.toString(), "$connected কথা", Modifier.weight(1f))
             KpiTile("ফলো-আপ", leads.count { it.status == "follow_up" }.toString(), "নির্ধারিত", Modifier.weight(1f))
-            KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            KpiTile("জমা দেওয়া কল", calls.size.toString(), "রিপোর্ট", Modifier.weight(1f))
-            KpiTile(
-                "কথা হয়েছে",
-                calls.count { it.connected }.toString(),
-                "প্রমাণসহ",
-                Modifier.weight(1f),
-            )
+            KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
+            KpiTile("কথা", "$talkMinutes মি.", "মোট", Modifier.weight(1f))
+            KpiTile("গড় সময়", "$avgSeconds সে.", "প্রতি কলে", Modifier.weight(1f))
         }
     }
 }
@@ -827,12 +792,6 @@ private fun LeadCard(
             color = if (lead.status == "pending") WinAmber else WinGreen,
             fontSize = 12.sp,
         )
-        // টাস্কের সময়রেখা: কবে এসেছে, কত দিন অপেক্ষায়, নাকি পরের দিনের কাজ।
-        Text(
-            taskTrail(lead),
-            fontSize = 11.sp,
-            color = if (!isTaskDone(lead) && waitingDays(lead) > 2) WinAmber else WinInkMuted,
-        )
         lead.notes?.let { Text(it, fontSize = 12.sp, color = WinInkMuted) }
         Spacer(Modifier.height(6.dp))
         Text(recordingLine, fontSize = 12.sp, color = recordingColor)
@@ -858,35 +817,22 @@ private fun CallCard(call: CallRow, leads: List<Lead>) {
     val leadName = leads.firstOrNull { it.id == call.leadId }?.name ?: call.phone
     WinCard {
         Text(leadName, fontWeight = FontWeight.SemiBold)
-        // ওয়েব Lead 360-এর একই লেখা: প্রমাণ ছাড়া "কথা হয়েছে" নয়, আর সময় না
-        // মাপা থাকলে বানানো সেকেন্ড নয় — "সময় অনুপলব্ধ"।
-        val timeText = call.verifiedSeconds?.let { "$it সেকেন্ড" } ?: "সময় অনুপলব্ধ"
         Text(
-            "${if (call.connected) "কথা হয়েছে" else "কেউ ধরেনি"} · $timeText · ${shortTime(call.createdAt)}",
+            "${call.durationSeconds} সেকেন্ড · ${shortTime(call.createdAt)}",
             fontSize = 12.sp,
             color = WinInkMuted,
         )
         Text(
             when (call.syncStatus) {
-                "failed" -> "অডিও সার্ভারে ওঠেনি"
-                "verified" -> "অডিও যাচাই হয়েছে"
-                "report_only" -> "রিপোর্ট জমা হয়েছে · অডিও ফাইল আসেনি"
-                else -> "অডিও আপলোড হয়েছে"
+                "failed" -> "সার্ভারে ওঠেনি"
+                "verified" -> "যাচাই হয়েছে"
+                else -> "আপলোড হয়েছে"
             },
             fontSize = 12.sp,
             color = if (call.syncStatus == "failed") WinRed else WinGreen,
         )
         call.summary?.let { Text(it, fontSize = 13.sp) }
         call.sentiment?.let { Text("AI মনোভাব: $it", fontSize = 12.sp, color = WinInkMuted) }
-        if (call.summary == null && call.syncStatus != "report_only") {
-            Text(
-                if (call.analysisStatus == "pending" || call.analysisStatus == "processing")
-                    "এআই সারসংক্ষেপ তৈরি হচ্ছে"
-                else "এআই সারসংক্ষেপ ও সুর বিশ্লেষণ এখনো হয়নি",
-                fontSize = 12.sp,
-                color = WinInkMuted,
-            )
-        }
     }
 }
 
@@ -901,65 +847,6 @@ private fun CoachCard(title: String, lines: List<String>) {
 @Composable
 private fun EmptyNote(text: String) {
     Text(text, color = WinInkMuted, fontSize = 13.sp)
-}
-
-/**
- * আজকের কাজের হিসাব — পুরোটাই সার্ভারের গণনা, ওয়েব CRM-এর সাথে হুবহু এক।
- * অফলাইনে সর্বশেষ সিঙ্ক করা সংখ্যাই দেখায়, নিজে কিছু হিসাব বা বদল করে না।
- */
-@Composable
-private fun AllocationBanner(alloc: com.winstone.connect.data.Allocation) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(WinCreamDeep, RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("আজকের কাজের হিসাব", fontWeight = FontWeight.Bold, color = WinGreen)
-            Text("${alloc.pending} / ${alloc.quota}", fontWeight = FontWeight.Bold)
-        }
-        Text(
-            buildString {
-                append("আগের দিনের বাকি ${alloc.carriedOver}টি")
-                alloc.carriedFrom?.let { append(" ($it)") }
-                append(" • ডেটাবেজ থেকে নতুন ${alloc.newFromDatabase}টি")
-                if (alloc.receivedFromOthers > 0) append(" • অন্যের থেকে পাওয়া ${alloc.receivedFromOthers}টি")
-                append(" • শেষ ${alloc.completed}টি")
-            },
-            fontSize = 12.sp,
-            color = WinInkMuted,
-        )
-        if (alloc.excess > 0) {
-            Text(
-                "লক্ষ্যের চেয়ে ${alloc.excess}টি বেশি পেন্ডিং (অতিরিক্ত/মীমাংসাধীন) — একটিও মুছে যায়নি, " +
-                    "কাজ শুরু না হওয়া অতিরিক্ত লিড কম চাপে থাকা সহকর্মীর কাছে যেতে পারে।",
-                fontSize = 12.sp,
-                color = WinAmber,
-            )
-        }
-        if (alloc.movedToOthers > 0) {
-            Text(
-                "আজ আপনার ${alloc.movedToOthers}টি অতিরিক্ত লিড ভারসাম্যের জন্য সহকর্মীর কাছে গেছে।",
-                fontSize = 12.sp,
-                color = WinInkMuted,
-            )
-        }
-        if (alloc.gap > 0) {
-            Text(
-                if (alloc.poolShortage > 0)
-                    "আর ${alloc.gap}টি লিড দরকার — হেড ডেটাবেজে ${alloc.poolShortage}টির ঘাটতি আছে।"
-                else "আর ${alloc.gap}টি লিড দরকার — পরের স্বয়ংক্রিয় বণ্টনে যোগ হবে।",
-                fontSize = 12.sp,
-                color = WinInkMuted,
-            )
-        }
-    }
 }
 
 @Composable
@@ -1199,8 +1086,7 @@ private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
             Text(
                 listOfNotNull(
                     if (row.connected) "কথা হয়েছে" else "কথা হয়নি",
-                    // সময় না মাপা থাকলে বানানো ০ সেকেন্ড নয়।
-                    if (row.durationSeconds > 0) "${row.durationSeconds} সেকেন্ড" else "সময় অনুপলব্ধ",
+                    "${row.durationSeconds} সেকেন্ড",
                     row.category,
                     if (row.status == "pending") "জমা হয়নি" else null,
                 ).joinToString(" · "),

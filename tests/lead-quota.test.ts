@@ -5,7 +5,7 @@ import { SUPPORT_CATEGORIES, categoryLabel } from "@/lib/team-support-shared";
 
 describe("daily quota", () => {
   it("gives every ordinary desk the floor-wide round", () => {
-    expect(DEFAULT_DAILY_QUOTA).toBe(30);
+    expect(DEFAULT_DAILY_QUOTA).toBe(25);
     expect(quotaFor("WIN2601", 25)).toBe(25);
     expect(hasFixedQuota("WIN2601")).toBe(false);
   });

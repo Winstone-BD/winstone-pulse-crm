@@ -1,15 +1,15 @@
-import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
-import { FloorAllocationPanel } from "@/components/crm/AllocationStatusCard";
-import { FloorPerformancePanel } from "@/components/crm/DailyPerformanceCard";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
+import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
 import { ExecutiveBrief } from "@/components/crm/ExecutiveBrief";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
+import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
@@ -18,11 +18,13 @@ import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
+import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
-import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
+import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
+import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
 
-import { buildTimeline, useSnapshot } from "@/lib/crm-data";
+import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/hq")({
   head: () => ({
@@ -49,14 +51,7 @@ export const Route = createFileRoute("/hq")({
   component: ControlBoardPage,
 });
 
-const HQ_NAV = [
-  { to: "/hq", label: "লাইভ সারাংশ" },
-  { to: "/hq/performance", label: "পারফরম্যান্স" },
-  { to: "/hq/operations", label: "অপারেশন" },
-  { to: "/hq/briefs", label: "ব্রিফ ও বিল" },
-] as const;
-
-export function ControlBoardPage() {
+function ControlBoardPage() {
   return (
     <AppShell>
       <RoleGate
@@ -73,12 +68,32 @@ export function ControlBoardPage() {
 }
 
 function ControlBoard() {
-  const { pathname } = useLocation();
-  const { profiles, leads, calls, callEvents, messages, events, isPending } = useSnapshot();
+  const { profiles, leads, calls, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
   /** Which number card / mix-card row the executive drilled into. */
   const [drill, setDrill] = useState<DrillSpec | null>(null);
+
+  const agents = useMemo(
+    () =>
+      profiles.filter(
+        (p) =>
+          (p.role === "agent" || p.role === "team_leader") &&
+          p.is_active &&
+          p.approval_status === "approved",
+      ),
+    [profiles],
+  );
+  const stats = useMemo(
+    () => buildAgentStats(profiles, leads, calls, messages),
+    [profiles, leads, calls, messages],
+  );
+
+  const chartData = stats.map((row) => ({
+    name: row.profile.name.split(" ")[0] ?? row.profile.name,
+    connected: row.connected,
+    talkMinutes: Math.round(row.talkSeconds / 60),
+  }));
 
   const funnelRows = useMemo(() => {
     const order: { key: string; label: string }[] = [
@@ -110,24 +125,79 @@ function ControlBoard() {
       }));
   }, [leads]);
 
+  const sentimentRows = useMemo(() => {
+    const labels: Record<string, string> = {
+      positive: "পজিটিভ",
+      neutral: "নিউট্রাল",
+      negative: "নেগেটিভ",
+    };
+    const counts = new Map<string, number>();
+    for (const call of calls) {
+      if (!call.sentiment) continue;
+      counts.set(call.sentiment, (counts.get(call.sentiment) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, value]) => ({
+        label: labels[key] ?? key,
+        value,
+        calls: calls.filter((c) => c.sentiment === key),
+      }));
+  }, [calls]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
 
   return (
     <>
-      <div className="page-stack">
+      <div className="space-y-8">
         <HqHeader />
-         <DashboardSubnav label="এক্সিকিউটিভ এইচকিউ অংশ" items={HQ_NAV} />
-         {pathname === "/hq" && <><ExecutiveOverview leads={leads} events={events} /><FloorPerformancePanel /><SmartInsightStrip scope="floor" /></>}
-         {pathname === "/hq/operations" && <><FloorAllocationPanel /><CommandAgentPanel surface="hq" /><AskHqPanel /></>}
-         {pathname === "/hq/briefs" && <><ExecutiveBrief /><ShiftSummaryPanel scope="hq" /><ServiceBillPanel mode="hq" /></>}
-         {pathname === "/hq/performance" && <><HqClassificationTiles leads={leads} onDrill={setDrill} /><HqMixCards
+
+        <ExecutiveOverview
+          profiles={profiles}
+          leads={leads}
+          calls={calls}
+          messages={messages}
+          events={events}
+          onSelectAgent={setOpenAgentId}
+        />
+
+        <SmartInsightStrip scope="floor" />
+
+        <ExecutiveBrief />
+
+        <ServiceBillPanel mode="hq" />
+
+        <ShiftSummaryPanel scope="hq" />
+
+        <CommandAgentPanel surface="hq" />
+
+        <AskHqPanel />
+
+        <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
+
+        <HqClassificationTiles leads={leads} onDrill={setDrill} />
+
+        <HqMixCards
           funnelRows={funnelRows}
           sourceRows={sourceRows}
+          sentimentRows={sentimentRows}
           loading={isPending}
           onDrill={setDrill}
-         /></>}
+        />
+
+        <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
+
+        <HqTalkChart chartData={chartData} />
+
+        <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
+
+        <HqRecentSummaries
+          calls={calls}
+          leads={leads}
+          profiles={profiles}
+          onSelectLead={setOpenLeadId}
+        />
       </div>
 
       <LeadDossier
@@ -141,7 +211,6 @@ function ControlBoard() {
         agent={openAgent}
         leads={leads}
         calls={calls}
-        callEvents={callEvents}
         messages={messages}
         open={openAgentId !== null}
         onOpenChange={(next) => !next && setOpenAgentId(null)}

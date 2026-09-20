@@ -31,7 +31,7 @@ export function SelfClaimsFeed({ limit = 8 }: { limit?: number }) {
   return (
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="section-title">
+        <h2 className="flex items-center gap-2 text-sm font-semibold sm:text-base">
           <UserPlus className="size-4 text-primary" />
           এজেন্টদের নিজের নেওয়া লিড
         </h2>

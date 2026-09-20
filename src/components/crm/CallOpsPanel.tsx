@@ -12,7 +12,6 @@ import {
   runAnalysisSweep,
 } from "@/lib/ops.functions";
 import { useAdminToken } from "@/lib/local-session";
-import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 const RECORDING_LABEL: Record<string, string> = {
   two_sided: "রেকর্ডিং: দুই পাশের কথা",
@@ -74,24 +73,17 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
   });
 
   const data = summary.data;
-  // Executive HQ sessions are view-only: never render actions the server will reject.
-  const canAct = showControls && data?.canWrite === true;
 
   return (
     <section className="card-elevated space-y-4 p-4">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
             <Activity className="size-4" /> কল রিপোর্ট, রেকর্ডিং ও AI অবস্থা
           </h2>
           <p className="text-xs text-muted-foreground">
             শেষ ৭ দিনের হিসাব · প্রতি ৩০ সেকেন্ডে নিজে থেকে হালনাগাদ হয়।
           </p>
-          {showControls && data && !data.canWrite ? (
-            <p className="text-xs text-muted-foreground">
-              এই সেশন শুধু দেখার জন্য — পরিবর্তনের কাজ কোঅর্ডিনেটর বা আইটি কনসোল থেকে করতে হবে।
-            </p>
-          ) : null}
         </div>
         <div className="flex gap-2">
           <Button
@@ -102,7 +94,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
           >
             <RefreshCw className="size-3.5" /> রিফ্রেশ
           </Button>
-          {canAct ? (
+          {showControls ? (
             <Button
               size="sm"
               className="gap-1.5"
@@ -236,24 +228,16 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                         : device.lastSeenAt
                           ? new Date(device.lastSeenAt).toLocaleString("bn-BD")
                           : "—"}
-                      {canAct && !device.revoked ? (
-                        <ConfirmAction
-                          title="ফোনটির অনুমতি বাতিল করবেন?"
-                          description="এই ফোন থেকে আর কল বা রেকর্ডিং CRM-এ আসবে না। এজেন্টকে আবার সাইন ইন করে ফোন যুক্ত করতে হবে।"
-                          confirmLabel="হ্যাঁ, বাতিল করুন"
+                      {showControls && !device.revoked ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 gap-1 px-2 text-[11px]"
                           disabled={revokeDevice.isPending}
-                          onConfirm={() => revokeDevice.mutate(device.id)}
-                          trigger={
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 gap-1 px-2 text-[11px]"
-                              disabled={revokeDevice.isPending}
-                            >
-                              <ShieldOff className="size-3" /> বাতিল করুন
-                            </Button>
-                          }
-                        />
+                          onClick={() => revokeDevice.mutate(device.id)}
+                        >
+                          <ShieldOff className="size-3" /> বাতিল করুন
+                        </Button>
                       ) : null}
                     </span>
                   </li>
@@ -276,7 +260,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                     <span>
                       <strong>{alert.title}</strong> — {alert.detail ?? ""}
                     </span>
-                    {canAct ? (
+                    {showControls ? (
                       <Button
                         size="sm"
                         variant="outline"

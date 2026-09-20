@@ -106,10 +106,10 @@ export function StaffAccountsTable() {
   const staff = list.data?.staff ?? [];
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <Users className="size-4 text-primary" />
-        <h2 className="section-title">এজেন্ট অ্যাকাউন্ট</h2>
+        <h2 className="text-sm font-semibold">এজেন্ট অ্যাকাউন্ট</h2>
         <span className="ml-auto text-xs text-muted-foreground">{staff.length} জন</span>
       </header>
 
@@ -284,7 +284,7 @@ export function StaffAccountsTable() {
 
       {list.isPending && <p className="mt-3 text-sm text-muted-foreground">তালিকা আনা হচ্ছে…</p>}
       {!list.isPending && staff.length === 0 && (
-        <p className="empty-note">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
+        <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
       )}
     </section>
   );

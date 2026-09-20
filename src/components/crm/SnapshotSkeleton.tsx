@@ -6,7 +6,7 @@ export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows
         <div className="skeleton h-7 w-56" />
         <div className="skeleton h-4 w-80" />
       </div>
-      <div className="stat-grid">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: tiles }).map((_, i) => (
           <div key={i} className="card-elevated space-y-3 p-5">
             <div className="skeleton h-3 w-24" />

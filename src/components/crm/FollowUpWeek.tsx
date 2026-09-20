@@ -107,7 +107,7 @@ export function FollowUpWeek() {
     <section className="card-elevated space-y-4 p-4">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
             <CalendarDays className="size-4 shrink-0" /> আগামী ৭ দিনের ফলো-আপ
           </h2>
           <p className="text-xs text-muted-foreground">

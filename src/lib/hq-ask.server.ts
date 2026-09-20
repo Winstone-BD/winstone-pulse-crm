@@ -10,39 +10,31 @@ export type ChartSpec = {
 
 export type HqAnswer = { answer: string; chart: ChartSpec };
 
-/**
- * Compact floor facts the model can turn into an answer and a chart.
- *
- * Calls come from the canonical call layer only (submitted post-call reports,
- * de-duplicated per session), so the analyst quotes the same dials, connected
- * calls and talk minutes as Executive HQ and the daily performance board.
- */
-export async function buildFloorFacts() {
-  const { fetchCanonicalCalls } = await import("@/lib/canonical-calls.server");
-  const { talkTimeOf } = await import("@/lib/call-evidence");
-  const { dhakaDateKey } = await import("@/lib/daily-performance");
+const CONNECTED = 30;
 
-  const [{ data: profiles }, { data: leads }, calls, { data: messages }] = await Promise.all([
-    supabaseAdmin.from("profiles").select("id, name, role, approval_status, is_active"),
-    supabaseAdmin.from("leads").select("id, assigned_to, status, outcome_category, created_at"),
-    fetchCanonicalCalls({ limit: 5000 }),
-    supabaseAdmin
-      .from("whatsapp_interactions")
-      .select("agent_id, sender_type, created_at")
-      .order("created_at", { ascending: false })
-      .limit(1000),
-  ]);
+/** Compact floor facts the model can turn into an answer and a chart. */
+export async function buildFloorFacts() {
+  const [{ data: profiles }, { data: leads }, { data: calls }, { data: messages }] =
+    await Promise.all([
+      supabaseAdmin.from("profiles").select("id, name, role, approval_status, is_active"),
+      supabaseAdmin.from("leads").select("id, assigned_to, status, outcome_category, created_at"),
+      supabaseAdmin
+        .from("call_recordings")
+        .select("agent_id, duration_seconds, sentiment, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      supabaseAdmin
+        .from("whatsapp_interactions")
+        .select("agent_id, sender_type, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    ]);
 
   const agents = (profiles ?? []).filter((p) => p.approval_status !== "rejected");
-  const talkOf = (rows: typeof calls) =>
-    talkTimeOf(
-      rows.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
-    );
 
   const perAgent = agents.map((agent) => {
-    const myCalls = calls.filter((c) => c.agentId === agent.id);
+    const myCalls = (calls ?? []).filter((c) => c.agent_id === agent.id);
     const myLeads = (leads ?? []).filter((l) => l.assigned_to === agent.id);
-    const talk = talkOf(myCalls);
     return {
       agent: agent.name,
       role: agent.role,
@@ -50,43 +42,30 @@ export async function buildFloorFacts() {
       pending: myLeads.filter((l) => l.status === "pending").length,
       closed: myLeads.filter((l) => l.status === "closed").length,
       dials: myCalls.length,
-      connected: myCalls.filter((c) => c.verifiedConnected).length,
-      contacted_leads: new Set(
-        myCalls.filter((c) => c.verifiedConnected).map((c) => c.leadId).filter(Boolean),
-      ).size,
-      talk_minutes: talk.measuredCalls ? Math.round(talk.seconds / 60) : null,
-      calls_without_measured_time: talk.unmeasuredCalls,
+      connected: myCalls.filter((c) => c.duration_seconds > CONNECTED).length,
+      talk_minutes: Math.round(myCalls.reduce((s, c) => s + c.duration_seconds, 0) / 60),
       whatsapp: (messages ?? []).filter((m) => m.agent_id === agent.id).length,
     };
   });
 
-  // Day buckets follow the Asia/Dhaka calendar day, never UTC.
   const byDay = new Map<string, { day: string; dials: number; connected: number }>();
-  for (const call of calls) {
-    const day = dhakaDateKey(new Date(call.at));
+  for (const call of calls ?? []) {
+    const day = (call.created_at ?? "").slice(0, 10);
+    if (!day) continue;
     const row = byDay.get(day) ?? { day, dials: 0, connected: 0 };
     row.dials += 1;
-    if (call.verifiedConnected) row.connected += 1;
+    if (call.duration_seconds > CONNECTED) row.connected += 1;
     byDay.set(day, row);
   }
 
-  const floorTalk = talkOf(calls);
-
   return {
-    metric_rules: {
-      dials: "one submitted post-call report = one call attempt",
-      connected_calls: "the phone proved the customer answered (measured duration, CDR or call log)",
-      talk_minutes: "verified duration of connected calls only; null when nothing was measured",
-      day: "Asia/Dhaka calendar day",
-    },
     totals: {
       agents: perAgent.length,
       leads: (leads ?? []).length,
       unassigned_leads: (leads ?? []).filter((l) => l.assigned_to === null).length,
-      dials: calls.length,
-      connected_calls: calls.filter((c) => c.verifiedConnected).length,
-      talk_minutes: floorTalk.measuredCalls ? Math.round(floorTalk.seconds / 60) : null,
-      calls_without_measured_time: floorTalk.unmeasuredCalls,
+      dials: (calls ?? []).length,
+      connected_calls: (calls ?? []).filter((c) => c.duration_seconds > CONNECTED).length,
+      talk_minutes: Math.round((calls ?? []).reduce((s, c) => s + c.duration_seconds, 0) / 60),
       whatsapp_messages: (messages ?? []).length,
       closed_leads: (leads ?? []).filter((l) => l.status === "closed").length,
     },

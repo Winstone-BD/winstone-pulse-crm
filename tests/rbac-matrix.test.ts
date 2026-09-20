@@ -30,10 +30,10 @@ describe("role surface matrix", () => {
     expect(ROLE_SURFACES.guest.routes).not.toContain("/desk");
   });
 
-  it("matches the documented quotas: 15 for the team admin, 30 for the floor", () => {
+  it("matches the documented quotas: 15 for the team admin, 25 for the floor", () => {
     expect(quotaFor("WIN2607", DEFAULT_DAILY_QUOTA)).toBe(15);
-    expect(quotaFor("WIN1001", DEFAULT_DAILY_QUOTA)).toBe(30);
+    expect(quotaFor("WIN1001", DEFAULT_DAILY_QUOTA)).toBe(25);
     expect(completionPercent(15, 15)).toBe(100);
-    expect(completionPercent(30, 30)).toBe(100);
+    expect(completionPercent(25, 25)).toBe(100);
   });
 });

@@ -1,4 +1,3 @@
-import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarDays, Loader2, Plus, Search } from "lucide-react";
@@ -21,15 +20,14 @@ import { myDayPerformance, setLeadWorkDate } from "@/lib/workday.functions";
  * lead into today's work, or into another chosen day, and every move is written
  * to the lead timeline, so nothing is lost and the IT council keeps the history.
  */
-/** Today in Asia/Dhaka, from the one canonical helper. */
 function dhakaToday() {
-  return dhakaDateKey();
+  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 function dayOf(lead: Lead) {
   return (
     lead.work_date ??
-    dhakaDateKey(new Date(lead.created_at))
+    new Date(new Date(lead.created_at).getTime() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10)
   );
 }
 
@@ -38,68 +36,6 @@ const WORK_LABELS: Record<string, string> = {
   in_progress: "চলছে",
   pending: "বাকি",
 };
-
-const BN_DATE = new Intl.DateTimeFormat("bn-BD", {
-  day: "numeric",
-  month: "short",
-  timeZone: "Asia/Dhaka",
-});
-
-/** Day the lead first entered the floor, in Dhaka time. */
-function startDay(lead: Lead) {
-  return new Date(new Date(lead.created_at).getTime() + 6 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
-}
-
-/** How many days this task has been waiting (0 = came in today). */
-function waitingDays(lead: Lead) {
-  const from = Date.parse(`${startDay(lead)}T00:00:00Z`);
-  const to = Date.parse(`${dhakaToday()}T00:00:00Z`);
-  return Math.max(0, Math.round((to - from) / 86_400_000));
-}
-
-const BN_TIME = new Intl.DateTimeFormat("bn-BD", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Asia/Dhaka",
-});
-
-/** Waiting for the next try: nobody answered and the gap has not passed yet. */
-function retryWaiting(lead: Lead) {
-  return (
-    lead.work_state !== "completed" &&
-    Boolean(lead.retry_after) &&
-    Date.parse(lead.retry_after!) > Date.now()
-  );
-}
-
-/**
- * One line of history per task: when it came in, when it was finished (or how
- * many days it has been waiting), and the note written on it.
- */
-function taskTrail(lead: Lead) {
-  const parts = [`এসেছে ${BN_DATE.format(new Date(lead.created_at))}`];
-  if (lead.work_state === "completed") {
-    const finishedAt = lead.classified_at ?? lead.last_call_at ?? lead.updated_at;
-    parts.push(`শেষ ${BN_DATE.format(new Date(finishedAt))}`);
-  } else {
-    const days = waitingDays(lead);
-    parts.push(days === 0 ? "আজকের কাজ" : `${days} দিন অপেক্ষায়`);
-    const tries = lead.unanswered_attempts ?? 0;
-    if (tries > 0) {
-      parts.push(
-        lead.retry_after && Date.parse(lead.retry_after) > Date.now()
-          ? `${tries} বার ধরেনি — ${BN_TIME.format(new Date(lead.retry_after))}-এর পর আবার কল`
-          : `${tries} বার ধরেনি — এখন আবার কল করা যাবে`,
-      );
-    }
-  }
-  const note = (lead.classification_note ?? lead.notes ?? "").trim();
-  if (note) parts.push(note);
-  return parts.join(" · ");
-}
-
 
 export function LeadDayBoard() {
   const { leads } = useSnapshot();
@@ -123,13 +59,7 @@ export function LeadDayBoard() {
     () =>
       leads
         .filter((lead) => dayOf(lead) === day)
-        // Leads waiting for their next try sit at the end of the queue, so an
-        // untried lead is always called before a number that just rang out.
-        .sort((a, b) => {
-          const wait = Number(retryWaiting(a)) - Number(retryWaiting(b));
-          if (wait !== 0) return wait;
-          return (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true });
-        }),
+        .sort((a, b) => (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true })),
     [leads, day],
   );
 
@@ -164,7 +94,7 @@ export function LeadDayBoard() {
     <section className="card-elevated space-y-3 p-4">
       <header className="flex flex-wrap items-center gap-2">
         <CalendarDays className="size-4 text-primary" />
-        <h2 className="section-title">দিনের কাজ</h2>
+        <h2 className="text-sm font-bold tracking-tight">দিনের কাজ</h2>
         <input
           type="date"
           value={day}
@@ -222,8 +152,6 @@ export function LeadDayBoard() {
                   {lead.phone_number} · {dayOf(lead)} ·{" "}
                   {WORK_LABELS[lead.work_state] ?? lead.work_state}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">{taskTrail(lead)}</p>
-
               </div>
               <Button
                 size="sm"
@@ -244,7 +172,7 @@ export function LeadDayBoard() {
       )}
 
       {dayLeads.length === 0 ? (
-        <p className="empty-note">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
+        <p className="text-sm text-muted-foreground">এই দিনের জন্য এখনো কোনো লিড নেই।</p>
       ) : (
         <ul className="space-y-2">
           {dayLeads.map((lead) => (
@@ -269,16 +197,6 @@ export function LeadDayBoard() {
                   {lead.phone_number}
                   {lead.call_attempts ? ` · ${lead.call_attempts} বার চেষ্টা` : ""}
                 </p>
-                <p
-                  className={`truncate text-xs ${
-                    lead.work_state !== "completed" && waitingDays(lead) >= 2
-                      ? "font-semibold text-destructive"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {taskTrail(lead)}
-                </p>
-
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <WebCallButton

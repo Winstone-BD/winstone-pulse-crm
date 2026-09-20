@@ -1,4 +1,3 @@
-import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, FileAudio, FileText, Loader2 } from "lucide-react";
@@ -65,7 +64,7 @@ function buildCsv(rows: DayCallRow[]) {
 }
 
 function todayDhaka() {
-  return dhakaDateKey();
+  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 type Result = Awaited<ReturnType<typeof dayCallExport>>;
@@ -113,10 +112,10 @@ export function DayCallExportPanel() {
   });
 
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-4">
       <header className="flex flex-wrap items-center gap-2">
         <FileAudio className="size-4 text-primary" />
-        <h2 className="section-title">এক দিনের কল ও রেকর্ডিং সামারি</h2>
+        <h2 className="text-sm font-semibold">এক দিনের কল ও রেকর্ডিং সামারি</h2>
         <input
           type="date"
           value={dateKey}
@@ -147,7 +146,7 @@ export function DayCallExportPanel() {
         </Button>
       </header>
 
-      <p className="empty-note">
+      <p className="mt-1 text-xs text-muted-foreground">
         ওই দিনের প্রতিটি কল, সঠিক সংখ্যা ও কথার সময়, আর প্রতিটি রেকর্ডিংয়ের ৬ ঘণ্টার জন্য সাইন করা
         শোনার লিংক একটি ফাইলে নামে। যে কলের অডিও জমা নেই, সেখানে লিংকের বদলে আসল অবস্থাই লেখা থাকে।
         Google Doc-এ প্রতিদিনের তালিকা যায় — ফাইলের নাম: তারিখ_এজেন্ট_লিড_নম্বর_কল-নম্বর।

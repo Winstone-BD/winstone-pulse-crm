@@ -76,7 +76,7 @@ export function AppReleasePanel() {
 
   return (
     <section className="space-y-3">
-      <h2 className="section-title">
+      <h2 className="flex items-center gap-2 text-lg font-semibold">
         <Smartphone className="size-4 text-primary" /> ফোন অ্যাপের নতুন ভার্সন
       </h2>
 

@@ -17,7 +17,6 @@ const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   talkMinutes: 20,
   connectRate: 50,
   score: 56,
-  avgTalkSeconds: 240, // 4 minutes per measured connected call
   ...overrides,
 });
 
@@ -52,17 +51,6 @@ describe("Top 3 performer intelligence", () => {
     const insight = performerInsight(line());
     expect(insight.gap).toBe("উল্লেখযোগ্য ঘাটতি নেই");
     expect(insight.advice).toContain("এই ছন্দ ধরে রাখুন");
-  });
-
-  it("flags a low verified average talk time (ATA) as a gap", () => {
-    const insight = performerInsight(line({ avgTalkSeconds: 60 })); // 1 min ATA
-    expect(insight.gap).toContain("গড় কথা 1.0 মিনিট");
-    expect(insight.advice).toContain("আরও একটি প্রশ্ন");
-  });
-
-  it("never invents an ATA gap when nothing was measured", () => {
-    const insight = performerInsight(line({ avgTalkSeconds: null }));
-    expect(insight.gap).not.toContain("গড় কথা");
   });
 
   it("shows the previous day until 9:05 am Dhaka", () => {

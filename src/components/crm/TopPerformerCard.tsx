@@ -102,13 +102,13 @@ export function TopPerformerCard() {
 
   if (!data.revealed) {
     return (
-      <section className="card-elevated card-pad">
+      <section className="card-elevated p-4 sm:p-5">
         <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
             <Clock className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="section-title truncate">
+            <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
               আজকের সেরা পারফর্মার
             </h2>
             <p className="text-xs text-muted-foreground sm:text-sm">
@@ -140,17 +140,17 @@ export function TopPerformerCard() {
   );
 
   return (
-    <section className="card-elevated card-pad overflow-hidden">
+    <section className="card-elevated overflow-hidden p-4 sm:p-5">
       <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b border-border pb-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
           <Trophy className="size-5" />
         </span>
         <div className="min-w-0">
-          <h2 className="section-title truncate">
+          <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
             {dayLabel} Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — যাচাইকৃত কল সংযোগ ও ফোন-মাপা কথার সময় থেকে · ATA গণনা ২০ সেপ্টেম্বর ২০২৬ থেকে · {DHAKA_TZ_LABEL}
+            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে · {DHAKA_TZ_LABEL}
           </p>
         </div>
       </header>
@@ -194,11 +194,6 @@ export function TopPerformerCard() {
                 </div>
                 <p className="tabular mt-1 text-[11px] text-muted-foreground">
                   দৈনিক কোটা {agent.quota}টি · অনুপাত-স্কোর {agent.fairScore}
-                </p>
-                <p className="tabular mt-1 text-[11px] text-muted-foreground">
-                  {agent.avgTalkSeconds === null || agent.avgTalkSeconds === undefined
-                    ? "ATA অনুপলব্ধ — ২০ সেপ্টেম্বর ২০২৬ থেকে মাপা কথার সময় গণনা হয়"
-                    : `গড় কথা (ATA) ${Math.floor(agent.avgTalkSeconds / 60)} মি ${agent.avgTalkSeconds % 60} সে`}
                 </p>
                 {agent.score === 0 ? (
                   <p className="mt-2 text-[11px] text-muted-foreground">

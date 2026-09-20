@@ -583,7 +583,6 @@ export type Database = {
           call_started_at: string | null
           category: string | null
           connected: boolean
-          connection_verified: boolean
           created_at: string
           device_id: string | null
           duration_seconds: number
@@ -609,7 +608,6 @@ export type Database = {
           call_started_at?: string | null
           category?: string | null
           connected?: boolean
-          connection_verified?: boolean
           created_at?: string
           device_id?: string | null
           duration_seconds?: number
@@ -635,7 +633,6 @@ export type Database = {
           call_started_at?: string | null
           category?: string | null
           connected?: boolean
-          connection_verified?: boolean
           created_at?: string
           device_id?: string | null
           duration_seconds?: number
@@ -1339,7 +1336,6 @@ export type Database = {
           assignment_source: string | null
           call_attempts: number
           call_count: number | null
-          carried_from_date: string | null
           classification_note: string | null
           classified_at: string | null
           classified_by: string | null
@@ -1354,12 +1350,10 @@ export type Database = {
           outcome_category: string | null
           phone_number: string
           reference_by: string | null
-          retry_after: string | null
           serial_no: string | null
           source: string
           status: Database["public"]["Enums"]["lead_status"]
           temperature: string | null
-          unanswered_attempts: number
           updated_at: string
           work_date: string | null
           work_state: string
@@ -1371,7 +1365,6 @@ export type Database = {
           assignment_source?: string | null
           call_attempts?: number
           call_count?: number | null
-          carried_from_date?: string | null
           classification_note?: string | null
           classified_at?: string | null
           classified_by?: string | null
@@ -1386,12 +1379,10 @@ export type Database = {
           outcome_category?: string | null
           phone_number: string
           reference_by?: string | null
-          retry_after?: string | null
           serial_no?: string | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: string | null
-          unanswered_attempts?: number
           updated_at?: string
           work_date?: string | null
           work_state?: string
@@ -1403,7 +1394,6 @@ export type Database = {
           assignment_source?: string | null
           call_attempts?: number
           call_count?: number | null
-          carried_from_date?: string | null
           classification_note?: string | null
           classified_at?: string | null
           classified_by?: string | null
@@ -1418,12 +1408,10 @@ export type Database = {
           outcome_category?: string | null
           phone_number?: string
           reference_by?: string | null
-          retry_after?: string | null
           serial_no?: string | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: string | null
-          unanswered_attempts?: number
           updated_at?: string
           work_date?: string | null
           work_state?: string

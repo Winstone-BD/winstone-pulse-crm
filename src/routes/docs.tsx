@@ -51,7 +51,7 @@ function DocsIndexPage() {
     <AppShell>
       <div className="mx-auto w-full max-w-3xl space-y-5">
         <header className="space-y-1">
-          <h1 className="page-title flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
             <BookOpen className="size-5" /> ডকুমেন্টেশন
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
@@ -78,7 +78,7 @@ function DocsIndexPage() {
         ) : (
           grouped.map(([category, pages]) => (
             <section key={category} className="card-elevated space-y-2 p-4">
-              <h2 className="section-title">{category}</h2>
+              <h2 className="text-sm font-bold tracking-tight">{category}</h2>
               <ul className="space-y-1.5">
                 {pages.map((page) => (
                   <li key={page.slug}>

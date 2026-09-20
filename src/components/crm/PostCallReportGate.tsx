@@ -122,14 +122,8 @@ export function PostCallReportGate() {
     [],
   );
 
-  // The call facts are prefilled once per report. The pending report is polled
-  // every 20s (AI analysis finishing, queue changes), and re-running the prefill
-  // on those refreshes would quietly overwrite what the agent just answered —
-  // turning a "ধরেনি" attempt into a completed "কথা হয়েছে" task.
-  const prefilledReportId = useRef<string | null>(null);
   useEffect(() => {
     if (!detail) {
-      prefilledReportId.current = null;
       setCategory("");
       setSummary("");
       setNote("");
@@ -146,14 +140,11 @@ export function PostCallReportGate() {
       setSmart(null);
       return;
     }
-    // Whatever the phone already knows is filled in once — after that the
-    // agent's own answers stand, even while the report keeps refreshing.
-    if (prefilledReportId.current === detail.report.id) return;
-    prefilledReportId.current = detail.report.id;
+    // Whatever the phone already knows is filled in — the agent confirms or corrects it.
     setDirection(detail.recording?.call_direction === "incoming_callback" ? "incoming" : "outgoing");
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
-  }, [detail]);
+  }, [detail?.report?.id, detail]);
 
   // A new pending report always opens — the dismissed flag applies to one
   // report only, never silences the next call's report.
@@ -209,29 +200,17 @@ export function PostCallReportGate() {
           ...payload,
           clientEventId: `report-${detail!.report.id}`,
         });
-        return { offline: true as const, warning: null as string | null, retryQueued: false };
+        return { offline: true as const };
       }
-      const result = await submit({ data: payload });
-      return {
-        offline: false as const,
-        warning: "warning" in result ? ((result as { warning?: string | null }).warning ?? null) : null,
-        retryQueued:
-          "retryQueued" in result
-            ? Boolean((result as { retryQueued?: boolean }).retryQueued)
-            : false,
-      };
+      await submit({ data: payload });
+      return { offline: false as const };
     },
     onSuccess: (result) => {
       toast.success(
         result.offline
           ? "ইন্টারনেট নেই — রিপোর্ট এই ফোনে সেভ হয়েছে, নেট ফিরলে নিজেই সার্ভারে যাবে"
-          : result.retryQueued
-            ? "রিপোর্ট জমা হয়েছে — কথা হয়নি, তাই টাস্ক শেষ হয়নি; লিডটি আবার কলের জন্য কিউতে গেল"
-            : "রিপোর্ট জমা হয়েছে — পরের লিড খুলে গেল",
+          : "রিপোর্ট জমা হয়েছে — পরের লিড খুলে গেল",
       );
-      if (!result.offline && result.warning) {
-        toast.warning(result.warning, { duration: 12_000 });
-      }
       void queryClient.invalidateQueries({ queryKey: ["pending-call-report"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });

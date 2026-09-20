@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -17,8 +17,6 @@ import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { MyCallLog } from "@/components/crm/MyCallLog";
 import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
-import { MyAllocationCard } from "@/components/crm/AllocationStatusCard";
-import { MyPerformanceCard } from "@/components/crm/DailyPerformanceCard";
 import { CarryOverLeads } from "@/components/crm/CarryOverLeads";
 import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
@@ -35,13 +33,11 @@ import { QueueBoard } from "@/components/crm/QueueBoard";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { TeamSupportPanel } from "@/components/crm/TeamSupportPanel";
-import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
-import { talkTimeOf } from "@/lib/call-evidence";
-import { useSnapshot } from "@/lib/crm-data";
-import { dhakaDateKey } from "@/lib/daily-performance";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
@@ -68,28 +64,21 @@ export const Route = createFileRoute("/desk")({
 
 /** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
-  const { leads, callEvents, messages } = useSnapshot();
+  const { leads, calls, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    // Asia/Dhaka calendar day, and only canonical calls: one submitted report is
-    // one attempt, and a conversation needs the phone's own proof.
-    const today = dhakaDateKey();
-    const yesterday = dhakaDateKey(new Date(Date.now() - 86_400_000));
+    const now = new Date();
+    const today = now.toDateString();
+    const yesterday = new Date(now.getTime() - 86_400_000).toDateString();
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => dhakaDateKey(new Date(r.created_at)) === day);
-    const callsOnDay = (day: string) =>
-      callEvents.filter((c) => dhakaDateKey(new Date(c.at)) === day);
-    const talkOf = (rows: typeof callEvents) =>
-      talkTimeOf(
-        rows.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
-      );
+      rows.filter((r) => new Date(r.created_at).toDateString() === day);
 
-    const todayCalls = callsOnDay(today);
-    const yCalls = callsOnDay(yesterday);
-    const talk = talkOf(todayCalls).seconds;
-    const yTalk = talkOf(yCalls).seconds;
-    const connectedOf = (rows: typeof callEvents) =>
-      rows.filter((c) => c.verifiedConnected).length;
+    const todayCalls = onDay(calls, today);
+    const yCalls = onDay(calls, yesterday);
+    const talk = todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
+    const yTalk = yCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
+    const connectedOf = (rows: typeof calls) =>
+      rows.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length;
     return {
       leads: leads.length,
       pending: leads.filter((l) => l.status === "pending").length,
@@ -105,7 +94,7 @@ function DeskStats() {
       whatsappDelta: onDay(messages, today).length - onDay(messages, yesterday).length,
       done: leads.filter((l) => l.work_state === "completed").length,
     };
-  }, [leads, callEvents, messages]);
+  }, [leads, calls, messages]);
 
   const donePct = stats.leads ? Math.round((stats.done / stats.leads) * 100) : 0;
 
@@ -208,18 +197,8 @@ function Tile({
   );
 }
 
-const DESK_NAV = [
-  { to: "/desk", label: "আজকের সারাংশ" },
-  { to: "/desk/leads", label: "লিড" },
-  { to: "/desk/calls", label: "কল" },
-  { to: "/desk/follow-ups", label: "ফলো-আপ" },
-  { to: "/desk/messages", label: "বার্তা" },
-  { to: "/desk/reports", label: "রিপোর্ট" },
-] as const;
-
-export function DeskPage() {
+function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
-  const { pathname } = useLocation();
   const signOut = useSignOut();
 
   if (isPending) {
@@ -240,7 +219,7 @@ export function DeskPage() {
           {account?.signedIn ? (
             <>
               <div>
-                <h1 className="page-title">
+                <h1 className="text-2xl font-bold tracking-tight">
                   {account.approval === "rejected" ? "প্রবেশ বাতিল" : "অনুমোদনের অপেক্ষায়"}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -256,7 +235,7 @@ export function DeskPage() {
           ) : (
             <>
               <div>
-                <h1 className="page-title">নিজের ডেস্কে সাইন ইন করুন</h1>
+                <h1 className="text-2xl font-bold tracking-tight">নিজের ডেস্কে সাইন ইন করুন</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।
                 </p>
@@ -275,13 +254,13 @@ export function DeskPage() {
 
   return (
     <AppShell>
-      <div className="page-stack">
+      <div className="space-y-6">
         <LeadDeadlineBanner />
         <MyProfileCard />
         <MyPhoneSetup />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="page-title">আমার ডেস্ক</h1>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">আমার ডেস্ক</h1>
             <p className="text-xs text-muted-foreground sm:text-sm">
               নিজের লিড, কল, হোয়াটসঅ্যাপ কথা আর নতুন লিড — সব এক জায়গায়।
             </p>
@@ -292,14 +271,62 @@ export function DeskPage() {
           </div>
         </div>
 
-        <DashboardSubnav label="আমার ডেস্কের অংশ" items={DESK_NAV} />
+        <AgentOverview />
 
-        {pathname === "/desk" && <><AgentOverview /><DeskStats /><MyAllocationCard /><MyPerformanceCard /><SmartInsightStrip scope="desk" /><CommandAgentPanel surface="desk" /></>}
-        {pathname === "/desk/leads" && <><MobileLeadQueue /><CarryOverLeads /><LeadDayBoard /><LeadTable /><OpenLeadsCard /><QueueBoard title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"} canSeeAllAgents={scope !== "agent"} showManualLog={scope !== "agent"} /></>}
-        {pathname === "/desk/calls" && <MyCallLog />}
-        {pathname === "/desk/follow-ups" && <><FollowUpAlarm /><FollowUpWeek /><FollowUpCalendar /></>}
-        {pathname === "/desk/messages" && <><WhatsappInbox /><TeamSupportInbox /><TeamSupportPanel /></>}
-        {pathname === "/desk/reports" && <MyReports />}
+        <DeskStats />
+
+        <SmartInsightStrip scope="desk" />
+
+        <MobileLeadQueue />
+
+        <FollowUpAlarm />
+
+        <CarryOverLeads />
+
+        <LeadDayBoard />
+
+        <CommandAgentPanel surface="desk" />
+
+        <TeamSupportInbox />
+
+        <Tabs defaultValue="leads" className="space-y-4">
+          <TabsList className="flex w-full flex-wrap">
+            <TabsTrigger value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
+            <TabsTrigger value="queue">কার্ড ভিউ</TabsTrigger>
+            <TabsTrigger value="calls">কল রেকর্ড</TabsTrigger>
+            <TabsTrigger value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
+            <TabsTrigger value="calendar">ফলো-আপ</TabsTrigger>
+            <TabsTrigger value="reports">আমার রিপোর্ট</TabsTrigger>
+            <TabsTrigger value="support">টিম সাপোর্ট</TabsTrigger>
+          </TabsList>
+          <TabsContent value="support">
+            <TeamSupportPanel />
+          </TabsContent>
+          <TabsContent value="leads" className="space-y-4">
+            <LeadTable />
+          </TabsContent>
+          <TabsContent value="queue" className="space-y-4">
+            <OpenLeadsCard />
+            <QueueBoard
+              title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
+              canSeeAllAgents={scope !== "agent"}
+              showManualLog={scope !== "agent"}
+            />
+          </TabsContent>
+          <TabsContent value="calls">
+            <MyCallLog />
+          </TabsContent>
+          <TabsContent value="whatsapp">
+            <WhatsappInbox />
+          </TabsContent>
+          <TabsContent value="calendar" className="space-y-4">
+            <FollowUpWeek />
+            <FollowUpCalendar />
+          </TabsContent>
+          <TabsContent value="reports">
+            <MyReports />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppShell>
   );

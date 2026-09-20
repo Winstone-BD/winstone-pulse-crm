@@ -57,7 +57,7 @@ function IngestPage() {
               <PlugZap className="size-7" />
             </span>
             <div>
-              <h1 className="page-title">Ingest Validation</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Ingest Validation</h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Endpoint health, payload checks and data problems. Master or IT PIN required.
               </p>
@@ -103,9 +103,9 @@ function IngestBoard() {
   const health = diagnostics.data;
 
   return (
-    <div className="page-stack">
+    <div className="space-y-6">
       <div className="min-w-0">
-        <h1 className="page-title flex items-center gap-2">
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
           <Stethoscope className="size-5 text-primary" /> Ingest Validation
         </h1>
         <p className="text-xs text-muted-foreground sm:text-sm">
@@ -115,7 +115,7 @@ function IngestBoard() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="section-title">Pipe health</h2>
+          <h2 className="text-lg font-semibold">Pipe health</h2>
           <Button
             variant="outline"
             size="sm"
@@ -128,9 +128,9 @@ function IngestBoard() {
         {diagnostics.isError && (
           <p className="text-sm text-destructive">{(diagnostics.error as Error).message}</p>
         )}
-        <div className="stat-grid">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {(health?.checks ?? []).map((c) => (
-            <div key={c.key} className="card-elevated card-pad">
+            <div key={c.key} className="card-elevated p-4">
               <div className="flex items-center gap-2">
                 {c.ok ? (
                   <CheckCircle2 className="size-4 text-live" />
@@ -146,8 +146,8 @@ function IngestBoard() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="card-elevated card-pad">
-          <h2 className="section-title">
+        <div className="card-elevated p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
             <ShieldAlert className="size-4 text-warning" /> Data problems
           </h2>
           <ul className="mt-3 space-y-2 text-sm">
@@ -193,7 +193,7 @@ function IngestBoard() {
         </div>
 
         <div className="card-elevated space-y-3 p-4">
-          <h2 className="section-title">Payload tester</h2>
+          <h2 className="text-sm font-semibold">Payload tester</h2>
           <p className="text-xs text-muted-foreground">
             Paste what the phone app sends. Nothing is saved — it only reports what would be
             rejected.

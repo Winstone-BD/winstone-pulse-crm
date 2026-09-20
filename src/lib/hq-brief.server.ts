@@ -13,7 +13,6 @@
  * edit window the presentation simply shows the newer numbers — HQ is never told
  * that an edit happened.
  */
-import { callEvidence } from "@/lib/call-evidence";
 import { dhakaInstant, dhakaParts } from "@/lib/shift.server";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -186,7 +185,7 @@ async function loadBlock(
     supabaseAdmin
       .from("call_reports")
       .select(
-        "id, agent_id, lead_id, phone_number, category, summary, note, connected, connection_verified, recording_id, duration_seconds, call_started_at, call_ended_at, follow_up_at, temperature, grade",
+        "id, agent_id, lead_id, phone_number, category, summary, note, connected, duration_seconds, call_started_at, call_ended_at, follow_up_at, temperature, grade",
       )
       .eq("status", "submitted")
       .gte("call_ended_at", startIso)
@@ -238,17 +237,6 @@ async function loadBlock(
     }),
   );
 
-  // "কথা হয়েছে" requires telephony evidence — a written report is not proof.
-  const isConnected = (r: { connection_verified?: boolean | null; connected: boolean | null; duration_seconds: number | null; recording_id?: string | null; call_started_at: string | null; call_ended_at: string | null }) =>
-    r.connection_verified === true ||
-    callEvidence({
-      claimedConnected: r.connected !== false,
-      measuredSeconds: r.duration_seconds,
-      hasRecording: Boolean(r.recording_id),
-      callStartedAt: r.call_started_at,
-      callEndedAt: r.call_ended_at,
-    }).connected;
-
   const byAgent = new Map<string, BriefAgent>();
   for (const r of reports) {
     const id = r.agent_id ?? "unknown";
@@ -272,9 +260,8 @@ async function loadBlock(
         calls_detail: [],
       } satisfies BriefAgent);
     line.calls += 1;
-    const connectedCall = isConnected(r);
-    if (connectedCall) line.connected += 1;
-    if (connectedCall) line.talkSeconds += r.duration_seconds ?? 0;
+    if (r.connected) line.connected += 1;
+    line.talkSeconds += r.duration_seconds ?? 0;
     if (r.temperature === "hot") line.hot += 1;
     if (r.temperature === "warm") line.warm += 1;
     if (r.temperature === "cold") line.cold += 1;
@@ -314,10 +301,8 @@ async function loadBlock(
     ).getUTCHours();
     const bucket = hourMap.get(dhakaHour) ?? { calls: 0, connected: 0, seconds: 0 };
     bucket.calls += 1;
-    if (isConnected(r)) {
-      bucket.connected += 1;
-      bucket.seconds += r.duration_seconds ?? 0;
-    }
+    if (r.connected) bucket.connected += 1;
+    bucket.seconds += r.duration_seconds ?? 0;
     hourMap.set(dhakaHour, bucket);
   }
   const hourly = [...hourMap.entries()]
@@ -329,9 +314,8 @@ async function loadBlock(
       minutes: Math.round(value.seconds / 60),
     }));
 
-  const connectedReports = reports.filter((r) => isConnected(r));
-  const talkSeconds = connectedReports.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0);
-  const connectedCount = connectedReports.length;
+  const talkSeconds = reports.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0);
+  const connectedCount = reports.filter((r) => r.connected).length;
   const totals = {
     agentsWorking: agents.length,
     calls: reports.length,
@@ -380,7 +364,7 @@ async function loadBlock(
       continue;
     }
     existing.calls += 1;
-    existing.connected = existing.connected || isConnected(r);
+    existing.connected = existing.connected || r.connected;
     existing.talkSeconds += seconds;
     existing.talkLabel = talkLabel(existing.talkSeconds);
     // Reports arrive ordered by call_ended_at, so the latest update wins.

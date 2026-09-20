@@ -76,7 +76,7 @@ export function ApkInstallCard() {
 
   return (
     <section className="space-y-3">
-      <h2 className="section-title">
+      <h2 className="flex items-center gap-2 text-lg font-semibold">
         <QrCode className="size-4 text-primary" /> অ্যাপ ইনস্টল ও সিস্টেম পরীক্ষা
       </h2>
 

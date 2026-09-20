@@ -112,7 +112,7 @@ export function RecordingPipelinePanel() {
     <section className="card-elevated space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
             <ListChecks className="size-4 text-primary" /> রেকর্ডিং পাইপলাইন ও রিট্রাই কিউ
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -183,7 +183,7 @@ export function RecordingPipelinePanel() {
         <p className="text-sm text-destructive">{(pipeline.error as Error).message}</p>
       )}
       {!pipeline.isLoading && rows.length === 0 && (
-        <p className="empty-note">এই ফিল্টারে কোনো কল নেই।</p>
+        <p className="text-sm text-muted-foreground">এই ফিল্টারে কোনো কল নেই।</p>
       )}
 
       <div className="space-y-3">
@@ -221,7 +221,7 @@ export function RecordingPipelinePanel() {
                 </span>
               </div>
 
-              <div className="mt-2 stat-grid">
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
                 {row.stages.map((s) => (
                   <div key={s.key} className="rounded-lg bg-surface-2 px-2.5 py-1.5">
                     <div className="flex items-center justify-between gap-2">

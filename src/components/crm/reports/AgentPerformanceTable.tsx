@@ -24,10 +24,10 @@ export function AgentPerformanceTable({
   onReset: () => void;
 }) {
   return (
-    <section className="card-elevated card-pad">
+    <section className="card-elevated p-3 sm:p-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <h2 className="section-title">Agent performance</h2>
+          <h2 className="text-sm font-semibold">Agent performance</h2>
           <p className="text-xs text-muted-foreground">
             Activity, connection and conversion overview
           </p>

@@ -37,7 +37,7 @@ export function MyReports() {
     <div className="space-y-6">
       <section className="space-y-3">
         <div>
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <CalendarClock className="size-5 text-primary" /> আপকমিং কাজ
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
@@ -76,7 +76,7 @@ export function MyReports() {
 
       <section className="space-y-3">
         <div>
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <ClipboardList className="size-5 text-primary" /> আমার কল রিপোর্ট
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">{reports.length}টি রিপোর্ট</p>

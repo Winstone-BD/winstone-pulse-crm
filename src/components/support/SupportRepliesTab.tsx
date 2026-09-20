@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminToken } from "@/lib/local-session";
 import { deleteCannedReply, listCannedReplies, saveCannedReply } from "@/lib/support-admin.functions";
-import { ConfirmAction } from "@/components/crm/ConfirmAction";
 
 export function SupportRepliesTab() {
   const adminToken = useAdminToken();
@@ -51,27 +50,15 @@ export function SupportRepliesTab() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-primary">{reply.shortcut}</span>
               <span className="text-sm font-medium">{reply.title}</span>
-              <span className="ml-auto">
-                <ConfirmAction
-                  title="Delete this canned reply?"
-                  description={`“${reply.title}” will be removed for the whole support team. This cannot be undone.`}
-                  confirmLabel="Delete"
-                  cancelLabel="Keep it"
-                  disabled={remove.isPending}
-                  onConfirm={() => remove.mutate(reply.id)}
-                  trigger={
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
-                      aria-label={`Delete ${reply.shortcut}`}
-                      disabled={remove.isPending}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  }
-                />
-              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="ml-auto size-7"
+                aria-label={`Delete ${reply.shortcut}`}
+                onClick={() => remove.mutate(reply.id)}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{reply.body}</p>
           </li>

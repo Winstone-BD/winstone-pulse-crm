@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -27,7 +27,6 @@ import { CallOpsPanel } from "@/components/crm/CallOpsPanel";
 import { SyncedCallsPanel } from "@/components/crm/SyncedCallsPanel";
 import { DayCallExportPanel } from "@/components/crm/DayCallExportPanel";
 import { RecordingPipelinePanel } from "@/components/crm/RecordingPipelinePanel";
-import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
@@ -58,15 +57,7 @@ export const Route = createFileRoute("/system")({
   component: SystemPage,
 });
 
-const SYSTEM_NAV = [
-  { to: "/system", label: "সিস্টেম স্বাস্থ্য" },
-  { to: "/system/staff", label: "স্টাফ" },
-  { to: "/system/integrations", label: "সংযোগ" },
-  { to: "/system/app", label: "অ্যাপ" },
-  { to: "/system/billing", label: "বিল" },
-] as const;
-
-export function SystemPage() {
+function SystemPage() {
   return (
     <AppShell>
       <RoleGate
@@ -97,13 +88,12 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 function SystemBoard() {
-  const { pathname } = useLocation();
-  const { profiles, leads, calls, callEvents, messages } = useSnapshot();
+  const { profiles, leads, calls, messages } = useSnapshot();
   const [rate, setRate] = useState(String(DEFAULT_RATE_PER_MINUTE));
 
   const billing = useMemo(
-    () => buildBillingSummary(callEvents, leads, Number(rate) || DEFAULT_RATE_PER_MINUTE),
-    [callEvents, leads, rate],
+    () => buildBillingSummary(calls, leads, Number(rate) || DEFAULT_RATE_PER_MINUTE),
+    [calls, leads, rate],
   );
 
   const sources = useMemo(() => {
@@ -115,53 +105,62 @@ function SystemBoard() {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
-    <div className="page-stack">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="page-title">সিস্টেম ও বিল</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">সিস্টেম ও বিল</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
             মূল ইঞ্জিনের অবস্থা, ডেটা আসার ঠিকানা আর মাসিক টেলিফোন খরচ।
           </p>
         </div>
         <CopilotDrawer />
       </div>
-      <DashboardSubnav label="আইটি কনসোলের অংশ" items={SYSTEM_NAV} />
 
-      {pathname === "/system" && <>
       <SystemNoticeBar surface="it" />
 
       <CommandAgentPanel surface="system" />
 
-      <RecordingPipelinePanel />
-      <DriveBackupPanel />
-      </>}
-      {pathname === "/system/staff" && <>
-      <StaffAccountsTable />
-      <AccountApprovals />
-      <AuditTrail />
-      </>}
-      {pathname === "/system/integrations" && <>
       <LeadDatabasePanel />
+
       <ExtraLeadPanel />
+
       <TeamSupportInbox />
+
       <CallOpsPanel showControls />
+
+      <RecordingPipelinePanel />
+
       <SyncedCallsPanel />
+
       <DayCallExportPanel />
+
+      <DriveBackupPanel />
+
       <DocSummaryPanel />
+
       <ReportSheetPanel />
+
+      <StaffAccountsTable />
+
       <ShiftSummaryPanel scope="it" />
-      </>}
-      {pathname === "/system/app" && <>
+
+      <AccountApprovals />
+
       <SystemCustomizer />
+
       <ApkInstallCard />
+
       <AppReleasePanel />
-      </>}
-      {pathname === "/system/billing" && <>
+
       <YearArchivePanel />
+
       <ServiceBillPanel mode="it" />
+
+      <AuditTrail />
+
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="section-title">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Receipt className="size-4 text-primary" /> {billing.monthLabel} মাসের বিল
           </h2>
           <div className="flex items-center gap-2">
@@ -181,7 +180,7 @@ function SystemBoard() {
             </label>
           </div>
         </div>
-        <div className="stat-grid">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Tile
             label="করা কল"
             value={String(billing.dials)}
@@ -200,19 +199,14 @@ function SystemBoard() {
           <Tile
             label="আনুমানিক অপারেটর খরচ"
             value={`৳${billing.carrierCost.toFixed(2)}`}
-            hint={
-              billing.unmeasuredCalls
-                ? `${billing.measuredCalls}টি কলের সময় মাপা আছে · ${billing.unmeasuredCalls}টির সময় ফোনে জমা হয়নি`
-                : `${billing.measuredCalls}টি কলের মাপা সময় থেকে`
-            }
+            hint={`${billing.aiAnalysed}টি কল এআই দেখেছে`}
           />
         </div>
       </section>
-      </>}
-      {pathname === "/system" && (
+
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="card-elevated card-pad">
-          <h2 className="section-title">
+        <div className="card-elevated p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
             <Database className="size-4 text-primary" /> ডেটার অবস্থা
           </h2>
           <dl className="mt-3 space-y-1.5 text-sm">
@@ -237,7 +231,7 @@ function SystemBoard() {
           </h3>
           <dl className="mt-2 space-y-1.5 text-sm">
             {sources.length === 0 && (
-              <p className="empty-note">এখনো কোনো লিড নেই।</p>
+              <p className="text-sm text-muted-foreground">এখনো কোনো লিড নেই।</p>
             )}
             {sources.map(([source, total]) => (
               <Row key={source} label={SOURCE_LABELS[source] ?? source} value={String(total)} />
@@ -245,8 +239,8 @@ function SystemBoard() {
           </dl>
         </div>
 
-        <div className="card-elevated card-pad">
-          <h2 className="section-title">
+        <div className="card-elevated p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
             <Radio className="size-4 text-primary" /> ডেটা আসার ঠিকানা
           </h2>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -273,14 +267,13 @@ function SystemBoard() {
           </ul>
         </div>
       </section>
-      )}
     </div>
   );
 }
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="card-elevated card-pad">
+    <div className="card-elevated p-4">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="tabular mt-1 text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>

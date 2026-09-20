@@ -36,7 +36,7 @@ export function ReportsKpiStrip({ report }: { report: ReportResult }) {
 function Kpi({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   const empty = value === 0 || value === "0";
   return (
-    <div className="card-elevated card-pad">
+    <div className="card-elevated p-3">
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>

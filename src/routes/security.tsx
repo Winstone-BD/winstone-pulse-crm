@@ -61,9 +61,9 @@ function SecurityBoard() {
   const view = views.find((item) => item.key === active) ?? views[0];
 
   return (
-    <div className="page-stack">
+    <div className="space-y-6">
       <div>
-        <h1 className="page-title">পিন ও অ্যাক্সেস</h1>
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">পিন ও অ্যাক্সেস</h1>
         <p className="text-xs text-muted-foreground sm:text-sm">
           রোল অনুযায়ী আলাদা ভিউ — আপনি যা ব্যবহার করেন শুধু সেটাই দেখানো হচ্ছে।
         </p>
@@ -87,7 +87,7 @@ function SecurityBoard() {
       {view && (
         <section className="card-elevated space-y-4 p-4">
           <div>
-            <h2 className="section-title">{view.label}</h2>
+            <h2 className="text-lg font-semibold">{view.label}</h2>
             <p className="text-xs text-muted-foreground">{view.subtitle}</p>
           </div>
           <div className="rounded-xl bg-surface-2 px-3 py-2 text-sm">

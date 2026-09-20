@@ -143,7 +143,7 @@ export function CommandAgentPanel({ surface }: { surface: Surface }) {
         <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">
           <Bot className="size-4" />
         </span>
-        <h2 className="section-title">{TITLE[surface]}</h2>
+        <h2 className="text-sm font-semibold">{TITLE[surface]}</h2>
         <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
           লাইভ তথ্য
         </span>

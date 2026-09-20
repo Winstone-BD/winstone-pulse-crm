@@ -41,7 +41,7 @@ export function CarryOverLeads() {
     <section className="rounded-2xl border border-warning/40 bg-warning/5 p-4">
       <header className="flex flex-wrap items-center gap-2">
         <AlarmClock className="size-4 text-warning" />
-        <h2 className="section-title text-warning">
+        <h2 className="text-sm font-bold tracking-tight text-warning">
           গতকালের বাকি কাজ — আজকের পেন্ডিং লিড
         </h2>
         <span className="ml-auto rounded-full bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">

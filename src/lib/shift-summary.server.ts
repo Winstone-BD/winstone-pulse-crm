@@ -1,18 +1,3 @@
-import { callSessionKey, type CallReportRow, reportConnected } from "@/lib/call-evidence";
-
-/** Collapses retried uploads of the same call into one session. */
-function dedupeSessions<T extends CallReportRow>(rows: T[]): T[] {
-  const seen = new Set<string>();
-  const out: T[] = [];
-  for (const row of rows) {
-    const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id ?? null });
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(row);
-  }
-  return out;
-}
-
 /**
  * Shift summary: what every agent actually did inside one working window,
  * built only from the updates the agents submitted themselves.
@@ -95,7 +80,7 @@ async function buildShiftLines(startIso: string, endIso: string) {
     supabaseAdmin
       .from("call_reports")
       .select(
-        "id, agent_id, lead_id, status, category, connected, connection_verified, recording_id, call_started_at, call_ended_at, created_at, duration_seconds",
+        "agent_id, status, category, connected, call_ended_at, created_at, duration_seconds",
       )
       .gte("created_at", startIso)
       .lte("created_at", endIso),
@@ -122,10 +107,8 @@ async function buildShiftLines(startIso: string, endIso: string) {
   }
 
   const lines: ShiftAgentLine[] = (agentsRes.data ?? []).map((agent) => {
-    // One row per call session, and a conversation only where the phone proved it.
-    const mine = dedupeSessions((reportsRes.data ?? []).filter((r) => r.agent_id === agent.id));
+    const mine = (reportsRes.data ?? []).filter((r) => r.agent_id === agent.id);
     const submitted = mine.filter((r) => r.status === "submitted");
-    const connectedCalls = submitted.filter((r) => reportConnected(r));
     const categories: Record<string, number> = {};
     for (const r of submitted) {
       const label = CATEGORY_LABEL[r.category ?? ""] ?? r.category ?? "—";
@@ -137,11 +120,11 @@ async function buildShiftLines(startIso: string, endIso: string) {
       employeeId: agent.employee_id,
       assigned: assignedCount.get(agent.id) ?? 0,
       called: mine.length,
-      connected: connectedCalls.length,
+      connected: mine.filter((r) => r.connected).length,
       reports: submitted.length,
       pending: mine.filter((r) => r.status === "pending").length,
       followUps: followCount.get(agent.id) ?? 0,
-      talkSeconds: connectedCalls.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0),
+      talkSeconds: mine.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0),
       categories,
     };
   });

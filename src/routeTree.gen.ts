@@ -35,25 +35,8 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TicketsRouteImport } from './routes/tickets'
 import { Route as VoiceTranscriptionRouteImport } from './routes/voice-transcription'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as DeskCallsRouteImport } from './routes/desk_.calls'
-import { Route as DeskFollowUpsRouteImport } from './routes/desk_.follow-ups'
-import { Route as DeskLeadsRouteImport } from './routes/desk_.leads'
-import { Route as DeskMessagesRouteImport } from './routes/desk_.messages'
-import { Route as DeskReportsRouteImport } from './routes/desk_.reports'
-import { Route as DispatchOperationsRouteImport } from './routes/dispatch_.operations'
-import { Route as DispatchTeamRouteImport } from './routes/dispatch_.team'
 import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
 import { Route as HelpSlugRouteImport } from './routes/help_.$slug'
-import { Route as HqBriefsRouteImport } from './routes/hq_.briefs'
-import { Route as HqOperationsRouteImport } from './routes/hq_.operations'
-import { Route as HqPerformanceRouteImport } from './routes/hq_.performance'
-import { Route as ReportsAgentsRouteImport } from './routes/reports_.agents'
-import { Route as ReportsCallsRouteImport } from './routes/reports_.calls'
-import { Route as ReportsExportsRouteImport } from './routes/reports_.exports'
-import { Route as SystemAppRouteImport } from './routes/system_.app'
-import { Route as SystemBillingRouteImport } from './routes/system_.billing'
-import { Route as SystemIntegrationsRouteImport } from './routes/system_.integrations'
-import { Route as SystemStaffRouteImport } from './routes/system_.staff'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
@@ -222,41 +205,6 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DeskCallsRoute = DeskCallsRouteImport.update({
-  id: '/desk_/calls',
-  path: '/desk/calls',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskFollowUpsRoute = DeskFollowUpsRouteImport.update({
-  id: '/desk_/follow-ups',
-  path: '/desk/follow-ups',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskLeadsRoute = DeskLeadsRouteImport.update({
-  id: '/desk_/leads',
-  path: '/desk/leads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskMessagesRoute = DeskMessagesRouteImport.update({
-  id: '/desk_/messages',
-  path: '/desk/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskReportsRoute = DeskReportsRouteImport.update({
-  id: '/desk_/reports',
-  path: '/desk/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DispatchOperationsRoute = DispatchOperationsRouteImport.update({
-  id: '/dispatch_/operations',
-  path: '/dispatch/operations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DispatchTeamRoute = DispatchTeamRouteImport.update({
-  id: '/dispatch_/team',
-  path: '/dispatch/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DocsSlugRoute = DocsSlugRouteImport.update({
   id: '/docs_/$slug',
   path: '/docs/$slug',
@@ -265,56 +213,6 @@ const DocsSlugRoute = DocsSlugRouteImport.update({
 const HelpSlugRoute = HelpSlugRouteImport.update({
   id: '/help_/$slug',
   path: '/help/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HqBriefsRoute = HqBriefsRouteImport.update({
-  id: '/hq_/briefs',
-  path: '/hq/briefs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HqOperationsRoute = HqOperationsRouteImport.update({
-  id: '/hq_/operations',
-  path: '/hq/operations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HqPerformanceRoute = HqPerformanceRouteImport.update({
-  id: '/hq_/performance',
-  path: '/hq/performance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsAgentsRoute = ReportsAgentsRouteImport.update({
-  id: '/reports_/agents',
-  path: '/reports/agents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsCallsRoute = ReportsCallsRouteImport.update({
-  id: '/reports_/calls',
-  path: '/reports/calls',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsExportsRoute = ReportsExportsRouteImport.update({
-  id: '/reports_/exports',
-  path: '/reports/exports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemAppRoute = SystemAppRouteImport.update({
-  id: '/system_/app',
-  path: '/system/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemBillingRoute = SystemBillingRouteImport.update({
-  id: '/system_/billing',
-  path: '/system/billing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemIntegrationsRoute = SystemIntegrationsRouteImport.update({
-  id: '/system_/integrations',
-  path: '/system/integrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SystemStaffRoute = SystemStaffRouteImport.update({
-  id: '/system_/staff',
-  path: '/system/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
@@ -536,25 +434,8 @@ export interface FileRoutesByFullPath {
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/desk/calls': typeof DeskCallsRoute
-  '/desk/follow-ups': typeof DeskFollowUpsRoute
-  '/desk/leads': typeof DeskLeadsRoute
-  '/desk/messages': typeof DeskMessagesRoute
-  '/desk/reports': typeof DeskReportsRoute
-  '/dispatch/operations': typeof DispatchOperationsRoute
-  '/dispatch/team': typeof DispatchTeamRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
-  '/hq/briefs': typeof HqBriefsRoute
-  '/hq/operations': typeof HqOperationsRoute
-  '/hq/performance': typeof HqPerformanceRoute
-  '/reports/agents': typeof ReportsAgentsRoute
-  '/reports/calls': typeof ReportsCallsRoute
-  '/reports/exports': typeof ReportsExportsRoute
-  '/system/app': typeof SystemAppRoute
-  '/system/billing': typeof SystemBillingRoute
-  '/system/integrations': typeof SystemIntegrationsRoute
-  '/system/staff': typeof SystemStaffRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -619,25 +500,8 @@ export interface FileRoutesByTo {
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/desk/calls': typeof DeskCallsRoute
-  '/desk/follow-ups': typeof DeskFollowUpsRoute
-  '/desk/leads': typeof DeskLeadsRoute
-  '/desk/messages': typeof DeskMessagesRoute
-  '/desk/reports': typeof DeskReportsRoute
-  '/dispatch/operations': typeof DispatchOperationsRoute
-  '/dispatch/team': typeof DispatchTeamRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
-  '/hq/briefs': typeof HqBriefsRoute
-  '/hq/operations': typeof HqOperationsRoute
-  '/hq/performance': typeof HqPerformanceRoute
-  '/reports/agents': typeof ReportsAgentsRoute
-  '/reports/calls': typeof ReportsCallsRoute
-  '/reports/exports': typeof ReportsExportsRoute
-  '/system/app': typeof SystemAppRoute
-  '/system/billing': typeof SystemBillingRoute
-  '/system/integrations': typeof SystemIntegrationsRoute
-  '/system/staff': typeof SystemStaffRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -703,25 +567,8 @@ export interface FileRoutesById {
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/desk_/calls': typeof DeskCallsRoute
-  '/desk_/follow-ups': typeof DeskFollowUpsRoute
-  '/desk_/leads': typeof DeskLeadsRoute
-  '/desk_/messages': typeof DeskMessagesRoute
-  '/desk_/reports': typeof DeskReportsRoute
-  '/dispatch_/operations': typeof DispatchOperationsRoute
-  '/dispatch_/team': typeof DispatchTeamRoute
   '/docs_/$slug': typeof DocsSlugRoute
   '/help_/$slug': typeof HelpSlugRoute
-  '/hq_/briefs': typeof HqBriefsRoute
-  '/hq_/operations': typeof HqOperationsRoute
-  '/hq_/performance': typeof HqPerformanceRoute
-  '/reports_/agents': typeof ReportsAgentsRoute
-  '/reports_/calls': typeof ReportsCallsRoute
-  '/reports_/exports': typeof ReportsExportsRoute
-  '/system_/app': typeof SystemAppRoute
-  '/system_/billing': typeof SystemBillingRoute
-  '/system_/integrations': typeof SystemIntegrationsRoute
-  '/system_/staff': typeof SystemStaffRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -788,25 +635,8 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
-    | '/desk/calls'
-    | '/desk/follow-ups'
-    | '/desk/leads'
-    | '/desk/messages'
-    | '/desk/reports'
-    | '/dispatch/operations'
-    | '/dispatch/team'
     | '/docs/$slug'
     | '/help/$slug'
-    | '/hq/briefs'
-    | '/hq/operations'
-    | '/hq/performance'
-    | '/reports/agents'
-    | '/reports/calls'
-    | '/reports/exports'
-    | '/system/app'
-    | '/system/billing'
-    | '/system/integrations'
-    | '/system/staff'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
     | '/docs-admin/editor/$slug'
@@ -871,25 +701,8 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
-    | '/desk/calls'
-    | '/desk/follow-ups'
-    | '/desk/leads'
-    | '/desk/messages'
-    | '/desk/reports'
-    | '/dispatch/operations'
-    | '/dispatch/team'
     | '/docs/$slug'
     | '/help/$slug'
-    | '/hq/briefs'
-    | '/hq/operations'
-    | '/hq/performance'
-    | '/reports/agents'
-    | '/reports/calls'
-    | '/reports/exports'
-    | '/system/app'
-    | '/system/billing'
-    | '/system/integrations'
-    | '/system/staff'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
     | '/docs-admin/editor/$slug'
@@ -954,25 +767,8 @@ export interface FileRouteTypes {
     | '/tickets'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
-    | '/desk_/calls'
-    | '/desk_/follow-ups'
-    | '/desk_/leads'
-    | '/desk_/messages'
-    | '/desk_/reports'
-    | '/dispatch_/operations'
-    | '/dispatch_/team'
     | '/docs_/$slug'
     | '/help_/$slug'
-    | '/hq_/briefs'
-    | '/hq_/operations'
-    | '/hq_/performance'
-    | '/reports_/agents'
-    | '/reports_/calls'
-    | '/reports_/exports'
-    | '/system_/app'
-    | '/system_/billing'
-    | '/system_/integrations'
-    | '/system_/staff'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
     | '/docs-admin_/editor/$slug'
@@ -1038,25 +834,8 @@ export interface RootRouteChildren {
   TicketsRoute: typeof TicketsRoute
   VoiceTranscriptionRoute: typeof VoiceTranscriptionRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  DeskCallsRoute: typeof DeskCallsRoute
-  DeskFollowUpsRoute: typeof DeskFollowUpsRoute
-  DeskLeadsRoute: typeof DeskLeadsRoute
-  DeskMessagesRoute: typeof DeskMessagesRoute
-  DeskReportsRoute: typeof DeskReportsRoute
-  DispatchOperationsRoute: typeof DispatchOperationsRoute
-  DispatchTeamRoute: typeof DispatchTeamRoute
   DocsSlugRoute: typeof DocsSlugRoute
   HelpSlugRoute: typeof HelpSlugRoute
-  HqBriefsRoute: typeof HqBriefsRoute
-  HqOperationsRoute: typeof HqOperationsRoute
-  HqPerformanceRoute: typeof HqPerformanceRoute
-  ReportsAgentsRoute: typeof ReportsAgentsRoute
-  ReportsCallsRoute: typeof ReportsCallsRoute
-  ReportsExportsRoute: typeof ReportsExportsRoute
-  SystemAppRoute: typeof SystemAppRoute
-  SystemBillingRoute: typeof SystemBillingRoute
-  SystemIntegrationsRoute: typeof SystemIntegrationsRoute
-  SystemStaffRoute: typeof SystemStaffRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
@@ -1279,55 +1058,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/desk_/calls': {
-      id: '/desk_/calls'
-      path: '/desk/calls'
-      fullPath: '/desk/calls'
-      preLoaderRoute: typeof DeskCallsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk_/follow-ups': {
-      id: '/desk_/follow-ups'
-      path: '/desk/follow-ups'
-      fullPath: '/desk/follow-ups'
-      preLoaderRoute: typeof DeskFollowUpsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk_/leads': {
-      id: '/desk_/leads'
-      path: '/desk/leads'
-      fullPath: '/desk/leads'
-      preLoaderRoute: typeof DeskLeadsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk_/messages': {
-      id: '/desk_/messages'
-      path: '/desk/messages'
-      fullPath: '/desk/messages'
-      preLoaderRoute: typeof DeskMessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk_/reports': {
-      id: '/desk_/reports'
-      path: '/desk/reports'
-      fullPath: '/desk/reports'
-      preLoaderRoute: typeof DeskReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dispatch_/operations': {
-      id: '/dispatch_/operations'
-      path: '/dispatch/operations'
-      fullPath: '/dispatch/operations'
-      preLoaderRoute: typeof DispatchOperationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dispatch_/team': {
-      id: '/dispatch_/team'
-      path: '/dispatch/team'
-      fullPath: '/dispatch/team'
-      preLoaderRoute: typeof DispatchTeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/docs_/$slug': {
       id: '/docs_/$slug'
       path: '/docs/$slug'
@@ -1340,76 +1070,6 @@ declare module '@tanstack/react-router' {
       path: '/help/$slug'
       fullPath: '/help/$slug'
       preLoaderRoute: typeof HelpSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hq_/briefs': {
-      id: '/hq_/briefs'
-      path: '/hq/briefs'
-      fullPath: '/hq/briefs'
-      preLoaderRoute: typeof HqBriefsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hq_/operations': {
-      id: '/hq_/operations'
-      path: '/hq/operations'
-      fullPath: '/hq/operations'
-      preLoaderRoute: typeof HqOperationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hq_/performance': {
-      id: '/hq_/performance'
-      path: '/hq/performance'
-      fullPath: '/hq/performance'
-      preLoaderRoute: typeof HqPerformanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports_/agents': {
-      id: '/reports_/agents'
-      path: '/reports/agents'
-      fullPath: '/reports/agents'
-      preLoaderRoute: typeof ReportsAgentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports_/calls': {
-      id: '/reports_/calls'
-      path: '/reports/calls'
-      fullPath: '/reports/calls'
-      preLoaderRoute: typeof ReportsCallsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports_/exports': {
-      id: '/reports_/exports'
-      path: '/reports/exports'
-      fullPath: '/reports/exports'
-      preLoaderRoute: typeof ReportsExportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/system_/app': {
-      id: '/system_/app'
-      path: '/system/app'
-      fullPath: '/system/app'
-      preLoaderRoute: typeof SystemAppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/system_/billing': {
-      id: '/system_/billing'
-      path: '/system/billing'
-      fullPath: '/system/billing'
-      preLoaderRoute: typeof SystemBillingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/system_/integrations': {
-      id: '/system_/integrations'
-      path: '/system/integrations'
-      fullPath: '/system/integrations'
-      preLoaderRoute: typeof SystemIntegrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/system_/staff': {
-      id: '/system_/staff'
-      path: '/system/staff'
-      fullPath: '/system/staff'
-      preLoaderRoute: typeof SystemStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -1695,25 +1355,8 @@ const rootRouteChildren: RootRouteChildren = {
   VoiceTranscriptionRoute: VoiceTranscriptionRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  DeskCallsRoute: DeskCallsRoute,
-  DeskFollowUpsRoute: DeskFollowUpsRoute,
-  DeskLeadsRoute: DeskLeadsRoute,
-  DeskMessagesRoute: DeskMessagesRoute,
-  DeskReportsRoute: DeskReportsRoute,
-  DispatchOperationsRoute: DispatchOperationsRoute,
-  DispatchTeamRoute: DispatchTeamRoute,
   DocsSlugRoute: DocsSlugRoute,
   HelpSlugRoute: HelpSlugRoute,
-  HqBriefsRoute: HqBriefsRoute,
-  HqOperationsRoute: HqOperationsRoute,
-  HqPerformanceRoute: HqPerformanceRoute,
-  ReportsAgentsRoute: ReportsAgentsRoute,
-  ReportsCallsRoute: ReportsCallsRoute,
-  ReportsExportsRoute: ReportsExportsRoute,
-  SystemAppRoute: SystemAppRoute,
-  SystemBillingRoute: SystemBillingRoute,
-  SystemIntegrationsRoute: SystemIntegrationsRoute,
-  SystemStaffRoute: SystemStaffRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,

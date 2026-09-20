@@ -1,6 +1,6 @@
 import {
+  CONNECTED_THRESHOLD_SECONDS,
   type CallRecording,
-  type CanonicalCall,
   type Lead,
   type LeadStatus,
   type Profile,
@@ -105,14 +105,13 @@ export function buildReport(
     profiles: Profile[];
     leads: Lead[];
     calls: CallRecording[];
-    callEvents: CanonicalCall[];
     messages: WhatsappMessage[];
   },
   filters: ReportFilters,
 ): ReportResult {
   const { from, to, agentId, source, status } = filters;
 
-  const agents = data.profiles.filter((p) => p.role === "agent");
+  const agents = data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader");
   const scopedAgents = agentId === "all" ? agents : agents.filter((a) => a.id === agentId);
   const agentIds = new Set(scopedAgents.map((a) => a.id));
 
@@ -124,12 +123,7 @@ export function buildReport(
   );
   const leadIds = new Set(leads.map((l) => l.id));
 
-  const scopeCall = (c: CanonicalCall) =>
-    inRange(c.at, from, to) &&
-    (agentId === "all" || c.agentId === agentId) &&
-    (source === "all" && status === "all" ? true : c.leadId !== null && leadIds.has(c.leadId));
-
-  const scopeRecording = (c: CallRecording) =>
+  const scopeCall = (c: CallRecording) =>
     inRange(c.created_at, from, to) &&
     (agentId === "all" || c.agent_id === agentId) &&
     (source === "all" && status === "all" ? true : c.lead_id !== null && leadIds.has(c.lead_id));
@@ -140,10 +134,7 @@ export function buildReport(
     (agentId === "all" || m.agent_id === agentId) &&
     (source === "all" && status === "all" ? true : m.lead_id !== null && leadIds.has(m.lead_id));
 
-  // Calls come from submitted call reports (the canonical attempt), never from
-  // recording rows — a recording is optional evidence attached to a call.
-  const calls = data.callEvents.filter(scopeCall);
-  const recordings = data.calls.filter(scopeRecording);
+  const calls = data.calls.filter(scopeCall);
   const messages = data.messages.filter(scopeMessage);
   const newLeads = leads.filter((l) => inRange(l.created_at, from, to));
 
@@ -163,12 +154,11 @@ export function buildReport(
     });
   }
   for (const c of calls) {
-    const b = buckets.get(isoDay(new Date(c.at)));
+    const b = buckets.get(isoDay(new Date(c.created_at)));
     if (!b) continue;
     b.dials += 1;
-    if (!c.verifiedConnected) continue;
-    b.connected += 1;
-    b.talkMinutes += (c.verifiedSeconds ?? 0) / 60;
+    if (c.duration_seconds > CONNECTED_THRESHOLD_SECONDS) b.connected += 1;
+    b.talkMinutes += c.duration_seconds / 60;
   }
   for (const m of messages) {
     const b = buckets.get(isoDay(new Date(m.created_at)));
@@ -197,11 +187,11 @@ export function buildReport(
 
   const rows: ReportRow[] = scopedAgents
     .map((profile) => {
-      const agentCalls = calls.filter((c) => c.agentId === profile.id);
-      const connectedCalls = agentCalls.filter((c) => c.verifiedConnected);
-      const connected = connectedCalls.length;
-      const talkSeconds = connectedCalls.reduce((s, c) => s + (c.verifiedSeconds ?? 0), 0);
-      const measuredCalls = connectedCalls.filter((c) => c.verifiedSeconds !== null).length;
+      const agentCalls = calls.filter((c) => c.agent_id === profile.id);
+      const connected = agentCalls.filter(
+        (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
+      ).length;
+      const talkSeconds = agentCalls.reduce((s, c) => s + c.duration_seconds, 0);
       const assignedLeads = leads.filter((l) => l.assigned_to === profile.id);
       const dealsWon = assignedLeads.filter(
         (l) => l.status === "closed" && l.outcome_category === "deal_won",
@@ -214,7 +204,7 @@ export function buildReport(
         connected,
         connectRate: agentCalls.length ? (connected / agentCalls.length) * 100 : 0,
         talkMinutes: Math.round((talkSeconds / 60) * 10) / 10,
-        avgCallSeconds: measuredCalls ? Math.round(talkSeconds / measuredCalls) : 0,
+        avgCallSeconds: connected ? Math.round(talkSeconds / connected) : 0,
         whatsapp: messages.filter((m) => m.agent_id === profile.id).length,
         assigned: assignedLeads.length,
         dealsWon,
@@ -223,8 +213,9 @@ export function buildReport(
     })
     .sort((a, b) => b.connected - a.connected || b.talkMinutes - a.talkMinutes);
 
-  const connectedCalls = calls.filter((c) => c.verifiedConnected);
-  const totalConnected = connectedCalls.length;
+  const totalConnected = calls.filter(
+    (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
+  ).length;
 
   return {
     filters,
@@ -232,10 +223,7 @@ export function buildReport(
       dials: calls.length,
       connected: totalConnected,
       connectRate: calls.length ? (totalConnected / calls.length) * 100 : 0,
-      talkMinutes:
-        Math.round(
-          (connectedCalls.reduce((s, c) => s + (c.verifiedSeconds ?? 0), 0) / 60) * 10,
-        ) / 10,
+      talkMinutes: Math.round((calls.reduce((s, c) => s + c.duration_seconds, 0) / 60) * 10) / 10,
       whatsapp: messages.length,
       newLeads: newLeads.length,
       dealsWon: leads.filter((l) => l.status === "closed" && l.outcome_category === "deal_won")
@@ -245,8 +233,7 @@ export function buildReport(
     daily,
     statusMix: countBy(leads, (l) => l.status),
     sourceMix: countBy(leads, (l) => l.source),
-    // Sentiment only exists on synced recordings that were analysed.
-    sentimentMix: countBy(recordings, (c) => c.sentiment),
+    sentimentMix: countBy(calls, (c) => c.sentiment),
     rows,
   };
 }

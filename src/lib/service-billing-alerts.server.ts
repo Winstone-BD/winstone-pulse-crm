@@ -90,7 +90,7 @@ async function recipients(): Promise<{ ids: string[]; emails: string[] }> {
   const { data } = await supabaseAdmin
     .from("profiles")
     .select("id,email")
-    .eq("role", "admin")
+    .in("role", ["admin", "team_leader"])
     .eq("is_active", true)
     .eq("approval_status", "approved");
   const rows = data ?? [];
