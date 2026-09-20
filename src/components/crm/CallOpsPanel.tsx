@@ -97,7 +97,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
           >
             <RefreshCw className="size-3.5" /> রিফ্রেশ
           </Button>
-          {showControls ? (
+          {canAct ? (
             <Button
               size="sm"
               className="gap-1.5"
@@ -231,7 +231,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                         : device.lastSeenAt
                           ? new Date(device.lastSeenAt).toLocaleString("bn-BD")
                           : "—"}
-                      {showControls && !device.revoked ? (
+                      {canAct && !device.revoked ? (
                         <ConfirmAction
                           title="ফোনটির অনুমতি বাতিল করবেন?"
                           description="এই ফোন থেকে আর কল বা রেকর্ডিং CRM-এ আসবে না। এজেন্টকে আবার সাইন ইন করে ফোন যুক্ত করতে হবে।"
@@ -271,7 +271,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                     <span>
                       <strong>{alert.title}</strong> — {alert.detail ?? ""}
                     </span>
-                    {showControls ? (
+                    {canAct ? (
                       <Button
                         size="sm"
                         variant="outline"
