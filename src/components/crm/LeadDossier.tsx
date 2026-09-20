@@ -654,8 +654,7 @@ function RecordingEvidence({ recording }: { recording: LeadCallRecordingEvidence
               : recording.analysisStatus === "failed"
                 ? "এআই বিশ্লেষণ করতে গিয়ে ব্যর্থ হয়েছে — আবার চালানো যাবে।"
                 : "এই রেকর্ডিংয়ের এআই সারসংক্ষেপ ও সুর বিশ্লেষণ এখনো হয়নি।"}
-          </p>
-        )
+        </p>
       )}
     </div>
   );
