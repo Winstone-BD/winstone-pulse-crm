@@ -156,8 +156,6 @@ function Dispatcher() {
 
       <ExtraLeadPanel />
 
-      <TeamSupportInbox />
-
       <section className="card-elevated card-pad">
         <h2 className="section-title">Bulk push</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">

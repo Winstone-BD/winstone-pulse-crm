@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -27,6 +27,7 @@ import { CallOpsPanel } from "@/components/crm/CallOpsPanel";
 import { SyncedCallsPanel } from "@/components/crm/SyncedCallsPanel";
 import { DayCallExportPanel } from "@/components/crm/DayCallExportPanel";
 import { RecordingPipelinePanel } from "@/components/crm/RecordingPipelinePanel";
+import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
@@ -57,7 +58,15 @@ export const Route = createFileRoute("/system")({
   component: SystemPage,
 });
 
-function SystemPage() {
+const SYSTEM_NAV = [
+  { to: "/system", label: "সিস্টেম স্বাস্থ্য" },
+  { to: "/system/staff", label: "স্টাফ" },
+  { to: "/system/integrations", label: "সংযোগ" },
+  { to: "/system/app", label: "অ্যাপ" },
+  { to: "/system/billing", label: "বিল" },
+] as const;
+
+export function SystemPage() {
   return (
     <AppShell>
       <RoleGate
@@ -88,6 +97,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 function SystemBoard() {
+  const { pathname } = useLocation();
   const { profiles, leads, calls, callEvents, messages } = useSnapshot();
   const [rate, setRate] = useState(String(DEFAULT_RATE_PER_MINUTE));
 
@@ -115,49 +125,40 @@ function SystemBoard() {
         </div>
         <CopilotDrawer />
       </div>
+      <DashboardSubnav label="আইটি কনসোলের অংশ" items={SYSTEM_NAV} />
 
+      {pathname === "/system" && <>
       <SystemNoticeBar surface="it" />
 
       <CommandAgentPanel surface="system" />
 
-      <LeadDatabasePanel />
-
-      <ExtraLeadPanel />
-
-      <TeamSupportInbox />
-
-      <CallOpsPanel showControls />
-
       <RecordingPipelinePanel />
-
-      <SyncedCallsPanel />
-
-      <DayCallExportPanel />
-
       <DriveBackupPanel />
-
-      <DocSummaryPanel />
-
-      <ReportSheetPanel />
-
+      </>}
+      {pathname === "/system/staff" && <>
       <StaffAccountsTable />
-
-      <ShiftSummaryPanel scope="it" />
-
       <AccountApprovals />
-
-      <SystemCustomizer />
-
-      <ApkInstallCard />
-
-      <AppReleasePanel />
-
-      <YearArchivePanel />
-
-      <ServiceBillPanel mode="it" />
-
       <AuditTrail />
-
+      </>}
+      {pathname === "/system/integrations" && <>
+      <LeadDatabasePanel />
+      <ExtraLeadPanel />
+      <TeamSupportInbox />
+      <CallOpsPanel showControls />
+      <SyncedCallsPanel />
+      <DayCallExportPanel />
+      <DocSummaryPanel />
+      <ReportSheetPanel />
+      <ShiftSummaryPanel scope="it" />
+      </>}
+      {pathname === "/system/app" && <>
+      <SystemCustomizer />
+      <ApkInstallCard />
+      <AppReleasePanel />
+      </>}
+      {pathname === "/system/billing" && <>
+      <YearArchivePanel />
+      <ServiceBillPanel mode="it" />
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="section-title">
@@ -207,7 +208,8 @@ function SystemBoard() {
           />
         </div>
       </section>
-
+      </>}
+      {pathname === "/system" && (
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card-elevated card-pad">
           <h2 className="section-title">
@@ -271,6 +273,7 @@ function SystemBoard() {
           </ul>
         </div>
       </section>
+      )}
     </div>
   );
 }
