@@ -643,11 +643,17 @@ function RecordingEvidence({ recording }: { recording: LeadCallRecordingEvidence
           )}
         </div>
       ) : (
-        recording.hasAudio && (
-          <p className="text-xs text-muted-foreground">
-            {analysing
+        <p className="text-xs text-muted-foreground">
+          {/* Honest about each real state: no audio means the analysis cannot run
+              at all, a failed or unavailable analysis says so, and nothing here
+              is ever filled in with a guessed summary, tone or sentiment. */}
+          {!recording.hasAudio
+            ? "অডিও ফাইল ছাড়া এআই সারসংক্ষেপ ও সুর বিশ্লেষণ করা যায় না।"
+            : analysing
               ? "এআই সারসংক্ষেপ ও সুর বিশ্লেষণ তৈরি হচ্ছে — শেষ হলে এখানেই দেখা যাবে।"
-              : "এই রেকর্ডিংয়ের এআই বিশ্লেষণ এখনো হয়নি।"}
+              : recording.analysisStatus === "failed"
+                ? "এআই বিশ্লেষণ করতে গিয়ে ব্যর্থ হয়েছে — আবার চালানো যাবে।"
+                : "এই রেকর্ডিংয়ের এআই সারসংক্ষেপ ও সুর বিশ্লেষণ এখনো হয়নি।"}
           </p>
         )
       )}
