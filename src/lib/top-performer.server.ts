@@ -357,6 +357,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     reasons.push(`${winner.connected}টি কলে কথা হয়েছে — আজ সবচেয়ে বেশি`);
     if (winner.reports) reasons.push(`${winner.reports}টি কল রিপোর্ট নিজে জমা দিয়েছেন`);
     if (winner.talkMinutes) reasons.push(`মোট ${winner.talkMinutes} মিনিট কথা বলেছেন`);
+    if (winner.avgTalkSeconds !== null)
+      reasons.push(
+        `গড় কথা (ATA) ${Math.floor(winner.avgTalkSeconds / 60)} মিনিট ${winner.avgTalkSeconds % 60} সেকেন্ড`,
+      );
     if (winner.followUps) reasons.push(`${winner.followUps}টি ফলো-আপ সময়সহ বসিয়েছেন`);
     if (winner.called) reasons.push(`কানেক্ট হার ${winner.connectRate}% (${winner.called}টি কলে)`);
     if (runnerUp)
