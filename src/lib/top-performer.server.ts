@@ -1,3 +1,4 @@
+import { canonicalCallsOf, talkTimeOf } from "@/lib/call-evidence";
 /**
  * Daily best performer, computed only from what the agents themselves submitted
  * today (their own call reports and follow-ups). Nothing is invented: if there
@@ -220,7 +221,9 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       .eq("role", "agent"),
     supabaseAdmin
       .from("call_reports")
-      .select("agent_id, status, connected, duration_seconds, created_at")
+      .select(
+        "id, agent_id, lead_id, status, connected, connection_verified, recording_id, call_started_at, call_ended_at, duration_seconds, created_at",
+      )
       .gte("created_at", startIso)
       .lte("created_at", endIso),
     supabaseAdmin
@@ -252,11 +255,15 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const follows = followRes.data ?? [];
 
   const lines: PerformerLine[] = (agentsRes.data ?? []).map((agent) => {
-    const mine = reports.filter((r) => r.agent_id === agent.id);
-    const connected = mine.filter((r) => r.connected).length;
-    const talkMinutes = Math.round(
-      mine.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60,
+    // Canonical rule: one session per call, connected only with phone evidence,
+    // and talk minutes from those connected calls only.
+    const mine = canonicalCallsOf(reports.filter((r) => r.agent_id === agent.id));
+    const connectedCalls = mine.filter((c) => c.verifiedConnected);
+    const connected = connectedCalls.length;
+    const talk = talkTimeOf(
+      mine.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
     );
+    const talkMinutes = Math.round(talk.seconds / 60);
     const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
     const quota = quotaFor(agent.employee_id, floorQuota);
     const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
@@ -266,7 +273,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       name: agent.name,
       called: mine.length,
       connected,
-      reports: mine.filter((r) => r.status === "submitted").length,
+      reports: mine.length,
       followUps: follows.filter((f) => f.agent_id === agent.id).length,
       talkMinutes,
       assigned: myLeads.length,
