@@ -222,7 +222,7 @@ function fallback(
 
 /** Real-time coaching for one agent, grounded in their own calls and chats. */
 export async function buildCoachBriefing(agentId: string): Promise<CoachBriefing> {
-  const { profile, leads, calls, messages, config } = await loadAgentData(agentId);
+  const { profile, leads, calls, callEvents, messages, config } = await loadAgentData(agentId);
   const metrics = buildMetrics(profile, leads, calls, callEvents, messages, config);
   const base = {
     agent: { id: profile.id, name: profile.name, employeeId: profile.employee_id },

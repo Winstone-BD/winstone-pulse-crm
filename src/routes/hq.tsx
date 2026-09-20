@@ -65,7 +65,7 @@ function ControlBoardPage() {
 }
 
 function ControlBoard() {
-  const { profiles, leads, calls, messages, events, isPending } = useSnapshot();
+  const { profiles, leads, calls, callEvents, messages, events, isPending } = useSnapshot();
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [openAgentId, setOpenAgentId] = useState<string | null>(null);
   /** Which number card / mix-card row the executive drilled into. */
@@ -149,6 +149,7 @@ function ControlBoard() {
         agent={openAgent}
         leads={leads}
         calls={calls}
+        callEvents={callEvents}
         messages={messages}
         open={openAgentId !== null}
         onOpenChange={(next) => !next && setOpenAgentId(null)}
