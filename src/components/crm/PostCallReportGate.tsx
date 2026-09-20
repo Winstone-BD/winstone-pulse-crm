@@ -122,8 +122,14 @@ export function PostCallReportGate() {
     [],
   );
 
+  // The call facts are prefilled once per report. The pending report is polled
+  // every 20s (AI analysis finishing, queue changes), and re-running the prefill
+  // on those refreshes would quietly overwrite what the agent just answered —
+  // turning a "ধরেনি" attempt into a completed "কথা হয়েছে" task.
+  const prefilledReportId = useRef<string | null>(null);
   useEffect(() => {
     if (!detail) {
+      prefilledReportId.current = null;
       setCategory("");
       setSummary("");
       setNote("");
