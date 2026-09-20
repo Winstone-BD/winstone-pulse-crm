@@ -297,6 +297,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       quota,
       targetQuota,
       completionPercent: completionPercent(completed, targetQuota),
+      avgTalkSeconds,
     };
     const score = Math.round(scoreOf(base));
     return {
