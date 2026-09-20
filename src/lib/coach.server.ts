@@ -1,4 +1,5 @@
 import {
+  type CanonicalCall,
   buildAgentStats,
   type CallRecording,
   type Lead,
@@ -77,10 +78,16 @@ async function loadAgentData(agentId: string) {
     messages = msgRes.data ?? [];
   }
 
+  // Metrics come from the canonical call layer (submitted reports); recordings
+  // are only used below as AI evidence (sentiment, objections, transcripts).
+  const { fetchCanonicalCalls } = await import("@/lib/canonical-calls.server");
+  const callEvents = await fetchCanonicalCalls({ agentIds: [agentId], limit: 3000 });
+
   return {
     profile: profileRes.data as Profile,
     leads: leads as Lead[],
     calls,
+    callEvents,
     messages,
     config: parseConfig(configRes.data?.data ?? {}),
   };
@@ -90,10 +97,11 @@ function buildMetrics(
   profile: Profile,
   leads: Lead[],
   calls: CallRecording[],
+  callEvents: CanonicalCall[],
   messages: WhatsappMessage[],
   config: AppConfig,
 ) {
-  const stats = buildAgentStats([profile], leads, calls, messages)[0];
+  const stats = buildAgentStats([profile], leads, callEvents, messages, false, calls)[0];
   const now = Date.now();
   const slaMs = config.rules.followUpSlaHours * 60 * 60 * 1000;
   const overdueFollowUps = leads.filter(
@@ -118,6 +126,8 @@ function buildMetrics(
     connected,
     connectRate: dials ? (connected / dials) * 100 : 0,
     talkMinutes: Math.round((stats?.talkSeconds ?? 0) / 60),
+    /** False when no connected call carries a phone-measured duration. */
+    talkTimeAvailable: stats?.talkTimeAvailable ?? false,
     avgCallSeconds: Math.round(stats?.avgCallSeconds ?? 0),
     whatsappTouches: stats?.whatsappTouches ?? 0,
     assigned: leads.length,
@@ -212,8 +222,8 @@ function fallback(
 
 /** Real-time coaching for one agent, grounded in their own calls and chats. */
 export async function buildCoachBriefing(agentId: string): Promise<CoachBriefing> {
-  const { profile, leads, calls, messages, config } = await loadAgentData(agentId);
-  const metrics = buildMetrics(profile, leads, calls, messages, config);
+  const { profile, leads, calls, callEvents, messages, config } = await loadAgentData(agentId);
+  const metrics = buildMetrics(profile, leads, calls, callEvents, messages, config);
   const base = {
     agent: { id: profile.id, name: profile.name, employeeId: profile.employee_id },
     metrics,

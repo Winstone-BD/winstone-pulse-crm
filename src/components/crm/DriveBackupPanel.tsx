@@ -1,3 +1,4 @@
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Cloud, FolderSync, Loader2, Save, Settings, Users } from "lucide-react";
@@ -21,7 +22,7 @@ import {
 import { useAdminToken } from "@/lib/local-session";
 
 function todayDhaka() {
-  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return dhakaDateKey();
 }
 
 export function DriveBackupPanel() {

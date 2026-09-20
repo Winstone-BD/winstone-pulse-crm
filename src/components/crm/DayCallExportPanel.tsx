@@ -1,3 +1,4 @@
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, FileAudio, FileText, Loader2 } from "lucide-react";
@@ -64,7 +65,7 @@ function buildCsv(rows: DayCallRow[]) {
 }
 
 function todayDhaka() {
-  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return dhakaDateKey();
 }
 
 type Result = Awaited<ReturnType<typeof dayCallExport>>;

@@ -155,3 +155,74 @@ export function talkTimeOf(calls: { connected: boolean; verifiedSeconds: number 
   }
   return { seconds, measuredCalls, unmeasuredCalls };
 }
+
+/**
+ * One canonical call in the whole CRM: a submitted post-call report, read as a
+ * call session. Every console (agent desk, Coordinator Deck, Executive HQ,
+ * reports, AI coach, copilot, Android) builds its numbers from this shape only.
+ */
+export type CanonicalCall = {
+  id: string;
+  agentId: string | null;
+  leadId: string | null;
+  /** Effective call time: when the phone ended the call, else when it was filed. */
+  at: string;
+  verifiedConnected: boolean;
+  /** Proven talk seconds, or null when nothing was measured. */
+  verifiedSeconds: number | null;
+  recordingId: string | null;
+};
+
+/** The raw columns every canonical read of `call_reports` needs. */
+export const CALL_REPORT_CANONICAL_COLUMNS =
+  "id, agent_id, lead_id, status, connected, connection_verified, duration_seconds, recording_id, call_started_at, call_ended_at, submitted_at, created_at";
+
+export type CallReportRow = {
+  id: string;
+  agent_id?: string | null;
+  lead_id?: string | null;
+  connected?: boolean | null;
+  connection_verified?: boolean | null;
+  call_status?: string | null;
+  duration_seconds?: number | null;
+  recording_id?: string | null;
+  call_started_at?: string | null;
+  call_ended_at?: string | null;
+  submitted_at?: string | null;
+  created_at?: string | null;
+};
+
+/** Did this stored report prove a conversation? The one answer for every screen. */
+export function reportConnected(row: CallReportRow): boolean {
+  if (row.connection_verified === true) return true;
+  return callEvidence({
+    claimedConnected: row.connected !== false,
+    callStatus: row.call_status ?? null,
+    measuredSeconds: row.duration_seconds ?? null,
+    hasRecording: Boolean(row.recording_id),
+    callStartedAt: row.call_started_at ?? null,
+    callEndedAt: row.call_ended_at ?? null,
+  }).connected;
+}
+
+/** Turns stored reports into canonical calls, de-duplicated per call session. */
+export function canonicalCallsOf(rows: CallReportRow[]): CanonicalCall[] {
+  const seen = new Set<string>();
+  const calls: CanonicalCall[] = [];
+  for (const row of rows) {
+    const key = callSessionKey({ reportId: row.id, recordingId: row.recording_id ?? null });
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const measured = row.duration_seconds ?? 0;
+    calls.push({
+      id: row.id,
+      agentId: row.agent_id ?? null,
+      leadId: row.lead_id ?? null,
+      at: row.call_ended_at ?? row.submitted_at ?? row.created_at ?? new Date().toISOString(),
+      verifiedConnected: reportConnected(row),
+      verifiedSeconds: measured > 0 ? measured : null,
+      recordingId: row.recording_id ?? null,
+    });
+  }
+  return calls;
+}

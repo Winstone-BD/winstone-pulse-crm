@@ -57,17 +57,21 @@ const TOOLS = [
 
 async function snapshot() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const [profiles, leads, calls, messages] = await Promise.all([
+  const { fetchCanonicalCalls } = await import("@/lib/canonical-calls.server");
+  const [profiles, leads, calls, messages, callEvents] = await Promise.all([
     supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
     supabaseAdmin.from("leads").select("*").order("updated_at", { ascending: false }),
     supabaseAdmin.from("call_recordings").select("*").limit(2000),
     supabaseAdmin.from("whatsapp_interactions").select("*").limit(2000),
+    // Canonical call layer: the copilot quotes the same numbers as every console.
+    fetchCanonicalCalls({ limit: 5000 }),
   ]);
   return {
     profiles: profiles.data ?? [],
     leads: leads.data ?? [],
     calls: calls.data ?? [],
     messages: messages.data ?? [],
+    callEvents,
   };
 }
 
@@ -84,7 +88,14 @@ async function runTool(
   if (name === "floor_report") {
     const todayOnly = Boolean(args["today_only"]);
     const limit = Math.min(Number(args["limit"] ?? 5) || 5, 20);
-    const stats = buildAgentStats(snap.profiles, snap.leads, snap.calls, snap.messages, todayOnly)
+    const stats = buildAgentStats(
+      snap.profiles,
+      snap.leads,
+      snap.callEvents,
+      snap.messages,
+      todayOnly,
+      snap.calls,
+    )
       .slice(0, limit)
       .map((s) => ({
         agent: s.profile.name,
@@ -113,7 +124,7 @@ async function runTool(
   if (name === "billing_report") {
     const rate =
       Number(args["rate_per_minute"] ?? DEFAULT_RATE_PER_MINUTE) || DEFAULT_RATE_PER_MINUTE;
-    const bill = buildBillingSummary(snap.calls, snap.leads, rate);
+    const bill = buildBillingSummary(snap.callEvents, snap.leads, rate);
     return {
       data: bill,
       card: {
@@ -123,7 +134,10 @@ async function runTool(
           { label: "Connected", value: `${bill.connected} (${bill.connectedPct.toFixed(0)}%)` },
           { label: "Billable minutes", value: String(bill.billableMinutes) },
           { label: "Estimated carrier cost", value: `৳${bill.carrierCost.toFixed(2)}` },
-          { label: "AI analysed calls", value: String(bill.aiAnalysed) },
+          {
+            label: "Measured talk time",
+            value: `${bill.measuredCalls} measured · ${bill.unmeasuredCalls} unmeasured`,
+          },
           { label: "Deals won", value: String(bill.dealsWon) },
         ],
       },
