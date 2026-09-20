@@ -77,10 +77,16 @@ async function loadAgentData(agentId: string) {
     messages = msgRes.data ?? [];
   }
 
+  // Metrics come from the canonical call layer (submitted reports); recordings
+  // are only used below as AI evidence (sentiment, objections, transcripts).
+  const { fetchCanonicalCalls } = await import("@/lib/canonical-calls.server");
+  const callEvents = await fetchCanonicalCalls({ agentIds: [agentId], limit: 3000 });
+
   return {
     profile: profileRes.data as Profile,
     leads: leads as Lead[],
     calls,
+    callEvents,
     messages,
     config: parseConfig(configRes.data?.data ?? {}),
   };
@@ -90,10 +96,11 @@ function buildMetrics(
   profile: Profile,
   leads: Lead[],
   calls: CallRecording[],
+  callEvents: CanonicalCall[],
   messages: WhatsappMessage[],
   config: AppConfig,
 ) {
-  const stats = buildAgentStats([profile], leads, calls, messages)[0];
+  const stats = buildAgentStats([profile], leads, callEvents, messages, false, calls)[0];
   const now = Date.now();
   const slaMs = config.rules.followUpSlaHours * 60 * 60 * 1000;
   const overdueFollowUps = leads.filter(

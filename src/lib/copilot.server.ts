@@ -57,17 +57,21 @@ const TOOLS = [
 
 async function snapshot() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const [profiles, leads, calls, messages] = await Promise.all([
+  const { fetchCanonicalCalls } = await import("@/lib/canonical-calls.server");
+  const [profiles, leads, calls, messages, callEvents] = await Promise.all([
     supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
     supabaseAdmin.from("leads").select("*").order("updated_at", { ascending: false }),
     supabaseAdmin.from("call_recordings").select("*").limit(2000),
     supabaseAdmin.from("whatsapp_interactions").select("*").limit(2000),
+    // Canonical call layer: the copilot quotes the same numbers as every console.
+    fetchCanonicalCalls({ limit: 5000 }),
   ]);
   return {
     profiles: profiles.data ?? [],
     leads: leads.data ?? [],
     calls: calls.data ?? [],
     messages: messages.data ?? [],
+    callEvents,
   };
 }
 
