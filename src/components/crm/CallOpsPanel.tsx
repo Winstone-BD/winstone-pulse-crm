@@ -87,6 +87,11 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
           <p className="text-xs text-muted-foreground">
             শেষ ৭ দিনের হিসাব · প্রতি ৩০ সেকেন্ডে নিজে থেকে হালনাগাদ হয়।
           </p>
+          {showControls && data && !data.canWrite ? (
+            <p className="text-xs text-muted-foreground">
+              এই সেশন শুধু দেখার জন্য — পরিবর্তনের কাজ কোঅর্ডিনেটর বা আইটি কনসোল থেকে করতে হবে।
+            </p>
+          ) : null}
         </div>
         <div className="flex gap-2">
           <Button
