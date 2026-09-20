@@ -1199,7 +1199,8 @@ private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
             Text(
                 listOfNotNull(
                     if (row.connected) "কথা হয়েছে" else "কথা হয়নি",
-                    "${row.durationSeconds} সেকেন্ড",
+                    // সময় না মাপা থাকলে বানানো ০ সেকেন্ড নয়।
+                    if (row.durationSeconds > 0) "${row.durationSeconds} সেকেন্ড" else "সময় অনুপলব্ধ",
                     row.category,
                     if (row.status == "pending") "জমা হয়নি" else null,
                 ).joinToString(" · "),
