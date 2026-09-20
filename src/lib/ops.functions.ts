@@ -77,6 +77,8 @@ export const callOpsSummary = createServerFn({ method: "POST" })
     }
 
     return {
+      // Executive HQ reads every board here but may never write.
+      canWrite: !caller.readOnly,
       reports: {
         pending: count(reports.data, (r) => r.status === "pending"),
         submitted: count(reports.data, (r) => r.status === "submitted"),
