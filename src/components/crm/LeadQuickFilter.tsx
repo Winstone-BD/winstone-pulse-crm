@@ -1,3 +1,4 @@
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,7 @@ const CATEGORY_OPTIONS: { key: LeadCategory; label: string }[] = [
 
 /** Day key in Dhaka time, so "today" means today for the agent, not UTC. */
 function dhakaDayKey(value: string | Date): string {
-  const date = typeof value === "string" ? new Date(value) : value;
-  return new Date(date.getTime() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return dhakaDateKey(typeof value === "string" ? new Date(value) : value);
 }
 
 /**

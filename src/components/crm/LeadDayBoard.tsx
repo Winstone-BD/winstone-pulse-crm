@@ -1,3 +1,4 @@
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarDays, Loader2, Plus, Search } from "lucide-react";
@@ -20,14 +21,15 @@ import { myDayPerformance, setLeadWorkDate } from "@/lib/workday.functions";
  * lead into today's work, or into another chosen day, and every move is written
  * to the lead timeline, so nothing is lost and the IT council keeps the history.
  */
+/** Today in Asia/Dhaka, from the one canonical helper. */
 function dhakaToday() {
-  return new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return dhakaDateKey();
 }
 
 function dayOf(lead: Lead) {
   return (
     lead.work_date ??
-    new Date(new Date(lead.created_at).getTime() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    dhakaDateKey(new Date(lead.created_at))
   );
 }
 
