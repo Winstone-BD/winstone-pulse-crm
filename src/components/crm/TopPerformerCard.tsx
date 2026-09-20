@@ -195,6 +195,11 @@ export function TopPerformerCard() {
                 <p className="tabular mt-1 text-[11px] text-muted-foreground">
                   দৈনিক কোটা {agent.quota}টি · অনুপাত-স্কোর {agent.fairScore}
                 </p>
+                <p className="tabular mt-1 text-[11px] text-muted-foreground">
+                  {agent.avgTalkSeconds === null || agent.avgTalkSeconds === undefined
+                    ? "ATA অনুপলব্ধ — ২০ সেপ্টেম্বর ২০২৬ থেকে মাপা কথার সময় গণনা হয়"
+                    : `গড় কথা (ATA) ${Math.floor(agent.avgTalkSeconds / 60)} মি ${agent.avgTalkSeconds % 60} সে`}
+                </p>
                 {agent.score === 0 ? (
                   <p className="mt-2 text-[11px] text-muted-foreground">
                     স্কোর ০ — এই ডেস্ক থেকে আজ কোনো সংযোগ, রিপোর্ট বা ফলো-আপ জমা পড়েনি।

@@ -17,6 +17,7 @@ const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   talkMinutes: 20,
   connectRate: 50,
   score: 56,
+  avgTalkSeconds: 240, // 4 minutes per measured connected call
   ...overrides,
 });
 
