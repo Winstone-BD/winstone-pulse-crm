@@ -54,6 +54,17 @@ describe("Top 3 performer intelligence", () => {
     expect(insight.advice).toContain("এই ছন্দ ধরে রাখুন");
   });
 
+  it("flags a low verified average talk time (ATA) as a gap", () => {
+    const insight = performerInsight(line({ avgTalkSeconds: 60 })); // 1 min ATA
+    expect(insight.gap).toContain("গড় কথা 1.0 মিনিট");
+    expect(insight.advice).toContain("আরও একটি প্রশ্ন");
+  });
+
+  it("never invents an ATA gap when nothing was measured", () => {
+    const insight = performerInsight(line({ avgTalkSeconds: null }));
+    expect(insight.gap).not.toContain("গড় কথা");
+  });
+
   it("shows the previous day until 9:05 am Dhaka", () => {
     // Dhaka 2026-09-17 03:31 => UTC 2026-09-16 21:31
     const at = new Date(Date.UTC(2026, 8, 16, 21, 31, 0));
