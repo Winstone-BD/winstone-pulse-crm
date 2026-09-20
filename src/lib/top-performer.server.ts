@@ -276,6 +276,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       mine.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
     );
     const talkMinutes = Math.round(talk.seconds / 60);
+    // ATA counts only calls from the verified-contract start date onward.
+    const avgTalkSeconds = averageTalkSecondsOf(
+      mine.filter((c) => dhakaDateKey(new Date(c.at)) >= VERIFIED_TALK_START_DATE),
+    );
     const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
     const quota = quotaFor(agent.employee_id, floorQuota);
     const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
