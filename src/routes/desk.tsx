@@ -39,7 +39,9 @@ import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
+import { talkTimeOf } from "@/lib/call-evidence";
+import { useSnapshot } from "@/lib/crm-data";
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { formatTalkTime } from "@/lib/crm-format";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
@@ -66,21 +68,28 @@ export const Route = createFileRoute("/desk")({
 
 /** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
-  const { leads, calls, messages } = useSnapshot();
+  const { leads, callEvents, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    const now = new Date();
-    const today = now.toDateString();
-    const yesterday = new Date(now.getTime() - 86_400_000).toDateString();
+    // Asia/Dhaka calendar day, and only canonical calls: one submitted report is
+    // one attempt, and a conversation needs the phone's own proof.
+    const today = dhakaDateKey();
+    const yesterday = dhakaDateKey(new Date(Date.now() - 86_400_000));
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => new Date(r.created_at).toDateString() === day);
+      rows.filter((r) => dhakaDateKey(new Date(r.created_at)) === day);
+    const callsOnDay = (day: string) =>
+      callEvents.filter((c) => dhakaDateKey(new Date(c.at)) === day);
+    const talkOf = (rows: typeof callEvents) =>
+      talkTimeOf(
+        rows.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
+      );
 
-    const todayCalls = onDay(calls, today);
-    const yCalls = onDay(calls, yesterday);
-    const talk = todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
-    const yTalk = yCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
-    const connectedOf = (rows: typeof calls) =>
-      rows.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length;
+    const todayCalls = callsOnDay(today);
+    const yCalls = callsOnDay(yesterday);
+    const talk = talkOf(todayCalls).seconds;
+    const yTalk = talkOf(yCalls).seconds;
+    const connectedOf = (rows: typeof callEvents) =>
+      rows.filter((c) => c.verifiedConnected).length;
     return {
       leads: leads.length,
       pending: leads.filter((l) => l.status === "pending").length,
@@ -96,7 +105,7 @@ function DeskStats() {
       whatsappDelta: onDay(messages, today).length - onDay(messages, yesterday).length,
       done: leads.filter((l) => l.work_state === "completed").length,
     };
-  }, [leads, calls, messages]);
+  }, [leads, callEvents, messages]);
 
   const donePct = stats.leads ? Math.round((stats.done / stats.leads) * 100) : 0;
 

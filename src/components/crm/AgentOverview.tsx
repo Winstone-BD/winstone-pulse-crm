@@ -13,7 +13,9 @@ import {
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
+import { talkTimeOf } from "@/lib/call-evidence";
+import { useSnapshot } from "@/lib/crm-data";
+import { dhakaDateKey } from "@/lib/daily-performance";
 import { formatTalkTime } from "@/lib/crm-format";
 import { useMyAccount } from "@/lib/session";
 
@@ -60,18 +62,23 @@ function StatCard({
 /** Reference-style agent dashboard hero: greeting, KPI tiles, activity feed, quick actions. */
 export function AgentOverview() {
   const { account } = useMyAccount();
-  const { leads, calls, messages } = useSnapshot();
+  const { leads, callEvents, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+    // Asia/Dhaka day + canonical calls, so this tile matches HQ and the report.
+    const today = dhakaDateKey();
+    const yesterday = dhakaDateKey(new Date(Date.now() - 86_400_000));
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => new Date(r.created_at).toDateString() === day);
+      rows.filter((r) => dhakaDateKey(new Date(r.created_at)) === day);
 
-    const todayCalls = onDay(calls, today);
-    const connected = todayCalls.filter(
-      (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
-    ).length;
+    const todayCalls = callEvents.filter((c) => dhakaDateKey(new Date(c.at)) === today);
+    const connected = todayCalls.filter((c) => c.verifiedConnected).length;
+    const talkTime = talkTimeOf(
+      todayCalls.map((c) => ({
+        connected: c.verifiedConnected,
+        verifiedSeconds: c.verifiedSeconds,
+      })),
+    );
     const newLeads = onDay(leads, today).length;
     const target = Math.max(leads.filter((l) => l.work_state !== "completed").length, 1);
     const done = leads.filter((l) => l.work_state === "completed").length;
@@ -82,26 +89,28 @@ export function AgentOverview() {
       todayCalls: todayCalls.length,
       connected,
       connectRate: todayCalls.length ? Math.round((connected / todayCalls.length) * 100) : 0,
-      talk: todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0),
+      talk: talkTime.seconds,
+      talkAvailable: talkTime.measuredCalls > 0,
       newLeads,
       newLeadsDelta: newLeads - onDay(leads, yesterday).length,
       hot: leads.filter((l) => l.temperature === "hot").length,
       followUp: leads.filter((l) => l.status === "follow_up").length,
       whatsapp: onDay(messages, today).length,
     };
-  }, [calls, leads, messages]);
+  }, [callEvents, leads, messages]);
 
   const score = stats.target ? Math.round((stats.done / stats.target) * 100) : 0;
 
   const activity = useMemo(() => {
     const rows = [
-      ...calls.map((c) => ({
+      ...callEvents.map((c) => ({
         id: `c-${c.id}`,
-        at: c.created_at,
-        title:
-          c.duration_seconds > CONNECTED_THRESHOLD_SECONDS
-            ? `কল হয়েছে · ${formatTalkTime(c.duration_seconds)}`
-            : "কল ধরা হয়নি",
+        at: c.at,
+        title: c.verifiedConnected
+          ? c.verifiedSeconds !== null
+            ? `কথা হয়েছে · ${formatTalkTime(c.verifiedSeconds)}`
+            : "কথা হয়েছে · সময় অনুপলব্ধ"
+          : "কেউ ধরেনি — আবার কল হবে",
         icon: <PhoneCall className="size-3.5" />,
       })),
       ...messages.map((m) => ({
@@ -127,7 +136,7 @@ export function AgentOverview() {
           minute: "2-digit",
         }),
       }));
-  }, [calls, leads, messages]);
+  }, [callEvents, leads, messages]);
 
   const name = account?.profile?.name ?? "এজেন্ট";
   const employeeId = account?.profile?.employee_id ?? "";
@@ -239,7 +248,9 @@ export function AgentOverview() {
             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Timer className="size-3.5" /> আজকের কথার সময়
             </p>
-            <p className="tabular mt-1 text-lg font-bold">{formatTalkTime(stats.talk)}</p>
+            <p className="tabular mt-1 text-lg font-bold">
+              {stats.talkAvailable ? formatTalkTime(stats.talk) : "সময় অনুপলব্ধ"}
+            </p>
             <p className="text-[10px] text-muted-foreground">
               {stats.whatsapp}টি হোয়াটসঅ্যাপ মেসেজ আজ
             </p>
