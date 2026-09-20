@@ -74,6 +74,8 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
   });
 
   const data = summary.data;
+  // Executive HQ sessions are view-only: never render actions the server will reject.
+  const canAct = showControls && data?.canWrite === true;
 
   return (
     <section className="card-elevated space-y-4 p-4">
