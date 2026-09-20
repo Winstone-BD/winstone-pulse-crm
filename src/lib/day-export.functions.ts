@@ -115,7 +115,9 @@ export const dayCallExport = createServerFn({ method: "POST" })
       }
     }
 
-    const CONNECTED_SECONDS = 30;
+    // Connection follows the canonical rule (call-evidence), never a duration
+    // threshold: the phone's own outcome decides whether a call connected.
+    const { callEvidence, isNotConnectedOutcome } = await import("@/lib/call-evidence");
     const calls: DayCallRow[] = inDay.map((row) => {
       const agent = row.agent_id ? agentMap.get(row.agent_id) : undefined;
       const audio = row.audio_url ? (signedByPath.get(row.audio_url) ?? null) : null;
@@ -131,7 +133,14 @@ export const dayCallExport = createServerFn({ method: "POST" })
         callStatus: row.call_status ?? "—",
         durationSeconds: row.duration_seconds ?? 0,
         durationLabel: hms(row.duration_seconds ?? 0),
-        connected: (row.duration_seconds ?? 0) > CONNECTED_SECONDS,
+        connected: callEvidence({
+          claimedConnected: !isNotConnectedOutcome(row.call_status ?? null),
+          callStatus: row.call_status ?? null,
+          measuredSeconds: row.duration_seconds ?? null,
+          hasRecording: Boolean(row.audio_url),
+          callStartedAt: row.started_at ?? null,
+          callEndedAt: null,
+        }).connected,
         recordingStatus: row.recording_status ?? "—",
         audioUrl: audio,
         audioExpiresInMinutes: audio ? SIGNED_URL_SECONDS / 60 : null,
@@ -141,7 +150,11 @@ export const dayCallExport = createServerFn({ method: "POST" })
       };
     });
 
-    const talkSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
+    // Talk time counts connected calls with a measured duration only.
+    const talkSeconds = calls.reduce(
+      (sum, c) => sum + (c.connected ? c.durationSeconds : 0),
+      0,
+    );
     const withAudio = calls.filter((c) => c.audioUrl).length;
 
     return {
@@ -244,7 +257,11 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
       };
     });
 
-    const talkSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
+    // Talk time counts connected calls with a measured duration only.
+    const talkSeconds = calls.reduce(
+      (sum, c) => sum + (c.connected ? c.durationSeconds : 0),
+      0,
+    );
 
     return {
       generatedAt: new Date().toISOString(),
