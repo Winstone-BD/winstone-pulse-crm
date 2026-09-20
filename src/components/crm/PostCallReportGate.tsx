@@ -146,11 +146,14 @@ export function PostCallReportGate() {
       setSmart(null);
       return;
     }
-    // Whatever the phone already knows is filled in — the agent confirms or corrects it.
+    // Whatever the phone already knows is filled in once — after that the
+    // agent's own answers stand, even while the report keeps refreshing.
+    if (prefilledReportId.current === detail.report.id) return;
+    prefilledReportId.current = detail.report.id;
     setDirection(detail.recording?.call_direction === "incoming_callback" ? "incoming" : "outgoing");
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
-  }, [detail?.report?.id, detail]);
+  }, [detail]);
 
   // A new pending report always opens — the dismissed flag applies to one
   // report only, never silences the next call's report.
