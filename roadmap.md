@@ -58,3 +58,8 @@
 - [ ] Verify Android KPI numbers against web API; offline-safe reconciliation
 - [ ] Connect Google Docs, Google Drive, Google Sheets in real workspace (after above)
 - [ ] Fix runtime error: TypeError: Importing a module script failed
+
+## 2026-09-20 — Dashboard subpages
+- [x] Agent, Coordinator, HQ, Reports ও IT Console-কে URL-ভিত্তিক সাবপেজে ভাগ করা
+- [x] সব পুরোনো dashboard URL, role gate ও canonical data logic অক্ষত রাখা
+- [x] mobile/desktop navigation ও child-route metadata যাচাই

@@ -229,17 +229,17 @@ export function AgentOverview() {
           <h3 className="text-sm font-semibold">দ্রুত কাজ</h3>
           <div className="grid gap-2">
             <Button asChild size="sm" className="justify-start">
-              <Link to="/desk" hash="leads">
+              <Link to="/desk/leads">
                 <PhoneCall className="size-4" /> কল শুরু করুন
               </Link>
             </Button>
             <Button asChild size="sm" variant="secondary" className="justify-start">
-              <Link to="/desk" hash="calendar">
+              <Link to="/desk/follow-ups">
                 <CalendarClock className="size-4" /> ফলো-আপ দেখুন
               </Link>
             </Button>
             <Button asChild size="sm" variant="secondary" className="justify-start">
-              <Link to="/desk" hash="whatsapp">
+              <Link to="/desk/messages">
                 <MessageCircle className="size-4" /> হোয়াটসঅ্যাপ ইনবক্স
               </Link>
             </Button>

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Lock, Send, Shuffle, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,6 +19,7 @@ import { CsvImportDialog } from "@/components/crm/CsvImportDialog";
 import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
+import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,7 +60,13 @@ export const Route = createFileRoute("/dispatch")({
   component: DispatchPage,
 });
 
-function DispatchPage() {
+const DISPATCH_NAV = [
+  { to: "/dispatch", label: "বিতরণ" },
+  { to: "/dispatch/team", label: "টিম" },
+  { to: "/dispatch/operations", label: "অপারেশন" },
+] as const;
+
+export function DispatchPage() {
   return (
     <AppShell>
       <RoleGate
@@ -75,6 +82,7 @@ function DispatchPage() {
 }
 
 function Dispatcher() {
+  const { pathname } = useLocation();
   const { profiles, leads, calls, callEvents, messages } = useSnapshot();
   const queryClient = useQueryClient();
   const assign = useServerFn(assignLeadsToAgent);
@@ -139,14 +147,14 @@ function Dispatcher() {
           <CopilotDrawer />
         </div>
       </div>
+      <DashboardSubnav label="কোঅর্ডিনেটর ডেস্কের অংশ" items={DISPATCH_NAV} />
 
+      {pathname === "/dispatch" && <>
       <SmartInsightStrip scope="floor" />
 
       <LeadDatabasePanel />
 
       <ExtraLeadPanel />
-
-      <TeamSupportInbox />
 
       <section className="card-elevated card-pad">
         <h2 className="section-title">Bulk push</h2>
@@ -198,11 +206,8 @@ function Dispatcher() {
           </Button>
         </div>
       </section>
-
-      <CommandAgentPanel surface="dispatch" />
-
-      <CallOpsPanel />
-
+      </>}
+      {pathname === "/dispatch/team" && <>
       <AssignmentHistory />
 
       <SelfClaimsFeed />
@@ -258,10 +263,15 @@ function Dispatcher() {
           </table>
         </div>
       </section>
-
+      </>}
+      {pathname === "/dispatch/operations" && <>
+      <CommandAgentPanel surface="dispatch" />
+      <CallOpsPanel />
+      <TeamSupportInbox />
       <section className="border-t border-border pt-6">
         <QueueBoard title="Agent Queue" canSeeAllAgents showManualLog />
       </section>
+      </>}
     </div>
   );
 }

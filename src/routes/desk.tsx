@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -35,10 +35,10 @@ import { QueueBoard } from "@/components/crm/QueueBoard";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { TeamSupportPanel } from "@/components/crm/TeamSupportPanel";
+import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { talkTimeOf } from "@/lib/call-evidence";
 import { useSnapshot } from "@/lib/crm-data";
 import { dhakaDateKey } from "@/lib/daily-performance";
@@ -208,8 +208,18 @@ function Tile({
   );
 }
 
-function DeskPage() {
+const DESK_NAV = [
+  { to: "/desk", label: "আজকের সারাংশ" },
+  { to: "/desk/leads", label: "লিড" },
+  { to: "/desk/calls", label: "কল" },
+  { to: "/desk/follow-ups", label: "ফলো-আপ" },
+  { to: "/desk/messages", label: "বার্তা" },
+  { to: "/desk/reports", label: "রিপোর্ট" },
+] as const;
+
+export function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
+  const { pathname } = useLocation();
   const signOut = useSignOut();
 
   if (isPending) {
@@ -282,64 +292,14 @@ function DeskPage() {
           </div>
         </div>
 
-        <AgentOverview />
+        <DashboardSubnav label="আমার ডেস্কের অংশ" items={DESK_NAV} />
 
-        <DeskStats />
-        <MyAllocationCard />
-        <MyPerformanceCard />
-
-        <SmartInsightStrip scope="desk" />
-
-        <MobileLeadQueue />
-
-        <FollowUpAlarm />
-
-        <CarryOverLeads />
-
-        <LeadDayBoard />
-
-        <CommandAgentPanel surface="desk" />
-
-        <TeamSupportInbox />
-
-        <Tabs defaultValue="leads" className="space-y-4">
-          <TabsList className="flex w-full flex-wrap">
-            <TabsTrigger value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger value="queue">কার্ড ভিউ</TabsTrigger>
-            <TabsTrigger value="calls">কল রেকর্ড</TabsTrigger>
-            <TabsTrigger value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
-            <TabsTrigger value="calendar">ফলো-আপ</TabsTrigger>
-            <TabsTrigger value="reports">আমার রিপোর্ট</TabsTrigger>
-            <TabsTrigger value="support">টিম সাপোর্ট</TabsTrigger>
-          </TabsList>
-          <TabsContent value="support">
-            <TeamSupportPanel />
-          </TabsContent>
-          <TabsContent value="leads" className="space-y-4">
-            <LeadTable />
-          </TabsContent>
-          <TabsContent value="queue" className="space-y-4">
-            <OpenLeadsCard />
-            <QueueBoard
-              title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
-              canSeeAllAgents={scope !== "agent"}
-              showManualLog={scope !== "agent"}
-            />
-          </TabsContent>
-          <TabsContent value="calls">
-            <MyCallLog />
-          </TabsContent>
-          <TabsContent value="whatsapp">
-            <WhatsappInbox />
-          </TabsContent>
-          <TabsContent value="calendar" className="space-y-4">
-            <FollowUpWeek />
-            <FollowUpCalendar />
-          </TabsContent>
-          <TabsContent value="reports">
-            <MyReports />
-          </TabsContent>
-        </Tabs>
+        {pathname === "/desk" && <><AgentOverview /><DeskStats /><MyAllocationCard /><MyPerformanceCard /><SmartInsightStrip scope="desk" /><CommandAgentPanel surface="desk" /></>}
+        {pathname === "/desk/leads" && <><MobileLeadQueue /><CarryOverLeads /><LeadDayBoard /><LeadTable /><OpenLeadsCard /><QueueBoard title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"} canSeeAllAgents={scope !== "agent"} showManualLog={scope !== "agent"} /></>}
+        {pathname === "/desk/calls" && <MyCallLog />}
+        {pathname === "/desk/follow-ups" && <><FollowUpAlarm /><FollowUpWeek /><FollowUpCalendar /></>}
+        {pathname === "/desk/messages" && <><WhatsappInbox /><TeamSupportInbox /><TeamSupportPanel /></>}
+        {pathname === "/desk/reports" && <MyReports />}
       </div>
     </AppShell>
   );

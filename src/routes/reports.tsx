@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -15,6 +15,7 @@ import { ReportsKpiStrip } from "@/components/crm/reports/ReportsKpiStrip";
 import { DailyActivityChart } from "@/components/crm/reports/DailyActivityChart";
 import { IntelligenceCards, AiPerformanceBrief } from "@/components/crm/reports/IntelligenceCards";
 import { AgentPerformanceTable } from "@/components/crm/reports/AgentPerformanceTable";
+import { DashboardSubnav } from "@/components/crm/DashboardSubnav";
 import { useSnapshot } from "@/lib/crm-data";
 import {
   buildReport,
@@ -51,7 +52,14 @@ export const Route = createFileRoute("/reports")({
   component: ReportsPage,
 });
 
-function ReportsPage() {
+const REPORTS_NAV = [
+  { to: "/reports", label: "পারফরম্যান্স" },
+  { to: "/reports/agents", label: "এজেন্ট" },
+  { to: "/reports/calls", label: "কল রিপোর্ট" },
+  { to: "/reports/exports", label: "এক্সপোর্ট" },
+] as const;
+
+export function ReportsPage() {
   return (
     <AppShell>
       <RoleGate
@@ -67,6 +75,7 @@ function ReportsPage() {
 }
 
 function ReportsBoard() {
+  const { pathname } = useLocation();
   const data = useSnapshot();
   const { scope } = useMyAccount();
   const canSeeDayExport = scope === "authority" || scope === "coordinator";
@@ -91,7 +100,9 @@ function ReportsBoard() {
         onToggleFilters={() => setShowFilters((v) => !v)}
         onExport={() => downloadCsv(`winstone-report_${stamp}.csv`, reportToCsv(report))}
       />
+      <DashboardSubnav label="রিপোর্টের অংশ" items={REPORTS_NAV} />
 
+      {(pathname === "/reports" || pathname === "/reports/agents") && (
       <ReportsFilterBar
         filters={filters}
         patch={patch}
@@ -100,7 +111,9 @@ function ReportsBoard() {
         sources={sources}
         visible={showFilters}
       />
+      )}
 
+      {pathname === "/reports" && <>
       <ReportsKpiStrip report={report} />
 
       <DailyActivityChart
@@ -110,7 +123,8 @@ function ReportsBoard() {
         hasActivity={hasActivity}
         onReset={() => setFilters(defaultFilters(30))}
       />
-
+      </>}
+      {pathname === "/reports/agents" && <>
       <IntelligenceCards report={report} />
 
       <AiPerformanceBrief report={report} filters={filters} />
@@ -120,14 +134,16 @@ function ReportsBoard() {
         stamp={stamp}
         onReset={() => setFilters(defaultFilters(30))}
       />
-
-      <CallReportsPanel />
-
-      {canSeeDayExport && (
+      </>}
+      {pathname === "/reports/calls" && <CallReportsPanel />}
+      {pathname === "/reports/exports" && canSeeDayExport && (
         <div className="space-y-4">
           <DayCallExportPanel />
           <SyncedCallsPanel />
         </div>
+      )}
+      {pathname === "/reports/exports" && !canSeeDayExport && (
+        <p className="empty-note">এই এক্সপোর্ট শুধু অনুমোদিত কোঅর্ডিনেটর ও অথরিটির জন্য।</p>
       )}
     </div>
   );
