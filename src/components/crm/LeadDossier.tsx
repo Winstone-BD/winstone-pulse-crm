@@ -475,8 +475,12 @@ function CallHistory({ leadId }: { leadId: string }) {
     );
   }
 
-  const connected = calls.filter((c) => c.connected).length;
-  const totalSeconds = calls.reduce((sum, c) => sum + c.durationSeconds, 0);
+  // Talk time counts only connected calls whose duration the phone measured, so
+  // the summary line never invents minutes. Same rule as the daily performance.
+  const connectedCalls = calls.filter((c) => c.connected);
+  const connected = connectedCalls.length;
+  const measured = connectedCalls.filter((c) => c.verifiedSeconds !== null);
+  const totalSeconds = measured.reduce((sum, c) => sum + (c.verifiedSeconds ?? 0), 0);
   const withAudio = calls.filter((c) => c.recording?.hasAudio).length + orphans.length;
 
   return (
@@ -484,7 +488,9 @@ function CallHistory({ leadId }: { leadId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm">
         <span className="font-semibold">মোট {calls.length}টি কল</span>
         <span className="text-muted-foreground">
-          কথা হয়েছে {connected}টিতে · মোট {formatDuration(totalSeconds)} · রেকর্ডিং {withAudio}টি
+          কথা হয়েছে {connected}টিতে ·{" "}
+          {measured.length ? `মোট ${formatDuration(totalSeconds)}` : "কথার সময় অনুপলব্ধ"} · রেকর্ডিং{" "}
+          {withAudio}টি
         </span>
       </div>
 
@@ -521,7 +527,10 @@ function ReportCallCard({ call }: { call: LeadCall }) {
             {call.category ? ` · ${CATEGORY_LABEL_CLIENT[call.category] ?? call.category}` : ""}
           </p>
           <p className="tabular text-xs text-muted-foreground">
-            {dayLabel(call.at)} · {clockTime(call.at)} · {formatDuration(call.durationSeconds)}
+            {dayLabel(call.at)} · {clockTime(call.at)} ·{" "}
+            {call.verifiedSeconds !== null
+              ? formatDuration(call.verifiedSeconds)
+              : "সময় অনুপলব্ধ"}
           </p>
         </div>
         {(call.temperature || call.grade) && (
@@ -634,13 +643,18 @@ function RecordingEvidence({ recording }: { recording: LeadCallRecordingEvidence
           )}
         </div>
       ) : (
-        recording.hasAudio && (
-          <p className="text-xs text-muted-foreground">
-            {analysing
+        <p className="text-xs text-muted-foreground">
+          {/* Honest about each real state: no audio means the analysis cannot run
+              at all, a failed or unavailable analysis says so, and nothing here
+              is ever filled in with a guessed summary, tone or sentiment. */}
+          {!recording.hasAudio
+            ? "অডিও ফাইল ছাড়া এআই সারসংক্ষেপ ও সুর বিশ্লেষণ করা যায় না।"
+            : analysing
               ? "এআই সারসংক্ষেপ ও সুর বিশ্লেষণ তৈরি হচ্ছে — শেষ হলে এখানেই দেখা যাবে।"
-              : "এই রেকর্ডিংয়ের এআই বিশ্লেষণ এখনো হয়নি।"}
-          </p>
-        )
+              : recording.analysisStatus === "failed"
+                ? "এআই বিশ্লেষণ করতে গিয়ে ব্যর্থ হয়েছে — আবার চালানো যাবে।"
+                : "এই রেকর্ডিংয়ের এআই সারসংক্ষেপ ও সুর বিশ্লেষণ এখনো হয়নি।"}
+        </p>
       )}
     </div>
   );

@@ -356,7 +356,7 @@ fun DeskScreen(
                                 if (coach.nextSteps.isNotEmpty()) item { CoachCard("পরবর্তী ধাপ", coach.nextSteps) }
                             }
                             item { SectionTitle("আজকের কল লগ", null) {} }
-                            if (calls.isEmpty()) item { EmptyNote("আজ কোনো কল রেকর্ড নেই।") }
+                            if (calls.isEmpty()) item { EmptyNote("এখনো কোনো কল রিপোর্ট জমা হয়নি।") }
                             items(calls) { CallCard(it, leads) }
                         }
                         else -> {
@@ -615,7 +615,13 @@ private fun KpiGrid(leads: List<Lead>, calls: List<CallRow>) {
             KpiTile("সম্পন্ন", leads.count { it.status == "closed" }.toString(), "লিড", Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            KpiTile("আজকের কল লগ", calls.size.toString(), "ফোনে জমা", Modifier.weight(1f))
+            KpiTile("জমা দেওয়া কল", calls.size.toString(), "রিপোর্ট", Modifier.weight(1f))
+            KpiTile(
+                "কথা হয়েছে",
+                calls.count { it.connected }.toString(),
+                "প্রমাণসহ",
+                Modifier.weight(1f),
+            )
         }
     }
 }
@@ -852,22 +858,35 @@ private fun CallCard(call: CallRow, leads: List<Lead>) {
     val leadName = leads.firstOrNull { it.id == call.leadId }?.name ?: call.phone
     WinCard {
         Text(leadName, fontWeight = FontWeight.SemiBold)
+        // ওয়েব Lead 360-এর একই লেখা: প্রমাণ ছাড়া "কথা হয়েছে" নয়, আর সময় না
+        // মাপা থাকলে বানানো সেকেন্ড নয় — "সময় অনুপলব্ধ"।
+        val timeText = call.verifiedSeconds?.let { "$it সেকেন্ড" } ?: "সময় অনুপলব্ধ"
         Text(
-            "${call.durationSeconds} সেকেন্ড · ${shortTime(call.createdAt)}",
+            "${if (call.connected) "কথা হয়েছে" else "কেউ ধরেনি"} · $timeText · ${shortTime(call.createdAt)}",
             fontSize = 12.sp,
             color = WinInkMuted,
         )
         Text(
             when (call.syncStatus) {
-                "failed" -> "সার্ভারে ওঠেনি"
-                "verified" -> "যাচাই হয়েছে"
-                else -> "আপলোড হয়েছে"
+                "failed" -> "অডিও সার্ভারে ওঠেনি"
+                "verified" -> "অডিও যাচাই হয়েছে"
+                "report_only" -> "রিপোর্ট জমা হয়েছে · অডিও ফাইল আসেনি"
+                else -> "অডিও আপলোড হয়েছে"
             },
             fontSize = 12.sp,
             color = if (call.syncStatus == "failed") WinRed else WinGreen,
         )
         call.summary?.let { Text(it, fontSize = 13.sp) }
         call.sentiment?.let { Text("AI মনোভাব: $it", fontSize = 12.sp, color = WinInkMuted) }
+        if (call.summary == null && call.syncStatus != "report_only") {
+            Text(
+                if (call.analysisStatus == "pending" || call.analysisStatus == "processing")
+                    "এআই সারসংক্ষেপ তৈরি হচ্ছে"
+                else "এআই সারসংক্ষেপ ও সুর বিশ্লেষণ এখনো হয়নি",
+                fontSize = 12.sp,
+                color = WinInkMuted,
+            )
+        }
     }
 }
 
@@ -1180,7 +1199,8 @@ private fun ReportRowCard(row: ReportRow, onOpenLead: (String) -> Unit) {
             Text(
                 listOfNotNull(
                     if (row.connected) "কথা হয়েছে" else "কথা হয়নি",
-                    "${row.durationSeconds} সেকেন্ড",
+                    // সময় না মাপা থাকলে বানানো ০ সেকেন্ড নয়।
+                    if (row.durationSeconds > 0) "${row.durationSeconds} সেকেন্ড" else "সময় অনুপলব্ধ",
                     row.category,
                     if (row.status == "pending") "জমা হয়নি" else null,
                 ).joinToString(" · "),

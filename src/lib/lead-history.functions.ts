@@ -34,7 +34,10 @@ export type LeadCallRecordingEvidence = {
 export type LeadCall = {
   id: string;
   at: string;
+  /** Verified by the phone's own record — the same rule every KPI uses. */
   connected: boolean;
+  /** Proven talk seconds, or null when the phone measured nothing. */
+  verifiedSeconds: number | null;
   durationSeconds: number;
   category: string | null;
   summary: string | null;
@@ -71,7 +74,7 @@ export const getLeadCallHistory = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("call_reports")
         .select(
-          "id, agent_id, connected, duration_seconds, category, summary, note, reason, temperature, grade, follow_up_at, recording_id, call_ended_at, submitted_at, created_at",
+          "id, agent_id, connected, connection_verified, duration_seconds, category, summary, note, reason, temperature, grade, follow_up_at, recording_id, call_started_at, call_ended_at, submitted_at, created_at",
         )
         .eq("lead_id", data.leadId)
         .eq("status", "submitted")
@@ -105,14 +108,25 @@ export const getLeadCallHistory = createServerFn({ method: "POST" })
     const byId = new Map((recordings.data ?? []).map((row) => [row.id, evidence(row)]));
     const attached = new Set<string>();
 
-    const calls: LeadCall[] = (reports.data ?? []).map((row) => {
+    // One row per call session, and the connection state comes from the shared
+    // rule — Lead 360 must not call a conversation "কথা হয়েছে" when the desk,
+    // HQ and the daily report count the same call as "কেউ ধরেনি".
+    const { canonicalCallsOf, reportConnected } = await import("@/lib/call-evidence");
+    const sessions = canonicalCallsOf(reports.data ?? []);
+    const sessionIds = new Set(sessions.map((c) => c.id));
+
+    const calls: LeadCall[] = (reports.data ?? [])
+      .filter((row) => sessionIds.has(row.id))
+      .map((row) => {
       const recording = row.recording_id ? byId.get(row.recording_id) ?? null : null;
       if (recording) attached.add(recording.id);
+      const measured = row.duration_seconds ?? 0;
       return {
         id: row.id,
         at: row.submitted_at ?? row.call_ended_at ?? row.created_at,
-        connected: Boolean(row.connected),
-        durationSeconds: row.duration_seconds ?? 0,
+        connected: reportConnected(row),
+        verifiedSeconds: measured > 0 ? measured : null,
+        durationSeconds: measured,
         category: row.category ?? null,
         summary: row.summary ?? null,
         note: row.note ?? null,

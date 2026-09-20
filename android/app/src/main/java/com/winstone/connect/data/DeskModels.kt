@@ -27,11 +27,16 @@ data class CallRow(
     val id: String,
     val leadId: String?,
     val phone: String,
-    val durationSeconds: Int,
+    /** ফোনে মাপা কথার সময়; না মাপা হলে null — কখনো বানানো ০ নয়। */
+    val verifiedSeconds: Int?,
+    /** সার্ভারের এক হিসাব: ফোনের প্রমাণে কথা হয়েছে কি না। */
+    val connected: Boolean,
     val direction: String,
+    /** "report_only" = রিপোর্ট গেছে, অডিও ফাইল যায়নি। */
     val syncStatus: String,
     val summary: String?,
     val sentiment: String?,
+    val analysisStatus: String?,
     val createdAt: String,
 )
 
@@ -181,11 +186,13 @@ fun parseCalls(arr: JSONArray): List<CallRow> = (0 until arr.length()).map { i -
         id = o.optString("id"),
         leadId = o.str("lead_id"),
         phone = o.optString("phone_number"),
-        durationSeconds = o.optInt("duration_seconds"),
+        verifiedSeconds = if (o.isNull("verified_seconds")) null else o.optInt("verified_seconds"),
+        connected = o.optBoolean("connected", false),
         direction = o.optString("call_direction", "outgoing"),
-        syncStatus = o.optString("sync_status", "uploaded"),
+        syncStatus = o.optString("sync_status", "report_only"),
         summary = o.str("ai_summary"),
         sentiment = o.str("sentiment"),
+        analysisStatus = o.str("analysis_status"),
         createdAt = o.optString("created_at"),
     )
 }

@@ -206,10 +206,9 @@ fun AgentDashboardScreen(
                     MetricBox(
                         label = "শেষ টাস্ক",
                         value = metrics?.completedTasks?.toString() ?: "0",
-                        hint = if (metrics?.talkTimeAvailable == true)
-                            "${metrics.talkMinutes} মিনিট কথা"
-                        else
-                            "কথার সময় অনুপলব্ধ",
+                        hint = metrics?.takeIf { it.talkTimeAvailable }
+                            ?.let { "${it.talkMinutes} মিনিট কথা" }
+                            ?: "কথার সময় অনুপলব্ধ",
                         modifier = Modifier.weight(1f),
                         accent = WinGreen,
                     )
