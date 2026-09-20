@@ -862,7 +862,9 @@ export async function editSubmittedReport(input: {
     throw new Error("সংশোধনের সময় শেষ — সকাল ৯:০০ থেকে ১২:৪৫ পর্যন্ত একই দিনের রিপোর্ট বদলানো যায়");
   }
 
-  const received = report.connected !== false;
+  // The same verified-connection rule as submission: an edit can never turn a
+  // call the phone never proved into a completed conversation.
+  const received = reportConnected(report);
   const invalid = validateReport({ ...input, connected: received });
   if (invalid) throw new Error(invalid.message);
 
