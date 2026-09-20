@@ -1,4 +1,5 @@
 import {
+  type CanonicalCall,
   buildAgentStats,
   type CallRecording,
   type Lead,
@@ -125,6 +126,8 @@ function buildMetrics(
     connected,
     connectRate: dials ? (connected / dials) * 100 : 0,
     talkMinutes: Math.round((stats?.talkSeconds ?? 0) / 60),
+    /** False when no connected call carries a phone-measured duration. */
+    talkTimeAvailable: stats?.talkTimeAvailable ?? false,
     avgCallSeconds: Math.round(stats?.avgCallSeconds ?? 0),
     whatsappTouches: stats?.whatsappTouches ?? 0,
     assigned: leads.length,
@@ -220,7 +223,7 @@ function fallback(
 /** Real-time coaching for one agent, grounded in their own calls and chats. */
 export async function buildCoachBriefing(agentId: string): Promise<CoachBriefing> {
   const { profile, leads, calls, messages, config } = await loadAgentData(agentId);
-  const metrics = buildMetrics(profile, leads, calls, messages, config);
+  const metrics = buildMetrics(profile, leads, calls, callEvents, messages, config);
   const base = {
     agent: { id: profile.id, name: profile.name, employeeId: profile.employee_id },
     metrics,
