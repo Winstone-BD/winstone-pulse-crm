@@ -171,7 +171,7 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
       advice: "আগ্রহী কথোপকথন থেকে অন্তত ৫টি ফলো-আপ ঠিক করুন",
     };
   }
-  if (line.connected > 0 && averageTalk < 2) {
+  if (line.connected > 0 && averageTalk !== null && averageTalk < 2) {
     return {
       reason,
       gap: `গড় কথা ${averageTalk.toFixed(1)} মিনিট`,
