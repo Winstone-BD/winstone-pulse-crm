@@ -74,6 +74,8 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
   });
 
   const data = summary.data;
+  // Executive HQ sessions are view-only: never render actions the server will reject.
+  const canAct = showControls && data?.canWrite === true;
 
   return (
     <section className="card-elevated space-y-4 p-4">
@@ -85,6 +87,11 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
           <p className="text-xs text-muted-foreground">
             শেষ ৭ দিনের হিসাব · প্রতি ৩০ সেকেন্ডে নিজে থেকে হালনাগাদ হয়।
           </p>
+          {showControls && data && !data.canWrite ? (
+            <p className="text-xs text-muted-foreground">
+              এই সেশন শুধু দেখার জন্য — পরিবর্তনের কাজ কোঅর্ডিনেটর বা আইটি কনসোল থেকে করতে হবে।
+            </p>
+          ) : null}
         </div>
         <div className="flex gap-2">
           <Button
@@ -95,7 +102,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
           >
             <RefreshCw className="size-3.5" /> রিফ্রেশ
           </Button>
-          {showControls ? (
+          {canAct ? (
             <Button
               size="sm"
               className="gap-1.5"
@@ -229,7 +236,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                         : device.lastSeenAt
                           ? new Date(device.lastSeenAt).toLocaleString("bn-BD")
                           : "—"}
-                      {showControls && !device.revoked ? (
+                      {canAct && !device.revoked ? (
                         <ConfirmAction
                           title="ফোনটির অনুমতি বাতিল করবেন?"
                           description="এই ফোন থেকে আর কল বা রেকর্ডিং CRM-এ আসবে না। এজেন্টকে আবার সাইন ইন করে ফোন যুক্ত করতে হবে।"
@@ -269,7 +276,7 @@ export function CallOpsPanel({ showControls = false }: { showControls?: boolean 
                     <span>
                       <strong>{alert.title}</strong> — {alert.detail ?? ""}
                     </span>
-                    {showControls ? (
+                    {canAct ? (
                       <Button
                         size="sm"
                         variant="outline"

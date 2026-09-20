@@ -20,7 +20,7 @@ async function requireSupervisor(adminToken: string | null, write = false) {
 export const callOpsSummary = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }) => {
-    await requireSupervisor(data.adminToken ?? null);
+    const caller = await requireSupervisor(data.adminToken ?? null);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const since = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
@@ -77,6 +77,8 @@ export const callOpsSummary = createServerFn({ method: "POST" })
     }
 
     return {
+      // Executive HQ reads every board here but may never write.
+      canWrite: !caller.readOnly,
       reports: {
         pending: count(reports.data, (r) => r.status === "pending"),
         submitted: count(reports.data, (r) => r.status === "submitted"),
