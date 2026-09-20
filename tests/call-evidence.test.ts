@@ -1,3 +1,6 @@
+import { describe, expect, it } from "vitest";
+
+import { averageTalkSecondsOf } from "@/lib/call-evidence";
 
 describe("averageTalkSecondsOf (ATA)", () => {
   it("averages verified talk over measured connected calls only", () => {
