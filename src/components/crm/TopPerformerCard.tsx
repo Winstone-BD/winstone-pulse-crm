@@ -150,7 +150,7 @@ export function TopPerformerCard() {
             {dayLabel} Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে · {DHAKA_TZ_LABEL}
+            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — যাচাইকৃত কল সংযোগ ও ফোন-মাপা কথার সময় থেকে · ATA গণনা ২০ সেপ্টেম্বর ২০২৬ থেকে · {DHAKA_TZ_LABEL}
           </p>
         </div>
       </header>
@@ -194,6 +194,11 @@ export function TopPerformerCard() {
                 </div>
                 <p className="tabular mt-1 text-[11px] text-muted-foreground">
                   দৈনিক কোটা {agent.quota}টি · অনুপাত-স্কোর {agent.fairScore}
+                </p>
+                <p className="tabular mt-1 text-[11px] text-muted-foreground">
+                  {agent.avgTalkSeconds === null || agent.avgTalkSeconds === undefined
+                    ? "ATA অনুপলব্ধ — ২০ সেপ্টেম্বর ২০২৬ থেকে মাপা কথার সময় গণনা হয়"
+                    : `গড় কথা (ATA) ${Math.floor(agent.avgTalkSeconds / 60)} মি ${agent.avgTalkSeconds % 60} সে`}
                 </p>
                 {agent.score === 0 ? (
                   <p className="mt-2 text-[11px] text-muted-foreground">

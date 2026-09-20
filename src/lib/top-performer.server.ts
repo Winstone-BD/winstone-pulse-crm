@@ -1,4 +1,10 @@
-import { canonicalCallsOf, talkTimeOf } from "@/lib/call-evidence";
+import {
+  averageTalkSecondsOf,
+  canonicalCallsOf,
+  talkTimeOf,
+  VERIFIED_TALK_START_DATE,
+} from "@/lib/call-evidence";
+import { dhakaDateKey } from "@/lib/daily-performance";
 /**
  * Daily best performer, computed only from what the agents themselves submitted
  * today (their own call reports and follow-ups). Nothing is invented: if there
@@ -37,6 +43,11 @@ export type PerformerLine = {
   completionPercent: number;
   /** Quota-normalised score — how the same effort looks on a standard round. */
   fairScore: number;
+  /**
+   * Average talk time: verified talk seconds ÷ measured connected calls, from
+   * 20 Sep 2026 onward only. null = nothing measured / before the contract.
+   */
+  avgTalkSeconds: number | null;
 };
 
 export type RankedPerformer = PerformerLine & {
@@ -107,7 +118,8 @@ export function scoreOf(
 }
 
 export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "reason" | "gap" | "advice"> {
-  const averageTalk = line.connected ? line.talkMinutes / line.connected : 0;
+  // ATA = verified talk ÷ measured connected calls only (20 Sep 2026 onward).
+  const averageTalk = line.avgTalkSeconds === null ? null : line.avgTalkSeconds / 60;
   const reportGap = Math.max(0, line.called - line.reports);
 
   // Completion is always shown as the person's OWN quota ratio, so a 15-lead
@@ -159,7 +171,7 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
       advice: "আগ্রহী কথোপকথন থেকে অন্তত ৫টি ফলো-আপ ঠিক করুন",
     };
   }
-  if (line.connected > 0 && averageTalk < 2) {
+  if (line.connected > 0 && averageTalk !== null && averageTalk < 2) {
     return {
       reason,
       gap: `গড় কথা ${averageTalk.toFixed(1)} মিনিট`,
@@ -264,6 +276,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       mine.map((c) => ({ connected: c.verifiedConnected, verifiedSeconds: c.verifiedSeconds })),
     );
     const talkMinutes = Math.round(talk.seconds / 60);
+    // ATA counts only calls from the verified-contract start date onward.
+    const avgTalkSeconds = averageTalkSecondsOf(
+      mine.filter((c) => dhakaDateKey(new Date(c.at)) >= VERIFIED_TALK_START_DATE),
+    );
     const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
     const quota = quotaFor(agent.employee_id, floorQuota);
     const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
@@ -281,6 +297,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       quota,
       targetQuota,
       completionPercent: completionPercent(completed, targetQuota),
+      avgTalkSeconds,
     };
     const score = Math.round(scoreOf(base));
     return {
@@ -340,6 +357,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     reasons.push(`${winner.connected}টি কলে কথা হয়েছে — আজ সবচেয়ে বেশি`);
     if (winner.reports) reasons.push(`${winner.reports}টি কল রিপোর্ট নিজে জমা দিয়েছেন`);
     if (winner.talkMinutes) reasons.push(`মোট ${winner.talkMinutes} মিনিট কথা বলেছেন`);
+    if (winner.avgTalkSeconds !== null)
+      reasons.push(
+        `গড় কথা (ATA) ${Math.floor(winner.avgTalkSeconds / 60)} মিনিট ${winner.avgTalkSeconds % 60} সেকেন্ড`,
+      );
     if (winner.followUps) reasons.push(`${winner.followUps}টি ফলো-আপ সময়সহ বসিয়েছেন`);
     if (winner.called) reasons.push(`কানেক্ট হার ${winner.connectRate}% (${winner.called}টি কলে)`);
     if (runnerUp)
