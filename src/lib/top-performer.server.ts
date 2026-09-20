@@ -43,6 +43,11 @@ export type PerformerLine = {
   completionPercent: number;
   /** Quota-normalised score — how the same effort looks on a standard round. */
   fairScore: number;
+  /**
+   * Average talk time: verified talk seconds ÷ measured connected calls, from
+   * 20 Sep 2026 onward only. null = nothing measured / before the contract.
+   */
+  avgTalkSeconds: number | null;
 };
 
 export type RankedPerformer = PerformerLine & {
@@ -113,7 +118,8 @@ export function scoreOf(
 }
 
 export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "reason" | "gap" | "advice"> {
-  const averageTalk = line.connected ? line.talkMinutes / line.connected : 0;
+  // ATA = verified talk ÷ measured connected calls only (20 Sep 2026 onward).
+  const averageTalk = line.avgTalkSeconds === null ? null : line.avgTalkSeconds / 60;
   const reportGap = Math.max(0, line.called - line.reports);
 
   // Completion is always shown as the person's OWN quota ratio, so a 15-lead
