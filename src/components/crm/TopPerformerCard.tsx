@@ -150,7 +150,7 @@ export function TopPerformerCard() {
             {dayLabel} Top 3 পারফর্মার
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — এজেন্টদের নিজের জমা দেওয়া আপডেট থেকে · {DHAKA_TZ_LABEL}
+            {revealTime}-এর হিসাব{data.isPreviousDay ? " (গতকাল)" : ""} — যাচাইকৃত কল সংযোগ ও ফোন-মাপা কথার সময় থেকে · ATA গণনা ২০ সেপ্টেম্বর ২০২৬ থেকে · {DHAKA_TZ_LABEL}
           </p>
         </div>
       </header>
