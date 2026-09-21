@@ -296,7 +296,17 @@ export async function openCallReport(input: {
     })
     .select("id")
     .single();
-  if (error || !data) throw new Error(error?.message ?? "Could not open post-call report");
+  if (error || !data) {
+    // Two call-end events for the same agent can land at once (app retry +
+    // sync worker). The unique "one pending per agent" index rejects the
+    // loser — fall back to the report that did get created instead of 500ing.
+    const code = (error as { code?: string } | null)?.code;
+    if (code === "23505") {
+      const raced = await pendingReportFor(input.agentId);
+      if (raced) return { id: raced.id, reused: true as const };
+    }
+    throw new Error(error?.message ?? "Could not open post-call report");
+  }
 
   const { logLeadEvent } = await import("@/lib/lead-events.server");
   await logLeadEvent({
