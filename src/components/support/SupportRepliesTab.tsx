@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ConfirmAction } from "@/components/crm/ConfirmAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,15 +51,21 @@ export function SupportRepliesTab() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-primary">{reply.shortcut}</span>
               <span className="text-sm font-medium">{reply.title}</span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="ml-auto size-7"
-                aria-label={`Delete ${reply.shortcut}`}
-                onClick={() => remove.mutate(reply.id)}
+              <ConfirmAction
+                title={`Delete ${reply.shortcut}?`}
+                description="This saved reply is removed for the whole team and cannot be restored."
+                onConfirm={() => remove.mutate(reply.id)}
               >
-                <Trash2 className="size-3.5" />
-              </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="ml-auto size-7"
+                  aria-label={`Delete ${reply.shortcut}`}
+                  disabled={remove.isPending}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </ConfirmAction>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{reply.body}</p>
           </li>
