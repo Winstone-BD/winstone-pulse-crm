@@ -27,8 +27,11 @@ export const Route = createFileRoute("/api/public/agent/dashboard-metrics")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const agentId = caller.profile.id;
 
-        const todayStart = new Date();
-        todayStart.setUTCHours(0, 0, 0, 0);
+        // "Today" is the Bangladesh business day, not the UTC day: UTC midnight
+        // is 6:00 AM in Dhaka, which would park early-morning calls in yesterday.
+        const { dhakaParts, dhakaInstant } = await import("@/lib/shift.server");
+        const { dateKey } = dhakaParts();
+        const todayStart = dhakaInstant(dateKey, 0);
         const todayIso = todayStart.toISOString();
 
         const [{ data: leads }, { data: reports }] = await Promise.all([
