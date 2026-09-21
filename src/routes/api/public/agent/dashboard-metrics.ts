@@ -67,6 +67,8 @@ export const Route = createFileRoute("/api/public/agent/dashboard-metrics")({
 
         return json({
           ok: true,
+          date_key: dateKey,
+          time_zone: "Asia/Dhaka",
           progress_percent: progressPercent,
           assigned,
           called,
