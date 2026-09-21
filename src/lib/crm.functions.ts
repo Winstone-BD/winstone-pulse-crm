@@ -14,6 +14,29 @@ const SnapshotScope = z.object({
 });
 
 /**
+ * The Data API caps a single select at 1000 rows, so the board must page or it
+ * silently loses every lead past the first thousand (and every count with it).
+ */
+async function allLeads(
+  client: { from: (t: "leads") => any },
+): Promise<{ data: any[]; error: { message: string } | null }> {
+  const PAGE = 1000;
+  const MAX = 50_000;
+  const rows: any[] = [];
+  for (let from = 0; from < MAX; from += PAGE) {
+    const { data, error } = await client
+      .from("leads")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) return { data: [], error };
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < PAGE) break;
+  }
+  return { data: rows, error: null };
+}
+
+/**
  * Board data scoped to who is asking.
  * Authority (HQ / IT PIN) and coordinators get the whole floor; a signed-in
  * agent gets only their own leads, calls and messages. Anyone else gets nothing.
