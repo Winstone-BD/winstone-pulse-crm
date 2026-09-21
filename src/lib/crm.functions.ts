@@ -53,7 +53,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
 
     const [profiles, leads, calls, messages, events] = await Promise.all([
       supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
-      supabaseAdmin.from("leads").select("*").order("updated_at", { ascending: false }),
+      allLeads(supabaseAdmin as never),
       supabaseAdmin
         .from("call_recordings")
         .select("*")
