@@ -55,6 +55,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-exec-navy: var(--exec-navy);
+  --color-exec-blue: var(--exec-blue);
+  --color-exec-emerald: var(--exec-emerald);
+  --color-exec-amber: var(--exec-amber);
+  --color-exec-red: var(--exec-red);
+  --color-exec-gold: var(--exec-gold);
   --font-display: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
