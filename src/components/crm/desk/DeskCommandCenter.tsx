@@ -466,8 +466,11 @@ export function DeskCommandCenter({
               </Select>
             </div>
 
-            <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border/70 bg-surface-2/60 p-2 text-[11px]">
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5">
+            <div
+              className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border/70 bg-surface-2/60 p-2 text-[11px]"
+              aria-live="polite"
+            >
+              <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5 pb-0.5">
                 <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
                 <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
                 <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
@@ -483,17 +486,17 @@ export function DeskCommandCenter({
                 </span>
                 <span className="tabular shrink-0 text-muted-foreground">{bn(rows.length)} ফল</span>
               </div>
-              {hasQueueState && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
-                  onClick={resetQueue}
-                >
-                  <RotateCcw className="size-3" /> রিসেট
-                </Button>
-              )}
+              <Button
+                type="button"
+                size="sm"
+                variant={hasQueueState ? "secondary" : "ghost"}
+                className="h-8 shrink-0 gap-1 px-2 text-[11px]"
+                onClick={resetQueue}
+                disabled={!hasQueueState}
+                aria-label="লিড কিউয়ের ফিল্টার, সার্চ ও সাজানো রিসেট করুন"
+              >
+                <RotateCcw className="size-3" /> রিসেট
+              </Button>
             </div>
 
             <div className="mt-3 max-h-[520px] overflow-y-auto">
@@ -558,7 +561,7 @@ export function DeskCommandCenter({
                           </span>
                         </div>
                       </button>
-                      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2">
+                      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
                         <WebCallButton
                           leadId={lead.id}
                           phone={lead.phone_number}
@@ -570,7 +573,7 @@ export function DeskCommandCenter({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-9 px-2 text-[11px]"
+                          className="col-span-2 h-9 px-2 text-[11px] sm:col-span-1"
                           onClick={() => setDossierId(lead.id)}
                         >
                           বিস্তারিত
@@ -793,12 +796,13 @@ export function DeskCommandCenter({
       <Sheet open={mobile360Open} onOpenChange={setMobile360Open}>
         <SheetContent
           side="bottom"
-          className="inset-x-0 bottom-0 h-[88dvh] w-full max-w-none gap-0 overflow-y-auto rounded-t-xl border-x border-t p-0 xl:hidden"
+          className="inset-x-0 bottom-0 flex h-[min(88dvh,760px)] w-full max-w-none flex-col gap-0 overflow-hidden rounded-t-xl border-x border-t p-0 xl:hidden"
         >
-          <SheetHeader className="sticky top-0 z-10 m-0 border-b border-border bg-background px-4 py-3 text-left">
-            <SheetTitle>লিড ৩৬০</SheetTitle>
+          <SheetHeader className="relative z-10 m-0 shrink-0 border-b border-border bg-background px-4 pb-3 pt-2 text-left">
+            <span aria-hidden className="mx-auto mb-1 block h-1 w-10 rounded-full bg-muted-foreground/35" />
+            <SheetTitle className="pr-10">লিড ৩৬০</SheetTitle>
           </SheetHeader>
-          <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Lead360Content
               selected={selected}
               selectedHistory={selectedHistory}
