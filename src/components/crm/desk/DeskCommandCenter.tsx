@@ -1018,6 +1018,22 @@ function Lead360Content({
         <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
       </div>
 
+      {canResolveFollowUp(selected) && (
+        <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-chart-4">
+            যোগাযোগ হয়েছে — এখন কী করবেন?
+          </p>
+          <FollowUpResolveActions
+            leadId={selected.id}
+            leadName={selected.name}
+            className="mt-2"
+          />
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+          </p>
+        </div>
+      )}
+
       <div>
         <p className="text-xs font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
         <ul className="mt-2 space-y-2">
