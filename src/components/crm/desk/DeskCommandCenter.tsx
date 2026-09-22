@@ -624,18 +624,14 @@ export function DeskCommandCenter({
                 <div>
                   <p className="text-[11px] font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
                   <ul className="mt-1.5 space-y-1.5">
-                    {buildTimeline(selectedCalls, selectedMsgs, selected.id, events)
-                      .slice(0, 6)
-                      .map((entry, i) => (
-                        <li key={`${entry.at}-${i}`} className="flex items-start gap-2 text-[11px]">
-                          <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary/60" />
-                          <span className="min-w-0 flex-1 truncate">{entry.title}</span>
-                          <span className="shrink-0 text-muted-foreground">
-                            {shortDate(entry.at)}
-                          </span>
-                        </li>
-                      ))}
-                    {buildTimeline(selectedCalls, selectedMsgs, selected.id, events).length === 0 && (
+                    {selectedHistory.map((entry) => (
+                      <li key={entry.key} className="flex items-start gap-2 text-[11px]">
+                        <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary/60" />
+                        <span className="min-w-0 flex-1 truncate">{entry.title}</span>
+                        <span className="shrink-0 text-muted-foreground">{shortDate(entry.at)}</span>
+                      </li>
+                    ))}
+                    {selectedHistory.length === 0 && (
                       <li className="text-[11px] text-muted-foreground">
                         এখনো কোনো কল বা মেসেজ নেই।
                       </li>
