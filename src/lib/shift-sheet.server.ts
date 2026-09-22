@@ -71,20 +71,27 @@ function categoryText(categories: Record<string, number>) {
     .join(", ");
 }
 
+/** The tab is created once; remembering it avoids a metadata read per write. */
+let tabReady = false;
+let tabSheetIdCache: number | null = null;
+
 async function ensureTab() {
+  if (tabReady) return;
   const meta = (await gatewayFetch(`/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`)) as {
     sheets?: { properties?: { title?: string } }[];
   } | null;
   const exists = (meta?.sheets ?? []).some((s) => s.properties?.title === TAB);
-  if (exists) return;
-  await gatewayFetch(`/spreadsheets/${SHEET_ID}:batchUpdate`, {
-    method: "POST",
-    body: JSON.stringify({ requests: [{ addSheet: { properties: { title: TAB } } }] }),
-  });
-  await gatewayFetch(
-    `/spreadsheets/${SHEET_ID}/values/${TAB}!A1:K1?valueInputOption=USER_ENTERED`,
-    { method: "PUT", body: JSON.stringify({ values: [[...HEADER]] }) },
-  );
+  if (!exists) {
+    await gatewayFetch(`/spreadsheets/${SHEET_ID}:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: TAB } } }] }),
+    });
+    await gatewayFetch(
+      `/spreadsheets/${SHEET_ID}/values/${TAB}!A1:K1?valueInputOption=USER_ENTERED`,
+      { method: "PUT", body: JSON.stringify({ values: [[...HEADER]] }) },
+    );
+  }
+  tabReady = true;
 }
 
 /** One summary → one block of rows (a totals row, then one row per agent). */
