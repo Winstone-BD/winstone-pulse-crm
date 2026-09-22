@@ -37,8 +37,8 @@ export const replayVersionDataFn = createServerFn({ method: "POST" })
     });
     await logAudit({
       action: "version_data_replay",
-      entity: "version_data_ledger",
-      detail: { versionCode: data.versionCode ?? null, agentId: data.agentId ?? null, count },
+      entityType: "version_data_ledger",
+      metadata: { versionCode: data.versionCode ?? null, agentId: data.agentId ?? null, count },
     }).catch(() => undefined);
     return { count };
   });
