@@ -38,13 +38,23 @@ function gatewayHeaders() {
   };
 }
 
-async function gatewayFetch(path: string, init?: RequestInit) {
+/** Google's per-minute quota is shared, so a 429/5xx waits and tries again. */
+async function gatewayFetch(path: string, init?: RequestInit, attempt = 0): Promise<unknown> {
   const response = await fetch(`${GATEWAY}${path}`, {
     ...init,
     headers: { ...gatewayHeaders(), ...(init?.headers ?? {}) },
   });
   const body = await response.text();
   if (!response.ok) {
+    const retryable = response.status === 429 || response.status >= 500;
+    if (retryable && attempt < 3) {
+      const retryAfter = Number(response.headers.get("retry-after"));
+      const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : 1500 * 2 ** attempt + Math.floor(Math.random() * 400);
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      return gatewayFetch(path, init, attempt + 1);
+    }
     console.error(`Sheets gateway failed [${response.status}]: ${body}`);
     throw new Error(`Google Sheets ত্রুটি [${response.status}]: ${body.slice(0, 300)}`);
   }
@@ -61,20 +71,27 @@ function categoryText(categories: Record<string, number>) {
     .join(", ");
 }
 
+/** The tab is created once; remembering it avoids a metadata read per write. */
+let tabReady = false;
+let tabSheetIdCache: number | null = null;
+
 async function ensureTab() {
+  if (tabReady) return;
   const meta = (await gatewayFetch(`/spreadsheets/${SHEET_ID}?fields=sheets.properties.title`)) as {
     sheets?: { properties?: { title?: string } }[];
   } | null;
   const exists = (meta?.sheets ?? []).some((s) => s.properties?.title === TAB);
-  if (exists) return;
-  await gatewayFetch(`/spreadsheets/${SHEET_ID}:batchUpdate`, {
-    method: "POST",
-    body: JSON.stringify({ requests: [{ addSheet: { properties: { title: TAB } } }] }),
-  });
-  await gatewayFetch(
-    `/spreadsheets/${SHEET_ID}/values/${TAB}!A1:K1?valueInputOption=USER_ENTERED`,
-    { method: "PUT", body: JSON.stringify({ values: [[...HEADER]] }) },
-  );
+  if (!exists) {
+    await gatewayFetch(`/spreadsheets/${SHEET_ID}:batchUpdate`, {
+      method: "POST",
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: TAB } } }] }),
+    });
+    await gatewayFetch(
+      `/spreadsheets/${SHEET_ID}/values/${TAB}!A1:K1?valueInputOption=USER_ENTERED`,
+      { method: "PUT", body: JSON.stringify({ values: [[...HEADER]] }) },
+    );
+  }
+  tabReady = true;
 }
 
 /** One summary → one block of rows (a totals row, then one row per agent). */
@@ -167,12 +184,14 @@ export async function appendShiftSummaryToSheetQuietly(
 }
 
 async function tabSheetId(): Promise<number> {
+  if (tabSheetIdCache !== null) return tabSheetIdCache;
   const meta = (await gatewayFetch(
     `/spreadsheets/${SHEET_ID}?fields=sheets.properties`,
   )) as { sheets?: { properties?: { title?: string; sheetId?: number } }[] } | null;
   const found = (meta?.sheets ?? []).find((s) => s.properties?.title === TAB);
   if (!found?.properties?.sheetId) throw new Error("শিফট সামারি ট্যাব খুঁজে পাওয়া যায়নি");
-  return found.properties.sheetId;
+  tabSheetIdCache = found.properties.sheetId;
+  return tabSheetIdCache;
 }
 
 async function logShiftSheetSync(shiftKey: string, rowsWritten: number) {

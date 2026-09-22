@@ -30,10 +30,20 @@ function gatewayHeaders() {
   };
 }
 
-async function gatewayFetch(path: string) {
+/** Google's per-minute quota is shared, so a 429/5xx waits and tries again. */
+async function gatewayFetch(path: string, attempt = 0): Promise<unknown> {
   const response = await fetch(`${GATEWAY}${path}`, { headers: gatewayHeaders() });
   const body = await response.text();
   if (!response.ok) {
+    const retryable = response.status === 429 || response.status >= 500;
+    if (retryable && attempt < 3) {
+      const retryAfter = Number(response.headers.get("retry-after"));
+      const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : 1500 * 2 ** attempt + Math.floor(Math.random() * 400);
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      return gatewayFetch(path, attempt + 1);
+    }
     console.error(`Sheets gateway failed [${response.status}]: ${body}`);
     if (response.status === 403 || response.status === 404) {
       throw new Error("শিটটি পড়া যায়নি — সংযুক্ত Google অ্যাকাউন্টকে এই শিটের অ্যাক্সেস দিন");
@@ -43,12 +53,20 @@ async function gatewayFetch(path: string) {
   return body ? (JSON.parse(body) as unknown) : null;
 }
 
+/** Tab lists rarely change; remember them briefly to cut metadata reads. */
+const tabCache = new Map<string, { tabs: string[]; at: number }>();
+const TAB_CACHE_MS = 5 * 60 * 1000;
+
 /** Tab names in the spreadsheet, in sheet order. */
 export async function listSheetTabs(sheetId: string): Promise<string[]> {
+  const cached = tabCache.get(sheetId);
+  if (cached && Date.now() - cached.at < TAB_CACHE_MS) return cached.tabs;
   const meta = (await gatewayFetch(`/spreadsheets/${sheetId}?fields=sheets.properties.title`)) as {
     sheets?: { properties?: { title?: string } }[];
   } | null;
-  return (meta?.sheets ?? []).map((s) => s.properties?.title ?? "").filter(Boolean);
+  const tabs = (meta?.sheets ?? []).map((s) => s.properties?.title ?? "").filter(Boolean);
+  tabCache.set(sheetId, { tabs, at: Date.now() });
+  return tabs;
 }
 
 /** Raw values grid of one tab (first 2000 rows, columns A-H). */
