@@ -143,6 +143,8 @@ function SystemBoard() {
 
       <SheetSyncHealthPanel />
 
+      <VersionDataPanel />
+
       <StaffAccountsTable />
 
       <ShiftSummaryPanel scope="it" />
