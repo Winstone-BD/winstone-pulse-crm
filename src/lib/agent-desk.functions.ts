@@ -222,3 +222,94 @@ export const triageMyLead = createServerFn({ method: "POST" })
 
     return { leadId: data.leadId, action: data.action, scheduledAt };
   });
+
+const FollowUpResolveInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  leadId: z.string().uuid(),
+  action: z.enum(["reschedule", "complete"]),
+  hours: z.number().int().min(1).max(720).optional(),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+/**
+ * Desk follow-up resolution after the agent has contacted the lead:
+ *  - "reschedule" keeps the lead in the follow-up queue with a new time
+ *  - "complete" closes the follow-up, so the lead leaves the queue by itself
+ * Same ownership rule as every other desk action.
+ */
+export const resolveMyFollowUp = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => FollowUpResolveInput.parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { LEAD_OWNER_COLUMNS, leadHeldByOther, LEAD_NOT_YOURS } = await import(
+      "@/lib/lead-access.server"
+    );
+
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select(`id, name, phone_number, status, ${LEAD_OWNER_COLUMNS}`)
+      .eq("id", data.leadId)
+      .maybeSingle();
+    if (!lead) throw new Error(LEAD_NOT_YOURS);
+    if (caller.scope === "agent" && caller.profile && leadHeldByOther(lead, caller.profile.id)) {
+      throw new Error(LEAD_NOT_YOURS);
+    }
+
+    const nowIso = new Date().toISOString();
+
+    if (data.action === "reschedule") {
+      const scheduledAt = new Date(Date.now() + (data.hours ?? 24) * 3_600_000).toISOString();
+      const { error } = await supabaseAdmin
+        .from("leads")
+        .update({ status: "follow_up", retry_after: scheduledAt, updated_at: nowIso })
+        .eq("id", data.leadId);
+      if (error) throw new Error(error.message);
+
+      await supabaseAdmin.from("follow_up_events").insert({
+        lead_id: data.leadId,
+        agent_id: caller.profile?.id ?? null,
+        category: "follow_up",
+        customer_name: lead.name,
+        phone_number: lead.phone_number,
+        note: data.note ?? "ডেস্ক থেকে আবার ফলো-আপ সময় দেওয়া হয়েছে",
+        scheduled_at: scheduledAt,
+      });
+
+      const { logLeadEvent } = await import("@/lib/lead-events.server");
+      await logLeadEvent({
+        leadId: data.leadId,
+        agentId: caller.profile?.id ?? null,
+        kind: "outcome_logged",
+        detail: "ডেস্ক: আবার ফলো-আপ সময় দেওয়া হয়েছে",
+      });
+
+      return { leadId: data.leadId, action: data.action, scheduledAt };
+    }
+
+    // complete: the follow-up work is finished, so the lead leaves the queue.
+    const { error } = await supabaseAdmin
+      .from("leads")
+      .update({ status: "closed", retry_after: null, updated_at: nowIso })
+      .eq("id", data.leadId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin
+      .from("follow_up_events")
+      .update({ status: "done", completed_at: nowIso })
+      .eq("lead_id", data.leadId)
+      .neq("status", "done");
+
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({
+      leadId: data.leadId,
+      agentId: caller.profile?.id ?? null,
+      kind: "outcome_logged",
+      detail: "ডেস্ক: ফলো-আপ সম্পন্ন করা হয়েছে",
+    });
+
+    return { leadId: data.leadId, action: data.action, scheduledAt: null };
+  });
