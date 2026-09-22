@@ -137,10 +137,14 @@ export function ExecutiveKpiBoard({
       (l) => l.status === "closed" && l.outcome_category === "deal_won",
     ).length;
     const followUp = leads.filter((l) => l.status === "follow_up").length;
-    const overdue = leads.filter(
-      (l) => l.status === "follow_up" && l.follow_up_at && Date.parse(l.follow_up_at) < now,
+    const overdue = leads.filter((l) => {
+      if (l.status !== "follow_up") return false;
+      if (l.retry_after) return Date.parse(l.retry_after) < now;
+      return now - Date.parse(l.last_call_at ?? l.updated_at) > 24 * 3_600_000;
+    }).length;
+    const uncalled = leads.filter(
+      (l) => l.call_attempts === 0 && !(l.call_count ?? 0) && !l.last_call_at,
     ).length;
-    const uncalled = leads.filter((l) => !(l.call_count ?? 0) && !l.last_call_at).length;
     const hotReady = leads.filter(
       (l) => l.temperature === "hot" && l.status !== "closed",
     ).length;
