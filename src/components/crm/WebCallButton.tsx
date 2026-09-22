@@ -45,6 +45,7 @@ export function WebCallButton({
   className,
   label = "কল করুন",
   name = null,
+  ariaLabel,
 }: {
   leadId?: string | null;
   phone: string;
@@ -52,6 +53,7 @@ export function WebCallButton({
   label?: string;
   /** Customer name used when the number has to become a new lead. */
   name?: string | null;
+  ariaLabel?: string;
 }) {
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
@@ -141,6 +143,7 @@ export function WebCallButton({
         className={cn("h-11 min-w-0 flex-1 rounded-xl text-base font-semibold", className)}
         disabled={end.isPending}
         onClick={() => end.mutate()}
+        aria-label={ariaLabel ? `${ariaLabel} শেষ করুন` : undefined}
       >
         {end.isPending ? <Loader2 className="size-5 animate-spin" /> : <Square className="size-5" />}
         <span className="tabular">
@@ -161,6 +164,7 @@ export function WebCallButton({
       disabled={start.isPending}
       onClick={() => start.mutate()}
       title="কল করুন — কল শেষে রিপোর্ট বাধ্যতামূলক"
+      aria-label={ariaLabel}
     >
       {start.isPending ? (
         <Loader2 className="size-5 animate-spin" />
