@@ -211,6 +211,7 @@ function Tile({
 function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
+  const [tab, setTab] = useState<string>("leads");
 
   if (isPending) {
     return (
