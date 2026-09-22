@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
+import { FollowUpResolveActions } from "@/components/crm/FollowUpResolveActions";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
@@ -81,6 +82,20 @@ const SORT_LABELS: Record<QueueSort, string> = {
   serial: "সিরিয়াল অনুযায়ী",
 };
 
+/**
+ * The follow-up resolve pair only makes sense once the lead has actually been
+ * contacted: it is parked for follow-up, or a call/attempt is already on record.
+ */
+function canResolveFollowUp(lead: Lead) {
+  if (lead.status === "closed") return false;
+  return (
+    lead.status === "follow_up" ||
+    lead.status === "contacted" ||
+    Boolean(lead.retry_after) ||
+    Boolean(lead.last_call_at)
+  );
+}
+
 function bn(n: number) {
   return n.toLocaleString("bn-BD");
 }
@@ -120,10 +135,36 @@ function KpiCard({
     chart4: "bg-chart-4/15 text-chart-4",
     destructive: "bg-destructive/15 text-destructive",
   }[tone];
+  const glowClass = {
+    primary: "from-primary/12 ring-primary/20",
+    live: "from-live/12 ring-live/20",
+    chart4: "from-chart-4/12 ring-chart-4/20",
+    destructive: "from-destructive/12 ring-destructive/20",
+  }[tone];
+  const barClass = {
+    primary: "bg-primary",
+    live: "bg-live",
+    chart4: "bg-chart-4",
+    destructive: "bg-destructive",
+  }[tone];
   return (
-    <div className="card-elevated relative overflow-hidden p-3">
+    <div
+      className={cn(
+        "card-elevated relative overflow-hidden bg-gradient-to-br to-transparent p-3 ring-1 transition-shadow hover:shadow-lg",
+        glowClass,
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn("absolute inset-x-0 top-0 h-0.5 opacity-70", barClass)}
+      />
       <div className="flex items-center gap-2">
-        <span className={cn("grid size-8 shrink-0 place-items-center rounded-xl", toneClass)}>
+        <span
+          className={cn(
+            "grid size-9 shrink-0 place-items-center rounded-xl shadow-inner",
+            toneClass,
+          )}
+        >
           {icon}
         </span>
         <p className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">{label}</p>
@@ -133,7 +174,7 @@ function KpiCard({
       {progress !== undefined && (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className={cn("h-full rounded-full transition-all", barClass)}
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
@@ -620,6 +661,14 @@ export function DeskCommandCenter({
                           বিস্তারিত
                         </Button>
                       </div>
+                      {canResolveFollowUp(lead) && (
+                        <FollowUpResolveActions
+                          leadId={lead.id}
+                          leadName={lead.name}
+                          compact
+                          className="mt-2 border-t border-border/60 pt-2"
+                        />
+                      )}
                     </li>
                   );
                 })}
@@ -784,6 +833,21 @@ export function DeskCommandCenter({
                   <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
                   <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
                 </div>
+                {canResolveFollowUp(selected) && (
+                  <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-chart-4">
+                      যোগাযোগ হয়েছে — এখন কী করবেন?
+                    </p>
+                    <FollowUpResolveActions
+                      leadId={selected.id}
+                      leadName={selected.name}
+                      className="mt-2"
+                    />
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-[11px] font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
                   <ul className="mt-1.5 space-y-1.5">
@@ -979,6 +1043,22 @@ function Lead360Content({
         <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
         <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
       </div>
+
+      {canResolveFollowUp(selected) && (
+        <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-chart-4">
+            যোগাযোগ হয়েছে — এখন কী করবেন?
+          </p>
+          <FollowUpResolveActions
+            leadId={selected.id}
+            leadName={selected.name}
+            className="mt-2"
+          />
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+          </p>
+        </div>
+      )}
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
