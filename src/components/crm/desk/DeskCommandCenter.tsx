@@ -7,11 +7,14 @@ import {
   MessageCircle,
   PhoneCall,
   PhoneOutgoing,
+  RotateCcw,
   Search,
+  SlidersHorizontal,
   Timer,
   TrendingUp,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -21,6 +24,15 @@ import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
@@ -53,6 +65,7 @@ const TEMP_STYLES: Record<string, string> = {
 };
 
 type QueueFilter = "pending" | "follow_up" | "hot" | "done" | "all";
+type QueueSort = "priority" | "recent" | "name" | "serial";
 
 const QUEUE_LABELS: Record<QueueFilter, string> = {
   pending: "কল বাকি",
@@ -60,6 +73,13 @@ const QUEUE_LABELS: Record<QueueFilter, string> = {
   hot: "হট",
   done: "কথা হয়েছে",
   all: "সব",
+};
+
+const SORT_LABELS: Record<QueueSort, string> = {
+  priority: "অগ্রাধিকার আগে",
+  recent: "সাম্প্রতিক আগে",
+  name: "নাম অনুযায়ী",
+  serial: "সিরিয়াল অনুযায়ী",
 };
 
 function bn(n: number) {
@@ -127,6 +147,9 @@ export function DeskCommandCenter({
   const [dossierId, setDossierId] = useState<string | null>(null);
   const [filter, setFilter] = useState<QueueFilter>("pending");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<QueueSort>("priority");
+  const [mobile360Open, setMobile360Open] = useState(false);
+  const isMobile = useIsMobile();
 
   const stats = useMemo(() => {
     const now = Date.now();
@@ -183,13 +206,24 @@ export function DeskCommandCenter({
           (l.serial_no ?? "").toLowerCase().includes(needle),
       )
       .sort((a, b) => {
+        if (sort === "recent") {
+          return Date.parse(b.last_call_at ?? b.created_at) - Date.parse(a.last_call_at ?? a.created_at);
+        }
+        if (sort === "name") return a.name.localeCompare(b.name, "bn");
+        if (sort === "serial") {
+          return (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true });
+        }
         const aOver = a.retry_after && Date.parse(a.retry_after) < now ? 0 : 1;
         const bOver = b.retry_after && Date.parse(b.retry_after) < now ? 0 : 1;
         if (aOver !== bOver) return aOver - bOver;
+        const rank = (lead: Lead) =>
+          lead.temperature === "hot" ? 0 : lead.temperature === "warm" ? 1 : 2;
+        const byTemperature = rank(a) - rank(b);
+        if (byTemperature !== 0) return byTemperature;
         return (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true });
       })
       .slice(0, 60);
-  }, [leads, filter, search]);
+  }, [leads, filter, search, sort]);
 
   const priority = useMemo(() => {
     const now = Date.now();
@@ -263,6 +297,17 @@ export function DeskCommandCenter({
                 : (LEAD_EVENT_LABELS[entry.event.kind] ?? entry.event.kind),
         }))
     : [];
+
+  const hasQueueState = filter !== "pending" || search.trim().length > 0 || sort !== "priority";
+  const resetQueue = () => {
+    setFilter("pending");
+    setSearch("");
+    setSort("priority");
+  };
+  const selectLead = (leadId: string) => {
+    setSelectedId(leadId);
+    if (isMobile) setMobile360Open(true);
+  };
 
   return (
     <section className="space-y-3">
@@ -346,44 +391,94 @@ export function DeskCommandCenter({
         />
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-3">
           {/* Lead queue */}
           <div className="card-elevated p-3 sm:p-4">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <h3 className="truncate text-sm font-semibold">আমার লিড কিউ</h3>
-                <p className="truncate text-[11px] text-muted-foreground">
-                  সারি বেছে নিলে ডানদিকে লিড ৩৬০ খুলবে
+                <p className="text-[11px] text-muted-foreground">
+                  {bn(rows.length)}টি দেখা যাচ্ছে · লিড বেছে নিলে ৩৬০ খুলবে
                 </p>
               </div>
-              <div className="relative w-full sm:w-56">
+              <div className="relative min-w-0 sm:w-64">
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="নাম বা নম্বর"
-                  className="h-9 pl-9"
+                  className="h-10 pl-9 pr-9"
                 />
+                {search && (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-1 top-1/2 size-8 -translate-y-1/2"
+                    onClick={() => setSearch("")}
+                    aria-label="সার্চ মুছুন"
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                )}
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {(Object.keys(QUEUE_LABELS) as QueueFilter[]).map((key) => (
-                <button
-                  key={key}
+            <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_190px]">
+              <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1">
+                {(Object.keys(QUEUE_LABELS) as QueueFilter[]).map((key) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    size="sm"
+                    variant={filter === key ? "default" : "outline"}
+                    onClick={() => setFilter(key)}
+                    className="h-9 shrink-0 rounded-full px-3 text-[11px]"
+                  >
+                    {QUEUE_LABELS[key]}
+                  </Button>
+                ))}
+              </div>
+              <Select value={sort} onValueChange={(value) => setSort(value as QueueSort)}>
+                <SelectTrigger className="h-9 w-full" aria-label="লিড সাজান">
+                  <SlidersHorizontal className="size-3.5 shrink-0 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(SORT_LABELS) as QueueSort[]).map((key) => (
+                    <SelectItem key={key} value={key}>{SORT_LABELS[key]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="mt-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-lg border border-border/70 bg-surface-2/60 px-2.5 py-2 text-[11px]">
+              <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
+              <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
+              <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
+                {QUEUE_LABELS[filter]}
+              </span>
+              {search.trim() && (
+                <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
+                  খোঁজ: {search.trim()}
+                </span>
+              )}
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                {SORT_LABELS[sort]}
+              </span>
+              <span className="tabular ml-auto shrink-0 text-muted-foreground">{bn(rows.length)} ফল</span>
+              {hasQueueState && (
+                <Button
                   type="button"
-                  onClick={() => setFilter(key)}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
-                    filter === key
-                      ? "border-primary/40 bg-primary/12 text-primary"
-                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
-                  )}
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
+                  onClick={resetQueue}
                 >
-                  {QUEUE_LABELS[key]}
-                </button>
-              ))}
+                  <RotateCcw className="size-3" /> রিসেট
+                </Button>
+              )}
             </div>
 
             <div className="mt-3 max-h-[520px] overflow-y-auto">
@@ -402,7 +497,7 @@ export function DeskCommandCenter({
                     >
                       <button
                         type="button"
-                        onClick={() => setSelectedId(lead.id)}
+                         onClick={() => selectLead(lead.id)}
                         className="block w-full min-w-0 text-left"
                       >
                         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
@@ -448,12 +543,12 @@ export function DeskCommandCenter({
                           </span>
                         </div>
                       </button>
-                      <div className="mt-2 flex items-center gap-2">
+                      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2">
                         <WebCallButton
                           leadId={lead.id}
                           phone={lead.phone_number}
                           label="কল"
-                          className="h-9 flex-1 text-sm"
+                          className="h-9 min-w-0 text-sm"
                         />
                         <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" />
                         <CallbackLogButton leadId={lead.id} label="" />
@@ -489,7 +584,7 @@ export function DeskCommandCenter({
                   <li key={lead.id}>
                     <button
                       type="button"
-                      onClick={() => setSelectedId(lead.id)}
+                       onClick={() => selectLead(lead.id)}
                       className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-1 py-1 text-left hover:bg-surface-2"
                     >
                       <span className="min-w-0">
@@ -553,7 +648,7 @@ export function DeskCommandCenter({
         </div>
 
         {/* Lead 360 */}
-        <aside className="min-w-0 space-y-3">
+        <aside className="hidden min-w-0 space-y-3 xl:block">
           <div className="card-elevated p-4 xl:sticky xl:top-20">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold">লিড ৩৬০</h3>
@@ -679,6 +774,27 @@ export function DeskCommandCenter({
           </div>
         </aside>
       </div>
+
+      <Sheet open={mobile360Open} onOpenChange={setMobile360Open}>
+        <SheetContent
+          side="bottom"
+          className="inset-x-0 bottom-0 h-[88dvh] w-full max-w-none gap-0 overflow-y-auto rounded-t-xl border-x border-t p-0 xl:hidden"
+        >
+          <SheetHeader className="sticky top-0 z-10 m-0 border-b border-border bg-background px-4 py-3 text-left">
+            <SheetTitle>লিড ৩৬০</SheetTitle>
+          </SheetHeader>
+          <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <Lead360Content
+              selected={selected}
+              selectedHistory={selectedHistory}
+              onOpenDossier={(id) => {
+                setMobile360Open(false);
+                setDossierId(id);
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <LeadDossier
         lead={dossierLead}
