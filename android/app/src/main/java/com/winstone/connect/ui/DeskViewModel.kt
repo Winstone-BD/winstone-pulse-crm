@@ -10,6 +10,7 @@ import com.winstone.connect.data.parseLeads
 import com.winstone.connect.data.parseMessages
 import com.winstone.connect.data.remote.WinstoneAgentApi
 import com.winstone.connect.data.remote.WinstoneApi
+import com.winstone.connect.data.sync.CallSyncQueue
 import com.winstone.connect.data.sync.SyncStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -221,15 +222,36 @@ class DeskViewModel(private val app: Application) : AndroidViewModel(app) {
     }
 
     fun submitLead(name: String, phone: String, company: String, notes: String) {
+        val clientRef = java.util.UUID.randomUUID().toString()
+        val payload = WinstoneAgentApi.leadPayload(
+            name = name,
+            phone = phone,
+            company = company,
+            notes = notes,
+            agentId = AgentSession.agentId,
+            clientRef = clientRef,
+        )
         viewModelScope.launch {
-            runCatching {
-                WinstoneAgentApi.submitLead(name, phone, company, notes, AgentSession.agentId)
-            }
+            runCatching { WinstoneAgentApi.submitLeadRaw(payload) }
                 .onSuccess {
                     _state.value = _state.value.copy(toast = "লিড জমা হয়েছে")
                     refresh(silent = true)
                 }
-                .onFailure { _state.value = _state.value.copy(toast = it.message ?: "লিড জমা হয়নি") }
+                .onFailure { error ->
+                    val message = error.message.orEmpty()
+                    val badPayload = message.contains("Invalid") || message.contains("Unauthorized")
+                    if (badPayload) {
+                        _state.value = _state.value.copy(toast = message.ifBlank { "লিড জমা হয়নি" })
+                    } else {
+                        // No signal: park the lead on the phone and send it once
+                        // the connection is back — nothing typed is ever lost.
+                        payload.put("captured_offline", true)
+                        CallSyncQueue.queueLeadSubmit(getApplication(), clientRef, payload.toString())
+                        _state.value = _state.value.copy(
+                            toast = "ইন্টারনেট নেই — লিড ফোনে সংরক্ষিত, সংযোগ ফিরলে নিজে থেকেই পাঠানো হবে",
+                        )
+                    }
+                }
         }
     }
 
