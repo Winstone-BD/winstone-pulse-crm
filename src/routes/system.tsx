@@ -14,6 +14,7 @@ import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
 import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
+import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { StaffAccountsTable } from "@/components/crm/StaffAccountsTable";
 import { RoleGate } from "@/components/crm/RoleGate";
@@ -139,6 +140,8 @@ function SystemBoard() {
       <DocSummaryPanel />
 
       <ReportSheetPanel />
+
+      <SheetSyncHealthPanel />
 
       <StaffAccountsTable />
 

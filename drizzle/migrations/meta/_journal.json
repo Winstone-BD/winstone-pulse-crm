@@ -330,6 +330,13 @@
       "when": 1789836017264,
       "tag": "0046_allow_duplicate_skipped_work_state",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1790050107973,
+      "tag": "0047_create_sheet_sync_events",
+      "breakpoints": true
     }
   ]
 }
