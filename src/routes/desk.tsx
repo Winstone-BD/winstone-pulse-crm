@@ -62,6 +62,17 @@ export const Route = createFileRoute("/desk")({
   component: DeskPage,
 });
 
+/** Desk sections, mapped to the existing tab values — no new routes. */
+const SECTION_RAIL = [
+  { tab: "leads", label: "লিড ড্যাশবোর্ড" },
+  { tab: "queue", label: "কার্ড ভিউ" },
+  { tab: "calls", label: "কল রেকর্ড" },
+  { tab: "whatsapp", label: "হোয়াটসঅ্যাপ" },
+  { tab: "calendar", label: "ফলো-আপ" },
+  { tab: "reports", label: "আমার রিপোর্ট" },
+  { tab: "support", label: "টিম সাপোর্ট" },
+] as const;
+
 /** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
   const { leads, calls, messages } = useSnapshot();
