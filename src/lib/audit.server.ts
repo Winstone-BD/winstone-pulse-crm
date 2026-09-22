@@ -58,6 +58,7 @@ export type AuditAction =
   | "service_invoice_raised"
   | "service_payment_verified"
   | "service_payout_recorded"
+  | "version_data_replay"
   | "service_bill_alert_raised"
   | "pin_rotated"
   | "pin_revealed";
