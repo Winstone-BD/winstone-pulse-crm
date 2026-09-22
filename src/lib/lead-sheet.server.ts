@@ -32,8 +32,11 @@ function gatewayHeaders() {
 
 /** Google's per-minute quota is shared, so a 429/5xx waits and tries again. */
 async function gatewayFetch(path: string, attempt = 0): Promise<unknown> {
+  const { recordSheetSyncEvent } = await import("@/lib/sheet-metrics.server");
+  const startedAt = Date.now();
   const response = await fetch(`${GATEWAY}${path}`, { headers: gatewayHeaders() });
   const body = await response.text();
+  const durationMs = Date.now() - startedAt;
   if (!response.ok) {
     const retryable = response.status === 429 || response.status >= 500;
     if (retryable && attempt < 3) {
@@ -41,15 +44,39 @@ async function gatewayFetch(path: string, attempt = 0): Promise<unknown> {
       const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
         ? retryAfter * 1000
         : 1500 * 2 ** attempt + Math.floor(Math.random() * 400);
+      await recordSheetSyncEvent({
+        surface: "lead_import",
+        outcome: "retry",
+        httpStatus: response.status,
+        attempt,
+        retryWaitMs: waitMs,
+        durationMs,
+        errorText: body,
+      });
       await new Promise((resolve) => setTimeout(resolve, waitMs));
       return gatewayFetch(path, attempt + 1);
     }
     console.error(`Sheets gateway failed [${response.status}]: ${body}`);
+    await recordSheetSyncEvent({
+      surface: "lead_import",
+      outcome: "failure",
+      httpStatus: response.status,
+      attempt,
+      durationMs,
+      errorText: body,
+    });
     if (response.status === 403 || response.status === 404) {
       throw new Error("শিটটি পড়া যায়নি — সংযুক্ত Google অ্যাকাউন্টকে এই শিটের অ্যাক্সেস দিন");
     }
     throw new Error(`Google Sheets ত্রুটি [${response.status}]: ${body.slice(0, 300)}`);
   }
+  await recordSheetSyncEvent({
+    surface: "lead_import",
+    outcome: "success",
+    httpStatus: response.status,
+    attempt,
+    durationMs,
+  });
   return body ? (JSON.parse(body) as unknown) : null;
 }
 
