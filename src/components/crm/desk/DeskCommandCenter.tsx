@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
+import { FollowUpResolveActions } from "@/components/crm/FollowUpResolveActions";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
@@ -80,6 +81,20 @@ const SORT_LABELS: Record<QueueSort, string> = {
   name: "নাম অনুযায়ী",
   serial: "সিরিয়াল অনুযায়ী",
 };
+
+/**
+ * The follow-up resolve pair only makes sense once the lead has actually been
+ * contacted: it is parked for follow-up, or a call/attempt is already on record.
+ */
+function canResolveFollowUp(lead: Lead) {
+  if (lead.status === "closed") return false;
+  return (
+    lead.status === "follow_up" ||
+    lead.status === "contacted" ||
+    Boolean(lead.retry_after) ||
+    Boolean(lead.last_call_at)
+  );
+}
 
 function bn(n: number) {
   return n.toLocaleString("bn-BD");
