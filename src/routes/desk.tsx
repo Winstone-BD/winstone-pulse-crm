@@ -254,24 +254,50 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
-        <LeadDeadlineBanner />
-        <MyProfileCard />
-        <MyPhoneSetup />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">আমার ডেস্ক</h1>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              নিজের লিড, কল, হোয়াটসঅ্যাপ কথা আর নতুন লিড — সব এক জায়গায়।
+      <div className="grid gap-4 xl:grid-cols-[186px_minmax(0,1fr)]">
+        {/* Section rail — desktop-first shortcut to the desk's existing panels */}
+        <nav className="hidden xl:block">
+          <div className="card-elevated sticky top-20 space-y-1 p-2">
+            <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              আমার ডেস্ক
             </p>
+            {SECTION_RAIL.map((item) => (
+              <button
+                key={item.tab}
+                type="button"
+                onClick={() => {
+                  setTab(item.tab);
+                  document.getElementById("desk-tabs")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`w-full truncate rounded-lg px-2.5 py-2 text-left text-[12px] font-medium transition-colors ${
+                  tab === item.tab
+                    ? "bg-primary/12 text-primary"
+                    : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <LeadImportDialog />
-            <NewLeadDialog />
-          </div>
-        </div>
+        </nav>
 
-        <AgentOverview />
+        <div className="min-w-0 space-y-6">
+          <LeadDeadlineBanner />
+          <MyProfileCard />
+          <MyPhoneSetup />
+
+          <DeskCommandCenter
+            onJumpTab={(next) => {
+              setTab(next);
+              document.getElementById("desk-tabs")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            actions={
+              <>
+                <LeadImportDialog />
+                <NewLeadDialog />
+              </>
+            }
+          />
 
         <DeskStats />
 
@@ -289,7 +315,7 @@ function DeskPage() {
 
         <TeamSupportInbox />
 
-        <Tabs defaultValue="leads" className="space-y-4">
+        <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="space-y-4">
           <TabsList className="flex w-full flex-wrap">
             <TabsTrigger value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger value="queue">কার্ড ভিউ</TabsTrigger>
