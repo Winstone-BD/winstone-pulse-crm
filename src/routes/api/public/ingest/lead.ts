@@ -11,6 +11,12 @@ const Payload = z.object({
   assign: z.boolean().default(true),
   /** Profile id of the agent adding their own lead from the phone app. */
   agent_id: z.string().uuid().nullable().optional(),
+  /** App version that captured the lead, for the version data ledger. */
+  app_version: z.string().trim().max(40).nullable().optional(),
+  version_code: z.number().int().nullable().optional(),
+  client_ref: z.string().trim().max(80).nullable().optional(),
+  captured_offline: z.boolean().optional(),
+  captured_at: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
 function json(body: unknown, status = 200): Response {
