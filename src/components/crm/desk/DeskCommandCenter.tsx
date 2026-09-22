@@ -16,7 +16,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -32,7 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
@@ -84,6 +83,20 @@ const SORT_LABELS: Record<QueueSort, string> = {
 
 function bn(n: number) {
   return n.toLocaleString("bn-BD");
+}
+
+function useCompactDesk() {
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1279px)");
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  return compact;
 }
 
 function KpiCard({
@@ -149,7 +162,7 @@ export function DeskCommandCenter({
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<QueueSort>("priority");
   const [mobile360Open, setMobile360Open] = useState(false);
-  const isMobile = useIsMobile();
+  const compactDesk = useCompactDesk();
 
   const stats = useMemo(() => {
     const now = Date.now();
@@ -306,13 +319,13 @@ export function DeskCommandCenter({
   };
   const selectLead = (leadId: string) => {
     setSelectedId(leadId);
-    if (isMobile) setMobile360Open(true);
+    if (compactDesk) setMobile360Open(true);
   };
 
   return (
     <section className="space-y-3">
       {/* Agent / status bar */}
-      <div className="card-elevated grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:flex sm:flex-wrap sm:justify-between">
+      <div className="card-elevated grid min-w-0 gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-sm font-bold text-primary">
             {(account?.profile?.name ?? "এ").slice(0, 2)}
@@ -331,7 +344,7 @@ export function DeskCommandCenter({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-live/30 bg-live/10 px-2.5 py-1 text-[11px] font-semibold text-live">
             <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু
           </span>
@@ -823,6 +836,107 @@ function Field({ label, value }: { label: string; value?: string | null }) {
         {label}
       </dt>
       <dd className="truncate font-medium">{value ?? "—"}</dd>
+    </div>
+  );
+}
+
+function Lead360Content({
+  selected,
+  selectedHistory,
+  onOpenDossier,
+}: {
+  selected: Lead | null;
+  selectedHistory: { key: string; at: string; title: string }[];
+  onOpenDossier: (id: string) => void;
+}) {
+  if (!selected) {
+    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন।</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-lg font-bold">{selected.name}</p>
+          <p className="tabular truncate text-sm text-muted-foreground">{selected.phone_number}</p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => onOpenDossier(selected.id)}
+        >
+          পুরো ফাইল
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        <span
+          className={cn(
+            "rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+            STATUS_STYLES[selected.status],
+          )}
+        >
+          {STATUS_LABELS[selected.status] ?? selected.status}
+        </span>
+        {selected.temperature && (
+          <span
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize",
+              TEMP_STYLES[selected.temperature] ?? "border-border bg-surface-2",
+            )}
+          >
+            {selected.temperature}
+          </span>
+        )}
+        {selected.grade && (
+          <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[11px] font-semibold">
+            গ্রেড {selected.grade}
+          </span>
+        )}
+      </div>
+
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-4 text-xs">
+        <Field label="ঠিকানা" value={selected.address} />
+        <Field label="প্রতিষ্ঠান" value={selected.company} />
+        <Field label="রেফারেন্স" value={selected.reference_by} />
+        <Field label="সোর্স" value={selected.source} />
+        <Field label="শেষ কল" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
+        <Field label="চেষ্টা" value={bn(selected.call_attempts)} />
+        <Field label="পরের যোগাযোগ" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
+        <Field label="কাজের দিন" value={selected.work_date} />
+      </dl>
+
+      <div className="sticky bottom-0 z-10 grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-y border-border bg-background py-3">
+        <WebCallButton
+          leadId={selected.id}
+          phone={selected.phone_number}
+          label="কল"
+          className="h-11 min-w-0"
+        />
+        <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" />
+        <CallbackLogButton leadId={selected.id} label="" />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
+        <ul className="mt-2 space-y-2">
+          {selectedHistory.map((entry) => (
+            <li key={entry.key} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 text-xs">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary/60" />
+              <span className="min-w-0">{entry.title}</span>
+              <span className="shrink-0 text-muted-foreground">{shortDate(entry.at)}</span>
+            </li>
+          ))}
+          {selectedHistory.length === 0 && (
+            <li className="text-xs text-muted-foreground">এখনো কোনো কল বা মেসেজ নেই।</li>
+          )}
+        </ul>
+      </div>
+
+      {selected.notes && (
+        <p className="rounded-lg bg-surface-2 p-3 text-xs text-muted-foreground">{selected.notes}</p>
+      )}
     </div>
   );
 }
