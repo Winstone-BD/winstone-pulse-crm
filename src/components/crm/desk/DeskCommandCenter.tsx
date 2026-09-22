@@ -64,6 +64,19 @@ const TEMP_STYLES: Record<string, string> = {
   cold: "border-primary/25 bg-primary/10 text-primary",
 };
 
+const STATUS_LABELS_EN: Record<string, string> = {
+  pending: "Not called",
+  contacted: "Contacted",
+  follow_up: "Follow-up",
+  closed: "Closed",
+};
+
+const TEMP_LABELS_EN: Record<string, string> = {
+  hot: "Hot",
+  warm: "Warm",
+  cold: "Cold",
+};
+
 type QueueFilter = "pending" | "follow_up" | "hot" | "done" | "all";
 type QueueSort = "priority" | "recent" | "name" | "serial";
 
@@ -75,12 +88,50 @@ const QUEUE_LABELS: Record<QueueFilter, string> = {
   all: "সব",
 };
 
+const QUEUE_LABELS_EN: Record<QueueFilter, string> = {
+  pending: "Pending",
+  follow_up: "Follow-up",
+  hot: "Hot",
+  done: "Contacted",
+  all: "All",
+};
+
 const SORT_LABELS: Record<QueueSort, string> = {
   priority: "অগ্রাধিকার আগে",
   recent: "সাম্প্রতিক আগে",
   name: "নাম অনুযায়ী",
   serial: "সিরিয়াল অনুযায়ী",
 };
+
+const SORT_LABELS_EN: Record<QueueSort, string> = {
+  priority: "Priority first",
+  recent: "Most recent",
+  name: "By name",
+  serial: "By serial",
+};
+
+/** Bengali headline with an English sub-label, used across the whole board. */
+function DualHeading({
+  bnText,
+  enText,
+  icon,
+  id,
+}: {
+  bnText: string;
+  enText: string;
+  icon?: React.ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <h3 id={id} className="flex items-center gap-2 truncate text-sm font-semibold">
+        {icon}
+        {bnText}
+      </h3>
+      <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{enText}</p>
+    </div>
+  );
+}
 
 /**
  * The follow-up resolve pair only makes sense once the lead has actually been
@@ -117,6 +168,7 @@ function useCompactDesk() {
 function KpiCard({
   icon,
   label,
+  labelEn,
   value,
   sub,
   tone = "primary",
@@ -124,6 +176,7 @@ function KpiCard({
 }: {
   icon: React.ReactNode;
   label: string;
+  labelEn: string;
   value: string;
   sub?: string;
   tone?: "primary" | "live" | "chart4" | "destructive";
@@ -167,7 +220,12 @@ function KpiCard({
         >
           {icon}
         </span>
-        <p className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">{label}</p>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-medium text-muted-foreground">{label}</p>
+          <p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground/70">
+            {labelEn}
+          </p>
+        </div>
       </div>
       <p className="tabular mt-2 text-xl font-bold leading-none">{value}</p>
       {sub && <p className="mt-1 text-[10px] text-muted-foreground">{sub}</p>}
@@ -402,11 +460,11 @@ export function DeskCommandCenter({
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-live/30 bg-live/10 px-2.5 py-1 text-[11px] font-semibold text-live">
-            <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু
+            <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু / Live
           </span>
           {stats.overdue > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive">
-              <AlarmClock className="size-3" /> {bn(stats.overdue)}টি সময় পেরিয়েছে
+              <AlarmClock className="size-3" /> {bn(stats.overdue)}টি সময় পেরিয়েছে / overdue
             </span>
           )}
           {actions}
@@ -418,6 +476,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Users className="size-4" />}
           label="আমার লিড"
+          labelEn="My leads"
           value={bn(stats.total)}
           sub={`${bn(stats.pending)}টি কল বাকি`}
           progress={stats.donePct}
@@ -425,6 +484,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<PhoneOutgoing className="size-4" />}
           label="আজকের কল"
+          labelEn="Today's calls"
           value={bn(stats.calls)}
           sub={`${bn(stats.connected)}টিতে কথা · ${bn(stats.connectRate)}%`}
           tone="live"
@@ -433,12 +493,14 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Timer className="size-4" />}
           label="আজকের কথার সময়"
+          labelEn="Talk time today"
           value={formatTalkTime(stats.talk)}
           sub={`${bn(stats.whatsapp)}টি হোয়াটসঅ্যাপ আজ`}
         />
         <KpiCard
           icon={<CalendarClock className="size-4" />}
           label="ফলো-আপ"
+          labelEn="Follow-ups"
           value={bn(stats.followUp)}
           sub={`আজ ${bn(stats.dueToday)}টি · সময় পেরিয়েছে ${bn(stats.overdue)}টি`}
           tone="chart4"
@@ -446,6 +508,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Flame className="size-4" />}
           label="হট লিড"
+          labelEn="Hot leads"
           value={bn(stats.hot)}
           sub={`${bn(stats.uncalled)}টিতে এখনো কল হয়নি`}
           tone="destructive"
@@ -453,6 +516,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<CheckCircle2 className="size-4" />}
           label="শেষ হয়েছে"
+          labelEn="Completed"
           value={`${bn(stats.done)} / ${bn(stats.total)}`}
           sub={`${bn(stats.donePct)}% কাজ শেষ`}
           tone="live"
@@ -460,15 +524,58 @@ export function DeskCommandCenter({
         />
       </div>
 
+      {/* Next best action — the single highest-priority lead from the agent's own queue */}
+      {priority[0] && (
+        <div className="card-elevated grid min-w-0 gap-3 border-primary/25 bg-primary/5 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+              পরবর্তী সেরা কাজ · Next best action
+            </p>
+            <p className="mt-0.5 truncate text-sm font-bold">
+              {priority[0].lead.name}{" "}
+              <span className="tabular text-xs font-normal text-muted-foreground">
+                {priority[0].lead.phone_number}
+              </span>
+            </p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {priority[0].overdue
+                ? "ফলো-আপের সময় পেরিয়েছে · Follow-up overdue"
+                : priority[0].lead.temperature === "hot"
+                  ? "হট লিড — আগে কল করুন · Hot lead, call first"
+                  : "অগ্রাধিকার লিড · Priority lead"}
+            </p>
+          </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+            <WebCallButton
+              leadId={priority[0].lead.id}
+              phone={priority[0].lead.phone_number}
+              label="কল / Call"
+              className="h-9"
+              ariaLabel={`${priority[0].lead.name}-কে কল করুন`}
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-9"
+              onClick={() => selectLead(priority[0]!.lead.id)}
+            >
+              লিড ৩৬০ / Open
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-3">
           {/* Lead queue */}
           <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
-                <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">আমার লিড কিউ</h3>
+                <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">
+                  আমার লিড কিউ <span className="text-muted-foreground">/ My Lead Queue</span>
+                </h3>
                 <p id="lead-queue-help" className="text-[11px] text-muted-foreground">
-                  {bn(rows.length)}টি দেখা যাচ্ছে · লিড বেছে নিলে ৩৬০ খুলবে
+                  {bn(rows.length)}টি দেখা যাচ্ছে · showing {rows.length} leads
                 </p>
               </div>
               <div className="relative min-w-0 sm:w-64">
@@ -514,6 +621,7 @@ export function DeskCommandCenter({
                     aria-controls="agent-lead-queue-results"
                   >
                     {QUEUE_LABELS[key]}
+                    <span className="ml-1 opacity-70">/ {QUEUE_LABELS_EN[key]}</span>
                   </Button>
                 ))}
               </div>
@@ -524,7 +632,9 @@ export function DeskCommandCenter({
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(SORT_LABELS) as QueueSort[]).map((key) => (
-                    <SelectItem key={key} value={key}>{SORT_LABELS[key]}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {SORT_LABELS[key]} · {SORT_LABELS_EN[key]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -536,19 +646,19 @@ export function DeskCommandCenter({
             >
               <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5 pb-0.5">
                 <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
-                <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
+                <span className="shrink-0 text-muted-foreground">সক্রিয় / Active:</span>
                 <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
-                  {QUEUE_LABELS[filter]}
+                  {QUEUE_LABELS[filter]} · {QUEUE_LABELS_EN[filter]}
                 </span>
                 {search.trim() && (
                   <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
-                    খোঁজ: {search.trim()}
+                    খোঁজ / Search: {search.trim()}
                   </span>
                 )}
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                   {SORT_LABELS[sort]}
                 </span>
-                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল</span>
+                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল / results</span>
               </div>
               <Button
                 type="button"
@@ -559,7 +669,7 @@ export function DeskCommandCenter({
                 disabled={!hasQueueState}
                 aria-label="লিড কিউয়ের ফিল্টার, সার্চ ও সাজানো রিসেট করুন"
               >
-                <RotateCcw className="size-3" /> রিসেট
+                <RotateCcw className="size-3" /> রিসেট / Reset
               </Button>
             </div>
 
@@ -618,6 +728,9 @@ export function DeskCommandCenter({
                             )}
                           >
                             {STATUS_LABELS[lead.status] ?? lead.status}
+                            <span className="ml-1 opacity-70">
+                              / {STATUS_LABELS_EN[lead.status] ?? lead.status}
+                            </span>
                           </span>
                           {lead.temperature && (
                             <span
@@ -626,12 +739,12 @@ export function DeskCommandCenter({
                                 TEMP_STYLES[lead.temperature] ?? "border-border bg-surface-2",
                               )}
                             >
-                              {lead.temperature}
+                              {TEMP_LABELS_EN[lead.temperature] ?? lead.temperature}
                             </span>
                           )}
                           {overdue && (
                             <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                              সময় পেরিয়েছে
+                              সময় পেরিয়েছে / Overdue
                             </span>
                           )}
                           <span className="tabular ml-auto text-[10px] text-muted-foreground">
@@ -674,7 +787,7 @@ export function DeskCommandCenter({
                 })}
                 {rows.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-                    এই তালিকায় এখন কোনো লিড নেই
+                    এই তালিকায় এখন কোনো লিড নেই · No leads in this view
                   </li>
                 )}
               </ul>
@@ -684,9 +797,11 @@ export function DeskCommandCenter({
           {/* Priority + performance */}
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="card-elevated p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Flame className="size-4 text-destructive" /> অগ্রাধিকার তালিকা
-              </h3>
+              <DualHeading
+                icon={<Flame className="size-4 text-destructive" />}
+                bnText="অগ্রাধিকার কেন্দ্র"
+                enText="Priority Center"
+              />
               <ul className="mt-3 space-y-2">
                 {priority.map(({ lead, overdue }) => (
                   <li key={lead.id}>
@@ -719,36 +834,38 @@ export function DeskCommandCenter({
                 ))}
                 {priority.length === 0 && (
                   <li className="text-[11px] text-muted-foreground">
-                    এখন কোনো হট লিড বা বাকি ফলো-আপ নেই।
+                    এখন কোনো হট লিড বা বাকি ফলো-আপ নেই · Nothing urgent right now
                   </li>
                 )}
               </ul>
             </div>
 
             <div className="card-elevated p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <TrendingUp className="size-4 text-primary" /> আমার পারফরম্যান্স (আজ)
-              </h3>
+              <DualHeading
+                icon={<TrendingUp className="size-4 text-primary" />}
+                bnText="আমার পারফরম্যান্স (আজ)"
+                enText="My performance today"
+              />
               <dl className="mt-3 space-y-2.5 text-xs">
-                <Meter label="লিড শেষ" value={stats.done} total={stats.total} />
-                <Meter label="কথা হয়েছে" value={stats.connected} total={stats.calls} />
+                <Meter label="লিড শেষ / Completed" value={stats.done} total={stats.total} />
+                <Meter label="কথা হয়েছে / Connected" value={stats.connected} total={stats.calls} />
                 <Meter
-                  label="ফলো-আপ সময়মতো"
+                  label="ফলো-আপ সময়মতো / On-time follow-ups"
                   value={Math.max(stats.followUp - stats.overdue, 0)}
                   total={stats.followUp}
                 />
               </dl>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <MiniStat label="আজ যোগ হওয়া লিড" value={bn(stats.newToday)} />
-                <MiniStat label="কথার সময়" value={formatTalkTime(stats.talk)} />
+                <MiniStat label="আজ যোগ হওয়া লিড / New today" value={bn(stats.newToday)} />
+                <MiniStat label="কথার সময় / Talk time" value={formatTalkTime(stats.talk)} />
               </div>
               {onJumpTab && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("reports")}>
-                    আমার রিপোর্ট
+                    আমার রিপোর্ট / Reports
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("calendar")}>
-                    ফলো-আপ ক্যালেন্ডার
+                    ফলো-আপ ক্যালেন্ডার / Calendar
                   </Button>
                 </div>
               )}
@@ -760,7 +877,7 @@ export function DeskCommandCenter({
         <aside className="hidden min-w-0 space-y-3 xl:block">
           <div className="card-elevated p-4 xl:sticky xl:top-20">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">লিড ৩৬০</h3>
+              <DualHeading bnText="লিড ৩৬০" enText="Lead 360" />
               {selected && (
                 <Button
                   size="sm"
@@ -789,6 +906,9 @@ export function DeskCommandCenter({
                     )}
                   >
                     {STATUS_LABELS[selected.status] ?? selected.status}
+                    <span className="ml-1 opacity-70">
+                      / {STATUS_LABELS_EN[selected.status] ?? selected.status}
+                    </span>
                   </span>
                   {selected.temperature && (
                     <span
@@ -807,20 +927,22 @@ export function DeskCommandCenter({
                   )}
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-[11px]">
-                  <Field label="ঠিকানা" value={selected.address} />
-                  <Field label="প্রতিষ্ঠান" value={selected.company} />
-                  <Field label="রেফারেন্স" value={selected.reference_by} />
-                  <Field label="সোর্স" value={selected.source} />
+                  <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
+                  <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
+                  <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
+                  <Field label="সোর্স" labelEn="Source" value={selected.source} />
                   <Field
                     label="শেষ কল"
+                    labelEn="Last call"
                     value={selected.last_call_at ? relativeTime(selected.last_call_at) : null}
                   />
-                  <Field label="চেষ্টা" value={bn(selected.call_attempts)} />
+                  <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
                   <Field
                     label="পরের যোগাযোগ"
+                    labelEn="Next follow-up"
                     value={selected.retry_after ? shortDate(selected.retry_after) : null}
                   />
-                  <Field label="কাজের দিন" value={selected.work_date} />
+                  <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
                 </dl>
                 <div className="flex items-center gap-2">
                   <WebCallButton
@@ -873,13 +995,13 @@ export function DeskCommandCenter({
               </div>
             ) : (
               <p className="mt-3 text-[11px] text-muted-foreground">
-                কিউ থেকে একটি লিড বেছে নিন।
+                কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue
               </p>
             )}
           </div>
 
           <div className="card-elevated p-4">
-            <h3 className="text-sm font-semibold">আমার সাম্প্রতিক কাজ</h3>
+            <DualHeading bnText="আমার সাম্প্রতিক কাজ" enText="Recent activity" />
             <ul className="mt-3 space-y-2">
               {activity.map((row) => (
                 <li key={row.id} className="flex items-center gap-2 text-[11px]">
@@ -891,7 +1013,7 @@ export function DeskCommandCenter({
                 </li>
               ))}
               {activity.length === 0 && (
-                <li className="text-[11px] text-muted-foreground">আজ এখনো কোনো কাজ নেই।</li>
+                <li className="text-[11px] text-muted-foreground">আজ এখনো কোনো কাজ নেই · No activity yet today</li>
               )}
             </ul>
             <Button asChild size="sm" variant="secondary" className="mt-3 w-full">
@@ -953,11 +1075,20 @@ export function DeskCommandCenter({
   );
 }
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function Field({
+  label,
+  labelEn,
+  value,
+}: {
+  label: string;
+  labelEn?: string;
+  value?: string | null;
+}) {
   return (
     <div className="min-w-0">
       <dt className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
         {label}
+        {labelEn ? <span className="text-muted-foreground/60"> · {labelEn}</span> : null}
       </dt>
       <dd className="truncate font-medium">{value ?? "—"}</dd>
     </div>
@@ -974,7 +1105,7 @@ function Lead360Content({
   onOpenDossier: (id: string) => void;
 }) {
   if (!selected) {
-    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন।</p>;
+    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue</p>;
   }
 
   return (
@@ -1003,6 +1134,9 @@ function Lead360Content({
           )}
         >
           {STATUS_LABELS[selected.status] ?? selected.status}
+          <span className="ml-1 opacity-70">
+            / {STATUS_LABELS_EN[selected.status] ?? selected.status}
+          </span>
         </span>
         {selected.temperature && (
           <span
@@ -1022,14 +1156,14 @@ function Lead360Content({
       </div>
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-4 text-xs">
-        <Field label="ঠিকানা" value={selected.address} />
-        <Field label="প্রতিষ্ঠান" value={selected.company} />
-        <Field label="রেফারেন্স" value={selected.reference_by} />
-        <Field label="সোর্স" value={selected.source} />
-        <Field label="শেষ কল" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
-        <Field label="চেষ্টা" value={bn(selected.call_attempts)} />
-        <Field label="পরের যোগাযোগ" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
-        <Field label="কাজের দিন" value={selected.work_date} />
+        <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
+        <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
+        <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
+        <Field label="সোর্স" labelEn="Source" value={selected.source} />
+        <Field label="শেষ কল" labelEn="Last call" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
+        <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
+        <Field label="পরের যোগাযোগ" labelEn="Next follow-up" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
+        <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
       </dl>
 
       <div className="sticky bottom-0 z-10 grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-y border-border bg-background py-3">
