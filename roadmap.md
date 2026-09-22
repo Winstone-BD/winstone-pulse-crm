@@ -54,3 +54,5 @@
 # Roadmap
 - [x] Release APK with black-gold theme (in progress)
 - [x] Connect Google Docs, Google Drive, Google Sheets (new workspace)
+- [x] ছোট স্ক্রিনে এজেন্ট ডেস্ক ও লিড ৩৬০ ব্যবহারযোগ্য করা
+- [x] লিড কিউ-এর ফিল্টার, সার্চ ও সাজানোর সক্রিয় অবস্থা এবং দ্রুত রিসেট যোগ করা
