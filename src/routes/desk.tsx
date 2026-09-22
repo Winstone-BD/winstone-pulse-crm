@@ -352,7 +352,8 @@ function DeskPage() {
           <TabsContent value="reports">
             <MyReports />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
     </AppShell>
   );
