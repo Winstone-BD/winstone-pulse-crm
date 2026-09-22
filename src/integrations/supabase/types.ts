@@ -1857,6 +1857,45 @@ export type Database = {
           },
         ]
       }
+      sheet_sync_events: {
+        Row: {
+          attempt: number
+          created_at: string
+          duration_ms: number | null
+          error_text: string | null
+          http_status: number | null
+          id: string
+          operation: string
+          outcome: string
+          retry_wait_ms: number | null
+          surface: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error_text?: string | null
+          http_status?: number | null
+          id?: string
+          operation?: string
+          outcome: string
+          retry_wait_ms?: number | null
+          surface: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          duration_ms?: number | null
+          error_text?: string | null
+          http_status?: number | null
+          id?: string
+          operation?: string
+          outcome?: string
+          retry_wait_ms?: number | null
+          surface?: string
+        }
+        Relationships: []
+      }
       shift_summaries: {
         Row: {
           agents: Json
