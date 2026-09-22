@@ -64,6 +64,19 @@ const TEMP_STYLES: Record<string, string> = {
   cold: "border-primary/25 bg-primary/10 text-primary",
 };
 
+const STATUS_LABELS_EN: Record<string, string> = {
+  pending: "Not called",
+  contacted: "Contacted",
+  follow_up: "Follow-up",
+  closed: "Closed",
+};
+
+const TEMP_LABELS_EN: Record<string, string> = {
+  hot: "Hot",
+  warm: "Warm",
+  cold: "Cold",
+};
+
 type QueueFilter = "pending" | "follow_up" | "hot" | "done" | "all";
 type QueueSort = "priority" | "recent" | "name" | "serial";
 
@@ -75,12 +88,50 @@ const QUEUE_LABELS: Record<QueueFilter, string> = {
   all: "সব",
 };
 
+const QUEUE_LABELS_EN: Record<QueueFilter, string> = {
+  pending: "Pending",
+  follow_up: "Follow-up",
+  hot: "Hot",
+  done: "Contacted",
+  all: "All",
+};
+
 const SORT_LABELS: Record<QueueSort, string> = {
   priority: "অগ্রাধিকার আগে",
   recent: "সাম্প্রতিক আগে",
   name: "নাম অনুযায়ী",
   serial: "সিরিয়াল অনুযায়ী",
 };
+
+const SORT_LABELS_EN: Record<QueueSort, string> = {
+  priority: "Priority first",
+  recent: "Most recent",
+  name: "By name",
+  serial: "By serial",
+};
+
+/** Bengali headline with an English sub-label, used across the whole board. */
+function DualHeading({
+  bnText,
+  enText,
+  icon,
+  id,
+}: {
+  bnText: string;
+  enText: string;
+  icon?: React.ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <h3 id={id} className="flex items-center gap-2 truncate text-sm font-semibold">
+        {icon}
+        {bnText}
+      </h3>
+      <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{enText}</p>
+    </div>
+  );
+}
 
 /**
  * The follow-up resolve pair only makes sense once the lead has actually been
@@ -117,6 +168,7 @@ function useCompactDesk() {
 function KpiCard({
   icon,
   label,
+  labelEn,
   value,
   sub,
   tone = "primary",
@@ -124,6 +176,7 @@ function KpiCard({
 }: {
   icon: React.ReactNode;
   label: string;
+  labelEn: string;
   value: string;
   sub?: string;
   tone?: "primary" | "live" | "chart4" | "destructive";
@@ -167,7 +220,12 @@ function KpiCard({
         >
           {icon}
         </span>
-        <p className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">{label}</p>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-medium text-muted-foreground">{label}</p>
+          <p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground/70">
+            {labelEn}
+          </p>
+        </div>
       </div>
       <p className="tabular mt-2 text-xl font-bold leading-none">{value}</p>
       {sub && <p className="mt-1 text-[10px] text-muted-foreground">{sub}</p>}
@@ -418,6 +476,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Users className="size-4" />}
           label="আমার লিড"
+          labelEn="My leads"
           value={bn(stats.total)}
           sub={`${bn(stats.pending)}টি কল বাকি`}
           progress={stats.donePct}
@@ -425,6 +484,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<PhoneOutgoing className="size-4" />}
           label="আজকের কল"
+          labelEn="Today's calls"
           value={bn(stats.calls)}
           sub={`${bn(stats.connected)}টিতে কথা · ${bn(stats.connectRate)}%`}
           tone="live"
@@ -433,12 +493,14 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Timer className="size-4" />}
           label="আজকের কথার সময়"
+          labelEn="Talk time today"
           value={formatTalkTime(stats.talk)}
           sub={`${bn(stats.whatsapp)}টি হোয়াটসঅ্যাপ আজ`}
         />
         <KpiCard
           icon={<CalendarClock className="size-4" />}
           label="ফলো-আপ"
+          labelEn="Follow-ups"
           value={bn(stats.followUp)}
           sub={`আজ ${bn(stats.dueToday)}টি · সময় পেরিয়েছে ${bn(stats.overdue)}টি`}
           tone="chart4"
@@ -446,6 +508,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<Flame className="size-4" />}
           label="হট লিড"
+          labelEn="Hot leads"
           value={bn(stats.hot)}
           sub={`${bn(stats.uncalled)}টিতে এখনো কল হয়নি`}
           tone="destructive"
@@ -453,6 +516,7 @@ export function DeskCommandCenter({
         <KpiCard
           icon={<CheckCircle2 className="size-4" />}
           label="শেষ হয়েছে"
+          labelEn="Completed"
           value={`${bn(stats.done)} / ${bn(stats.total)}`}
           sub={`${bn(stats.donePct)}% কাজ শেষ`}
           tone="live"
@@ -807,20 +871,22 @@ export function DeskCommandCenter({
                   )}
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-[11px]">
-                  <Field label="ঠিকানা" value={selected.address} />
-                  <Field label="প্রতিষ্ঠান" value={selected.company} />
-                  <Field label="রেফারেন্স" value={selected.reference_by} />
-                  <Field label="সোর্স" value={selected.source} />
+                  <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
+                  <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
+                  <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
+                  <Field label="সোর্স" labelEn="Source" value={selected.source} />
                   <Field
                     label="শেষ কল"
+                    labelEn="Last call"
                     value={selected.last_call_at ? relativeTime(selected.last_call_at) : null}
                   />
-                  <Field label="চেষ্টা" value={bn(selected.call_attempts)} />
+                  <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
                   <Field
                     label="পরের যোগাযোগ"
+                    labelEn="Next follow-up"
                     value={selected.retry_after ? shortDate(selected.retry_after) : null}
                   />
-                  <Field label="কাজের দিন" value={selected.work_date} />
+                  <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
                 </dl>
                 <div className="flex items-center gap-2">
                   <WebCallButton
@@ -953,11 +1019,20 @@ export function DeskCommandCenter({
   );
 }
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function Field({
+  label,
+  labelEn,
+  value,
+}: {
+  label: string;
+  labelEn?: string;
+  value?: string | null;
+}) {
   return (
     <div className="min-w-0">
       <dt className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
         {label}
+        {labelEn ? <span className="text-muted-foreground/60"> · {labelEn}</span> : null}
       </dt>
       <dd className="truncate font-medium">{value ?? "—"}</dd>
     </div>
@@ -1022,14 +1097,14 @@ function Lead360Content({
       </div>
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-4 text-xs">
-        <Field label="ঠিকানা" value={selected.address} />
-        <Field label="প্রতিষ্ঠান" value={selected.company} />
-        <Field label="রেফারেন্স" value={selected.reference_by} />
-        <Field label="সোর্স" value={selected.source} />
-        <Field label="শেষ কল" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
-        <Field label="চেষ্টা" value={bn(selected.call_attempts)} />
-        <Field label="পরের যোগাযোগ" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
-        <Field label="কাজের দিন" value={selected.work_date} />
+        <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
+        <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
+        <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
+        <Field label="সোর্স" labelEn="Source" value={selected.source} />
+        <Field label="শেষ কল" labelEn="Last call" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
+        <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
+        <Field label="পরের যোগাযোগ" labelEn="Next follow-up" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
+        <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
       </dl>
 
       <div className="sticky bottom-0 z-10 grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-y border-border bg-background py-3">
