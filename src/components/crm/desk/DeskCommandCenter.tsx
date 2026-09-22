@@ -460,11 +460,11 @@ export function DeskCommandCenter({
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-live/30 bg-live/10 px-2.5 py-1 text-[11px] font-semibold text-live">
-            <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু
+            <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু / Live
           </span>
           {stats.overdue > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive">
-              <AlarmClock className="size-3" /> {bn(stats.overdue)}টি সময় পেরিয়েছে
+              <AlarmClock className="size-3" /> {bn(stats.overdue)}টি সময় পেরিয়েছে / overdue
             </span>
           )}
           {actions}
@@ -530,9 +530,11 @@ export function DeskCommandCenter({
           <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
-                <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">আমার লিড কিউ</h3>
+                <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">
+                  আমার লিড কিউ <span className="text-muted-foreground">/ My Lead Queue</span>
+                </h3>
                 <p id="lead-queue-help" className="text-[11px] text-muted-foreground">
-                  {bn(rows.length)}টি দেখা যাচ্ছে · লিড বেছে নিলে ৩৬০ খুলবে
+                  {bn(rows.length)}টি দেখা যাচ্ছে · showing {rows.length} leads
                 </p>
               </div>
               <div className="relative min-w-0 sm:w-64">
@@ -578,6 +580,7 @@ export function DeskCommandCenter({
                     aria-controls="agent-lead-queue-results"
                   >
                     {QUEUE_LABELS[key]}
+                    <span className="ml-1 opacity-70">/ {QUEUE_LABELS_EN[key]}</span>
                   </Button>
                 ))}
               </div>
@@ -588,7 +591,9 @@ export function DeskCommandCenter({
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(SORT_LABELS) as QueueSort[]).map((key) => (
-                    <SelectItem key={key} value={key}>{SORT_LABELS[key]}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {SORT_LABELS[key]} · {SORT_LABELS_EN[key]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -600,19 +605,19 @@ export function DeskCommandCenter({
             >
               <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5 pb-0.5">
                 <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
-                <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
+                <span className="shrink-0 text-muted-foreground">সক্রিয় / Active:</span>
                 <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
-                  {QUEUE_LABELS[filter]}
+                  {QUEUE_LABELS[filter]} · {QUEUE_LABELS_EN[filter]}
                 </span>
                 {search.trim() && (
                   <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
-                    খোঁজ: {search.trim()}
+                    খোঁজ / Search: {search.trim()}
                   </span>
                 )}
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                   {SORT_LABELS[sort]}
                 </span>
-                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল</span>
+                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল / results</span>
               </div>
               <Button
                 type="button"
@@ -623,7 +628,7 @@ export function DeskCommandCenter({
                 disabled={!hasQueueState}
                 aria-label="লিড কিউয়ের ফিল্টার, সার্চ ও সাজানো রিসেট করুন"
               >
-                <RotateCcw className="size-3" /> রিসেট
+                <RotateCcw className="size-3" /> রিসেট / Reset
               </Button>
             </div>
 
@@ -682,6 +687,9 @@ export function DeskCommandCenter({
                             )}
                           >
                             {STATUS_LABELS[lead.status] ?? lead.status}
+                            <span className="ml-1 opacity-70">
+                              / {STATUS_LABELS_EN[lead.status] ?? lead.status}
+                            </span>
                           </span>
                           {lead.temperature && (
                             <span
@@ -690,12 +698,12 @@ export function DeskCommandCenter({
                                 TEMP_STYLES[lead.temperature] ?? "border-border bg-surface-2",
                               )}
                             >
-                              {lead.temperature}
+                              {TEMP_LABELS_EN[lead.temperature] ?? lead.temperature}
                             </span>
                           )}
                           {overdue && (
                             <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                              সময় পেরিয়েছে
+                              সময় পেরিয়েছে / Overdue
                             </span>
                           )}
                           <span className="tabular ml-auto text-[10px] text-muted-foreground">
@@ -738,7 +746,7 @@ export function DeskCommandCenter({
                 })}
                 {rows.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-                    এই তালিকায় এখন কোনো লিড নেই
+                    এই তালিকায় এখন কোনো লিড নেই · No leads in this view
                   </li>
                 )}
               </ul>
@@ -748,9 +756,11 @@ export function DeskCommandCenter({
           {/* Priority + performance */}
           <div className="grid gap-3 lg:grid-cols-2">
             <div className="card-elevated p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Flame className="size-4 text-destructive" /> অগ্রাধিকার তালিকা
-              </h3>
+              <DualHeading
+                icon={<Flame className="size-4 text-destructive" />}
+                bnText="অগ্রাধিকার কেন্দ্র"
+                enText="Priority Center"
+              />
               <ul className="mt-3 space-y-2">
                 {priority.map(({ lead, overdue }) => (
                   <li key={lead.id}>
@@ -783,36 +793,38 @@ export function DeskCommandCenter({
                 ))}
                 {priority.length === 0 && (
                   <li className="text-[11px] text-muted-foreground">
-                    এখন কোনো হট লিড বা বাকি ফলো-আপ নেই।
+                    এখন কোনো হট লিড বা বাকি ফলো-আপ নেই · Nothing urgent right now
                   </li>
                 )}
               </ul>
             </div>
 
             <div className="card-elevated p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <TrendingUp className="size-4 text-primary" /> আমার পারফরম্যান্স (আজ)
-              </h3>
+              <DualHeading
+                icon={<TrendingUp className="size-4 text-primary" />}
+                bnText="আমার পারফরম্যান্স (আজ)"
+                enText="My performance today"
+              />
               <dl className="mt-3 space-y-2.5 text-xs">
-                <Meter label="লিড শেষ" value={stats.done} total={stats.total} />
-                <Meter label="কথা হয়েছে" value={stats.connected} total={stats.calls} />
+                <Meter label="লিড শেষ / Completed" value={stats.done} total={stats.total} />
+                <Meter label="কথা হয়েছে / Connected" value={stats.connected} total={stats.calls} />
                 <Meter
-                  label="ফলো-আপ সময়মতো"
+                  label="ফলো-আপ সময়মতো / On-time follow-ups"
                   value={Math.max(stats.followUp - stats.overdue, 0)}
                   total={stats.followUp}
                 />
               </dl>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <MiniStat label="আজ যোগ হওয়া লিড" value={bn(stats.newToday)} />
-                <MiniStat label="কথার সময়" value={formatTalkTime(stats.talk)} />
+                <MiniStat label="আজ যোগ হওয়া লিড / New today" value={bn(stats.newToday)} />
+                <MiniStat label="কথার সময় / Talk time" value={formatTalkTime(stats.talk)} />
               </div>
               {onJumpTab && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("reports")}>
-                    আমার রিপোর্ট
+                    আমার রিপোর্ট / Reports
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("calendar")}>
-                    ফলো-আপ ক্যালেন্ডার
+                    ফলো-আপ ক্যালেন্ডার / Calendar
                   </Button>
                 </div>
               )}
@@ -824,7 +836,7 @@ export function DeskCommandCenter({
         <aside className="hidden min-w-0 space-y-3 xl:block">
           <div className="card-elevated p-4 xl:sticky xl:top-20">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold">লিড ৩৬০</h3>
+              <DualHeading bnText="লিড ৩৬০" enText="Lead 360" />
               {selected && (
                 <Button
                   size="sm"
@@ -853,6 +865,9 @@ export function DeskCommandCenter({
                     )}
                   >
                     {STATUS_LABELS[selected.status] ?? selected.status}
+                    <span className="ml-1 opacity-70">
+                      / {STATUS_LABELS_EN[selected.status] ?? selected.status}
+                    </span>
                   </span>
                   {selected.temperature && (
                     <span
@@ -939,13 +954,13 @@ export function DeskCommandCenter({
               </div>
             ) : (
               <p className="mt-3 text-[11px] text-muted-foreground">
-                কিউ থেকে একটি লিড বেছে নিন।
+                কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue
               </p>
             )}
           </div>
 
           <div className="card-elevated p-4">
-            <h3 className="text-sm font-semibold">আমার সাম্প্রতিক কাজ</h3>
+            <DualHeading bnText="আমার সাম্প্রতিক কাজ" enText="Recent activity" />
             <ul className="mt-3 space-y-2">
               {activity.map((row) => (
                 <li key={row.id} className="flex items-center gap-2 text-[11px]">
@@ -957,7 +972,7 @@ export function DeskCommandCenter({
                 </li>
               ))}
               {activity.length === 0 && (
-                <li className="text-[11px] text-muted-foreground">আজ এখনো কোনো কাজ নেই।</li>
+                <li className="text-[11px] text-muted-foreground">আজ এখনো কোনো কাজ নেই · No activity yet today</li>
               )}
             </ul>
             <Button asChild size="sm" variant="secondary" className="mt-3 w-full">
@@ -1049,7 +1064,7 @@ function Lead360Content({
   onOpenDossier: (id: string) => void;
 }) {
   if (!selected) {
-    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন।</p>;
+    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue</p>;
   }
 
   return (
@@ -1078,6 +1093,9 @@ function Lead360Content({
           )}
         >
           {STATUS_LABELS[selected.status] ?? selected.status}
+          <span className="ml-1 opacity-70">
+            / {STATUS_LABELS_EN[selected.status] ?? selected.status}
+          </span>
         </span>
         {selected.temperature && (
           <span
