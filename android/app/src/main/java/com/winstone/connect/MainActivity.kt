@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.winstone.connect.data.AppVersion.init(this)
         requestCallPermissions()
 
         setContent {

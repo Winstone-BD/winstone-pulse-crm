@@ -308,6 +308,11 @@ object WinstoneApi {
     ): JSONObject = JSONObject().apply {
         put("action", "submit")
         put("report_id", reportId)
+        // Version stamp: lets the CRM hand this report back if the phone is
+        // later moved to a newer app version.
+        com.winstone.connect.data.AppVersion.name?.let { put("app_version", it) }
+        com.winstone.connect.data.AppVersion.code.takeIf { it > 0 }?.let { put("version_code", it) }
+        put("captured_at", java.time.Instant.now().toString())
         put("category", category)
         summary?.let { if (it.isNotBlank()) put("summary", it) }
         note?.let { if (it.isNotBlank()) put("note", it) }

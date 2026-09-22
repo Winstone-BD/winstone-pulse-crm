@@ -37,6 +37,12 @@ const Body = z.discriminatedUnion("action", [
     duration_seconds: z.number().int().min(0).max(86400).nullable().optional(),
     follow_up_needed: z.boolean().optional(),
     follow_up_note: z.string().trim().max(500).nullable().optional(),
+    /** Which app version produced this report, for the version data ledger. */
+    app_version: z.string().trim().max(40).nullable().optional(),
+    version_code: z.number().int().nullable().optional(),
+    /** True when the report was written offline and replayed by the sync queue. */
+    captured_offline: z.boolean().optional(),
+    captured_at: z.string().datetime({ offset: true }).nullable().optional(),
   }),
 ]);
 
@@ -170,6 +176,28 @@ export const Route = createFileRoute("/api/public/agent/report")({
             durationSeconds: body.duration_seconds ?? null,
             followUpNeeded: body.follow_up_needed ?? true,
             followUpNote: body.follow_up_note ?? null,
+          });
+
+          // Record which app version produced this report, so a replaced or
+          // dropped version can have its data handed back to the new one.
+          const { recordVersionData } = await import("@/lib/version-ledger.server");
+          await recordVersionData({
+            entityType: "report",
+            entityId: body.report_id,
+            appVersion: body.app_version ?? caller.device.app_version ?? null,
+            versionCode: body.version_code ?? null,
+            deviceId: caller.device.id,
+            agentId: caller.profile.id,
+            clientRef: body.report_id,
+            capturedOffline: body.captured_offline ?? false,
+            createdOfflineAt: body.captured_at ?? null,
+            payload: {
+              category: body.category,
+              summary: body.summary ?? null,
+              note: body.note ?? null,
+              follow_up_at: body.follow_up_at ?? null,
+              duration_seconds: body.duration_seconds ?? null,
+            },
           });
           return json({ ...result, ok: true });
         } catch (error) {

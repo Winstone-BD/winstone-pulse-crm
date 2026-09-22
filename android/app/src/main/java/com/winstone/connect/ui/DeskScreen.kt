@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.winstone.connect.data.AgentSession
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.data.remote.UpdateChecker
+import com.winstone.connect.data.remote.VersionHandoff
 import com.winstone.connect.telephony.RecordingCapabilityCheck
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -121,6 +122,19 @@ fun DeskScreen(
             context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toInt()
         }.getOrDefault(0)
         update = UpdateChecker.check(installed)
+    }
+
+    // First launch on a new version: pull back anything earlier versions of the
+    // app produced for this agent, so no lead or report is stranded on a version
+    // that no longer runs.
+    LaunchedEffect(Unit) {
+        val claimed = VersionHandoff.claim()
+        if (claimed != null && claimed.total > 0) {
+            snackbar.showSnackbar(
+                "পুরনো সংস্করণের ${claimed.leads}টি লিড ও ${claimed.reports}টি রিপোর্ট এই সংস্করণে বুঝিয়ে দেওয়া হয়েছে",
+            )
+            vm.refresh(silent = true)
+        }
     }
 
     LaunchedEffect(state.toast) {

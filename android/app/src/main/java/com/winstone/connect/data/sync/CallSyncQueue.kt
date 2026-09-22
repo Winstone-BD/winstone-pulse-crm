@@ -80,11 +80,31 @@ object CallSyncQueue {
      * replay it; the unique name is the report id, so one report is sent once.
      */
     fun queueReportSubmit(context: Context, reportId: String, payloadJson: String) {
+        // Mark the parked copy as captured offline, so the CRM's version ledger
+        // knows this report was typed without a connection.
+        val tagged = runCatching {
+            org.json.JSONObject(payloadJson).put("captured_offline", true).toString()
+        }.getOrDefault(payloadJson)
         enqueue(
             context,
             unique = "report_submit_$reportId",
             data = Data.Builder()
                 .putString(KEY_KIND, KIND_REPORT_SUBMIT)
+                .putString(KEY_TEXT, tagged)
+                .build(),
+        )
+    }
+
+    /**
+     * Parks a lead typed with no signal. The unique name is the client ref, so
+     * the lead is sent exactly once no matter how often the queue retries.
+     */
+    fun queueLeadSubmit(context: Context, clientRef: String, payloadJson: String) {
+        enqueue(
+            context,
+            unique = "lead_submit_$clientRef",
+            data = Data.Builder()
+                .putString(KEY_KIND, KIND_LEAD_SUBMIT)
                 .putString(KEY_TEXT, payloadJson)
                 .build(),
         )
@@ -206,6 +226,7 @@ object CallSyncQueue {
     const val KIND_OUTCOME = "outcome"
     const val KIND_REPORT_OPEN = "report_open"
     const val KIND_REPORT_SUBMIT = "report_submit"
+    const val KIND_LEAD_SUBMIT = "lead_submit"
     const val KIND_INCOMING_CALL = "incoming_call"
     const val KEY_DIRECTION = "direction"
     const val KEY_CALL_SOURCE = "call_source"
@@ -292,6 +313,13 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                     Result.success()
                 }
 
+                CallSyncQueue.KIND_LEAD_SUBMIT -> {
+                    val raw = inputData.getString(CallSyncQueue.KEY_TEXT) ?: return Result.failure()
+                    com.winstone.connect.data.remote.WinstoneAgentApi
+                        .submitLeadRaw(org.json.JSONObject(raw))
+                    Result.success()
+                }
+
                 CallSyncQueue.KIND_CALL_STATE -> {
                     val callUid = inputData.getString(CallSyncQueue.KEY_CALL_UID)
                     if (leadId == null || callUid == null) return Result.failure()
@@ -322,6 +350,7 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 kind == CallSyncQueue.KIND_RECORDING ||
                     kind == CallSyncQueue.KIND_REPORT_OPEN ||
                     kind == CallSyncQueue.KIND_REPORT_SUBMIT ||
+                    kind == CallSyncQueue.KIND_LEAD_SUBMIT ||
                     kind == CallSyncQueue.KIND_CALL_STATE ||
                     runAttemptCount < 12
                 )

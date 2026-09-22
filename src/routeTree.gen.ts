@@ -52,6 +52,7 @@ import { Route as ApiPublicAgentRemindersRouteImport } from './routes/api/public
 import { Route as ApiPublicAgentReportRouteImport } from './routes/api/public/agent/report'
 import { Route as ApiPublicAgentSupportRouteImport } from './routes/api/public/agent/support'
 import { Route as ApiPublicAgentVersionRouteImport } from './routes/api/public/agent/version'
+import { Route as ApiPublicAgentVersionHandoffRouteImport } from './routes/api/public/agent/version-handoff'
 import { Route as ApiPublicAgentWhatsappRouteImport } from './routes/api/public/agent/whatsapp'
 import { Route as ApiPublicAgentWorkspaceRouteImport } from './routes/api/public/agent/workspace'
 import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/config/rules'
@@ -293,6 +294,12 @@ const ApiPublicAgentVersionRoute = ApiPublicAgentVersionRouteImport.update({
   path: '/api/public/agent/version',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentVersionHandoffRoute =
+  ApiPublicAgentVersionHandoffRouteImport.update({
+    id: '/api/public/agent/version-handoff',
+    path: '/api/public/agent/version-handoff',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAgentWhatsappRoute = ApiPublicAgentWhatsappRouteImport.update({
   id: '/api/public/agent/whatsapp',
   path: '/api/public/agent/whatsapp',
@@ -451,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
+  '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
@@ -517,6 +525,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
+  '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
@@ -584,6 +593,7 @@ export interface FileRoutesById {
   '/api/public/agent/report': typeof ApiPublicAgentReportRoute
   '/api/public/agent/support': typeof ApiPublicAgentSupportRoute
   '/api/public/agent/version': typeof ApiPublicAgentVersionRoute
+  '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
@@ -652,6 +662,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
+    | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
     | '/api/public/config/rules'
@@ -718,6 +729,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
+    | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
     | '/api/public/config/rules'
@@ -784,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/report'
     | '/api/public/agent/support'
     | '/api/public/agent/version'
+    | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
     | '/api/public/config/rules'
@@ -851,6 +864,7 @@ export interface RootRouteChildren {
   ApiPublicAgentReportRoute: typeof ApiPublicAgentReportRoute
   ApiPublicAgentSupportRoute: typeof ApiPublicAgentSupportRoute
   ApiPublicAgentVersionRoute: typeof ApiPublicAgentVersionRoute
+  ApiPublicAgentVersionHandoffRoute: typeof ApiPublicAgentVersionHandoffRoute
   ApiPublicAgentWhatsappRoute: typeof ApiPublicAgentWhatsappRoute
   ApiPublicAgentWorkspaceRoute: typeof ApiPublicAgentWorkspaceRoute
   ApiPublicConfigRulesRoute: typeof ApiPublicConfigRulesRoute
@@ -1177,6 +1191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent/version-handoff': {
+      id: '/api/public/agent/version-handoff'
+      path: '/api/public/agent/version-handoff'
+      fullPath: '/api/public/agent/version-handoff'
+      preLoaderRoute: typeof ApiPublicAgentVersionHandoffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent/whatsapp': {
       id: '/api/public/agent/whatsapp'
       path: '/api/public/agent/whatsapp'
@@ -1372,6 +1393,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentReportRoute: ApiPublicAgentReportRoute,
   ApiPublicAgentSupportRoute: ApiPublicAgentSupportRoute,
   ApiPublicAgentVersionRoute: ApiPublicAgentVersionRoute,
+  ApiPublicAgentVersionHandoffRoute: ApiPublicAgentVersionHandoffRoute,
   ApiPublicAgentWhatsappRoute: ApiPublicAgentWhatsappRoute,
   ApiPublicAgentWorkspaceRoute: ApiPublicAgentWorkspaceRoute,
   ApiPublicConfigRulesRoute: ApiPublicConfigRulesRoute,

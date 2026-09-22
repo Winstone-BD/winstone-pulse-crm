@@ -81,17 +81,40 @@ object WinstoneAgentApi {
         company: String?,
         notes: String?,
         agentId: String?,
-    ): JSONObject = withContext(Dispatchers.IO) {
-        val payload = JSONObject().apply {
-            put("name", name)
-            put("phone_number", phone)
-            if (!company.isNullOrBlank()) put("company", company)
-            if (!notes.isNullOrBlank()) put("notes", notes)
-            put("source", "agent_app")
-            put("assign", true)
-            // Keep the lead with the agent who added it — no approval needed.
-            if (!agentId.isNullOrBlank()) put("agent_id", agentId)
-        }
+    ): JSONObject = submitLeadRaw(leadPayload(name, phone, company, notes, agentId))
+
+    /**
+     * The exact lead payload, so a lead typed with no signal can be parked in
+     * the sync queue and replayed once the connection is back. `client_ref`
+     * makes the replay idempotent, and the version stamp lets the CRM hand the
+     * lead back if this phone moves to a newer app version.
+     */
+    fun leadPayload(
+        name: String,
+        phone: String,
+        company: String?,
+        notes: String?,
+        agentId: String?,
+        clientRef: String = java.util.UUID.randomUUID().toString(),
+        capturedOffline: Boolean = false,
+    ): JSONObject = JSONObject().apply {
+        put("name", name)
+        put("phone_number", phone)
+        if (!company.isNullOrBlank()) put("company", company)
+        if (!notes.isNullOrBlank()) put("notes", notes)
+        put("source", "agent_app")
+        put("assign", true)
+        // Keep the lead with the agent who added it — no approval needed.
+        if (!agentId.isNullOrBlank()) put("agent_id", agentId)
+        put("client_ref", clientRef)
+        put("captured_offline", capturedOffline)
+        put("captured_at", java.time.Instant.now().toString())
+        com.winstone.connect.data.AppVersion.name?.let { put("app_version", it) }
+        com.winstone.connect.data.AppVersion.code.takeIf { it > 0 }?.let { put("version_code", it) }
+    }
+
+    /** Sends a lead payload (fresh or replayed from the offline queue). */
+    suspend fun submitLeadRaw(payload: JSONObject): JSONObject = withContext(Dispatchers.IO) {
         val req = Request.Builder()
             .url(WinstoneApi.BASE_URL + "/api/public/ingest/lead")
             .header("x-device-token", AgentSession.deviceToken.orEmpty())

@@ -2869,6 +2869,68 @@ export type Database = {
         }
         Relationships: []
       }
+      version_data_ledger: {
+        Row: {
+          agent_id: string | null
+          app_version: string | null
+          captured_offline: boolean
+          client_ref: string | null
+          created_offline_at: string | null
+          device_id: string | null
+          employee_id: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          payload: Json
+          restored_at: string | null
+          restored_version_code: number | null
+          synced_at: string
+          version_code: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          app_version?: string | null
+          captured_offline?: boolean
+          client_ref?: string | null
+          created_offline_at?: string | null
+          device_id?: string | null
+          employee_id?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          payload?: Json
+          restored_at?: string | null
+          restored_version_code?: number | null
+          synced_at?: string
+          version_code?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          app_version?: string | null
+          captured_offline?: boolean
+          client_ref?: string | null
+          created_offline_at?: string | null
+          device_id?: string | null
+          employee_id?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          payload?: Json
+          restored_at?: string | null
+          restored_version_code?: number | null
+          synced_at?: string
+          version_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "version_data_ledger_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "agent_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_deliveries: {
         Row: {
           attempts: number
