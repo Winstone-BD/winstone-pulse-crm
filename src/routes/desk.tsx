@@ -293,7 +293,7 @@ function DeskPage() {
           </div>
         </nav>
 
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0 space-y-4 sm:space-y-6">
           <LeadDeadlineBanner />
           <MyProfileCard />
           <MyPhoneSetup />
@@ -327,15 +327,15 @@ function DeskPage() {
 
         <TeamSupportInbox />
 
-        <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="space-y-4">
-          <TabsList className="flex w-full flex-wrap">
-            <TabsTrigger value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger value="queue">কার্ড ভিউ</TabsTrigger>
-            <TabsTrigger value="calls">কল রেকর্ড</TabsTrigger>
-            <TabsTrigger value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
-            <TabsTrigger value="calendar">ফলো-আপ</TabsTrigger>
-            <TabsTrigger value="reports">আমার রিপোর্ট</TabsTrigger>
-            <TabsTrigger value="support">টিম সাপোর্ট</TabsTrigger>
+        <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
+          <TabsList className="flex w-full min-w-0 justify-start gap-1 overflow-x-auto">
+            <TabsTrigger className="shrink-0" value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="queue">কার্ড ভিউ</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="calls">কল রেকর্ড</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="calendar">ফলো-আপ</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="reports">আমার রিপোর্ট</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="support">টিম সাপোর্ট</TabsTrigger>
           </TabsList>
           <TabsContent value="support">
             <TeamSupportPanel />
