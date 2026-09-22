@@ -184,12 +184,14 @@ export async function appendShiftSummaryToSheetQuietly(
 }
 
 async function tabSheetId(): Promise<number> {
+  if (tabSheetIdCache !== null) return tabSheetIdCache;
   const meta = (await gatewayFetch(
     `/spreadsheets/${SHEET_ID}?fields=sheets.properties`,
   )) as { sheets?: { properties?: { title?: string; sheetId?: number } }[] } | null;
   const found = (meta?.sheets ?? []).find((s) => s.properties?.title === TAB);
   if (!found?.properties?.sheetId) throw new Error("শিফট সামারি ট্যাব খুঁজে পাওয়া যায়নি");
-  return found.properties.sheetId;
+  tabSheetIdCache = found.properties.sheetId;
+  return tabSheetIdCache;
 }
 
 async function logShiftSheetSync(shiftKey: string, rowsWritten: number) {
