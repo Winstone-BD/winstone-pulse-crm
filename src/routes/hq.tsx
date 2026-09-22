@@ -155,6 +155,15 @@ function ControlBoard() {
       <div className="space-y-8">
         <HqHeader />
 
+        <ExecutiveKpiBoard
+          profiles={profiles}
+          leads={leads}
+          calls={calls}
+          messages={messages}
+        />
+
+        <TopPerformerBoard stats={stats} onSelectAgent={setOpenAgentId} />
+
         <ExecutiveOverview
           profiles={profiles}
           leads={leads}
