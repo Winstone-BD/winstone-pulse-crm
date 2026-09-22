@@ -88,6 +88,30 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
             ownerName,
             source: body.source,
           });
+          // Version data guarantee: remember which app version captured this
+          // lead (and whether it was written offline), so the data can be
+          // handed back if that version is replaced or reinstalled.
+          if (result.leadId && caller.kind === "device") {
+            const { recordVersionData } = await import("@/lib/version-ledger.server");
+            await recordVersionData({
+              entityType: "lead",
+              entityId: result.leadId,
+              appVersion: body.app_version ?? caller.device.app_version ?? null,
+              versionCode: body.version_code ?? null,
+              deviceId: caller.device.id,
+              agentId: caller.profile.id,
+              clientRef: body.client_ref ?? null,
+              capturedOffline: body.captured_offline ?? false,
+              createdOfflineAt: body.captured_at ?? null,
+              payload: {
+                name: body.name,
+                phone_number: body.phone_number,
+                company: body.company ?? null,
+                notes: body.notes ?? null,
+                duplicate: result.duplicate ?? false,
+              },
+            });
+          }
           if (result.duplicate) {
             return json({ ok: true, duplicate: true, lead_id: result.leadId }, 200);
           }
