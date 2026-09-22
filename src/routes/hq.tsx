@@ -24,6 +24,8 @@ import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
 import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
 import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
+import { FloorLockAdminPanel } from "@/components/crm/hq/FloorLockAdminPanel";
+
 import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
@@ -154,6 +156,9 @@ function ControlBoard() {
     <>
       <div className="space-y-8">
         <HqHeader />
+
+        <FloorLockAdminPanel />
+
 
         <ExecutiveKpiBoard
           profiles={profiles}
