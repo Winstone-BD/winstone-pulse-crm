@@ -21,7 +21,13 @@ import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { buildTimeline, CONNECTED_THRESHOLD_SECONDS, useSnapshot, type Lead } from "@/lib/crm-data";
+import {
+  buildTimeline,
+  CONNECTED_THRESHOLD_SECONDS,
+  LEAD_EVENT_LABELS,
+  useSnapshot,
+  type Lead,
+} from "@/lib/crm-data";
 import { formatTalkTime, relativeTime, shortDate } from "@/lib/crm-format";
 import { useMyAccount } from "@/lib/session";
 import { cn } from "@/lib/utils";
