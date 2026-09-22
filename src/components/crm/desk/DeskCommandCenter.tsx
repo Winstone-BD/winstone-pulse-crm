@@ -239,8 +239,24 @@ export function DeskCommandCenter({
     leads.find((l) => l.id === selectedId) ?? priority[0]?.lead ?? rows[0] ?? null;
   const dossierLead = leads.find((l) => l.id === dossierId) ?? null;
 
-  const selectedCalls = selected ? calls.filter((c) => c.lead_id === selected.id) : [];
-  const selectedMsgs = selected ? messages.filter((m) => m.lead_id === selected.id) : [];
+  const selectedHistory = selected
+    ? buildTimeline(calls, messages, selected.id, events)
+        .slice()
+        .reverse()
+        .slice(0, 6)
+        .map((entry, i) => ({
+          key: `${entry.at}-${i}`,
+          at: entry.at,
+          title:
+            entry.kind === "call"
+              ? entry.call.duration_seconds > CONNECTED_THRESHOLD_SECONDS
+                ? `কল · ${formatTalkTime(entry.call.duration_seconds)}`
+                : "কল ধরা হয়নি"
+              : entry.kind === "message"
+                ? "হোয়াটসঅ্যাপ মেসেজ"
+                : (LEAD_EVENT_LABELS[entry.event.kind] ?? entry.event.kind),
+        }))
+    : [];
 
   return (
     <section className="space-y-3">
