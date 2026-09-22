@@ -15,10 +15,12 @@ export function CallbackLogButton({
   leadId,
   className,
   label = "কলব্যাক",
+  ariaLabel,
 }: {
   leadId: string;
   className?: string;
   label?: string;
+  ariaLabel?: string;
 }) {
   const adminToken = useAdminToken();
   const run = useServerFn(logIncomingCallback);
@@ -43,6 +45,7 @@ export function CallbackLogButton({
       disabled={mutation.isPending}
       onClick={() => mutation.mutate()}
       title="ক্রেতা ফিরতি কল করলে এখানে চাপ দিন"
+      aria-label={ariaLabel}
     >
       {mutation.isPending ? (
         <Loader2 className="size-4 animate-spin" />

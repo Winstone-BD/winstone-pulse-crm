@@ -15,6 +15,7 @@ type Props = {
   size?: "sm" | "default" | "lg";
   variant?: "default" | "secondary" | "ghost" | "outline";
   className?: string;
+  ariaLabel?: string;
 };
 
 /**
@@ -30,6 +31,7 @@ export function WhatsAppAction({
   size = "sm",
   variant = "secondary",
   className,
+  ariaLabel,
 }: Props) {
   const handleClick = () => {
     const result = openWhatsApp(phone, text);
@@ -56,6 +58,7 @@ export function WhatsAppAction({
       variant={variant}
       className={cn("gap-1", className)}
       onClick={handleClick}
+      aria-label={ariaLabel}
     >
       <MessageCircle className="size-4" /> {label}
     </Button>

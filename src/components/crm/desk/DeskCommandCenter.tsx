@@ -16,7 +16,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -162,6 +162,8 @@ export function DeskCommandCenter({
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<QueueSort>("priority");
   const [mobile360Open, setMobile360Open] = useState(false);
+  const queueItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const mobile360HeadingRef = useRef<HTMLHeadingElement | null>(null);
   const compactDesk = useCompactDesk();
 
   const stats = useMemo(() => {
@@ -321,6 +323,19 @@ export function DeskCommandCenter({
     setSelectedId(leadId);
     if (compactDesk) setMobile360Open(true);
   };
+  const moveQueueFocus = (leadId: string, key: string) => {
+    const currentIndex = rows.findIndex((lead) => lead.id === leadId);
+    if (currentIndex < 0 || rows.length === 0) return;
+    let nextIndex = currentIndex;
+    if (key === "ArrowDown") nextIndex = Math.min(currentIndex + 1, rows.length - 1);
+    if (key === "ArrowUp") nextIndex = Math.max(currentIndex - 1, 0);
+    if (key === "Home") nextIndex = 0;
+    if (key === "End") nextIndex = rows.length - 1;
+    if (nextIndex === currentIndex && !["Home", "End"].includes(key)) return;
+    const nextLead = rows[nextIndex];
+    if (!nextLead) return;
+    queueItemRefs.current[nextLead.id]?.focus();
+  };
 
   return (
     <section className="space-y-3">
@@ -407,11 +422,11 @@ export function DeskCommandCenter({
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-3">
           {/* Lead queue */}
-          <div className="card-elevated p-3 sm:p-4">
+          <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold">আমার লিড কিউ</h3>
-                <p className="text-[11px] text-muted-foreground">
+                <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">আমার লিড কিউ</h3>
+                <p id="lead-queue-help" className="text-[11px] text-muted-foreground">
                   {bn(rows.length)}টি দেখা যাচ্ছে · লিড বেছে নিলে ৩৬০ খুলবে
                 </p>
               </div>
@@ -422,6 +437,8 @@ export function DeskCommandCenter({
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="নাম বা নম্বর"
                   className="h-10 pl-9 pr-9"
+                  aria-label="আমার লিড কিউতে নাম, নম্বর, ঠিকানা বা সিরিয়াল দিয়ে খুঁজুন"
+                  aria-controls="agent-lead-queue-results"
                 />
                 {search && (
                   <Button
@@ -439,7 +456,11 @@ export function DeskCommandCenter({
             </div>
 
             <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_190px]">
-              <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1">
+              <div
+                className="flex min-w-0 gap-1.5 overflow-x-auto pb-1"
+                role="group"
+                aria-label="লিড কিউ ফিল্টার"
+              >
                 {(Object.keys(QUEUE_LABELS) as QueueFilter[]).map((key) => (
                   <Button
                     key={key}
@@ -448,6 +469,8 @@ export function DeskCommandCenter({
                     variant={filter === key ? "default" : "outline"}
                     onClick={() => setFilter(key)}
                     className="h-9 shrink-0 rounded-full px-3 text-[11px]"
+                    aria-pressed={filter === key}
+                    aria-controls="agent-lead-queue-results"
                   >
                     {QUEUE_LABELS[key]}
                   </Button>
@@ -484,7 +507,7 @@ export function DeskCommandCenter({
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                   {SORT_LABELS[sort]}
                 </span>
-                <span className="tabular shrink-0 text-muted-foreground">{bn(rows.length)} ফল</span>
+                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল</span>
               </div>
               <Button
                 type="button"
@@ -500,7 +523,12 @@ export function DeskCommandCenter({
             </div>
 
             <div className="mt-3 max-h-[520px] overflow-y-auto">
-              <ul className="space-y-2">
+              <ul
+                id="agent-lead-queue-results"
+                className="space-y-2"
+                aria-label={`${QUEUE_LABELS[filter]} লিড, ${SORT_LABELS[sort]}, ${bn(rows.length)} ফল`}
+                aria-describedby="lead-queue-help"
+              >
                 {rows.map((lead) => {
                   const overdue = lead.retry_after ? Date.parse(lead.retry_after) < Date.now() : false;
                   return (
@@ -515,8 +543,19 @@ export function DeskCommandCenter({
                     >
                       <button
                         type="button"
+                         ref={(node) => {
+                           queueItemRefs.current[lead.id] = node;
+                         }}
                          onClick={() => selectLead(lead.id)}
-                        className="block w-full min-w-0 text-left"
+                         onKeyDown={(event) => {
+                           if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+                             event.preventDefault();
+                             moveQueueFocus(lead.id, event.key);
+                           }
+                         }}
+                         aria-current={selected?.id === lead.id ? "true" : undefined}
+                         aria-label={`${lead.name}, ${lead.phone_number}, ${STATUS_LABELS[lead.status] ?? lead.status}${lead.temperature ? `, ${lead.temperature}` : ""}. লিড ৩৬০ খুলুন`}
+                         className="block w-full min-w-0 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
                         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                           <div className="min-w-0">
@@ -567,14 +606,16 @@ export function DeskCommandCenter({
                           phone={lead.phone_number}
                           label="কল"
                           className="h-9 min-w-0 text-sm"
+                         ariaLabel={`${lead.name}-কে কল করুন`}
                         />
-                        <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" />
-                        <CallbackLogButton leadId={lead.id} label="" />
+                        <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" ariaLabel={`${lead.name}-কে হোয়াটসঅ্যাপ করুন`} />
+                        <CallbackLogButton leadId={lead.id} label="" ariaLabel={`${lead.name}-এর কলব্যাক রিপোর্ট করুন`} />
                         <Button
                           size="sm"
                           variant="ghost"
                           className="col-span-2 h-9 px-2 text-[11px] sm:col-span-1"
                           onClick={() => setDossierId(lead.id)}
+                          aria-label={`${lead.name}-এর পুরো লিড বিস্তারিত খুলুন`}
                         >
                           বিস্তারিত
                         </Button>
@@ -603,7 +644,8 @@ export function DeskCommandCenter({
                     <button
                       type="button"
                        onClick={() => selectLead(lead.id)}
-                      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-1 py-1 text-left hover:bg-surface-2"
+                       aria-label={`${lead.name}, ${overdue ? "ফলো-আপের সময় পেরিয়েছে" : (lead.temperature ?? lead.status)}. লিড ৩৬০ খুলুন`}
+                       className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-1 py-1 text-left outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-xs font-semibold">{lead.name}</span>
@@ -676,6 +718,7 @@ export function DeskCommandCenter({
                   variant="ghost"
                   className="h-7 px-2 text-[11px]"
                   onClick={() => setDossierId(selected.id)}
+                   aria-label={`${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`}
                 >
                   পুরো ফাইল
                 </Button>
@@ -736,9 +779,10 @@ export function DeskCommandCenter({
                     phone={selected.phone_number}
                     label="কল"
                     className="h-10 flex-1"
+                     ariaLabel={`${selected.name}-কে কল করুন`}
                   />
-                  <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" />
-                  <CallbackLogButton leadId={selected.id} label="" />
+                  <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
+                  <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
@@ -797,10 +841,20 @@ export function DeskCommandCenter({
         <SheetContent
           side="bottom"
           className="inset-x-0 bottom-0 flex h-[min(88dvh,760px)] w-full max-w-none flex-col gap-0 overflow-hidden rounded-t-xl border-x border-t p-0 xl:hidden"
+          aria-describedby="mobile-lead-360-description"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            mobile360HeadingRef.current?.focus();
+          }}
         >
           <SheetHeader className="relative z-10 m-0 shrink-0 border-b border-border bg-background px-4 pb-3 pt-2 text-left">
             <span aria-hidden className="mx-auto mb-1 block h-1 w-10 rounded-full bg-muted-foreground/35" />
-            <SheetTitle className="pr-10">লিড ৩৬০</SheetTitle>
+            <SheetTitle ref={mobile360HeadingRef} tabIndex={-1} className="pr-10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              লিড ৩৬০{selected ? ` — ${selected.name}` : ""}
+            </SheetTitle>
+            <p id="mobile-lead-360-description" className="sr-only">
+              নির্বাচিত লিডের পরিচিতি, দ্রুত অ্যাকশন এবং সাম্প্রতিক ইতিহাস। Escape চাপলে প্যানেল বন্ধ হবে।
+            </p>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Lead360Content
@@ -871,6 +925,7 @@ function Lead360Content({
           variant="outline"
           className="shrink-0"
           onClick={() => onOpenDossier(selected.id)}
+          aria-label={`${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`}
         >
           পুরো ফাইল
         </Button>
@@ -919,9 +974,10 @@ function Lead360Content({
           phone={selected.phone_number}
           label="কল"
           className="h-11 min-w-0"
+          ariaLabel={`${selected.name}-কে কল করুন`}
         />
-        <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" />
-        <CallbackLogButton leadId={selected.id} label="" />
+        <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
+        <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
       </div>
 
       <div>
