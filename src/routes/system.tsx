@@ -141,6 +141,8 @@ function SystemBoard() {
 
       <ReportSheetPanel />
 
+      <SheetSyncHealthPanel />
+
       <StaffAccountsTable />
 
       <ShiftSummaryPanel scope="it" />
