@@ -466,21 +466,23 @@ export function DeskCommandCenter({
               </Select>
             </div>
 
-            <div className="mt-2 flex min-w-0 items-center gap-2 overflow-x-auto rounded-lg border border-border/70 bg-surface-2/60 px-2.5 py-2 text-[11px]">
-              <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
-              <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
-              <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
-                {QUEUE_LABELS[filter]}
-              </span>
-              {search.trim() && (
-                <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
-                  খোঁজ: {search.trim()}
+            <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border/70 bg-surface-2/60 p-2 text-[11px]">
+              <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5">
+                <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
+                <span className="shrink-0 text-muted-foreground">সক্রিয়:</span>
+                <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
+                  {QUEUE_LABELS[filter]}
                 </span>
-              )}
-              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                {SORT_LABELS[sort]}
-              </span>
-              <span className="tabular ml-auto shrink-0 text-muted-foreground">{bn(rows.length)} ফল</span>
+                {search.trim() && (
+                  <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
+                    খোঁজ: {search.trim()}
+                  </span>
+                )}
+                <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                  {SORT_LABELS[sort]}
+                </span>
+                <span className="tabular shrink-0 text-muted-foreground">{bn(rows.length)} ফল</span>
+              </div>
               {hasQueueState && (
                 <Button
                   type="button"
