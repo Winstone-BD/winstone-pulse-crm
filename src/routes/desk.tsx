@@ -9,9 +9,9 @@ import {
   Timer,
   Users,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-import { AgentOverview } from "@/components/crm/AgentOverview";
+import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { MyCallLog } from "@/components/crm/MyCallLog";
