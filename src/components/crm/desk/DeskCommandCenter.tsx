@@ -135,10 +135,36 @@ function KpiCard({
     chart4: "bg-chart-4/15 text-chart-4",
     destructive: "bg-destructive/15 text-destructive",
   }[tone];
+  const glowClass = {
+    primary: "from-primary/12 ring-primary/20",
+    live: "from-live/12 ring-live/20",
+    chart4: "from-chart-4/12 ring-chart-4/20",
+    destructive: "from-destructive/12 ring-destructive/20",
+  }[tone];
+  const barClass = {
+    primary: "bg-primary",
+    live: "bg-live",
+    chart4: "bg-chart-4",
+    destructive: "bg-destructive",
+  }[tone];
   return (
-    <div className="card-elevated relative overflow-hidden p-3">
+    <div
+      className={cn(
+        "card-elevated relative overflow-hidden bg-gradient-to-br to-transparent p-3 ring-1 transition-shadow hover:shadow-lg",
+        glowClass,
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn("absolute inset-x-0 top-0 h-0.5 opacity-70", barClass)}
+      />
       <div className="flex items-center gap-2">
-        <span className={cn("grid size-8 shrink-0 place-items-center rounded-xl", toneClass)}>
+        <span
+          className={cn(
+            "grid size-9 shrink-0 place-items-center rounded-xl shadow-inner",
+            toneClass,
+          )}
+        >
           {icon}
         </span>
         <p className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">{label}</p>
@@ -148,7 +174,7 @@ function KpiCard({
       {progress !== undefined && (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className={cn("h-full rounded-full transition-all", barClass)}
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
