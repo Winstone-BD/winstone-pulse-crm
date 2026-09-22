@@ -37,6 +37,12 @@ const Body = z.discriminatedUnion("action", [
     duration_seconds: z.number().int().min(0).max(86400).nullable().optional(),
     follow_up_needed: z.boolean().optional(),
     follow_up_note: z.string().trim().max(500).nullable().optional(),
+    /** Which app version produced this report, for the version data ledger. */
+    app_version: z.string().trim().max(40).nullable().optional(),
+    version_code: z.number().int().nullable().optional(),
+    /** True when the report was written offline and replayed by the sync queue. */
+    captured_offline: z.boolean().optional(),
+    captured_at: z.string().datetime({ offset: true }).nullable().optional(),
   }),
 ]);
 
