@@ -177,6 +177,28 @@ export const Route = createFileRoute("/api/public/agent/report")({
             followUpNeeded: body.follow_up_needed ?? true,
             followUpNote: body.follow_up_note ?? null,
           });
+
+          // Record which app version produced this report, so a replaced or
+          // dropped version can have its data handed back to the new one.
+          const { recordVersionData } = await import("@/lib/version-ledger.server");
+          await recordVersionData({
+            entityType: "report",
+            entityId: body.report_id,
+            appVersion: body.app_version ?? caller.device.app_version ?? null,
+            versionCode: body.version_code ?? null,
+            deviceId: caller.device.id,
+            agentId: caller.profile.id,
+            clientRef: body.report_id,
+            capturedOffline: body.captured_offline ?? false,
+            createdOfflineAt: body.captured_at ?? null,
+            payload: {
+              category: body.category,
+              summary: body.summary ?? null,
+              note: body.note ?? null,
+              follow_up_at: body.follow_up_at ?? null,
+              duration_seconds: body.duration_seconds ?? null,
+            },
+          });
           return json({ ...result, ok: true });
         } catch (error) {
           return json({ error: error instanceof Error ? error.message : "রিপোর্ট জমা হয়নি" }, 422);
