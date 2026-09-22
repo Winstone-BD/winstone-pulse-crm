@@ -23,6 +23,8 @@ import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
 import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
+import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
+import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
