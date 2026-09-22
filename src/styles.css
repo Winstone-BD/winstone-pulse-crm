@@ -55,6 +55,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-exec-navy: var(--exec-navy);
+  --color-exec-blue: var(--exec-blue);
+  --color-exec-emerald: var(--exec-emerald);
+  --color-exec-amber: var(--exec-amber);
+  --color-exec-red: var(--exec-red);
+  --color-exec-gold: var(--exec-gold);
   --font-display: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
@@ -150,6 +156,13 @@
   --chart-3: oklch(0.88 0.08 90);
   --chart-4: oklch(0.5 0.05 78);
   --chart-5: oklch(0.7 0.06 70);
+  /* Executive HQ presentation accents (investor / board view only) */
+  --exec-navy: oklch(0.21 0.035 265);
+  --exec-blue: oklch(0.66 0.16 258);
+  --exec-emerald: oklch(0.72 0.14 163);
+  --exec-amber: oklch(0.79 0.15 72);
+  --exec-red: oklch(0.65 0.2 25);
+  --exec-gold: oklch(0.82 0.13 85);
   --shadow-card: 0 1px 2px oklch(0 0 0 / 45%), 0 1px 3px oklch(0 0 0 / 30%);
   --shadow-card-hover: 0 6px 18px oklch(0 0 0 / 50%), 0 2px 6px oklch(0 0 0 / 32%);
   --shadow-glass: 0 1px 0 oklch(1 0 0 / 6%) inset, 0 10px 28px -12px oklch(0 0 0 / 60%);
