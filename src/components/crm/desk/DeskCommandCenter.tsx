@@ -620,6 +620,14 @@ export function DeskCommandCenter({
                           বিস্তারিত
                         </Button>
                       </div>
+                      {canResolveFollowUp(lead) && (
+                        <FollowUpResolveActions
+                          leadId={lead.id}
+                          leadName={lead.name}
+                          compact
+                          className="mt-2 border-t border-border/60 pt-2"
+                        />
+                      )}
                     </li>
                   );
                 })}
@@ -784,6 +792,21 @@ export function DeskCommandCenter({
                   <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
                   <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
                 </div>
+                {canResolveFollowUp(selected) && (
+                  <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-chart-4">
+                      যোগাযোগ হয়েছে — এখন কী করবেন?
+                    </p>
+                    <FollowUpResolveActions
+                      leadId={selected.id}
+                      leadName={selected.name}
+                      className="mt-2"
+                    />
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-[11px] font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
                   <ul className="mt-1.5 space-y-1.5">
