@@ -122,9 +122,10 @@ export const setFloorLock = createServerFn({ method: "POST" })
 
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
-      action: `floor_lock_${data.action}`,
+      action: "floor_lock_changed",
       entityType: "system_settings",
-      metadata: { employeeId: id || null },
+      metadata: { change: data.action, employeeId: id || null },
+
     });
 
     return next;
