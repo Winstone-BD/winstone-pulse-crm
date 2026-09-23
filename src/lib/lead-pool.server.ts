@@ -159,16 +159,30 @@ export async function distributeDailyLeads(options: {
   actorProfileId?: string | null;
   actorLabel?: string;
   trigger: "manual" | "daily_auto";
+  /** Desks that must be skipped in this run (employee IDs, e.g. a locked account). */
+  excludeEmployeeIds?: string[];
+  /** Give every included desk exactly `perAgent`, ignoring lighter fixed quotas. */
+  ignoreFixedQuota?: boolean;
 }): Promise<DistributionResult> {
   const supabaseAdmin = await admin();
   const today = dhakaToday();
-  const agents = await activeAgents();
+  const skip = new Set(
+    (options.excludeEmployeeIds ?? []).map((id) => id.trim().toUpperCase()).filter(Boolean),
+  );
+  const agents = (await activeAgents()).filter(
+    (agent) => !skip.has((agent.employee_id ?? "").trim().toUpperCase()),
+  );
   if (agents.length === 0) throw new Error("চালু কোনো এজেন্ট নেই");
 
   // Each desk has its own daily quota: the floor-wide round, unless that person
   // runs on a fixed lighter quota (Sell Team Admin).
   const { quotaFor } = await import("@/lib/lead-quota");
-  const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
+  const quotas = new Map(
+    agents.map((a) => [
+      a.id,
+      options.ignoreFixedQuota ? options.perAgent : quotaFor(a.employee_id, options.perAgent),
+    ]),
+  );
 
   // Idempotency: what each desk already holds for today is subtracted from its
   // quota, so a second run (cron retry, double click) only fills real gaps.
