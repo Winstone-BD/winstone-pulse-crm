@@ -293,7 +293,12 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
     // complete: the follow-up work is finished, so the lead leaves the queue.
     const { error } = await supabaseAdmin
       .from("leads")
-      .update({ status: "closed", retry_after: null, updated_at: nowIso })
+      .update({
+        status: "closed",
+        work_state: "completed",
+        retry_after: null,
+        updated_at: nowIso,
+      })
       .eq("id", data.leadId);
     if (error) throw new Error(error.message);
 
