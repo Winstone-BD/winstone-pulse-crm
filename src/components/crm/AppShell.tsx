@@ -8,7 +8,6 @@ import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
-import { FloorLockGate } from "@/components/crm/FloorLockGate";
 import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
 
 import { ReminderBell } from "@/components/crm/ReminderBell";
@@ -310,10 +309,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* The mandatory post-call report follows the agent across every page, not
           just the desk: a call that ended anywhere must be reported. */}
       {scope !== "none" && <PostCallReportGate />}
-
-      {/* Floor-wide performance review notice / HQ approval wall. */}
-      <FloorLockGate />
-
 
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </div>
