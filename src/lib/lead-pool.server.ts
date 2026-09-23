@@ -294,20 +294,37 @@ export async function distributeDailyLeads(options: {
   for (const [agentId, bucket] of buckets) {
     for (let start = 0; start < bucket.leadIds.length; start += CHUNK) {
       const ids = bucket.leadIds.slice(start, start + CHUNK);
+      const patch = {
+        assigned_to: agentId,
+        assigned_agent_id: agentId,
+        assignment_source: "lead_database",
+        work_date: today,
+      };
       const { data: updated, error } = await supabaseAdmin
         .from("leads")
-        .update({
-          assigned_to: agentId,
-          assigned_agent_id: agentId,
-          assignment_source: "lead_database",
-          work_date: today,
-        })
+        .update(patch)
         .in("id", ids)
         .is("assigned_to", null)
         .is("assigned_agent_id", null)
         .select("id");
-      if (error) continue;
-      const takenIds = (updated ?? []).map((row) => row.id);
+
+      let takenIds = (updated ?? []).map((row) => row.id);
+      if (error) {
+        // One bad row (e.g. a phone that another lead already owns) makes the
+        // whole batch fail, which would silently starve a desk. Retry one by one
+        // so every healthy lead still lands and only the bad row is left behind.
+        takenIds = [];
+        for (const id of ids) {
+          const single = await supabaseAdmin
+            .from("leads")
+            .update(patch)
+            .eq("id", id)
+            .is("assigned_to", null)
+            .is("assigned_agent_id", null)
+            .select("id");
+          if (!single.error && single.data?.[0]) takenIds.push(single.data[0].id);
+        }
+      }
       if (takenIds.length === 0) continue;
       moved += takenIds.length;
 
