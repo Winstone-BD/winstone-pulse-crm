@@ -28,8 +28,8 @@ const PendingGrantSchema = z.object({
 
 const StateSchema = z.object({
   enabled: z.boolean().default(true),
-  /** Dhaka 9:30 AM, 23 September 2026 = 03:30 UTC. */
-  openAt: z.string().default("2026-09-23T03:30:00.000Z"),
+  /** Dhaka 9:45 AM, 23 September 2026 = 03:45 UTC. */
+  openAt: z.string().default("2026-09-23T03:45:00.000Z"),
   restricted: z.array(z.string()).default(["WIN2606"]),
   approved: z.array(z.string()).default([]),
   pendingGrants: z.array(PendingGrantSchema).default([]),
