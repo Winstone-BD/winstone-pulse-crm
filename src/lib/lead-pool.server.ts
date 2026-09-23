@@ -160,9 +160,9 @@ export async function distributeDailyLeads(options: {
   actorLabel?: string;
   trigger: "manual" | "daily_auto";
   /** Desks that must be skipped in this run (employee IDs, e.g. a locked account). */
-  excludeEmployeeIds?: string[];
+  excludeEmployeeIds?: string[] | undefined;
   /** Give every included desk exactly `perAgent`, ignoring lighter fixed quotas. */
-  ignoreFixedQuota?: boolean;
+  ignoreFixedQuota?: boolean | undefined;
 }): Promise<DistributionResult> {
   const supabaseAdmin = await admin();
   const today = dhakaToday();
