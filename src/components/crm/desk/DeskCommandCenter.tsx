@@ -139,12 +139,8 @@ function DualHeading({
  */
 function canResolveFollowUp(lead: Lead) {
   if (lead.status === "closed") return false;
-  return (
-    lead.status === "follow_up" ||
-    lead.status === "contacted" ||
-    Boolean(lead.retry_after) ||
-    Boolean(lead.last_call_at)
-  );
+  // Only a lead actually parked for follow-up can be rescheduled or finished.
+  return lead.status === "follow_up" || Boolean(lead.retry_after);
 }
 
 function bn(n: number) {
