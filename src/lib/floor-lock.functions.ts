@@ -111,7 +111,7 @@ export const getFloorLock = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    const state = await readState();
+    const state = await releaseDueGrants(await readState());
 
     const beforeOpen = state.enabled && Date.now() < new Date(state.openAt).getTime();
     const employeeId = caller.profile?.employee_id ?? null;
@@ -120,6 +120,9 @@ export const getFloorLock = createServerFn({ method: "POST" })
       employeeId !== null &&
       state.restricted.includes(employeeId) &&
       !state.approved.includes(employeeId);
+    const myGrant = employeeId
+      ? (state.pendingGrants.find((grant) => grant.employeeId === employeeId) ?? null)
+      : null;
 
     return {
       scope: caller.scope,
@@ -131,6 +134,16 @@ export const getFloorLock = createServerFn({ method: "POST" })
       /** HQ can dismiss the board; agents and coordinators cannot. */
       canDismiss: caller.scope === "authority",
       me: caller.profile ? { name: caller.profile.name, employeeId } : null,
+      /** This desk's held-back lead batch, if any. */
+      myGrant: myGrant
+        ? {
+            quantity: myGrant.quantity,
+            delayMinutes: myGrant.delayMinutes,
+            releaseAt: myGrant.releaseAt,
+            deliveredAt: myGrant.deliveredAt,
+            delivered: myGrant.delivered,
+          }
+        : null,
     };
   });
 
