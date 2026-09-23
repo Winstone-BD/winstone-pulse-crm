@@ -112,6 +112,10 @@ const DistributeInput = z.object({
   perAgent: z.number().int().min(1).max(500),
   /** Also make this the amount the automatic daily run uses. */
   saveAsDaily: z.boolean().optional(),
+  /** Desks to skip today — e.g. an account still waiting for HQ approval. */
+  excludeEmployeeIds: z.array(z.string().trim().max(32)).max(20).optional(),
+  /** Give everyone included exactly `perAgent`, ignoring lighter fixed quotas. */
+  ignoreFixedQuota: z.boolean().optional(),
 });
 
 /** Hands the same number of database leads to every active agent. */
@@ -130,6 +134,8 @@ export const distributeLeadPool = createServerFn({ method: "POST" })
       actorProfileId: caller.profile?.id ?? null,
       actorLabel: caller.profile?.name ?? "IT Console",
       trigger: "manual",
+      excludeEmployeeIds: data.excludeEmployeeIds,
+      ignoreFixedQuota: data.ignoreFixedQuota,
     });
     if (data.saveAsDaily) await saveDailyPlan({ perAgent: data.perAgent });
     await saveDailyPlan({ perAgent: data.perAgent, lastRunDate: dhakaToday() });

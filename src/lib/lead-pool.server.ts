@@ -159,16 +159,30 @@ export async function distributeDailyLeads(options: {
   actorProfileId?: string | null;
   actorLabel?: string;
   trigger: "manual" | "daily_auto";
+  /** Desks that must be skipped in this run (employee IDs, e.g. a locked account). */
+  excludeEmployeeIds?: string[] | undefined;
+  /** Give every included desk exactly `perAgent`, ignoring lighter fixed quotas. */
+  ignoreFixedQuota?: boolean | undefined;
 }): Promise<DistributionResult> {
   const supabaseAdmin = await admin();
   const today = dhakaToday();
-  const agents = await activeAgents();
+  const skip = new Set(
+    (options.excludeEmployeeIds ?? []).map((id) => id.trim().toUpperCase()).filter(Boolean),
+  );
+  const agents = (await activeAgents()).filter(
+    (agent) => !skip.has((agent.employee_id ?? "").trim().toUpperCase()),
+  );
   if (agents.length === 0) throw new Error("চালু কোনো এজেন্ট নেই");
 
   // Each desk has its own daily quota: the floor-wide round, unless that person
   // runs on a fixed lighter quota (Sell Team Admin).
   const { quotaFor } = await import("@/lib/lead-quota");
-  const quotas = new Map(agents.map((a) => [a.id, quotaFor(a.employee_id, options.perAgent)]));
+  const quotas = new Map(
+    agents.map((a) => [
+      a.id,
+      options.ignoreFixedQuota ? options.perAgent : quotaFor(a.employee_id, options.perAgent),
+    ]),
+  );
 
   // Idempotency: what each desk already holds for today is subtracted from its
   // quota, so a second run (cron retry, double click) only fills real gaps.
@@ -280,20 +294,37 @@ export async function distributeDailyLeads(options: {
   for (const [agentId, bucket] of buckets) {
     for (let start = 0; start < bucket.leadIds.length; start += CHUNK) {
       const ids = bucket.leadIds.slice(start, start + CHUNK);
+      const patch = {
+        assigned_to: agentId,
+        assigned_agent_id: agentId,
+        assignment_source: "lead_database",
+        work_date: today,
+      };
       const { data: updated, error } = await supabaseAdmin
         .from("leads")
-        .update({
-          assigned_to: agentId,
-          assigned_agent_id: agentId,
-          assignment_source: "lead_database",
-          work_date: today,
-        })
+        .update(patch)
         .in("id", ids)
         .is("assigned_to", null)
         .is("assigned_agent_id", null)
         .select("id");
-      if (error) continue;
-      const takenIds = (updated ?? []).map((row) => row.id);
+
+      let takenIds = (updated ?? []).map((row) => row.id);
+      if (error) {
+        // One bad row (e.g. a phone that another lead already owns) makes the
+        // whole batch fail, which would silently starve a desk. Retry one by one
+        // so every healthy lead still lands and only the bad row is left behind.
+        takenIds = [];
+        for (const id of ids) {
+          const single = await supabaseAdmin
+            .from("leads")
+            .update(patch)
+            .eq("id", id)
+            .is("assigned_to", null)
+            .is("assigned_agent_id", null)
+            .select("id");
+          if (!single.error && single.data?.[0]) takenIds.push(single.data[0].id);
+        }
+      }
       if (takenIds.length === 0) continue;
       moved += takenIds.length;
 

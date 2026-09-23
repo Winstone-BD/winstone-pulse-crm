@@ -11,15 +11,32 @@ import { z } from "zod";
 
 const SETTINGS_KEY = "performance_review_lock";
 
+/**
+ * A batch of leads held back for a locked desk. Nothing moves while the account
+ * waits for HQ; the clock only starts when HQ unlocks it, and the leads land
+ * `delayMinutes` later. Until then they stay in the head database.
+ */
+const PendingGrantSchema = z.object({
+  employeeId: z.string(),
+  quantity: z.number().int().min(1).max(500),
+  delayMinutes: z.number().int().min(1).max(1440).default(10),
+  /** Set when HQ approves — the moment the leads become due. */
+  releaseAt: z.string().nullable().default(null),
+  deliveredAt: z.string().nullable().default(null),
+  delivered: z.number().int().default(0),
+});
+
 const StateSchema = z.object({
   enabled: z.boolean().default(true),
   /** Dhaka 9:30 AM, 23 September 2026 = 03:30 UTC. */
   openAt: z.string().default("2026-09-23T03:30:00.000Z"),
   restricted: z.array(z.string()).default(["WIN2606"]),
   approved: z.array(z.string()).default([]),
+  pendingGrants: z.array(PendingGrantSchema).default([]),
 });
 
 export type FloorLockState = z.infer<typeof StateSchema>;
+export type PendingGrant = z.infer<typeof PendingGrantSchema>;
 
 async function readState(): Promise<FloorLockState> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -40,6 +57,52 @@ async function writeState(next: FloorLockState) {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Hands over any batch whose delay has run out. Called on every floor-lock read,
+ * so the leads arrive on their own once the ten minutes pass — nobody has to
+ * press anything. Safe to call repeatedly: a delivered batch is never redone.
+ */
+async function releaseDueGrants(state: FloorLockState): Promise<FloorLockState> {
+  const due = state.pendingGrants.filter(
+    (grant) => !grant.deliveredAt && grant.releaseAt && Date.now() >= new Date(grant.releaseAt).getTime(),
+  );
+  if (due.length === 0) return state;
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { grantExtraLeads } = await import("@/lib/lead-pool.server");
+  const next: FloorLockState = { ...state, pendingGrants: [...state.pendingGrants] };
+
+  for (const grant of due) {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, name")
+      .eq("employee_id", grant.employeeId)
+      .maybeSingle();
+    if (!profile) continue;
+    try {
+      const result = await grantExtraLeads({
+        agentProfileId: profile.id,
+        quantity: grant.quantity,
+        reason: `হেড কোয়ার্টার অনুমোদনের ${grant.delayMinutes} মিনিট পর স্বয়ংক্রিয় লিড`,
+        actorLabel: "Executive HQ (auto)",
+      });
+      const index = next.pendingGrants.findIndex((row) => row.employeeId === grant.employeeId);
+      if (index >= 0) {
+        next.pendingGrants[index] = {
+          ...grant,
+          deliveredAt: new Date().toISOString(),
+          delivered: result.moved,
+        };
+      }
+    } catch {
+      // Empty database or a transient failure: leave it due and retry next poll.
+    }
+  }
+
+  if (next.pendingGrants.some((grant, i) => grant !== state.pendingGrants[i])) await writeState(next);
+  return next;
+}
+
 /** What this device must show: the blocking board, the red HQ notice, or nothing. */
 export const getFloorLock = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
@@ -48,7 +111,7 @@ export const getFloorLock = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    const state = await readState();
+    const state = await releaseDueGrants(await readState());
 
     const beforeOpen = state.enabled && Date.now() < new Date(state.openAt).getTime();
     const employeeId = caller.profile?.employee_id ?? null;
@@ -57,6 +120,9 @@ export const getFloorLock = createServerFn({ method: "POST" })
       employeeId !== null &&
       state.restricted.includes(employeeId) &&
       !state.approved.includes(employeeId);
+    const myGrant = employeeId
+      ? (state.pendingGrants.find((grant) => grant.employeeId === employeeId) ?? null)
+      : null;
 
     return {
       scope: caller.scope,
@@ -68,6 +134,16 @@ export const getFloorLock = createServerFn({ method: "POST" })
       /** HQ can dismiss the board; agents and coordinators cannot. */
       canDismiss: caller.scope === "authority",
       me: caller.profile ? { name: caller.profile.name, employeeId } : null,
+      /** This desk's held-back lead batch, if any. */
+      myGrant: myGrant
+        ? {
+            quantity: myGrant.quantity,
+            delayMinutes: myGrant.delayMinutes,
+            releaseAt: myGrant.releaseAt,
+            deliveredAt: myGrant.deliveredAt,
+            delivered: myGrant.delivered,
+          }
+        : null,
     };
   });
 
@@ -105,6 +181,12 @@ export const setFloorLock = createServerFn({ method: "POST" })
 
     if (data.action === "approve" && id) {
       next.approved = [...new Set([...state.approved, id])];
+      // Unlocking starts the clock on this desk's held-back leads.
+      next.pendingGrants = state.pendingGrants.map((grant) =>
+        grant.employeeId === id && !grant.releaseAt && !grant.deliveredAt
+          ? { ...grant, releaseAt: new Date(Date.now() + grant.delayMinutes * 60_000).toISOString() }
+          : grant,
+      );
     } else if (data.action === "revoke" && id) {
       next.approved = state.approved.filter((x) => x !== id);
     } else if (data.action === "restrict" && id) {
