@@ -87,7 +87,7 @@ const STATUS_STYLE: Record<SmartStatus, { chip: string; row: string; bar: string
 /**
  * Blocking floor notice — Smart Performance UI.
  *
- * Until the floor opens (9:30 AM Dhaka) every signed-in desk is covered by this
+  * Until the floor opens (9:45 AM Dhaka) every signed-in desk is covered by this
  * board and nothing underneath can be used. It shows three separate signals per
  * desk (activity, evidence, integrity) rather than a single "worst agent" verdict.
  * After the floor opens the board disappears for everyone except accounts HQ has
@@ -140,11 +140,11 @@ export function FloorLockGate() {
               বাকি {countdown}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-live/40 bg-live/10 px-3 py-1 text-xs font-semibold text-live">
-              <Activity className="size-3.5" /> Evidence-based, live rules from 9:30
+              <Activity className="size-3.5" /> Evidence-based, live rules from 9:45
             </span>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            এই সময় পর্যন্ত CRM-এর কোনো অংশ ব্যবহার করা যাবে না। সাড়ে ৯টায় সবার ড্যাশবোর্ড নিজেই খুলে
+            এই সময় পর্যন্ত CRM-এর কোনো অংশ ব্যবহার করা যাবে না। ৯টা ৪৫ মিনিটে সবার ড্যাশবোর্ড নিজেই খুলে
             যাবে — তবে যার প্যাটার্ন গুরুতর, তাকে হেড কোয়ার্টার থেকে অনুমোদন নিতে হবে।
           </p>
           {state.canDismiss && (
@@ -476,7 +476,7 @@ function SmartAgentCard({ row }: { row: ReviewRow }) {
       </div>
 
       <p className="mt-2 text-[10px] text-muted-foreground">
-        সাড়ে ৯টার পর: Lead 360, Call Timeline ও Audit Evidence — সব হেড কোয়ার্টার প্যানেল থেকে খোলা
+         ৯টা ৪৫ মিনিটের পর: Lead 360, Call Timeline ও Audit Evidence — সব হেড কোয়ার্টার প্যানেল থেকে খোলা
         যাবে।
       </p>
     </div>
