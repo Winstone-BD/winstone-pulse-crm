@@ -181,6 +181,12 @@ export const setFloorLock = createServerFn({ method: "POST" })
 
     if (data.action === "approve" && id) {
       next.approved = [...new Set([...state.approved, id])];
+      // Unlocking starts the clock on this desk's held-back leads.
+      next.pendingGrants = state.pendingGrants.map((grant) =>
+        grant.employeeId === id && !grant.releaseAt && !grant.deliveredAt
+          ? { ...grant, releaseAt: new Date(Date.now() + grant.delayMinutes * 60_000).toISOString() }
+          : grant,
+      );
     } else if (data.action === "revoke" && id) {
       next.approved = state.approved.filter((x) => x !== id);
     } else if (data.action === "restrict" && id) {
