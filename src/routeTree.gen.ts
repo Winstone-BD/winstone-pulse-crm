@@ -39,6 +39,7 @@ import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
 import { Route as HelpSlugRouteImport } from './routes/help_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
+import { Route as ApiPublicTmpBulkImportRouteImport } from './routes/api/public/tmp-bulk-import'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
 import { Route as ApiPublicAgentCallStartRouteImport } from './routes/api/public/agent/call-start'
 import { Route as ApiPublicAgentCallStateRouteImport } from './routes/api/public/agent/call-state'
@@ -224,6 +225,11 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 const ApiPublicSmokeRoute = ApiPublicSmokeRouteImport.update({
   id: '/api/public/smoke',
   path: '/api/public/smoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTmpBulkImportRoute = ApiPublicTmpBulkImportRouteImport.update({
+  id: '/api/public/tmp-bulk-import',
+  path: '/api/public/tmp-bulk-import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsAdminEditorSlugRoute = DocsAdminEditorSlugRouteImport.update({
@@ -445,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
+  '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
@@ -512,6 +519,7 @@ export interface FileRoutesByTo {
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
+  '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/help_/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
+  '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
@@ -649,6 +658,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
+    | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
+    | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
@@ -783,6 +794,7 @@ export interface FileRouteTypes {
     | '/help_/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/smoke'
+    | '/api/public/tmp-bulk-import'
     | '/docs-admin_/editor/$slug'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
@@ -851,6 +863,7 @@ export interface RootRouteChildren {
   HelpSlugRoute: typeof HelpSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
+  ApiPublicTmpBulkImportRoute: typeof ApiPublicTmpBulkImportRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
   ApiPublicAgentCallStartRoute: typeof ApiPublicAgentCallStartRoute
   ApiPublicAgentCallStateRoute: typeof ApiPublicAgentCallStateRoute
@@ -1098,6 +1111,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/smoke'
       fullPath: '/api/public/smoke'
       preLoaderRoute: typeof ApiPublicSmokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/tmp-bulk-import': {
+      id: '/api/public/tmp-bulk-import'
+      path: '/api/public/tmp-bulk-import'
+      fullPath: '/api/public/tmp-bulk-import'
+      preLoaderRoute: typeof ApiPublicTmpBulkImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs-admin_/editor/$slug': {
@@ -1380,6 +1400,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpSlugRoute: HelpSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
+  ApiPublicTmpBulkImportRoute: ApiPublicTmpBulkImportRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,
   ApiPublicAgentCallStartRoute: ApiPublicAgentCallStartRoute,
   ApiPublicAgentCallStateRoute: ApiPublicAgentCallStateRoute,
