@@ -14,10 +14,7 @@
 export const DEFAULT_DAILY_QUOTA = 25;
 
 /** Agent ID → fixed daily quota, regardless of the floor-wide round size. */
-export const FIXED_DAILY_QUOTA: Record<string, number> = {
-  // Abu Haidar — Sell Team Admin
-  WIN2607: 15,
-};
+export const FIXED_DAILY_QUOTA: Record<string, number> = {};
 
 function key(employeeId: string | null | undefined): string {
   return (employeeId ?? "").toUpperCase().replace(/\s+/g, "");
