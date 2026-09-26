@@ -32,7 +32,12 @@ const StateSchema = z.object({
   openAt: z.string().default("2026-09-23T03:45:00.000Z"),
   restricted: z.array(z.string()).default(["WIN2606"]),
   approved: z.array(z.string()).default([]),
-  pendingGrants: z.array(PendingGrantSchema).default([]),
+  /** Elias's held batch: 40 leads, released 10 minutes after HQ approval. */
+  pendingGrants: z
+    .array(PendingGrantSchema)
+    .default([
+      { employeeId: "WIN2606", quantity: 40, delayMinutes: 10, releaseAt: null, deliveredAt: null, delivered: 0 },
+    ]),
 });
 
 export type FloorLockState = z.infer<typeof StateSchema>;
