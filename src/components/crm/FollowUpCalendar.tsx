@@ -9,7 +9,8 @@ import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { completeFollowUp, myFollowUps } from "@/lib/call-reports.functions";
+import { completeFollowUp, myFollowUps, rescheduleFollowUp } from "@/lib/call-reports.functions";
+import { dhakaDay } from "@/lib/lead-groups";
 import { useAdminToken } from "@/lib/local-session";
 
 type View = "day" | "week" | "month" | "agenda";
@@ -32,6 +33,8 @@ function rangeFor(view: View) {
   const from = new Date();
   const to = new Date();
   from.setHours(0, 0, 0, 0);
+  // Reach back 30 days so every open overdue follow-up stays visible.
+  from.setDate(from.getDate() - 30);
   if (view === "day") to.setHours(23, 59, 59, 999);
   else if (view === "week") to.setDate(to.getDate() + 7);
   else if (view === "month") to.setDate(to.getDate() + 31);
@@ -45,6 +48,21 @@ export function FollowUpCalendar() {
   const queryClient = useQueryClient();
   const fetchEvents = useServerFn(myFollowUps);
   const done = useServerFn(completeFollowUp);
+  const moveFn = useServerFn(rescheduleFollowUp);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [newAt, setNewAt] = useState("");
+  const move = useMutation({
+    mutationFn: (input: { eventId: string; at: string }) =>
+      moveFn({ data: { adminToken, eventId: input.eventId, scheduledAt: new Date(input.at).toISOString() } }),
+    onSuccess: () => {
+      toast.success("ফলো-আপের সময় বদলানো হয়েছে");
+      setEditing(null);
+      void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      void queryClient.invalidateQueries({ queryKey: ["followup-reminders"] });
+      void queryClient.invalidateQueries({ queryKey: ["lead-extras"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const [view, setView] = useState<View>("day");
 
   const range = useMemo(() => rangeFor(view), [view]);
@@ -64,7 +82,11 @@ export function FollowUpCalendar() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const rows = events.data ?? [];
+  const today = dhakaDay(Date.now());
+  // Past events only matter while still open; finished old ones drop out.
+  const rows = (events.data ?? []).filter(
+    (row) => row.state !== "done" || dhakaDay(row.scheduled_at) >= today,
+  );
   const overdue = rows.filter((row) => row.state === "overdue").length;
   const due = rows.filter((row) => row.state === "due").length;
 
@@ -116,7 +138,9 @@ export function FollowUpCalendar() {
                 {event.note ? <p className="mt-1 text-xs">{event.note}</p> : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className={STATE_TONE[event.state]}>{STATE_LABEL[event.state]}</Badge>
+                <Badge className={STATE_TONE[event.state]}>
+                  {event.state === "overdue" ? "OVERDUE FOLLOW-UP" : STATE_LABEL[event.state]}
+                </Badge>
                 {event.phone_number ? (
                   <>
                     {/* Every follow-up call goes through the report gate. */}
@@ -134,6 +158,31 @@ export function FollowUpCalendar() {
                       variant="ghost"
                     />
                   </>
+                ) : null}
+                {event.status !== "done" && editing === event.id ? (
+                  <span className="flex items-center gap-1">
+                    <input
+                      type="datetime-local"
+                      aria-label="নতুন সময়"
+                      value={newAt}
+                      onChange={(e) => setNewAt(e.target.value)}
+                      className="h-8 rounded-md border border-border bg-card px-2 text-xs"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!newAt || move.isPending}
+                      onClick={() => move.mutate({ eventId: event.id, at: newAt })}
+                    >
+                      সেভ
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                      বাতিল
+                    </Button>
+                  </span>
+                ) : event.status !== "done" ? (
+                  <Button size="sm" variant="ghost" onClick={() => { setEditing(event.id); setNewAt(""); }}>
+                    সময় বদল
+                  </Button>
                 ) : null}
                 {event.status !== "done" ? (
                   <Button
