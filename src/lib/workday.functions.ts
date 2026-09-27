@@ -178,8 +178,12 @@ export const listYearArchives = createServerFn({ method: "POST" })
 export const myDayPerformance = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ day: DATE }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await callerOf(data.adminToken ?? null);
-    const me = caller.profile!;
+    // Read-only panel: an expired or unapproved session gets "no data" (shown
+    // as —) instead of an error that blanks the whole desk.
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none" || !caller.profile) return null;
+    const me = caller.profile;
     // Dhaka day boundaries in UTC.
     const from = new Date(`${data.day}T00:00:00+06:00`).toISOString();
     const to = new Date(new Date(from).getTime() + 24 * 60 * 60 * 1000).toISOString();
