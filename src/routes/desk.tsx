@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ChevronDown,
   Clock,
   LogIn,
   MessageCircle,
@@ -10,6 +11,8 @@ import {
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+
+import { usePersistentTab } from "@/lib/use-persistent-tab";
 
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { AppShell } from "@/components/crm/AppShell";
@@ -211,7 +214,11 @@ function Tile({
 function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
-  const [tab, setTab] = useState<string>("leads");
+  const [tab, setTab] = usePersistentTab<string>(
+    "desk:last-tab",
+    SECTION_RAIL.map((t) => t.tab),
+    "leads",
+  );
 
   if (isPending) {
     return (
@@ -328,7 +335,34 @@ function DeskPage() {
         <TeamSupportInbox />
 
         <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
-          <TabsList className="flex w-full min-w-0 justify-start gap-1 overflow-x-auto">
+          {/* Mobile: collapsible section menu */}
+          <details className="group rounded-xl border border-border bg-card sm:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              <span>{SECTION_RAIL.find((s) => s.tab === tab)?.label ?? "সেকশন"}</span>
+              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="flex flex-col gap-1 border-t border-border p-2">
+              {SECTION_RAIL.map((s) => (
+                <button
+                  key={s.tab}
+                  type="button"
+                  onClick={(e) => {
+                    setTab(s.tab);
+                    e.currentTarget.closest("details")?.removeAttribute("open");
+                  }}
+                  aria-current={tab === s.tab ? "page" : undefined}
+                  className={`rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
+                    tab === s.tab
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </details>
+          <TabsList className="hidden w-full min-w-0 justify-start gap-1 overflow-x-auto sm:flex">
             <TabsTrigger className="shrink-0" value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
             <TabsTrigger className="shrink-0" value="queue">কার্ড ভিউ</TabsTrigger>
             <TabsTrigger className="shrink-0" value="calls">কল রেকর্ড</TabsTrigger>
