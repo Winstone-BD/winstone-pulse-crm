@@ -43,10 +43,13 @@ import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
 import { CallReportsPanel } from "@/components/crm/CallReportsPanel";
 import { usePersistentTab } from "@/lib/use-persistent-tab";
+import { AllocationTable, AssignLeadsWorkspace } from "@/components/crm/deck/AssignLeadsWorkspace";
+import { CoordinatorDeckGate } from "@/components/crm/deck/CoordinatorDeckGate";
 
 const DECK_TABS = [
+  { key: "store", label: "Lead Head Data" },
+  { key: "assign", label: "Assign Leads" },
   { key: "dashboard", label: "Dashboard" },
-  { key: "store", label: "Lead Store" },
   { key: "import", label: "Import Leads" },
   { key: "distribution", label: "Distribution" },
   { key: "agents", label: "Agents" },
@@ -95,6 +98,7 @@ function DispatchPage() {
   }
   return (
     <AppShell>
+      <CoordinatorDeckGate>
       <RoleGate
         allow={["authority", "coordinator"]}
         icon={<Users className="size-7" />}
@@ -103,6 +107,7 @@ function DispatchPage() {
       >
         <Dispatcher />
       </RoleGate>
+      </CoordinatorDeckGate>
     </AppShell>
   );
 }
@@ -179,7 +184,9 @@ function Dispatcher() {
   });
 
   const agentOptions = agents.map((a) => ({ id: a.id, name: a.name }));
-  const [tab, setTab] = usePersistentTab<DeckTab>("deck:last-tab", DECK_TABS.map((t) => t.key), "dashboard");
+  const [tab, setTab] = usePersistentTab<DeckTab>("deck:last-tab", DECK_TABS.map((t) => t.key), "store");
+  const [assignFor, setAssignFor] = useState<string | undefined>(undefined);
+  const openAssign = (id?: string) => { setAssignFor(id); setTab("assign"); };
 
   return (
     <div className="space-y-5">
@@ -219,12 +226,21 @@ function Dispatcher() {
           {tab === "dashboard" && (
             <>
               <DeckKpis />
-              <AllocationProgress />
+              <Button size="lg" onClick={() => openAssign()}>
+                <Send className="size-4" /> Assign Leads
+              </Button>
+              <AllocationTable onAssign={(id) => openAssign(id)} />
               <SmartInsightStrip scope="floor" />
               <div className="grid gap-6 lg:grid-cols-2">
                 <DeckReadinessPanel />
                 <HeadLeadIntakePanel />
               </div>
+            </>
+          )}
+          {tab === "assign" && (
+            <>
+              <AssignLeadsWorkspace key={assignFor ?? "new"} initialAgentId={assignFor} />
+              <AllocationTable onAssign={(id) => openAssign(id)} />
             </>
           )}
           {tab === "store" && (
