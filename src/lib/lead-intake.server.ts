@@ -14,6 +14,15 @@ export type LeadIntakeResult = {
   assignedTo: string | null;
 };
 
+/** Thrown when the number is not a Bangladeshi mobile; callers map it to 4xx. */
+export class InvalidLeadPhoneError extends Error {
+  readonly code = "invalid_phone";
+  constructor() {
+    super("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
+    this.name = "InvalidLeadPhoneError";
+  }
+}
+
 /** Bangladesh-first: 01XXXXXXXXX / +8801XXXXXXXXX / 8801XXXXXXXXX -> 8801XXXXXXXXX. */
 export function normalizeLeadPhone(raw: string): string {
   return primaryBangladeshPhone(raw) ?? (raw.replace(/[^\d+]/g, "") || raw.trim());
@@ -44,7 +53,7 @@ export async function intakeLead(input: {
     "@/lib/lead-eligibility.server"
   );
   const phoneStatus = await getLeadPhoneStatus(input.phoneNumber);
-  if (phoneStatus.canonicalPhones.length === 0) throw new Error("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
+  if (phoneStatus.canonicalPhones.length === 0) throw new InvalidLeadPhoneError();
   if (phoneStatus.existingLeadId) {
     const { data: existing } = await supabaseAdmin
       .from("leads")

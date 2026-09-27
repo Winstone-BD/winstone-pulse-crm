@@ -58,17 +58,22 @@ export async function resolveLeadId(input: {
   agentId?: string | null;
   source: string;
   fallbackName?: string | null;
-}): Promise<{ leadId: string | null; created: boolean }> {
+}): Promise<{ leadId: string | null; created: boolean; invalidPhone?: boolean }> {
   if (input.leadId) return { leadId: input.leadId, created: false };
   if (!input.phoneNumber) return { leadId: null, created: false };
 
   const phone = normalizePhone(input.phoneNumber);
-  const { intakeLead } = await import("@/lib/lead-intake.server");
-  const result = await intakeLead({
-    name: input.fallbackName?.trim() || `Unknown ${phone}`,
-    phoneNumber: input.phoneNumber,
-    ownerId: input.agentId ?? null,
-    source: input.source,
-  });
-  return { leadId: result.leadId, created: !result.duplicate };
+  const { intakeLead, InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
+  try {
+    const result = await intakeLead({
+      name: input.fallbackName?.trim() || `Unknown ${phone}`,
+      phoneNumber: input.phoneNumber,
+      ownerId: input.agentId ?? null,
+      source: input.source,
+    });
+    return { leadId: result.leadId, created: !result.duplicate };
+  } catch (err) {
+    if (err instanceof InvalidLeadPhoneError) return { leadId: null, created: false, invalidPhone: true };
+    throw err;
+  }
 }

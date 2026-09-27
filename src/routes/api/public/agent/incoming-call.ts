@@ -113,6 +113,7 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         let created = false;
 
         if (!leadId) {
+          const { InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
           const intake = await intakeLead({
             // A call the agent dialled from the phone is not a callback.
             name: body.contact_name?.trim() || `${outgoing ? "কল" : "ফিরতি কল"} ${phone}`,

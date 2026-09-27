@@ -45,13 +45,15 @@ export const Route = createFileRoute("/api/public/ingest/message")({
                 employeeId: body.employee_id ?? null,
               });
 
-        const { leadId, created } = await resolveLeadId({
+        const { leadId, created, invalidPhone } = await resolveLeadId({
           leadId: body.lead_id ?? null,
           phoneNumber: body.phone_number ?? null,
           agentId: agent?.id ?? null,
           source: "whatsapp",
           fallbackName: body.lead_name ?? null,
         });
+        if (invalidPhone)
+          return json({ error: "সঠিক বাংলাদেশি মোবাইল নম্বর দিন", code: "invalid_phone" }, 422);
         if (!leadId) return json({ error: "Unknown lead" }, 404);
 
         const { error } = await supabaseAdmin.from("whatsapp_interactions").insert({
