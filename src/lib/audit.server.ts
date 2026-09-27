@@ -65,7 +65,9 @@ export type AuditAction =
   | "pin_rotated"
   | "floor_lock_changed"
   | "pin_revealed"
-  | "follow_up_rescheduled";
+  | "follow_up_rescheduled"
+  | "accountability_flagged"
+  | "accountability_reviewed";
 
 
 export async function logAudit(input: {
