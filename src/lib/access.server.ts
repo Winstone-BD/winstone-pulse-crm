@@ -16,6 +16,8 @@ export type Caller = {
   approval: "pending" | "approved" | "rejected" | null;
   /** True for HQ viewing sessions and unapproved accounts: reads only. */
   readOnly: boolean;
+  /** Actor label for audit rows when there is no profile (Coordinator Deck PIN). */
+  label?: string;
 };
 
 const ANON: Caller = { scope: "none", profile: null, userId: null, approval: null, readOnly: true };
@@ -83,10 +85,30 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (!profile) return { ...ANON, userId };
+  const approval = (profile?.approval_status ?? "pending") as Caller["approval"];
+  const approved = Boolean(profile) && approval === "approved" && Boolean(profile?.is_active);
 
-  const approval = (profile.approval_status ?? "pending") as Caller["approval"];
-  if (approval !== "approved" || !profile.is_active) {
+  // Coordinator Deck only: Gmail sign-in + Coordinator PIN token, bound to this
+  // user. Approved accounts keep their normal scope; nothing else is widened.
+  if (!approved && adminToken) {
+    const gate = await import("@/lib/coordinator-gate.server");
+    if (gate.isCoordinatorToken(adminToken) && gate.coordinatorTokenValid(adminToken, userId)) {
+      const email = await gate.googleEmailFor(userId);
+      if (email) {
+        return {
+          scope: "coordinator",
+          profile: null,
+          userId,
+          approval: "approved",
+          readOnly: false,
+          label: `Coordinator (${email})`,
+        };
+      }
+    }
+  }
+
+  if (!profile) return { ...ANON, userId };
+  if (!approved) {
     return { scope: "none", profile, userId, approval, readOnly: true };
   }
 
