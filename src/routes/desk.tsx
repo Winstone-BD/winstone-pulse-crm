@@ -214,7 +214,7 @@ function Tile({
 function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
-  const [tab, setTab] = usePersistentTab(
+  const [tab, setTab] = usePersistentTab<string>(
     "desk:last-tab",
     SECTION_RAIL.map((t) => t.tab),
     "leads",
