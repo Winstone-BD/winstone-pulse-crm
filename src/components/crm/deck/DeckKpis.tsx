@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { deckKpis } from "@/lib/lead-pool.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 /** Live Coordinator Deck KPIs — every number comes from the Lead Store. */
 export function DeckKpis() {

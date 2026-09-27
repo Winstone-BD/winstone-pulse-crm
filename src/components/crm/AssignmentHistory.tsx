@@ -4,7 +4,7 @@ import { History } from "lucide-react";
 
 import { useSnapshot } from "@/lib/crm-data";
 import { assignmentHistory } from "@/lib/ops.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 /** Who moved which lead to whom, newest first. */
 export function AssignmentHistory() {

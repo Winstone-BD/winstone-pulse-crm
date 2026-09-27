@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { importHistory } from "@/lib/lead-pool.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 export function ImportHistoryPanel() {
   const adminToken = useAdminToken();

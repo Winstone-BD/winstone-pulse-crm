@@ -17,6 +17,8 @@ export type AuditAction =
   | "lead_created"
   | "lead_imported"
   | "lead_assigned"
+  | "coordinator_pin_unlocked"
+  | "coordinator_pin_failed"
   | "lead_pool_distributed"
   | "lead_self_claimed"
   | "call_report_submitted"

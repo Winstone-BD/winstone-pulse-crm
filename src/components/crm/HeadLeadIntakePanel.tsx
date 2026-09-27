@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { addHeadLead, type HeadLeadResult } from "@/lib/lead-pool.functions";
-import { getAdminToken } from "@/lib/local-session";
+import { getDeckToken as getAdminToken } from "@/lib/local-session";
 
 const EMPTY = {
   name: "",

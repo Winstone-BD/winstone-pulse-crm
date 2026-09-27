@@ -70,3 +70,21 @@ export function useOperatorId() {
 export function setOperatorId(id: string | null) {
   write(OPERATOR_KEY, id);
 }
+
+/** Coordinator Deck unlock (Gmail + Coordinator PIN). Deck-only — never HQ/IT. */
+export const COORD_TOKEN_KEY = "winstone.coord.token";
+
+export function setCoordToken(token: string | null) {
+  write(COORD_TOKEN_KEY, token);
+}
+
+/** Token for Coordinator Deck calls: master/IT PIN token first, else the coordinator unlock. */
+export function useDeckToken() {
+  const admin = useStoredValue(ADMIN_TOKEN_KEY);
+  const coord = useStoredValue(COORD_TOKEN_KEY);
+  return admin ?? coord;
+}
+
+export function getDeckToken() {
+  return read(ADMIN_TOKEN_KEY) ?? read(COORD_TOKEN_KEY);
+}
