@@ -456,15 +456,15 @@ export const listLeadStore = createServerFn({ method: "GET" })
       ids.length
         ? supabaseAdmin
             .from("follow_up_events")
-            .select("lead_id, scheduled_for, status")
+            .select("lead_id, scheduled_at, status")
             .in("lead_id", ids)
-            .order("scheduled_for", { ascending: true })
-        : Promise.resolve({ data: [] as { lead_id: string; scheduled_for: string; status: string }[] }),
+            .order("scheduled_at", { ascending: true })
+        : Promise.resolve({ data: [] as { lead_id: string; scheduled_at: string; status: string }[] }),
     ]);
     const names = new Map((owners.data ?? []).map((o) => [o.id, o.name]));
     const nextFollow = new Map<string, string>();
-    for (const f of (follows.data ?? []) as { lead_id: string; scheduled_for: string; status: string }[]) {
-      if (f.status === "pending" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_for);
+    for (const f of (follows.data ?? []) as { lead_id: string; scheduled_at: string; status: string }[]) {
+      if (f.status === "pending" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_at);
     }
     return {
       full,
