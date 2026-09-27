@@ -326,6 +326,13 @@ export function DeskCommandCenter({
         const aOver = a.retry_after && Date.parse(a.retry_after) < now ? 0 : 1;
         const bOver = b.retry_after && Date.parse(b.retry_after) < now ? 0 : 1;
         if (aOver !== bOver) return aOver - bOver;
+        // Not connected / busy / failed retries go to the end of the queue and
+        // come back in order: the longest-waiting retry first.
+        const retry = (lead: Lead) => (lead.status === "pending" && lead.last_call_at ? 1 : 0);
+        if (retry(a) !== retry(b)) return retry(a) - retry(b);
+        if (retry(a) && retry(b)) {
+          return Date.parse(a.last_call_at!) - Date.parse(b.last_call_at!);
+        }
         const rank = (lead: Lead) =>
           lead.temperature === "hot" ? 0 : lead.temperature === "warm" ? 1 : 2;
         const byTemperature = rank(a) - rank(b);
