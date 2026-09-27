@@ -29,6 +29,26 @@ function remember(id: string) {
   localStorage.setItem(FIRED_KEY, JSON.stringify(next));
 }
 
+/** Short alarm sound; silently skipped if the browser blocks audio. */
+function beep() {
+  try {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    [0, 0.35, 0.7].forEach((offset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = 880;
+      gain.gain.value = 0.2;
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.2);
+    });
+    window.setTimeout(() => void ctx.close(), 1500);
+  } catch {
+    // no audio
+  }
+}
+
 /** Ask once for permission; safe to call from a click handler. */
 export async function askFollowUpNotifications(): Promise<NotificationPermission> {
   if (typeof Notification === "undefined") return "denied";
@@ -62,10 +82,14 @@ export function useFollowUpReminders(enabled: boolean) {
     for (const event of events.data) {
       if (event.status === "done") continue;
       const at = new Date(event.scheduled_at).getTime();
-      const lead = (event.reminder_minutes ?? REMINDER_MINUTES) * 60_000;
-      // Inside the reminder window and not yet past the appointment.
-      if (at - lead > now || at < now - 5 * 60_000) continue;
-      if (already.includes(event.id)) continue;
+      if (at < now - 5 * 60_000) continue;
+      // Three alarms: 30 min before, 15 min before, and at the time itself.
+      const stage = [0, 15, REMINDER_MINUTES].find(
+        (mins) => now >= at - mins * 60_000 && !already.includes(`${event.id}:${mins}`),
+      );
+      if (stage === undefined) continue;
+      // Mark every earlier stage too, so a late-opened tab rings once, not three times.
+      for (const mins of [REMINDER_MINUTES, 15, 0]) if (mins >= stage) remember(`${event.id}:${mins}`);
 
       const clock = new Date(at).toLocaleTimeString("bn-BD", {
         timeZone: "Asia/Dhaka",
@@ -73,17 +97,20 @@ export function useFollowUpReminders(enabled: boolean) {
         minute: "2-digit",
       });
       try {
-        const note = new Notification("ফলো-আপের সময় হচ্ছে", {
-          body: `${event.customer_name ?? "ক্রেতা"} — ${clock} · ${event.phone_number ?? ""}`.trim(),
-          tag: `followup-${event.id}`,
-          icon: "/icons/icon-192.png",
-          badge: "/icons/favicon-32.png",
-        });
+        const note = new Notification(
+          stage === 0 ? "এখনই ফলো-আপ কল করুন" : `ফলো-আপ ${stage} মিনিট পরে`,
+          {
+            body: `${event.customer_name ?? "ক্রেতা"} — ${clock} · ${event.phone_number ?? ""}`.trim(),
+            tag: `followup-${event.id}-${stage}`,
+            icon: "/icons/icon-192.png",
+            badge: "/icons/favicon-32.png",
+          },
+        );
         note.onclick = () => {
           window.focus();
           note.close();
         };
-        remember(event.id);
+        beep();
       } catch {
         // Notification blocked by the phone: the follow-up calendar still shows it.
       }
