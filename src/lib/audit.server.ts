@@ -62,7 +62,8 @@ export type AuditAction =
   | "service_bill_alert_raised"
   | "pin_rotated"
   | "floor_lock_changed"
-  | "pin_revealed";
+  | "pin_revealed"
+  | "follow_up_rescheduled";
 
 
 export async function logAudit(input: {
