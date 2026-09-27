@@ -32,6 +32,10 @@ import { buildAgentStats, useSnapshot } from "@/lib/crm-data";
 import { assignLeadsToAgent, autoDistributeLeads } from "@/lib/crm.functions";
 import { formatTalkTime } from "@/lib/crm-format";
 import { getAdminToken } from "@/lib/local-session";
+import { useMyAccount } from "@/lib/session";
+import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
+import { DeckReadinessPanel } from "@/components/crm/DeckReadinessPanel";
+import { DeckLeadSearch } from "@/components/crm/DeckLeadSearch";
 
 export const Route = createFileRoute("/dispatch")({
   head: () => ({
@@ -60,6 +64,15 @@ export const Route = createFileRoute("/dispatch")({
 });
 
 function DispatchPage() {
+  const { account, isPending } = useMyAccount();
+  // Sell Team Admin (WIN2607): intake-only deck. Server enforces the same rule.
+  if (!isPending && account?.deck === "intake") {
+    return (
+      <AppShell>
+        <IntakeDeck />
+      </AppShell>
+    );
+  }
   return (
     <AppShell>
       <RoleGate
@@ -71,6 +84,26 @@ function DispatchPage() {
         <Dispatcher />
       </RoleGate>
     </AppShell>
+  );
+}
+
+function IntakeDeck() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+          কোঅর্ডিনেটর ডেক / Coordinator Deck
+        </h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">
+          সেল টিম অ্যাডমিন — হেড ডেটাবেজে লিড যোগ ও বণ্টনের প্রস্তুতি দেখা
+        </p>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <HeadLeadIntakePanel />
+        <DeckReadinessPanel />
+      </div>
+      <DeckLeadSearch agents={[]} full={false} />
+    </div>
   );
 }
 
@@ -142,7 +175,14 @@ function Dispatcher() {
 
       <SmartInsightStrip scope="floor" />
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DeckReadinessPanel />
+        <HeadLeadIntakePanel />
+      </div>
+
       <LeadDatabasePanel />
+
+      <DeckLeadSearch agents={agents.map((a) => ({ id: a.id, name: a.name }))} full />
 
       <ExtraLeadPanel />
 

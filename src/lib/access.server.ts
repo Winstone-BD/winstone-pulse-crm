@@ -109,6 +109,29 @@ export function canDispatch(caller: Caller) {
   return caller.scope === "authority" || caller.scope === "coordinator";
 }
 
+/** Sell Team Admin desks (Abu Haidar). Agent scope + Coordinator Deck intake only. */
+export const SELL_TEAM_ADMIN_IDS = ["WIN2607"] as const;
+
+export function isSellTeamAdmin(caller: Pick<Caller, "scope" | "profile" | "readOnly">) {
+  const id = (caller.profile?.employee_id ?? "").toUpperCase().replace(/\s+/g, "");
+  return caller.scope === "agent" && !caller.readOnly && (SELL_TEAM_ADMIN_IDS as readonly string[]).includes(id);
+}
+
+/**
+ * Coordinator Deck access level. "full" = dispatch powers, "intake" = Sell Team
+ * Admin: may read pool readiness and add leads to the head database — never
+ * distribute, change quotas, or touch IT/account/device settings.
+ */
+export function deckAccess(caller: Caller): "full" | "intake" | "none" {
+  if (canDispatch(caller)) return "full";
+  if (isSellTeamAdmin(caller)) return "intake";
+  return "none";
+}
+
+export function requireDeck(caller: Caller) {
+  if (deckAccess(caller) === "none") throw new Error("Coordinator Deck access required");
+}
+
 export function requireDispatch(caller: Caller) {
   if (!canDispatch(caller)) throw new Error("Coordinator access required");
 }

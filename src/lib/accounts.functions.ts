@@ -132,10 +132,11 @@ export const getMyAccount = createServerFn({ method: "POST" })
     z.object({ adminToken: z.string().nullable().optional() }).parse(input ?? {}),
   )
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
+    const { resolveCaller, deckAccess } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     return {
       scope: caller.scope,
+      deck: deckAccess(caller),
       approval: caller.approval,
       signedIn: caller.userId !== null,
       profile: caller.profile

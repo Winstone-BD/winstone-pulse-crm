@@ -34,7 +34,7 @@ export const CATEGORY_LABEL: Record<CallCategory, string> = {
   closed_converted: "CLOSED / CONVERTED — বিক্রি হয়েছে",
 };
 
-const LEAD_STATUS_FOR: Record<CallCategory, "pending" | "contacted" | "follow_up" | "closed"> = {
+export const LEAD_STATUS_FOR: Record<CallCategory, "pending" | "contacted" | "follow_up" | "closed"> = {
   hot_lead: "follow_up",
   follow_up: "follow_up",
   interested: "contacted",
@@ -148,6 +148,9 @@ export function validateReport(input: {
     const seconds = input.durationSeconds;
     if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) {
       return { field: "durationSeconds", message: "কলের সময়কাল (সেকেন্ড) লিখুন" };
+    }
+    if (input.callStatus === "connected" && category === "no_answer") {
+      return { field: "category", message: "কথা হওয়া কলে NO ANSWER দেওয়া যাবে না — সঠিক ক্যাটেগরি বাছাই করুন" };
     }
     if (input.callStatus === "connected" && seconds < 1) {
       return { field: "durationSeconds", message: "কথা হওয়া কলের সময়কাল ০ হতে পারে না" };

@@ -24,11 +24,178 @@ export type LeadPoolAgent = {
   today: number;
 };
 
+/** Deck read access: coordinators/authority, plus the Sell Team Admin (intake only). */
+async function deckReader(adminToken: string | null | undefined) {
+  const { resolveCaller, requireDeck } = await import("@/lib/access.server");
+  const caller = await resolveCaller(adminToken ?? null);
+  requireDeck(caller);
+  return caller;
+}
+
+const HeadLeadInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  name: z.string().trim().min(1, "নাম লিখুন").max(120),
+  phoneNumber: z.string().trim().min(6, "মোবাইল নম্বর দিন").max(40),
+  address: z.string().trim().max(300).nullable().optional(),
+  company: z.string().trim().max(160).nullable().optional(),
+  serialNo: z.string().trim().max(40).nullable().optional(),
+  referenceBy: z.string().trim().min(1, "রেফারেন্স লিখুন").max(120),
+  notes: z.string().trim().max(1000).nullable().optional(),
+});
+
+export type HeadLeadResult =
+  | { ok: true; leadId: string }
+  | {
+      ok: false;
+      reason: "duplicate" | "invalid_phone";
+      message: string;
+      existing?: undefined | {
+        id: string;
+        name: string;
+        serialNo: string | null;
+        referenceBy: string | null;
+        status: string;
+        agentName: string | null;
+      };
+    };
+
+/**
+ * Adds one lead to the HEAD DATABASE (unassigned pool) — never to the caller's
+ * own queue. Duplicate protection and phone normalisation are server-side.
+ */
+export const addHeadLead = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => HeadLeadInput.parse(input))
+  .handler(async ({ data }): Promise<HeadLeadResult> => {
+    const caller = await deckReader(data.adminToken);
+    const { requireWrite } = await import("@/lib/access.server");
+    requireWrite(caller);
+    const { intakeLead, InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
+    const { HEAD_DATABASE_SOURCE } = await import("@/lib/head-lead");
+    const actorLabel = caller.profile
+      ? `${caller.profile.name}${caller.profile.employee_id ? ` (${caller.profile.employee_id})` : ""}`
+      : "IT Console";
+    try {
+      const result = await intakeLead({
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        company: data.company ?? null,
+        address: data.address ?? null,
+        serialNo: data.serialNo ?? null,
+        referenceBy: data.referenceBy,
+        notes: data.notes ?? null,
+        ownerId: null,
+        source: HEAD_DATABASE_SOURCE,
+        actorProfileId: caller.profile?.id ?? null,
+        actorLabel,
+      });
+      if (result.duplicate) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: row } = await supabaseAdmin
+          .from("leads")
+          .select("id, name, serial_no, reference_by, status, assigned_to")
+          .eq("id", result.leadId)
+          .maybeSingle();
+        let agentName: string | null = null;
+        if (row?.assigned_to) {
+          const { data: agent } = await supabaseAdmin
+            .from("profiles")
+            .select("name")
+            .eq("id", row.assigned_to)
+            .maybeSingle();
+          agentName = agent?.name ?? null;
+        }
+        return {
+          ok: false,
+          reason: "duplicate",
+          message: "এই নম্বর আগে থেকেই CRM-এ আছে — নতুন লিড তৈরি হয়নি",
+          existing: row
+            ? {
+                id: row.id,
+                name: row.name,
+                serialNo: row.serial_no,
+                referenceBy: row.reference_by,
+                status: row.status,
+                agentName,
+              }
+            : undefined,
+        };
+      }
+      return { ok: true, leadId: result.leadId };
+    } catch (err) {
+      if (err instanceof InvalidLeadPhoneError) {
+        return { ok: false, reason: "invalid_phone", message: err.message };
+      }
+      throw err;
+    }
+  });
+
+const SearchInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  q: z.string().trim().max(80).optional(),
+  agentId: z.string().uuid().nullable().optional(),
+  status: z.enum(["pending", "contacted", "follow_up", "closed"]).nullable().optional(),
+  source: z.string().trim().max(40).nullable().optional(),
+  scope: z.enum(["pool", "all"]).default("pool"),
+});
+
+/** Lead search across the deck: reference, serial, phone or name, plus filters. */
+export const searchDeckLeads = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => SearchInput.parse(input))
+  .handler(async ({ data }) => {
+    const caller = await deckReader(data.adminToken);
+    const { deckAccess } = await import("@/lib/access.server");
+    // The Sell Team Admin sees the head pool only — never other agents' queues.
+    const scope = deckAccess(caller) === "full" ? data.scope : "pool";
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let query = supabaseAdmin
+      .from("leads")
+      .select(
+        "id, name, phone_number, serial_no, reference_by, source, status, assigned_to, assignment_source, address, company, created_at, work_date",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (scope === "pool") {
+      query = query
+        .is("assigned_to", null)
+        .or("assignment_source.is.null,assignment_source.neq.duplicate_skipped");
+    } else if (data.agentId) {
+      query = query.eq("assigned_to", data.agentId);
+    }
+    if (data.status) query = query.eq("status", data.status);
+    if (data.source) query = query.eq("source", data.source);
+    const q = data.q?.replace(/[,()*%]/g, " ").trim();
+    if (q) {
+      const digits = q.replace(/\D/g, "");
+      const parts = [
+        `reference_by.ilike.%${q}%`,
+        `serial_no.ilike.%${q}%`,
+        `name.ilike.%${q}%`,
+      ];
+      if (digits.length >= 4) parts.push(`phone_number.ilike.%${digits.slice(-10)}%`);
+      query = query.or(parts.join(","));
+    }
+    const { data: rows, error } = await query;
+    if (error) throw new Error(error.message);
+    const ownerIds = [...new Set((rows ?? []).map((r) => r.assigned_to).filter(Boolean))] as string[];
+    const names = new Map<string, string>();
+    if (ownerIds.length) {
+      const { data: owners } = await supabaseAdmin.from("profiles").select("id, name").in("id", ownerIds);
+      for (const o of owners ?? []) names.set(o.id, o.name);
+    }
+    return {
+      scope,
+      rows: (rows ?? []).map((r) => ({
+        ...r,
+        agentName: r.assigned_to ? (names.get(r.assigned_to) ?? null) : null,
+      })),
+    };
+  });
+
 /** What is in the database right now, and what each agent already holds. */
 export const leadPoolStatus = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
-    await dispatcher(data.adminToken);
+    await deckReader(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { dhakaToday, usablePoolCount, activeAgents, dailyPlan } = await import(
       "@/lib/lead-pool.server"
@@ -90,6 +257,7 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
       dailyPerAgent: plan.perAgent,
       lastRunDate: plan.lastRunDate,
       shortage: poolCount < need,
+      neededForNextRound: Math.max(0, need - poolCount),
       daysLeft: need > 0 ? Math.floor(poolCount / need) : 0,
       latestImport:
         audits?.[0] && importMetadata
@@ -187,7 +355,7 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
 export const quotaOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
-    await dispatcher(data.adminToken);
+    await deckReader(data.adminToken);
     const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday } = await import(
       "@/lib/lead-pool.server"
     );
