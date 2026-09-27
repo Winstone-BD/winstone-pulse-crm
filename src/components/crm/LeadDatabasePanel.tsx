@@ -172,7 +172,12 @@ export function LeadDatabasePanel() {
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
             {status.data.preview.map((lead) => (
               <li key={lead.id} className="flex justify-between gap-3">
-                <span className="truncate">{lead.name}</span>
+                <span className="truncate">
+                  <span className="tabular">#{lead.serial_no ?? "—"}</span> {lead.name}
+                  {lead.reference_by ? (
+                    <span className="ml-1 text-foreground/80">· রেফ: {lead.reference_by}</span>
+                  ) : null}
+                </span>
                 <span className="tabular">{lead.phone_number}</span>
               </li>
             ))}
