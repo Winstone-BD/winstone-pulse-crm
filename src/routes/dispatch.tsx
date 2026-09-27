@@ -38,6 +38,7 @@ import { DeckReadinessPanel } from "@/components/crm/DeckReadinessPanel";
 import { DeckLeadSearch } from "@/components/crm/DeckLeadSearch";
 import { AllocationProgress } from "@/components/crm/deck/AllocationProgress";
 import { DeckKpis } from "@/components/crm/deck/DeckKpis";
+import { SectionGroup } from "@/components/crm/groups";
 import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
 import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
@@ -225,27 +226,45 @@ function Dispatcher() {
         <div className="min-w-0 space-y-6">
           {tab === "dashboard" && (
             <>
-              <DeckKpis />
-              <Button size="lg" onClick={() => openAssign()}>
-                <Send className="size-4" /> Assign Leads
-              </Button>
-              <AllocationTable onAssign={(id) => openAssign(id)} />
-              <SmartInsightStrip scope="floor" />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <DeckReadinessPanel />
-                <HeadLeadIntakePanel />
-              </div>
+              <SectionGroup eyebrow="Head Lead Data" title="Availability summary" subtitle="Live counts from the Head Lead Store">
+                <DeckKpis />
+              </SectionGroup>
+              <SectionGroup
+                eyebrow="Assignment Control"
+                title="Agent → Amount → Available → Preview → Confirm"
+                subtitle="Oldest eligible unassigned leads go first"
+                actions={
+                  <Button size="sm" onClick={() => openAssign()}>
+                    <Send className="size-4" /> Assign Leads
+                  </Button>
+                }
+              >
+                <AllocationTable onAssign={(id) => openAssign(id)} />
+              </SectionGroup>
+              <SectionGroup title="Insights & readiness" tone="tinted" collapsible>
+                <SmartInsightStrip scope="floor" />
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <DeckReadinessPanel />
+                  <HeadLeadIntakePanel />
+                </div>
+              </SectionGroup>
             </>
           )}
           {tab === "assign" && (
             <>
-              <AssignLeadsWorkspace key={assignFor ?? "new"} initialAgentId={assignFor} />
-              <AllocationTable onAssign={(id) => openAssign(id)} />
+              <SectionGroup eyebrow="Assignment Control" title="Assign leads by agent" subtitle="Agent → Amount → Available → Preview → Confirm">
+                <AssignLeadsWorkspace key={assignFor ?? "new"} initialAgentId={assignFor} />
+              </SectionGroup>
+              <SectionGroup title="Today's agent allocation" collapsible>
+                <AllocationTable onAssign={(id) => openAssign(id)} />
+              </SectionGroup>
             </>
           )}
           {tab === "store" && (
             <>
-              <HeadLeadIntakePanel />
+              <SectionGroup title="Add a lead" subtitle="New leads always land UNASSIGNED in the Head Lead Store" collapsible defaultOpen={false}>
+                <HeadLeadIntakePanel />
+              </SectionGroup>
               <LeadStorePanel agents={agentOptions} canAssign />
             </>
           )}
