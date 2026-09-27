@@ -257,6 +257,7 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
       dailyPerAgent: plan.perAgent,
       lastRunDate: plan.lastRunDate,
       shortage: poolCount < need,
+      neededForNextRound: Math.max(0, need - poolCount),
       daysLeft: need > 0 ? Math.floor(poolCount / need) : 0,
       latestImport:
         audits?.[0] && importMetadata
@@ -354,7 +355,7 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
 export const quotaOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
-    await dispatcher(data.adminToken);
+    await deckReader(data.adminToken);
     const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday } = await import(
       "@/lib/lead-pool.server"
     );
