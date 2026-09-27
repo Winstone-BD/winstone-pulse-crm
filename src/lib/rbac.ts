@@ -39,9 +39,10 @@ export const ROLE_SURFACES: Record<RoleKey, RoleSurface> = {
   },
   sales_team_admin: {
     label: "সেল টিম অ্যাডমিন",
-    routes: ["/", "/desk", "/coach", "/reports"],
+    routes: ["/", "/desk", "/coach", "/dispatch", "/reports"],
     powers: [
-      "এজেন্টের সব কাজ (দৈনিক কোটা ১৫)",
+      "এজেন্টের সব কাজ (দৈনিক কোটা সবার মতো)",
+      "কোঅর্ডিনেটর ডেক — শুধু হেড ডেটাবেজে লিড যোগ (বণ্টন/IT নয়)",
       "টিম সাপোর্ট ইনবক্স — পড়া, উত্তর, গুরুত্ব বদল",
     ],
   },
