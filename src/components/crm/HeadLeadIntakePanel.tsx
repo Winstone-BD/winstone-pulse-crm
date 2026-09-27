@@ -56,7 +56,7 @@ export function HeadLeadIntakePanel() {
         toast.success("লিড হেড ডেটাবেজে যোগ হয়েছে — পরের বণ্টনে যাবে");
         setForm(EMPTY);
         setDuplicate(null);
-        void queryClient.invalidateQueries({ queryKey: ["lead-pool-status"] });
+        void queryClient.invalidateQueries({ queryKey: ["lead-pool"] });
         void queryClient.invalidateQueries({ queryKey: ["deck-leads"] });
       } else if (result.reason === "duplicate") {
         setDuplicate(result);
