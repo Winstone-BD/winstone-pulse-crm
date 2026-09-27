@@ -5,7 +5,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,7 @@ export function CsvImportDialog() {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<CsvLeadRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [autoAssign, setAutoAssign] = useState(false);
+  const autoAssign = false;
   const queryClient = useQueryClient();
   const run = useServerFn(importLeads);
 
@@ -87,10 +86,7 @@ export function CsvImportDialog() {
               </ul>
             </div>
           )}
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={autoAssign} onCheckedChange={(v) => setAutoAssign(v === true)} />
-            <Label>Split evenly across active agents right away</Label>
-          </label>
+          <p className="rounded-md border border-border bg-surface-2 px-3 py-2 text-xs text-muted-foreground">সব ইমপোর্ট হেড লিড স্টোরে UNASSIGNED হিসেবে যায় — বণ্টন হয় Coordinator Deck-এর Distribution থেকে।</p>
           <Button
             className="w-full"
             disabled={!rows.length || mutation.isPending}
