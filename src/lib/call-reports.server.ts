@@ -489,6 +489,15 @@ export async function submitCallReport(input: {
 
   let followUpId: string | null = null;
   if (input.followUpAt) {
+    // Idempotent: a resubmitted report never creates a second follow-up task.
+    const { data: existing } = await supabaseAdmin
+      .from("follow_up_events")
+      .select("id")
+      .eq("report_id", report.id)
+      .maybeSingle();
+    if (existing) followUpId = existing.id;
+  }
+  if (input.followUpAt && !followUpId) {
     const { data: event } = await supabaseAdmin
       .from("follow_up_events")
       .insert({
@@ -520,7 +529,13 @@ export async function submitCallReport(input: {
       classified
         ? ` — ${TEMPERATURE_LABEL[temperature!]} / গ্রেড ${grade}`
         : " — কথা হয়নি, আবার কল হবে"
-    }${input.followUpAt ? ` — ফলো-আপ ${new Date(input.followUpAt).toLocaleString("bn-BD")}` : ""}`,
+    }${
+      input.followUpAt
+        ? ` — ফলো-আপ ${new Date(input.followUpAt).toLocaleString("bn-BD")}`
+        : input.noFollowUpReason
+          ? ` — ফলো-আপ নেই: ${input.noFollowUpReason}${noFollowUpNote ? ` (${noFollowUpNote})` : ""}`
+          : ""
+    }`,
   });
 
   const { logAudit } = await import("@/lib/audit.server");

@@ -29,6 +29,19 @@ function remember(id: string) {
   localStorage.setItem(FIRED_KEY, JSON.stringify(next));
 }
 
+/** True while the web dialler has a live call open (set by WebCallButton). */
+function onActiveCall(): boolean {
+  try {
+    const raw = localStorage.getItem("winstone.web.call.v1");
+    if (!raw) return false;
+    const live = JSON.parse(raw) as { startedAt?: number };
+    // A stale marker older than 2 hours never blocks reminders forever.
+    return typeof live.startedAt === "number" && Date.now() - live.startedAt < 2 * 60 * 60_000;
+  } catch {
+    return false;
+  }
+}
+
 /** Short alarm sound; silently skipped if the browser blocks audio. */
 function beep() {
   try {
@@ -78,11 +91,30 @@ export function useFollowUpReminders(enabled: boolean) {
 
     const now = Date.now();
     const already = firedIds();
+    // Agent is on a call right now: defer alarms (nothing is marked fired, so
+    // the schedule rings once the call ends).
+    if (onActiveCall()) return;
 
     for (const event of events.data) {
       if (event.status === "done") continue;
       const at = new Date(event.scheduled_at).getTime();
-      if (at < now - 5 * 60_000) continue;
+      if (at < now - 5 * 60_000) {
+        // Overdue: one quiet "OVERDUE" notice per follow-up, never repeated.
+        const key = `${event.id}:overdue`;
+        if (at < now - 15 * 60_000 && !already.includes(key)) {
+          remember(key);
+          try {
+            new Notification("OVERDUE FOLLOW-UP — সময় পেরিয়ে গেছে", {
+              body: `${event.customer_name ?? "ক্রেতা"} · ${event.phone_number ?? ""}`.trim(),
+              tag: `followup-${event.id}-overdue`,
+              icon: "/icons/icon-192.png",
+            });
+          } catch {
+            // blocked; the calendar still shows it as overdue
+          }
+        }
+        continue;
+      }
       // Three alarms: 30 min before, 15 min before, and at the time itself.
       const stage = [0, 15, REMINDER_MINUTES].find(
         (mins) => now >= at - mins * 60_000 && !already.includes(`${event.id}:${mins}`),
