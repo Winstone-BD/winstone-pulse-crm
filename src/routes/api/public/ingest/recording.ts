@@ -151,13 +151,15 @@ export const Route = createFileRoute("/api/public/ingest/recording")({
             })) ?? (await resolveAgentBySim(body.sim_number ?? null));
         }
 
-        const { leadId } = await resolveLeadId({
+        const { leadId, invalidPhone } = await resolveLeadId({
           leadId: body.lead_id ?? null,
           phoneNumber: body.phone_number ?? null,
           agentId: agent?.id ?? null,
           source: "call",
           fallbackName: body.lead_name ?? null,
         });
+        if (invalidPhone)
+          return json({ error: "সঠিক বাংলাদেশি মোবাইল নম্বর দিন", code: "invalid_phone" }, 422);
         if (!leadId) return json({ error: "Unknown lead" }, 404);
 
         // Ownership is never moved by a sync: a lead already held by another

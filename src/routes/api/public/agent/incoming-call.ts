@@ -113,6 +113,7 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         let created = false;
 
         if (!leadId) {
+          const { InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
           const intake = await intakeLead({
             // A call the agent dialled from the phone is not a callback.
             name: body.contact_name?.trim() || `${outgoing ? "কল" : "ফিরতি কল"} ${phone}`,
@@ -123,7 +124,15 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
             notes: outgoing
               ? "এজেন্ট ফোনের ডায়ালার থেকে কল করেছেন"
               : "ক্রেতা নিজে ফোন করেছেন (এজেন্টের ফোনে ইনকামিং কল)",
+          }).catch((err: unknown) => {
+            if (err instanceof InvalidLeadPhoneError) return null;
+            throw err;
           });
+          if (!intake)
+            return new Response(
+              JSON.stringify({ error: "সঠিক বাংলাদেশি মোবাইল নম্বর দিন", code: "invalid_phone" }),
+              { status: 422, headers: { "Content-Type": "application/json" } },
+            );
           leadId = intake.leadId;
           created = !intake.duplicate;
         } else if (!leadOwnerId(found)) {
