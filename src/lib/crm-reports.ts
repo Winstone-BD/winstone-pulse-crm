@@ -15,6 +15,9 @@ export type ReportFilters = {
   agentId: string | "all";
   source: string | "all";
   status: LeadStatus | "all";
+  /** free-text: matches lead name, phone or employee id */
+  query: string;
+  sentiment: string | "all";
 };
 
 export function isoDay(d: Date): string {
@@ -26,7 +29,15 @@ export function isoDay(d: Date): string {
 export function defaultFilters(days = 30, ref = new Date()): ReportFilters {
   const from = new Date(ref);
   from.setDate(from.getDate() - (days - 1));
-  return { from: isoDay(from), to: isoDay(ref), agentId: "all", source: "all", status: "all" };
+  return {
+    from: isoDay(from),
+    to: isoDay(ref),
+    agentId: "all",
+    source: "all",
+    status: "all",
+    query: "",
+    sentiment: "all",
+  };
 }
 
 function dayKeys(from: string, to: string): string[] {
