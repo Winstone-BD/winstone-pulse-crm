@@ -8,20 +8,13 @@ import {
   Lock,
   Mic,
   Monitor,
-  RefreshCw,
   Server,
-  ShieldCheck,
   Smartphone,
   Users,
-  Zap,
 } from "lucide-react";
 import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
-import androidImg from "@/assets/mode-android.jpg";
-import webImg from "@/assets/mode-web.jpg";
-import desktopImg from "@/assets/mode-desktop.jpg";
-import buildingImg from "@/assets/home-building.jpg";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -29,16 +22,16 @@ import { useMyAccount } from "@/lib/session";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Winstone Connect — Tele-Sales Entry Hall" },
+      { title: "Winstone Connect — Tele-Sales Operating System" },
       {
         name: "description",
         content:
-          "Enter Winstone Connect as a sales agent, coordinator, executive or IT administrator. Accounts for agents and coordinators, master PIN for HQ and IT.",
+          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone Connect CRM, the same data on every device.",
       },
-      { property: "og:title", content: "Winstone Connect — Tele-Sales Entry Hall" },
+      { property: "og:title", content: "Winstone Connect — Tele-Sales Operating System" },
       {
         property: "og:description",
-        content: "Four ways in: Sales Agent desk, Coordinator Deck, Executive HQ and IT Console.",
+        content: "One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -76,78 +69,57 @@ function EntryHall() {
 
   return (
     <div className="theme-light min-h-screen bg-background">
-      <main className="mx-auto w-full max-w-6xl animate-rise px-4 py-10 sm:px-6 sm:py-14">
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-12 sm:px-6 sm:py-16">
         <header className="flex flex-col items-center text-center">
           <img
             src={logoAsset.url}
             alt="Winstone Properties Ltd."
-            className="size-20 rounded-full object-cover shadow-sm ring-2 ring-primary/30"
+            className="size-24 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-28"
           />
-          <h1 className="mt-5 text-4xl font-black tracking-tight text-foreground sm:text-6xl">
+          <h1 className="mt-6 text-4xl font-black tracking-tight text-foreground sm:text-6xl">
             Winstone Connect
           </h1>
-          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.35em] text-foreground/80 sm:text-sm">
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary sm:text-xs">
             Tele-Sales Operating System
           </p>
-          <div className="mt-4 flex w-full max-w-2xl items-center gap-3 text-sm text-muted-foreground">
-            <span className="h-px flex-1 bg-primary/50" />
-            <span className="flex flex-wrap justify-center gap-x-2">
-              <span>Calls</span>·<span>Leads</span>·<span>Follow-ups</span>·<span>Team Performance</span>·<span>Growth</span>
-            </span>
-            <span className="h-px flex-1 bg-primary/50" />
-          </div>
-          <h2 className="mt-10 text-2xl font-bold tracking-tight sm:text-3xl">Choose Your Working Mode</h2>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Access Winstone Connect the way you prefer. Same powerful system, on any device.
+          <span aria-hidden className="mt-6 h-px w-24 bg-primary/60" />
+          <h2 className="mt-8 text-2xl font-bold tracking-tight sm:text-3xl">Choose Your Workspace</h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            Select the mode you are using — the same CRM opens on every device.
           </p>
         </header>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-3 sm:gap-6">
           <ModeCard
-            img={androidImg}
-            icon={<Smartphone className="size-6" />}
-            title="Android Mode"
-            description="Optimized for mobile use. Access leads, make calls and update reports on the go."
-            cta="Continue on Android"
-            strong
+            illustration={<SmartphoneIllustration />}
+            title="Android"
+            subtitle="Mobile-first CRM"
             onClick={() => chooseMode("android")}
           />
           <ModeCard
-            img={webImg}
-            icon={<Globe className="size-6" />}
-            title="Web Mode"
-            description="Full-featured experience in your browser. Perfect for daily operations."
-            cta="Open in Browser"
+            illustration={<WebIllustration />}
+            title="Web / iOS"
+            subtitle="Responsive CRM"
             onClick={() => chooseMode("web")}
           />
           <ModeCard
-            img={desktopImg}
-            icon={<Monitor className="size-6" />}
-            title="Desktop Mode"
-            description="Best for large screens and advanced analysis. Ideal for HQ and management."
-            cta="Open Desktop View"
+            illustration={<DesktopIllustration />}
+            title="Desktop"
+            subtitle="Full CRM Workspace"
             onClick={() => chooseMode("desktop")}
           />
         </div>
 
-        <ul className="card-elevated mt-6 grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { icon: <Zap className="size-7" />, a: "Same Data", b: "Across All Devices" },
-            { icon: <RefreshCw className="size-7" />, a: "Real-time Sync", b: "Always Updated" },
-            { icon: <ShieldCheck className="size-7" />, a: "Secure Access", b: "Role-based Control" },
-            { icon: <BarChart3 className="size-7" />, a: "Full Features", b: "Complete CRM Access" },
-          ].map((f) => (
-            <li key={f.a} className="flex items-center gap-3">
-              <span className="shrink-0 text-primary">{f.icon}</span>
-              <span className="min-w-0 text-sm">
-                <span className="block font-medium text-foreground">{f.a}</span>
-                <span className="block text-muted-foreground">{f.b}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <p className="mt-10 text-center text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+          One CRM. One data layer. Every device.
+        </p>
 
-        <h2 id="workspace-signin" className="mt-12 scroll-mt-6 text-center text-xl font-bold tracking-tight">Sign in to your workspace</h2>
+        <h2
+          id="workspace-signin"
+          className="mt-16 scroll-mt-6 text-center text-xl font-bold tracking-tight"
+        >
+          Sign in to your workspace
+        </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <EntryCard
             icon={<Headphones className="size-6" />}
@@ -212,40 +184,6 @@ function EntryHall() {
           />
         </div>
 
-        <section className="mt-10 grid gap-5 md:grid-cols-2">
-          <div className="card-elevated grid overflow-hidden sm:grid-cols-2">
-            <img
-              src={buildingImg}
-              alt="Winstone residential project"
-              loading="lazy"
-              width={944}
-              height={704}
-              className="h-48 w-full object-cover sm:h-full"
-            />
-            <div className="p-5">
-              <h3 className="text-2xl font-bold leading-tight">Real Estate Sales Simplified</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Empowering teams with AI-driven tools to sell smarter, faster and better.
-              </p>
-              <span className="mt-4 block h-0.5 w-12 bg-primary" />
-            </div>
-          </div>
-          <div className="card-elevated flex items-center gap-4 p-5">
-            <span className="grid size-16 shrink-0 place-items-center rounded-full bg-primary/15 text-foreground">
-              <LifeBuoy className="size-7" />
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-lg font-bold">Need Help?</h3>
-              <p className="text-sm text-muted-foreground">
-                Contact IT HQ for access, PIN reset or account support.
-              </p>
-              <Button asChild variant="outline" className="mt-3">
-                <Link to="/support">Contact Support</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
         {scope !== "none" && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already signed in —{" "}
@@ -255,8 +193,14 @@ function EntryHall() {
           </p>
         )}
 
-        <footer className="mt-14 text-center text-xs text-muted-foreground">
-          <p>© 2026 TrendFlux Digital. All Rights Reserved.</p>
+        <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
+          <p className="inline-flex items-center gap-1.5">
+            <LifeBuoy className="size-3.5" /> Need help?{" "}
+            <Link to="/support" className="font-semibold text-primary hover:underline">
+              Contact IT HQ
+            </Link>
+          </p>
+          <p className="mt-3">© 2026 TrendFlux Digital. All Rights Reserved.</p>
           <p className="mt-1">Developed &amp; Powered by Zahid Hasan Emon.</p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link to="/privacy" className="hover:text-foreground">
@@ -322,39 +266,59 @@ function EntryCard({
 }
 
 function ModeCard({
-  img,
-  icon,
+  illustration,
   title,
-  description,
-  cta,
-  strong,
+  subtitle,
   onClick,
 }: {
-  img: string;
-  icon: React.ReactNode;
+  illustration: React.ReactNode;
   title: string;
-  description: string;
-  cta: string;
-  strong?: boolean;
+  subtitle: string;
   onClick: () => void;
 }) {
   return (
-    <section className="card-elevated flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/40">
-      <img src={img} alt={`${title} preview`} width={896} height={752} className="aspect-[6/5] w-full object-contain bg-background" />
-      <div className="flex flex-1 flex-col gap-3 p-5 pt-0">
-        <span className="-mt-7 grid size-14 place-items-center rounded-full border-2 border-primary/60 bg-background text-primary shadow-sm">
-          {icon}
-        </span>
-        <h3 className="text-2xl font-bold tracking-tight">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
-        <Button
-          onClick={onClick}
-          variant={strong ? "default" : "secondary"}
-          className="mt-auto h-12 justify-center gap-1 text-base"
-        >
-          {cta} <ChevronRight className="size-4" />
-        </Button>
-      </div>
-    </section>
+    <button
+      type="button"
+      onClick={onClick}
+      className="card-elevated group flex min-h-44 flex-col items-center gap-4 p-7 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:translate-y-0 active:shadow-sm"
+    >
+      <span className="text-foreground transition-transform duration-200 group-hover:scale-105">
+        {illustration}
+      </span>
+      <span>
+        <span className="block text-xl font-bold tracking-tight">{title}</span>
+        <span className="mt-1 block text-sm text-muted-foreground">{subtitle}</span>
+      </span>
+      <span className="mt-auto inline-flex h-11 items-center gap-1 rounded-full border border-primary/40 px-5 text-sm font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        Select <ChevronRight className="size-4" />
+      </span>
+    </button>
+  );
+}
+
+function SmartphoneIllustration() {
+  return (
+    <span className="relative grid size-20 place-items-center">
+      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
+      <Smartphone className="size-9" strokeWidth={1.5} />
+    </span>
+  );
+}
+
+function WebIllustration() {
+  return (
+    <span className="relative grid size-20 place-items-center">
+      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
+      <Globe className="size-9" strokeWidth={1.5} />
+    </span>
+  );
+}
+
+function DesktopIllustration() {
+  return (
+    <span className="relative grid size-20 place-items-center">
+      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
+      <Monitor className="size-9" strokeWidth={1.5} />
+    </span>
   );
 }
