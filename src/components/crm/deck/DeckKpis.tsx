@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { deckKpis } from "@/lib/lead-pool.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 /** Live Coordinator Deck KPIs — every number comes from the Lead Store. */
 export function DeckKpis() {
@@ -15,18 +15,18 @@ export function DeckKpis() {
   });
   const k = q.data;
   const tiles: { label: string; value: number | undefined; tone?: "ok" | "warn" | "bad" | undefined; hint?: string | undefined }[] = [
-    { label: "Total Lead Store", value: k?.totalStore },
+    { label: "Total Head Leads", value: k?.totalStore },
     { label: "Unassigned", value: k?.unassigned, tone: "warn" },
+    { label: "Assigned", value: k?.assigned },
     {
-      label: "Ready Today",
+      label: "Available to distribute",
       value: k?.readyToday,
       tone: k && k.readyToday < k.neededToday ? "bad" : "ok",
-      hint: k ? `দরকার ${k.neededToday} (${k.availableAgents} × ${k.perAgent})` : undefined,
+      hint: k ? `আজ পুরো কোটায় দরকার ${k.neededToday}` : undefined,
     },
-    { label: "Assigned Today", value: k?.assignedToday, tone: "ok" },
     { label: "Duplicate", value: k?.duplicate },
-    { label: "Invalid Phone", value: k?.invalid, tone: k?.invalid ? "bad" : undefined, hint: "অবণ্টিত সারি" },
-    { label: "Missing Reference", value: k?.missingData, tone: k?.missingData ? "warn" : undefined },
+    { label: "Invalid", value: k?.invalid, tone: k?.invalid ? "bad" : undefined, hint: "অবণ্টিত সারি" },
+    { label: "Today's assigned", value: k?.assignedToday, tone: "ok" },
     { label: "Available Agents", value: k?.availableAgents },
   ];
   const toneClass = { ok: "text-success", warn: "text-warning", bad: "text-destructive" } as const;

@@ -490,7 +490,7 @@ export const deckKpis = createServerFn({ method: "GET" })
     );
     const today = dhakaToday();
     const head = () => supabaseAdmin.from("leads").select("id", { count: "exact", head: true });
-    const [total, unassigned, assignedToday, duplicate, missingRef, ready, agents, plan] =
+    const [total, unassigned, assignedToday, duplicate, missingRef, ready, agents, plan, assignedAll] =
       await Promise.all([
         head(),
         head()
@@ -502,6 +502,7 @@ export const deckKpis = createServerFn({ method: "GET" })
         usablePoolCount(),
         activeAgents(),
         dailyPlan(),
+        head().not("assigned_to", "is", null),
       ]);
     // Invalid phones: scan unassigned rows only (bounded).
     const { data: phones } = await supabaseAdmin
@@ -516,6 +517,7 @@ export const deckKpis = createServerFn({ method: "GET" })
       today,
       totalStore: total.count ?? 0,
       unassigned: unassigned.count ?? 0,
+      assigned: assignedAll.count ?? 0,
       readyToday: ready,
       assignedToday: assignedToday.count ?? 0,
       duplicate: duplicate.count ?? 0,

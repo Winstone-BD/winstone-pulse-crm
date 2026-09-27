@@ -25,7 +25,7 @@ import {
   toTemperature,
 } from "@/lib/crm-taxonomy";
 import { assignSelectedLeads, listLeadStore } from "@/lib/lead-pool.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 type Assignment = "all" | "unassigned" | "assigned" | "duplicate";
 type Quality = "any" | "missing_reference" | "invalid_phone";

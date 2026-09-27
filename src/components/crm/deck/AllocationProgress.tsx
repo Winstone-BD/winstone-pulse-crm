@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { StatusBadge } from "@/components/crm/StatusBadge";
 import { leadPoolStatus } from "@/lib/lead-pool.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { useDeckToken as useAdminToken } from "@/lib/local-session";
 
 /** Per-agent allocation for today: given / quota, remaining capacity, pool readiness. */
 export function AllocationProgress() {

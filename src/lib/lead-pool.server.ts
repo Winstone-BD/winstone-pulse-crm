@@ -136,7 +136,7 @@ export async function rolloverPendingLeads(workDate: string = dhakaToday()): Pro
  * The daily run tops desks up to their quota instead of handing out a second
  * full round, so calling it twice in one day can never double-assign.
  */
-async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
+export async function assignedTodayByAgent(workDate: string): Promise<Map<string, number>> {
   const supabaseAdmin = await admin();
   const counts = new Map<string, number>();
   for (let from = 0; ; from += 1000) {
