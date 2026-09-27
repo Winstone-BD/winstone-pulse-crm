@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const TranscribeInput = z.object({
   /** WAV audio bytes, base64 encoded. */
@@ -15,6 +16,8 @@ const TranscribeInput = z.object({
  * so the API key never reaches the browser.
  */
 export const transcribeAudio = createServerFn({ method: "POST" })
+  // Signed-in users only: every call spends AI credit.
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => TranscribeInput.parse(input))
   .handler(async ({ data }) => {
     const apiKey = process.env["LOVABLE_API_KEY"];
