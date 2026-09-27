@@ -97,7 +97,21 @@ export async function resolveLeadIdByPhone(
 export async function eligibleLeadIds(ids: string[]): Promise<string[]> {
   if (ids.length === 0) return [];
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.rpc("filter_eligible_lead_ids", { _lead_ids: ids });
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((row) => row.lead_id);
+  // Checked in batches: one call over thousands of pool leads hits the
+  // database statement timeout (broke IT Console notices once the pool grew).
+  const CHUNK = 300;
+  const out: string[] = [];
+  for (let i = 0; i < ids.length; i += CHUNK * 4) {
+    const batches = [];
+    for (let j = i; j < Math.min(ids.length, i + CHUNK * 4); j += CHUNK) {
+      batches.push(
+        supabaseAdmin.rpc("filter_eligible_lead_ids", { _lead_ids: ids.slice(j, j + CHUNK) }),
+      );
+    }
+    for (const { data, error } of await Promise.all(batches)) {
+      if (error) throw new Error(error.message);
+      (data ?? []).forEach((row) => out.push(row.lead_id));
+    }
+  }
+  return out;
 }
