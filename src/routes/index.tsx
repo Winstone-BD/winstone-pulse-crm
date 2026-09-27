@@ -75,7 +75,7 @@ function EntryHall() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="theme-light min-h-screen bg-background">
       <main className="mx-auto w-full max-w-6xl animate-rise px-4 py-10 sm:px-6 sm:py-14">
         <header className="flex flex-col items-center text-center">
           <img
