@@ -49,7 +49,7 @@ export type HeadLeadResult =
       ok: false;
       reason: "duplicate" | "invalid_phone";
       message: string;
-      existing?: {
+      existing?: undefined | {
         id: string;
         name: string;
         serialNo: string | null;
