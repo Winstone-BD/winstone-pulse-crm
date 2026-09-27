@@ -10,9 +10,9 @@ describe("daily quota", () => {
     expect(hasFixedQuota("WIN2601")).toBe(false);
   });
 
-  it("gives Haidar the same round as everyone", () => {
-    expect(quotaFor("WIN2607", 50)).toBe(50);
-    expect(hasFixedQuota("WIN2607")).toBe(false);
+  it("gives Haidar a light fixed round of 5", () => {
+    expect(quotaFor("WIN2607", 50)).toBe(5);
+    expect(hasFixedQuota("WIN2607")).toBe(true);
   });
 
   it("scores a full day as a full day, whatever the quota", () => {
