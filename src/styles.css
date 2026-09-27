@@ -214,7 +214,7 @@
 
 /* Faint dot grid on the cream foundation */
 @utility grid-noise {
-  background-image: radial-gradient(oklch(0.95 0.02 85 / 6%) 1px, transparent 1px);
+  background-image: radial-gradient(oklch(0.3 0.02 80 / 8%) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
