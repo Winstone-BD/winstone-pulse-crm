@@ -53,15 +53,21 @@ export async function activeAgents(): Promise<PoolAgent[]> {
 /** How many leads are still usable in the database. */
 export async function usablePoolCount(): Promise<number> {
   const supabaseAdmin = await admin();
-  const { data } = await supabaseAdmin
-    .from("leads")
-    .select("id")
-    .is("assigned_to", null)
-    .is("assigned_agent_id", null)
-    .or(USABLE)
-    .limit(20000);
+  const ids: string[] = [];
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data } = await supabaseAdmin
+      .from("leads")
+      .select("id")
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .or(USABLE)
+      .order("id")
+      .range(from, from + 999);
+    (data ?? []).forEach((row) => ids.push(row.id));
+    if (!data || data.length < 1000) break;
+  }
   const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
-  return (await eligibleLeadIds((data ?? []).map((row) => row.id))).length;
+  return (await eligibleLeadIds(ids)).length;
 }
 
 /** Every phone number that already belongs to an agent. */
