@@ -27,8 +27,19 @@ import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
 import { FloorLockAdminPanel } from "@/components/crm/hq/FloorLockAdminPanel";
 
 import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
+import { ReportsBoard } from "@/routes/reports";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
+
+type HqTab = "overview" | "performance" | "leads" | "reports" | "tools";
+
+const HQ_TABS: { key: HqTab; label: string }[] = [
+  { key: "overview", label: "ওভারভিউ" },
+  { key: "performance", label: "এজেন্ট পারফরম্যান্স" },
+  { key: "leads", label: "লিড ও ফানেল" },
+  { key: "reports", label: "রিপোর্ট" },
+  { key: "tools", label: "টুলস ও সেটিংস" },
+];
 
 export const Route = createFileRoute("/hq")({
   head: () => ({
