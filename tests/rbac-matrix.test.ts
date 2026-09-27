@@ -11,10 +11,11 @@ describe("role surface matrix", () => {
     }
   });
 
-  it("never lets the sales team admin reach dispatch or the IT console", () => {
+  it("gives the sales team admin the intake-only deck, never dispatch powers or the IT console", () => {
     const admin = ROLE_SURFACES.sales_team_admin;
-    expect(admin.routes).not.toContain("/dispatch");
+    expect(admin.routes).toContain("/dispatch");
     expect(admin.routes).not.toContain("/system");
+    expect(admin.routes).not.toContain("/hq");
     expect(DISPATCH_ROLES).not.toContain("sales_team_admin" as RoleKey);
   });
 
