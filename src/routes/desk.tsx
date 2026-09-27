@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ChevronDown,
   Clock,
   LogIn,
   MessageCircle,
