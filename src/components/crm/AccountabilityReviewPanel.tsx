@@ -71,9 +71,9 @@ export function AccountabilityReviewPanel({ surface }: { surface: "hq" | "it" })
       {q.isPending ? (
         <GroupState kind="loading" />
       ) : q.isError ? (
-        <GroupState kind="error" title={q.error instanceof Error ? q.error.message : "Could not load"} />
+        <GroupState kind="error" message={q.error instanceof Error ? q.error.message : "Could not load"} />
       ) : rows.length === 0 ? (
-        <GroupState kind="empty" title="No pending-review records in the last 30 days" />
+        <GroupState kind="empty" message="No pending-review records in the last 30 days" />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left text-xs">

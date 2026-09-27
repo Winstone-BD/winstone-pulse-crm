@@ -29,6 +29,7 @@ import { MyReports } from "@/components/crm/MyReports";
 import { NewLeadDialog } from "@/components/crm/NewLeadDialog";
 import { LeadImportDialog } from "@/components/crm/LeadImportDialog";
 import { LeadDeadlineBanner } from "@/components/crm/LeadDeadlineBanner";
+import { AccountabilityBanner, useMyAccountability } from "@/components/crm/AccountabilityBanner";
 import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
 import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
@@ -301,6 +302,7 @@ function DeskPage() {
         </nav>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
+          <AccountabilityBanner />
           <LeadDeadlineBanner />
           <MyProfileCard />
           <MyPhoneSetup />
@@ -322,13 +324,13 @@ function DeskPage() {
 
         <SmartInsightStrip scope="desk" />
 
-        <MobileLeadQueue />
+        {!queueLocked && <MobileLeadQueue />}
 
         <FollowUpAlarm />
 
-        <CarryOverLeads />
+        {!queueLocked && <CarryOverLeads />}
 
-        <LeadDayBoard />
+        {!queueLocked && <LeadDayBoard />}
 
         <CommandAgentPanel surface="desk" />
 
@@ -375,7 +377,7 @@ function DeskPage() {
             <TeamSupportPanel />
           </TabsContent>
           <TabsContent value="leads" className="space-y-4">
-            <LeadTable />
+            {queueLocked ? <QueueLockedNote /> : <LeadTable />}
           </TabsContent>
           <TabsContent value="queue" className="space-y-4">
             <OpenLeadsCard />
