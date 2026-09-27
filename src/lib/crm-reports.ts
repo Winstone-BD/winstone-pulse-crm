@@ -126,7 +126,7 @@ export function buildReport(
   const matchQuery = (l: Lead) =>
     !q ||
     l.name.toLowerCase().includes(q) ||
-    l.phone.replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\0") ||
+    (l.phone_number ?? "").replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\0") ||
     (l.reference_by ?? "").toLowerCase().includes(q);
 
   const agents = data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader");
