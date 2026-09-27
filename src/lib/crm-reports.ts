@@ -6,6 +6,7 @@ import {
   type Profile,
   type WhatsappMessage,
 } from "@/lib/crm-data";
+import { plausibleSeconds } from "@/lib/lead-groups";
 
 export type ReportFilters = {
   /** inclusive yyyy-mm-dd */
@@ -180,7 +181,7 @@ export function buildReport(
     if (!b) continue;
     b.dials += 1;
     if (c.duration_seconds > CONNECTED_THRESHOLD_SECONDS) b.connected += 1;
-    b.talkMinutes += c.duration_seconds / 60;
+    b.talkMinutes += plausibleSeconds(c.duration_seconds) / 60;
   }
   for (const m of messages) {
     const b = buckets.get(isoDay(new Date(m.created_at)));
@@ -213,7 +214,7 @@ export function buildReport(
       const connected = agentCalls.filter(
         (c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS,
       ).length;
-      const talkSeconds = agentCalls.reduce((s, c) => s + c.duration_seconds, 0);
+      const talkSeconds = agentCalls.reduce((s, c) => s + plausibleSeconds(c.duration_seconds), 0);
       const assignedLeads = leads.filter((l) => l.assigned_to === profile.id);
       const dealsWon = assignedLeads.filter(
         (l) => l.status === "closed" && l.outcome_category === "deal_won",

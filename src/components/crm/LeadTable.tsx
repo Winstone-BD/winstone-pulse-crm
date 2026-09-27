@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { CheckCircle2, ChevronDown, Search, X } from "lucide-react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -19,6 +21,46 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildTimeline, useSnapshot } from "@/lib/crm-data";
 import { relativeTime, shortDate } from "@/lib/crm-format";
 import { cn } from "@/lib/utils";
+import { myLeadExtras } from "@/lib/call-reports.functions";
+import { useAdminToken } from "@/lib/local-session";
+import {
+  DESK_BUCKET_LABEL,
+  GROUP_LABEL,
+  followUpState,
+  groupLeads,
+  inBucket,
+  matchesSearch,
+  type DeskBucket,
+  type DeskExtras,
+  type GroupKey,
+} from "@/lib/lead-groups";
+
+function FollowUpCell({ at }: { at: string | null }) {
+  const state = followUpState(at);
+  if (state === "none") return <span className="text-muted-foreground">—</span>;
+  const when = new Date(at!).toLocaleString("bn-BD", {
+    timeZone: "Asia/Dhaka",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+        state === "overdue"
+          ? "border-destructive/30 bg-destructive/10 text-destructive"
+          : state === "due_today"
+            ? "border-warning/30 bg-warning/10 text-warning"
+            : "border-border bg-surface-2 text-foreground",
+      )}
+    >
+      {state === "overdue" ? "OVERDUE · " : ""}
+      {when}
+    </span>
+  );
+}
 
 type Filter = "pending" | "follow_up" | "done" | "all";
 
@@ -62,6 +104,26 @@ export function LeadTable() {
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [period, setPeriod] = useState<LeadPeriod>("all");
   const [category, setCategory] = useState<LeadCategory>("all");
+  const [bucket, setBucket] = useState<DeskBucket>("all");
+  const [groupBy, setGroupBy] = useState<GroupKey>("none");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const adminToken = useAdminToken();
+  const fetchExtras = useServerFn(myLeadExtras);
+  const extrasQuery = useQuery({
+    queryKey: ["lead-extras", adminToken ? "pin" : "session"],
+    queryFn: () => fetchExtras({ data: { adminToken } }),
+    refetchInterval: 60_000,
+  });
+  const extras = useMemo(
+    () =>
+      new Map<string, DeskExtras>(
+        (extrasQuery.data ?? []).map((e) => [
+          e.leadId,
+          { requirement: e.requirement, nextFollowUpAt: e.nextFollowUpAt },
+        ]),
+      ),
+    [extrasQuery.data],
+  );
 
   // The quick filter narrows the pool first; the status tabs then count within it.
   const scoped = useMemo(
@@ -79,9 +141,17 @@ export function LeadTable() {
     [scoped],
   );
 
+  const bucketCounts = useMemo(() => {
+    const out = {} as Record<DeskBucket, number>;
+    for (const key of Object.keys(DESK_BUCKET_LABEL) as DeskBucket[])
+      out[key] = scoped.filter((l) => inBucket(l, extras.get(l.id), key)).length;
+    return out;
+  }, [scoped, extras]);
+
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return scoped
+      .filter((lead) => inBucket(lead, extras.get(lead.id), bucket))
       .filter((lead) => {
         if (filter === "pending") return lead.status === "pending";
         if (filter === "follow_up") return lead.status === "follow_up";
@@ -91,16 +161,24 @@ export function LeadTable() {
       .filter(
         (lead) =>
           !needle ||
-          lead.name.toLowerCase().includes(needle) ||
-          lead.phone_number.includes(needle) ||
+          matchesSearch(lead, needle) ||
           (lead.address ?? "").toLowerCase().includes(needle) ||
-          (lead.serial_no ?? "").toLowerCase().includes(needle) ||
-          (lead.reference_by ?? "").toLowerCase().includes(needle),
+          (lead.serial_no ?? "").toLowerCase().includes(needle),
       )
       .sort((a, b) =>
         (a.serial_no ?? "").localeCompare(b.serial_no ?? "", "bn", { numeric: true }),
       );
-  }, [scoped, filter, search]);
+  }, [scoped, filter, search, bucket, extras]);
+
+  const groups = useMemo(() => groupLeads(rows, extras, groupBy), [rows, extras, groupBy]);
+  const toggleGroup = (key: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const filtersActive = bucket !== "all" || search.trim() !== "" || period !== "all" || category !== "all";
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
@@ -121,7 +199,7 @@ export function LeadTable() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="নাম, নম্বর, ঠিকানা খুঁজুন"
+            placeholder="নাম, নম্বর, রেফারেন্স, কোম্পানি"
             className="pl-9"
           />
         </div>
@@ -153,6 +231,119 @@ export function LeadTable() {
         </TabsList>
       </Tabs>
 
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="দ্রুত ভাগ">
+        {(Object.keys(DESK_BUCKET_LABEL) as DeskBucket[]).map((key) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={bucket === key}
+            onClick={() => setBucket(key)}
+            className={cn(
+              "min-h-9 rounded-full border px-3 text-xs font-semibold transition-colors",
+              bucket === key
+                ? key === "overdue"
+                  ? "border-destructive bg-destructive text-destructive-foreground"
+                  : "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-foreground hover:bg-surface-2",
+            )}
+          >
+            {DESK_BUCKET_LABEL[key]} ({bucketCounts[key]})
+          </button>
+        ))}
+        <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+          গ্রুপ:
+          <select
+            value={groupBy}
+            onChange={(e) => setGroupBy(e.target.value as GroupKey)}
+            className="h-9 rounded-md border border-border bg-card px-2 text-xs text-foreground"
+          >
+            {(Object.keys(GROUP_LABEL) as GroupKey[]).map((key) => (
+              <option key={key} value={key}>
+                {GROUP_LABEL[key]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground">{rows.length}টি লিড</span>
+        <span>· সব ফিল্টার একসাথে (AND) প্রযোজ্য</span>
+        {filtersActive && (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-foreground hover:bg-surface-2"
+            onClick={() => {
+              setBucket("all");
+              setSearch("");
+              setPeriod("all");
+              setCategory("all");
+              setFilter("all");
+            }}
+          >
+            <X className="size-3" /> সব ফিল্টার মুছুন
+          </button>
+        )}
+      </p>
+
+      {groups.map((group) => {
+        const isOpen = !collapsed.has(group.key);
+        return (
+          <div key={group.key} className="space-y-2">
+            {groupBy !== "none" && (
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.key)}
+                aria-expanded={isOpen}
+                className="flex w-full items-center justify-between rounded-lg border border-border bg-surface-2 px-3 py-2 text-left text-sm font-semibold"
+              >
+                <span className="truncate">{group.key}</span>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {group.items.length}টি · Hot {group.items.filter((l) => l.temperature === "hot").length}
+                  <ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
+                </span>
+              </button>
+            )}
+            {isOpen && (
+              <LeadRows
+                rows={group.items}
+                extras={extras}
+                onOpen={setOpenLeadId}
+              />
+            )}
+          </div>
+        );
+      })}
+      {rows.length === 0 && (
+        <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          এই ফিল্টারে কোনো লিড নেই
+        </p>
+      )}
+
+      <LeadDossier
+        lead={openLead}
+        agents={profiles}
+        timeline={openLead ? buildTimeline(calls, messages, openLead.id, events) : []}
+        open={openLeadId !== null}
+        onOpenChange={(next) => !next && setOpenLeadId(null)}
+      />
+    </section>
+  );
+}
+
+type Row = ReturnType<typeof useSnapshot>["leads"][number];
+
+function LeadRows({
+  rows,
+  extras,
+  onOpen,
+}: {
+  rows: Row[];
+  extras: Map<string, DeskExtras>;
+  onOpen: (id: string) => void;
+}) {
+  const setOpenLeadId = onOpen;
+  return (
+    <>
       {/* Mobile: cards, no horizontal scrolling. Same rows, same data. */}
       <ul className="space-y-3 md:hidden">
         {rows.map((lead, index) => (
@@ -201,9 +392,16 @@ export function LeadTable() {
                   {shortDate(lead.classified_at ?? lead.last_call_at ?? lead.created_at)}
                 </span>
               </div>
-              {lead.address && (
-                <p className="mt-1.5 truncate text-xs text-muted-foreground">{lead.address}</p>
-              )}
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <dt className="text-muted-foreground">রেফারেন্স</dt>
+                <dd className="truncate text-right">{lead.reference_by ?? "—"}</dd>
+                <dt className="text-muted-foreground">চাহিদা</dt>
+                <dd className="truncate text-right">{extras.get(lead.id)?.requirement ?? "—"}</dd>
+                <dt className="text-muted-foreground">পরের ফলো-আপ</dt>
+                <dd className="text-right">
+                  <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
+                </dd>
+              </dl>
             </button>
             <div className="mt-3 flex items-center gap-2">
               <WebCallButton
@@ -230,11 +428,11 @@ export function LeadTable() {
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
               <th className="px-3 py-2.5 font-medium">ক্রমিক</th>
               <th className="px-3 py-2.5 font-medium">নাম</th>
-              <th className="px-3 py-2.5 font-medium">ঠিকানা</th>
               <th className="px-3 py-2.5 font-medium">ফোন নম্বর</th>
               <th className="px-3 py-2.5 font-medium">রেফারেন্স</th>
+              <th className="px-3 py-2.5 font-medium">চাহিদা</th>
               <th className="px-3 py-2.5 font-medium">অবস্থা</th>
-              <th className="px-3 py-2.5 font-medium">শেষ কল</th>
+              <th className="px-3 py-2.5 font-medium">পরের ফলো-আপ</th>
               <th className="px-3 py-2.5 text-right font-medium">কাজ</th>
             </tr>
           </thead>
@@ -258,12 +456,12 @@ export function LeadTable() {
                     <p className="truncate text-xs text-muted-foreground">{lead.company}</p>
                   )}
                 </td>
-                <td className="max-w-[200px] px-3 py-2.5 text-xs text-muted-foreground">
-                  {lead.address ?? "—"}
-                </td>
                 <td className="tabular px-3 py-2.5">{lead.phone_number}</td>
                 <td className="px-3 py-2.5 text-xs text-muted-foreground">
                   {lead.reference_by ?? "—"}
+                </td>
+                <td className="max-w-[180px] truncate px-3 py-2.5 text-xs">
+                  {extras.get(lead.id)?.requirement ?? "—"}
                 </td>
                 <td className="px-3 py-2.5">
                   <span
@@ -278,10 +476,13 @@ export function LeadTable() {
                     {STATUS_LABELS[lead.status] ?? lead.status}
                   </span>
                 </td>
-                <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                  {lead.last_call_at
-                    ? relativeTime(lead.last_call_at)
-                    : `${lead.call_attempts} বার চেষ্টা`}
+                <td className="px-3 py-2.5 text-xs">
+                  <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {lead.last_call_at
+                      ? `শেষ কল ${relativeTime(lead.last_call_at)}`
+                      : `${lead.call_attempts} বার চেষ্টা`}
+                  </p>
                 </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center justify-end gap-2">
@@ -308,13 +509,6 @@ export function LeadTable() {
         </table>
       </div>
 
-      <LeadDossier
-        lead={openLead}
-        agents={profiles}
-        timeline={openLead ? buildTimeline(calls, messages, openLead.id, events) : []}
-        open={openLeadId !== null}
-        onOpenChange={(next) => !next && setOpenLeadId(null)}
-      />
-    </section>
+    </>
   );
 }

@@ -661,3 +661,103 @@ export const listCallReports = createServerFn({ method: "POST" })
       agents: (agents ?? []).map((a) => ({ id: a.id, name: a.name })),
     };
   });
+
+/**
+ * Per-lead desk extras: latest reported requirement and the next open
+ * follow-up. Agents only ever receive their own leads' rows.
+ */
+export const myLeadExtras = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope === "none") return [] as { leadId: string; requirement: string | null; nextFollowUpAt: string | null }[];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const agentId = caller.scope === "agent" ? caller.profile?.id ?? null : null;
+    if (caller.scope === "agent" && !agentId) return [];
+
+    let reports = supabaseAdmin
+      .from("call_reports")
+      .select("lead_id, requirement, submitted_at")
+      .eq("status", "submitted")
+      .not("requirement", "is", null)
+      .order("submitted_at", { ascending: false })
+      .limit(2000);
+    if (agentId) reports = reports.eq("agent_id", agentId);
+    let follows = supabaseAdmin
+      .from("follow_up_events")
+      .select("lead_id, scheduled_at")
+      .neq("status", "done")
+      .order("scheduled_at", { ascending: true })
+      .limit(2000);
+    if (agentId) follows = follows.eq("agent_id", agentId);
+    const [r, f] = await Promise.all([reports, follows]);
+
+    const out = new Map<string, { leadId: string; requirement: string | null; nextFollowUpAt: string | null }>();
+    const row = (id: string) => {
+      const existing = out.get(id) ?? { leadId: id, requirement: null, nextFollowUpAt: null };
+      out.set(id, existing);
+      return existing;
+    };
+    for (const rep of r.data ?? []) if (rep.lead_id && !row(rep.lead_id).requirement) row(rep.lead_id).requirement = rep.requirement;
+    for (const ev of f.data ?? []) if (ev.lead_id && !row(ev.lead_id).nextFollowUpAt) row(ev.lead_id).nextFollowUpAt = ev.scheduled_at;
+    return [...out.values()];
+  });
+
+/**
+ * Move a follow-up to a new time. Owner agent, coordinator or HQ only;
+ * the change and who made it go to lead history and the audit log.
+ */
+export const rescheduleFollowUp = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    Base.extend({ eventId: z.string().uuid(), scheduledAt: z.string().datetime() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const { canReschedule } = await import("@/lib/lead-groups");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: event } = await supabaseAdmin
+      .from("follow_up_events")
+      .select("id, agent_id, lead_id, scheduled_at, status")
+      .eq("id", data.eventId)
+      .maybeSingle();
+    if (!event) throw new Error("ফলো-আপ পাওয়া যায়নি");
+    if (
+      !canReschedule(
+        { scope: caller.scope, profileId: caller.profile?.id ?? null, readOnly: caller.readOnly },
+        event.agent_id,
+      )
+    ) {
+      throw new Error("এই ফলো-আপ বদলানোর অনুমতি নেই");
+    }
+    if (event.status === "done") throw new Error("সম্পন্ন ফলো-আপ বদলানো যায় না");
+    if (Date.parse(data.scheduledAt) < Date.now() - 60_000) throw new Error("অতীত সময় বেছে নেওয়া যাবে না");
+
+    // Guarded on the old time so two concurrent moves cannot both win.
+    const { data: moved, error } = await supabaseAdmin
+      .from("follow_up_events")
+      .update({ scheduled_at: data.scheduledAt, notified_at: null, status: "upcoming" })
+      .eq("id", event.id)
+      .eq("scheduled_at", event.scheduled_at)
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (!moved?.length) throw new Error("অন্য কেউ এটি এইমাত্র বদলেছে — আবার চেষ্টা করুন");
+
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({
+      leadId: event.lead_id,
+      agentId: caller.profile?.id ?? null,
+      kind: "outcome_logged",
+      detail: `ফলো-আপ সময় বদল: ${new Date(event.scheduled_at).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })} → ${new Date(data.scheduledAt).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}`,
+    });
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({
+      action: "follow_up_rescheduled",
+      entityType: "follow_up_event",
+      entityId: event.id,
+      actorProfileId: caller.profile?.id ?? null,
+      metadata: { from: event.scheduled_at, to: data.scheduledAt, scope: caller.scope },
+    });
+    return { ok: true };
+  });
