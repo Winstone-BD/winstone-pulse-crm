@@ -24,7 +24,7 @@ export function CsvImportDialog() {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<CsvLeadRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [autoAssign, setAutoAssign] = useState(true);
+  const [autoAssign, setAutoAssign] = useState(false);
   const queryClient = useQueryClient();
   const run = useServerFn(importLeads);
 

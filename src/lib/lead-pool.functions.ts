@@ -464,7 +464,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
     const names = new Map((owners.data ?? []).map((o) => [o.id, o.name]));
     const nextFollow = new Map<string, string>();
     for (const f of (follows.data ?? []) as { lead_id: string; scheduled_at: string; status: string }[]) {
-      if (f.status === "pending" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_at);
+      if (f.status !== "done" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_at);
     }
     return {
       full,

@@ -67,7 +67,7 @@ function ImportScreen() {
   const run = useServerFn(importLeads);
   const [rows, setRows] = useState<CsvLeadRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [autoAssign, setAutoAssign] = useState(true);
+  const [autoAssign, setAutoAssign] = useState(false);
   const [sheetUrl, setSheetUrl] = useState("");
   const [sheetTabs, setSheetTabs] = useState<string[]>([]);
   const [sheetTab, setSheetTab] = useState<string | null>(null);
