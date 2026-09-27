@@ -14,7 +14,7 @@ export function DeckKpis() {
     refetchInterval: 60_000,
   });
   const k = q.data;
-  const tiles: { label: string; value: number | undefined; tone?: "ok" | "warn" | "bad"; hint?: string }[] = [
+  const tiles: { label: string; value: number | undefined; tone?: "ok" | "warn" | "bad" | undefined; hint?: string | undefined }[] = [
     { label: "Total Lead Store", value: k?.totalStore },
     { label: "Unassigned", value: k?.unassigned, tone: "warn" },
     {
