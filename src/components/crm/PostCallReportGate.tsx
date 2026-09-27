@@ -202,9 +202,9 @@ function SmartRow({
   options: Opt[];
   value: string;
   onChange: (value: string) => void;
-  rec?: Rec;
-  skipped?: boolean;
-  onSkip?: () => void;
+  rec?: Rec | undefined;
+  skipped?: boolean | undefined;
+  onSkip?: (() => void) | undefined;
 }) {
   const confirmed = Boolean(rec && value === rec.value);
   return (
@@ -659,7 +659,7 @@ function ReportDialog({
         });
         return { offline: true as const };
       }
-      await submit({ data: payload as Parameters<typeof submit>[0]["data"] });
+      await submit({ data: payload } as never);
       return { offline: false as const };
     },
     onSuccess: (result) => {

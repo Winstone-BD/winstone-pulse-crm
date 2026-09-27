@@ -43,10 +43,10 @@ export const saveInventory = createServerFn({ method: "POST" })
     requireDispatch(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.id) {
-      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-      if (data.label !== undefined) patch["label"] = data.label;
-      if (data.active !== undefined) patch["active"] = data.active;
-      if (data.sortOrder !== undefined) patch["sort_order"] = data.sortOrder;
+      const patch: { updated_at: string; label?: string; active?: boolean; sort_order?: number } = { updated_at: new Date().toISOString() };
+      if (data.label !== undefined) patch.label = data.label;
+      if (data.active !== undefined) patch.active = data.active;
+      if (data.sortOrder !== undefined) patch.sort_order = data.sortOrder;
       const { error } = await supabaseAdmin
         .from("inventory_requirements")
         .update(patch)
