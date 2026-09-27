@@ -23,6 +23,7 @@ import { Route as HqRouteImport } from './routes/hq'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
+import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -144,6 +145,11 @@ const InboxRoute = InboxRouteImport.update({
 const IngestRoute = IngestRouteImport.update({
   id: '/ingest',
   path: '/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventoryRoute = InventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -435,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
+  '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
@@ -503,6 +510,7 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
+  '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
@@ -572,6 +580,7 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
+  '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/privacy': typeof PrivacyRoute
@@ -642,6 +651,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
+    | '/inventory'
     | '/mcp'
     | '/migration'
     | '/privacy'
@@ -710,6 +720,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
+    | '/inventory'
     | '/mcp'
     | '/migration'
     | '/privacy'
@@ -778,6 +789,7 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
+    | '/inventory'
     | '/mcp'
     | '/migration'
     | '/privacy'
@@ -847,6 +859,7 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   InboxRoute: typeof InboxRoute
   IngestRoute: typeof IngestRoute
+  InventoryRoute: typeof InventoryRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -999,6 +1012,13 @@ declare module '@tanstack/react-router' {
       path: '/ingest'
       fullPath: '/ingest'
       preLoaderRoute: typeof IngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory': {
+      id: '/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof InventoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -1383,6 +1403,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   InboxRoute: InboxRoute,
   IngestRoute: IngestRoute,
+  InventoryRoute: InventoryRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
   PrivacyRoute: PrivacyRoute,
