@@ -15,6 +15,9 @@ export type ReportFilters = {
   agentId: string | "all";
   source: string | "all";
   status: LeadStatus | "all";
+  /** free-text: matches lead name, phone or employee id */
+  query: string;
+  sentiment: string | "all";
 };
 
 export function isoDay(d: Date): string {
@@ -26,7 +29,15 @@ export function isoDay(d: Date): string {
 export function defaultFilters(days = 30, ref = new Date()): ReportFilters {
   const from = new Date(ref);
   from.setDate(from.getDate() - (days - 1));
-  return { from: isoDay(from), to: isoDay(ref), agentId: "all", source: "all", status: "all" };
+  return {
+    from: isoDay(from),
+    to: isoDay(ref),
+    agentId: "all",
+    source: "all",
+    status: "all",
+    query: "",
+    sentiment: "all",
+  };
 }
 
 function dayKeys(from: string, to: string): string[] {
@@ -109,7 +120,14 @@ export function buildReport(
   },
   filters: ReportFilters,
 ): ReportResult {
-  const { from, to, agentId, source, status } = filters;
+  const { from, to, agentId, source, status, query, sentiment } = filters;
+
+  const q = query.trim().toLowerCase();
+  const matchQuery = (l: Lead) =>
+    !q ||
+    l.name.toLowerCase().includes(q) ||
+    (l.phone_number ?? "").replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\0") ||
+    (l.reference_by ?? "").toLowerCase().includes(q);
 
   const agents = data.profiles.filter((p) => p.role === "agent" || p.role === "team_leader");
   const scopedAgents = agentId === "all" ? agents : agents.filter((a) => a.id === agentId);
@@ -119,14 +137,18 @@ export function buildReport(
     (l) =>
       (source === "all" || l.source === source) &&
       (status === "all" || l.status === status) &&
-      (agentId === "all" || l.assigned_to === agentId),
+      (agentId === "all" || l.assigned_to === agentId) &&
+      matchQuery(l),
   );
   const leadIds = new Set(leads.map((l) => l.id));
 
   const scopeCall = (c: CallRecording) =>
     inRange(c.created_at, from, to) &&
     (agentId === "all" || c.agent_id === agentId) &&
-    (source === "all" && status === "all" ? true : c.lead_id !== null && leadIds.has(c.lead_id));
+    (sentiment === "all" || c.sentiment === sentiment) &&
+    (source === "all" && status === "all" && !q
+      ? true
+      : c.lead_id !== null && leadIds.has(c.lead_id));
 
   const scopeMessage = (m: WhatsappMessage) =>
     inRange(m.created_at, from, to) &&

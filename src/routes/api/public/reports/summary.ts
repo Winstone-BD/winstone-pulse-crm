@@ -93,7 +93,7 @@ export const Route = createFileRoute("/api/public/reports/summary")({
             calls: (callsRes.data ?? []) as CallRecording[],
             messages: (messagesRes.data ?? []) as WhatsappMessage[],
           },
-          { from, to, agentId, source: q.source, status: q.status },
+          { from, to, agentId, source: q.source, status: q.status, query: "", sentiment: "all" },
         );
 
         if (q.format === "csv") {
