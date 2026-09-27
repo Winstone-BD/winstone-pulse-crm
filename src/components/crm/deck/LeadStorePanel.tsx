@@ -13,6 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StatusBadge } from "@/components/crm/StatusBadge";
+import {
+  ASSIGNMENT,
+  GRADE_TONE,
+  LIFECYCLE,
+  TEMPERATURE,
+  assignmentState,
+  lifecycleStage,
+  toGrade,
+  toTemperature,
+} from "@/lib/crm-taxonomy";
 import { assignSelectedLeads, listLeadStore } from "@/lib/lead-pool.functions";
 import { useAdminToken } from "@/lib/local-session";
 
@@ -221,6 +232,8 @@ export function LeadStorePanel({
             {rows.map((r) => {
               const can = !r.assigned_to && !r.duplicate && !r.invalidPhone;
               const overdue = r.nextFollowUp && new Date(r.nextFollowUp).getTime() < Date.now();
+              const temp = toTemperature(r.temperature);
+              const grade = toGrade(r.grade);
               return (
                 <tr key={r.id} className="border-t border-border/70 align-top">
                   {canAssign && (
@@ -245,16 +258,21 @@ export function LeadStorePanel({
                   <td className="px-2 py-2 text-xs">{[r.company, r.address].filter(Boolean).join(" · ") || "—"}</td>
                   <td className="px-2 py-2 text-xs">{r.source}</td>
                   <td className="px-2 py-2 text-xs">
-                    {r.duplicate ? (
-                      <span className="font-semibold text-muted-foreground">Duplicate</span>
-                    ) : r.assigned_to ? (
-                      <span>{r.agentName ?? "Agent"}{r.work_date ? ` · ${r.work_date}` : ""}</span>
-                    ) : (
-                      <span className="font-semibold text-warning">UNASSIGNED</span>
+                    <StatusBadge {...ASSIGNMENT[assignmentState(r)]} />
+                    {r.assigned_to && (
+                      <div className="mt-0.5 text-muted-foreground">
+                        {r.agentName ?? "Agent"}{r.work_date ? ` · ${r.work_date}` : ""}
+                      </div>
                     )}
                   </td>
-                  <td className="px-2 py-2 text-xs">{r.status}</td>
-                  <td className="px-2 py-2 text-xs">{[r.temperature, r.grade].filter(Boolean).join(" / ") || "—"}</td>
+                  <td className="px-2 py-2"><StatusBadge {...LIFECYCLE[lifecycleStage(r)]} /></td>
+                  <td className="px-2 py-2">
+                    <div className="flex gap-1">
+                      {temp ? <StatusBadge {...TEMPERATURE[temp]} /> : null}
+                      {grade ? <StatusBadge label={grade} tone={GRADE_TONE[grade]} /> : null}
+                      {!temp && !grade && <span className="text-xs text-muted-foreground">—</span>}
+                    </div>
+                  </td>
                   <td className="px-2 py-2 text-xs">
                     {r.last_call_at ? new Date(r.last_call_at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }) : "—"}
                   </td>
