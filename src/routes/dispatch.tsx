@@ -36,6 +36,7 @@ import { useMyAccount } from "@/lib/session";
 import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
 import { DeckReadinessPanel } from "@/components/crm/DeckReadinessPanel";
 import { DeckLeadSearch } from "@/components/crm/DeckLeadSearch";
+import { AllocationProgress } from "@/components/crm/deck/AllocationProgress";
 import { DeckKpis } from "@/components/crm/deck/DeckKpis";
 import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
 import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
@@ -218,6 +219,7 @@ function Dispatcher() {
           {tab === "dashboard" && (
             <>
               <DeckKpis />
+              <AllocationProgress />
               <SmartInsightStrip scope="floor" />
               <div className="grid gap-6 lg:grid-cols-2">
                 <DeckReadinessPanel />
@@ -251,6 +253,7 @@ function Dispatcher() {
           )}
           {tab === "distribution" && (
             <>
+              <AllocationProgress />
               <LeadDatabasePanel />
               <LeadStorePanel agents={agentOptions} canAssign defaultAssignment="unassigned" title="Unassigned Lead Pool — manual assignment" />
               <ExtraLeadPanel />
