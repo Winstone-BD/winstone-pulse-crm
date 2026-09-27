@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ShieldCheck } from "lucide-react";
+import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
+
+import { usePersistentTab } from "@/lib/use-persistent-tab";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
