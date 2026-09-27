@@ -162,7 +162,12 @@ function ControlBoard() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
-  const [tab, setTab] = useState<HqTab>("overview");
+  const [tab, setTab] = usePersistentTab<HqTab>(
+    "hq:last-tab",
+    HQ_TABS.map((t) => t.key),
+    "overview",
+  );
+  const activeLabel = HQ_TABS.find((t) => t.key === tab)?.label ?? "";
 
   return (
     <>
@@ -170,10 +175,38 @@ function ControlBoard() {
         <HqHeader />
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          {/* Left grouped tabs */}
+          {/* Mobile: collapsible tab menu */}
+          <details className="group rounded-xl border border-border bg-card lg:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              <span>{activeLabel}</span>
+              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <nav aria-label="HQ sections" className="flex flex-col gap-1 border-t border-border p-2">
+              {HQ_TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={(e) => {
+                    setTab(t.key);
+                    e.currentTarget.closest("details")?.removeAttribute("open");
+                  }}
+                  aria-current={tab === t.key ? "page" : undefined}
+                  className={`rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
+                    tab === t.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </nav>
+          </details>
+
+          {/* Desktop: left grouped tabs */}
           <nav
             aria-label="HQ sections"
-            className="flex gap-2 overflow-x-auto lg:sticky lg:top-20 lg:w-52 lg:shrink-0 lg:flex-col"
+            className="hidden gap-2 lg:sticky lg:top-20 lg:flex lg:w-52 lg:shrink-0 lg:flex-col"
           >
             {HQ_TABS.map((t) => (
               <button
