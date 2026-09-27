@@ -238,17 +238,36 @@ export function PostCallReportGate() {
   const seconds = Math.max(0, Math.round(Number(duration) || 0));
   // Call facts (direction, outcome, length) plus category, summary and note are
   // all mandatory. Follow-up: either a date, or an explicit written reason why not.
-  const ready =
-    Boolean(category) &&
-    Boolean(direction) &&
-    Boolean(callState) &&
-    Number.isFinite(Number(duration)) &&
-    (callState !== "connected" || seconds > 0) &&
-    summary.trim().length > 1 &&
-    note.trim().length > 1 &&
-    (noFollowUp ? noFollowUpNote.trim().length > 1 : Boolean(when)) &&
-    (!received || (Boolean(temperature) && Boolean(grade))) &&
-    (!reasonRequired || reason.trim().length > 1);
+  // First missing requirement, in form order — shown above the submit button
+  // so the agent always knows exactly what blocks the report.
+  const missing: string | null = !direction
+    ? "কলের দিক বাছাই করুন — ইনকামিং না আউটগোয়িং"
+    : !callState
+      ? "কলের অবস্থা বাছাই করুন"
+      : !Number.isFinite(Number(duration)) || (callState === "connected" && seconds < 1)
+        ? "কথা হওয়া কলের সময়কাল (সেকেন্ড) লিখুন — ০ হতে পারে না"
+        : !category
+          ? "কল ক্যাটেগরি বাছাই করুন"
+          : callState === "connected" && category === "no_answer"
+            ? "কথা হওয়া কলে NO ANSWER দেওয়া যাবে না"
+            : summary.trim().length < 2
+              ? "কলের সারাংশ লিখুন"
+              : note.trim().length < 2
+                ? "নোট / পরের কাজ লিখুন"
+                : received && !temperature
+                  ? "কথা হওয়া কলে Hot / Warm / Cold বাছাই করুন"
+                  : received && !grade
+                    ? "কথা হওয়া কলে গ্রেড A / B / C / D বাছাই করুন"
+                    : reasonRequired && reason.trim().length < 2
+                      ? "কারণ লিখুন (NOT INTERESTED / WRONG NUMBER-এ বাধ্যতামূলক)"
+                      : noFollowUp
+                        ? noFollowUpNote.trim().length < 2
+                          ? "ফলো-আপ কেন দরকার নেই, তা লিখুন"
+                          : null
+                        : !when
+                          ? "ফলো-আপের তারিখ ও সময় দিন, নয়তো 'ফলো-আপ দরকার নেই' বেছে কারণ লিখুন"
+                          : null;
+  const ready = missing === null;
 
 
   const applySuggestion = () => {
@@ -621,7 +640,11 @@ export function PostCallReportGate() {
           </div>
         ) : null}
 
-
+        {missing ? (
+          <p role="status" aria-live="polite" className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium">
+            জমা দিতে বাকি: {missing}
+          </p>
+        ) : null}
         <Button
           className="w-full"
           disabled={!ready || send.isPending}

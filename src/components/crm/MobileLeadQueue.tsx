@@ -145,7 +145,13 @@ export function MobileLeadQueue() {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="truncate text-base font-bold tracking-tight">{lead.name}</p>
-                <p className="tabular text-sm text-muted-foreground">{lead.phone_number}</p>
+                <p className="tabular text-sm text-muted-foreground">
+                  {lead.phone_number}
+                  {lead.serial_no ? ` · #${lead.serial_no}` : ""}
+                </p>
+                {lead.reference_by ? (
+                  <p className="truncate text-xs text-muted-foreground">রেফ: {lead.reference_by}</p>
+                ) : null}
               </div>
               {lead.temperature ? (
                 <span
