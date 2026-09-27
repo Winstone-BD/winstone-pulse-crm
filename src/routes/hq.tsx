@@ -162,69 +162,101 @@ function ControlBoard() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
+  const [tab, setTab] = useState<HqTab>("overview");
 
   return (
     <>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <HqHeader />
 
-        <FloorLockAdminPanel />
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          {/* Left grouped tabs */}
+          <nav
+            aria-label="HQ sections"
+            className="flex gap-2 overflow-x-auto lg:sticky lg:top-20 lg:w-52 lg:shrink-0 lg:flex-col"
+          >
+            {HQ_TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                aria-current={tab === t.key ? "page" : undefined}
+                className={`whitespace-nowrap rounded-xl border px-4 py-2.5 text-left text-sm font-semibold transition-colors lg:w-full ${
+                  tab === t.key
+                    ? "border-primary/40 bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
 
+          {/* White content surface */}
+          <div className="min-w-0 flex-1 rounded-2xl border border-border bg-white p-4 text-slate-900 shadow-sm sm:p-6 dark:bg-card dark:text-card-foreground">
+            {tab === "overview" && (
+              <div className="space-y-8">
+                <ExecutiveKpiBoard
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  messages={messages}
+                />
+                <SmartInsightStrip scope="floor" />
+                <ExecutiveBrief />
+                <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
+              </div>
+            )}
 
-        <ExecutiveKpiBoard
-          profiles={profiles}
-          leads={leads}
-          calls={calls}
-          messages={messages}
-        />
+            {tab === "performance" && (
+              <div className="space-y-8">
+                <TopPerformerBoard stats={stats} onSelectAgent={setOpenAgentId} />
+                <ExecutiveOverview
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  messages={messages}
+                  events={events}
+                  onSelectAgent={setOpenAgentId}
+                />
+                <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
+                <HqTalkChart chartData={chartData} />
+                <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
+              </div>
+            )}
 
-        <TopPerformerBoard stats={stats} onSelectAgent={setOpenAgentId} />
+            {tab === "leads" && (
+              <div className="space-y-8">
+                <HqClassificationTiles leads={leads} onDrill={setDrill} />
+                <HqMixCards
+                  funnelRows={funnelRows}
+                  sourceRows={sourceRows}
+                  sentimentRows={sentimentRows}
+                  loading={isPending}
+                  onDrill={setDrill}
+                />
+                <HqRecentSummaries
+                  calls={calls}
+                  leads={leads}
+                  profiles={profiles}
+                  onSelectLead={setOpenLeadId}
+                />
+              </div>
+            )}
 
-        <ExecutiveOverview
-          profiles={profiles}
-          leads={leads}
-          calls={calls}
-          messages={messages}
-          events={events}
-          onSelectAgent={setOpenAgentId}
-        />
+            {tab === "reports" && <ReportsBoard />}
 
-        <SmartInsightStrip scope="floor" />
-
-        <ExecutiveBrief />
-
-        <ServiceBillPanel mode="hq" />
-
-        <ShiftSummaryPanel scope="hq" />
-
-        <CommandAgentPanel surface="hq" />
-
-        <AskHqPanel />
-
-        <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
-
-        <HqClassificationTiles leads={leads} onDrill={setDrill} />
-
-        <HqMixCards
-          funnelRows={funnelRows}
-          sourceRows={sourceRows}
-          sentimentRows={sentimentRows}
-          loading={isPending}
-          onDrill={setDrill}
-        />
-
-        <AgentRadar agents={agents} calls={calls} onSelectAgent={setOpenAgentId} />
-
-        <HqTalkChart chartData={chartData} />
-
-        <Leaderboard stats={stats} onSelectAgent={setOpenAgentId} />
-
-        <HqRecentSummaries
-          calls={calls}
-          leads={leads}
-          profiles={profiles}
-          onSelectLead={setOpenLeadId}
-        />
+            {tab === "tools" && (
+              <div className="space-y-8">
+                <FloorLockAdminPanel />
+                <ServiceBillPanel mode="hq" />
+                <ShiftSummaryPanel scope="hq" />
+                <CommandAgentPanel surface="hq" />
+                <AskHqPanel />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <LeadDossier
