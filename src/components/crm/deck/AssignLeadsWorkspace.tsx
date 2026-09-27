@@ -85,7 +85,7 @@ export function AllocationTable({ onAssign }: { onAssign: (agentId: string) => v
 }
 
 /** Assign an exact number of leads per agent, one or many at once, with a preview. */
-export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: string }) {
+export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: string | undefined }) {
   const adminToken = useDeckToken();
   const qc = useQueryClient();
   const alloc = useCoordinatorAllocation();
@@ -258,7 +258,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone?: "danger" }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone?: "danger" | undefined }) {
   return (
     <div className="rounded-lg border border-border px-3 py-1.5">
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
