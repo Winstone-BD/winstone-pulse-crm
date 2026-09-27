@@ -314,3 +314,28 @@
     min-height: 44px;
   }
 }
+
+/* White-first scope (home page): same token names, light values. */
+.theme-light {
+  --background: oklch(0.995 0.002 85);
+  --foreground: oklch(0.18 0.01 80);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 80);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.01 80);
+  --primary: oklch(0.76 0.13 80);
+  --primary-foreground: oklch(0.18 0.02 80);
+  --secondary: oklch(0.93 0.045 85);
+  --secondary-foreground: oklch(0.2 0.02 80);
+  --muted: oklch(0.96 0.005 85);
+  --muted-foreground: oklch(0.45 0.012 80);
+  --accent: oklch(0.94 0.04 85);
+  --accent-foreground: oklch(0.25 0.03 80);
+  --border: oklch(0.9 0.01 85);
+  --input: oklch(0.88 0.01 85);
+  --surface-2: oklch(0.97 0.006 85);
+  --shadow-card: 0 1px 2px oklch(0.3 0.02 80 / 6%), 0 8px 24px -12px oklch(0.3 0.02 80 / 18%);
+  --shadow-card-hover: 0 12px 30px -12px oklch(0.3 0.02 80 / 25%);
+  background: var(--background);
+  color: var(--foreground);
+}
