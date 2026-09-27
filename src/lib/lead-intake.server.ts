@@ -43,6 +43,9 @@ export async function intakeLead(input: {
   source?: string;
   /** Display name used in the timeline entry. */
   ownerName?: string | null;
+  /** Who typed it in, when that is not the owner (e.g. head-database intake). */
+  actorProfileId?: string | null;
+  actorLabel?: string | null;
 }): Promise<LeadIntakeResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const extractedPhones = (await import("@/lib/lead-phone")).extractBangladeshPhones(

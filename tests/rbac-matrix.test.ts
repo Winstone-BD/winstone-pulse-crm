@@ -31,7 +31,7 @@ describe("role surface matrix", () => {
   });
 
   it("matches the documented quotas: floor round for all, light desk for Haidar", () => {
-    expect(quotaFor("WIN2607", DEFAULT_DAILY_QUOTA)).toBe(5);
+    expect(quotaFor("WIN2607", DEFAULT_DAILY_QUOTA)).toBe(DEFAULT_DAILY_QUOTA);
     expect(quotaFor("WIN1001", DEFAULT_DAILY_QUOTA)).toBe(25);
     expect(completionPercent(15, 15)).toBe(100);
     expect(completionPercent(25, 25)).toBe(100);

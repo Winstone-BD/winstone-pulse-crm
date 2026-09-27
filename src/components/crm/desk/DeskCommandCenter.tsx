@@ -712,8 +712,16 @@ export function DeskCommandCenter({
                               {lead.address ? ` · ${lead.address}` : ""}
                             </p>
                           </div>
-                          <span className="tabular shrink-0 text-[10px] text-muted-foreground">
-                            #{lead.serial_no ?? "—"}
+                          <span className="flex shrink-0 flex-col items-end text-[10px] text-muted-foreground">
+                            <span className="tabular">#{lead.serial_no ?? "—"}</span>
+                            {lead.reference_by ? (
+                              <span
+                                className="max-w-[9rem] truncate"
+                                title={`রেফারেন্স / Reference: ${lead.reference_by}`}
+                              >
+                                রেফ: {lead.reference_by}
+                              </span>
+                            ) : null}
                           </span>
                         </div>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

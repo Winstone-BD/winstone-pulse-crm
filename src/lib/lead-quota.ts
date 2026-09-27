@@ -14,10 +14,9 @@
 export const DEFAULT_DAILY_QUOTA = 25;
 
 /** Agent ID → fixed daily quota, regardless of the floor-wide round size. */
-export const FIXED_DAILY_QUOTA: Record<string, number> = {
-  // Haidar runs a light desk — 5 leads a day instead of the floor-wide round.
-  WIN2607: 5,
-};
+// Empty since 2026-09-28: every approved active agent, including Haidar
+// (WIN2607), receives the same floor-wide round (50/day).
+export const FIXED_DAILY_QUOTA: Record<string, number> = {};
 
 function key(employeeId: string | null | undefined): string {
   return (employeeId ?? "").toUpperCase().replace(/\s+/g, "");
