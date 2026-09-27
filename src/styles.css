@@ -106,34 +106,34 @@
 
 :root {
   --radius: 0.75rem;
-  /* Charcoal foundation with slightly lifted ink cards */
-  --background: oklch(0.19 0.008 80);
-  --foreground: oklch(0.95 0.008 85);
-  --card: oklch(0.235 0.009 80);
-  --card-foreground: oklch(0.95 0.008 85);
-  --popover: oklch(0.235 0.009 80);
-  --popover-foreground: oklch(0.95 0.008 85);
+  /* White foundation (home-page look) across the whole app */
+  --background: oklch(0.995 0.002 85);
+  --foreground: oklch(0.18 0.01 80);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 80);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.01 80);
   /* Winstone gold: the single action colour */
-  --primary: oklch(0.78 0.13 85);
-  --primary-foreground: oklch(0.2 0.02 85);
-  --secondary: oklch(0.28 0.01 80);
-  --secondary-foreground: oklch(0.93 0.008 85);
-  --muted: oklch(0.27 0.01 80);
-  --muted-foreground: oklch(0.78 0.014 85);
-  --accent: oklch(0.32 0.035 85);
-  --accent-foreground: oklch(0.88 0.1 85);
+  --primary: oklch(0.76 0.13 80);
+  --primary-foreground: oklch(0.18 0.02 80);
+  --secondary: oklch(0.93 0.045 85);
+  --secondary-foreground: oklch(0.2 0.02 80);
+  --muted: oklch(0.96 0.005 85);
+  --muted-foreground: oklch(0.45 0.012 80);
+  --accent: oklch(0.94 0.04 85);
+  --accent-foreground: oklch(0.25 0.03 80);
   --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  /* Faint warm hairlines on charcoal */
-  --border: oklch(0.36 0.012 80 / 70%);
-  --input: oklch(0.36 0.012 80);
-  --ring: oklch(0.78 0.13 85);
-  --surface: oklch(0.22 0.009 80);
-  --surface-2: oklch(0.26 0.01 80);
-  /* Deepest ink surface for the waveform container */
-  --ink: oklch(0.145 0.006 80);
+  /* Soft warm hairlines on white */
+  --border: oklch(0.9 0.01 85);
+  --input: oklch(0.88 0.01 85);
+  --ring: oklch(0.76 0.13 80);
+  --surface: oklch(0.985 0.003 85);
+  --surface-2: oklch(0.97 0.006 85);
+  /* Deep navy ink panel for contrast sections (waveform, dark headers) */
+  --ink: oklch(0.21 0.035 265);
   --ink-foreground: oklch(0.95 0.008 85);
-  --ink-muted: oklch(0.68 0.012 85);
+  --ink-muted: oklch(0.78 0.02 265);
   /* Gold live, dim amber idle */
   /* Semantic: live/connected/completed = green (not brand gold). */
   --live: oklch(0.74 0.16 150);
