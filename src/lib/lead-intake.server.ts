@@ -123,8 +123,8 @@ export async function intakeLead(input: {
     action: "lead_created",
     entityType: "lead",
     entityId: created.id,
-    actorProfileId: owner,
-    actorLabel: input.ownerName?.trim() || null,
+    actorProfileId: input.actorProfileId ?? owner,
+    actorLabel: input.actorLabel?.trim() || input.ownerName?.trim() || null,
     metadata: { phone, source: owner ? "agent_app" : (input.source ?? "webhook") },
   });
 
