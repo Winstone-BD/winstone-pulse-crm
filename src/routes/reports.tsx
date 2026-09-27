@@ -66,7 +66,7 @@ function ReportsPage() {
   );
 }
 
-function ReportsBoard() {
+export function ReportsBoard() {
   const data = useSnapshot();
   const { scope } = useMyAccount();
   const canSeeDayExport = scope === "authority" || scope === "coordinator";
