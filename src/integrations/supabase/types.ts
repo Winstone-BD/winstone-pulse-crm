@@ -585,16 +585,22 @@ export type Database = {
           connected: boolean
           connection_verified: boolean
           created_at: string
+          customer_response: string | null
           device_id: string | null
           duration_seconds: number
           follow_up_at: string | null
           grade: string | null
           id: string
+          interest: string | null
           lead_id: string
+          next_action: string | null
+          no_follow_up_reason: string | null
           note: string | null
           phone_number: string | null
           reason: string | null
           recording_id: string | null
+          requirement: string | null
+          smart_reasons: Json | null
           status: string
           submitted_at: string | null
           summary: string | null
@@ -611,16 +617,22 @@ export type Database = {
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
+          customer_response?: string | null
           device_id?: string | null
           duration_seconds?: number
           follow_up_at?: string | null
           grade?: string | null
           id?: string
+          interest?: string | null
           lead_id: string
+          next_action?: string | null
+          no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
           reason?: string | null
           recording_id?: string | null
+          requirement?: string | null
+          smart_reasons?: Json | null
           status?: string
           submitted_at?: string | null
           summary?: string | null
@@ -637,16 +649,22 @@ export type Database = {
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
+          customer_response?: string | null
           device_id?: string | null
           duration_seconds?: number
           follow_up_at?: string | null
           grade?: string | null
           id?: string
+          interest?: string | null
           lead_id?: string
+          next_action?: string | null
+          no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
           reason?: string | null
           recording_id?: string | null
+          requirement?: string | null
+          smart_reasons?: Json | null
           status?: string
           submitted_at?: string | null
           summary?: string | null
@@ -988,6 +1006,44 @@ export type Database = {
             columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "call_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_requirements: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_requirements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

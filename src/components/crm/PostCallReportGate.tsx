@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, Bot, Check, Loader2, Pencil, Sparkles, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { DictateButton } from "@/components/crm/DictateButton";
@@ -11,104 +11,295 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { myPendingReport, submitMyReport } from "@/lib/call-reports.functions";
+import { listInventory } from "@/lib/inventory.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { enqueue, subscribeQueue } from "@/lib/offline-queue";
-import { draftReportSummary } from "@/lib/report-summary.functions";
-
-/** Adds dictated words to what the agent already typed — never erases it. */
-function joinText(previous: string, addition: string): string {
-  return previous.trim() ? `${previous.trim()} ${addition}` : addition;
-}
-
-
-/** Categories in the order agents pick them, with their Bengali labels. */
-const CATEGORIES = [
-  { value: "hot_lead", label: "HOT LEAD — খুব সম্ভাবনাময়" },
-  { value: "follow_up", label: "FOLLOW UP — পরে যোগাযোগ" },
-  { value: "interested", label: "INTERESTED — আগ্রহী" },
-  { value: "not_interested", label: "NOT INTERESTED — আগ্রহী নয়" },
-  { value: "callback", label: "CALLBACK — কলব্যাক চেয়েছেন" },
-  { value: "no_answer", label: "NO ANSWER — ধরেনি" },
-  { value: "wrong_number", label: "WRONG NUMBER — ভুল নম্বর" },
-  { value: "closed_converted", label: "CLOSED / CONVERTED — বিক্রি হয়েছে" },
-] as const;
-
-const NEEDS_REASON = new Set(["not_interested", "wrong_number"]);
-
-/** Classification, mandatory whenever the customer actually answered. */
-const TEMPERATURES = [
-  { value: "hot", label: "HOT — গরম" },
-  { value: "warm", label: "WARM — কিছুটা আগ্রহী" },
-  { value: "cold", label: "COLD — ঠান্ডা" },
-] as const;
-
-const GRADES = [
-  { value: "A", label: "A" },
-  { value: "B", label: "B" },
-  { value: "C", label: "C" },
-  { value: "D", label: "D" },
-] as const;
-
-/** Call facts — every report must say which way, how it ended, how long. */
-const DIRECTIONS = [
-  { value: "outgoing", label: "আউটগোয়িং — আমি কল করেছি" },
-  { value: "incoming", label: "ইনকামিং — ক্রেতা কল করেছেন" },
-] as const;
-
-const CALL_STATES = [
-  { value: "connected", label: "কথা হয়েছে" },
-  { value: "no_answer", label: "ধরেনি" },
-  { value: "busy", label: "ব্যস্ত ছিল" },
-  { value: "failed", label: "কল যায়নি" },
-] as const;
 
 /**
- * The next-lead lock, on the web desk.
+ * Post-Call Smart Report.
  *
- * While an agent has an unfinished post-call report this stays open: the report
- * must be submitted with a category (and its required fields) before the desk is
- * usable again. The same rule is enforced in the database, so closing the tab
- * does not skip it.
+ *   CALL ENDED -> AI ANALYSIS -> agent Confirms / Changes each row -> SUBMIT
+ *
+ * AI only recommends (with a one-line reason). Nothing is saved until the agent
+ * picks every required value himself — tapping "Confirm" is that pick. The
+ * server re-checks the same rules, so the desk can never skip them.
  */
+
+type Opt = { value: string; label: string };
+
+const CATEGORIES: Opt[] = [
+  { value: "hot_lead", label: "HOT LEAD" },
+  { value: "follow_up", label: "FOLLOW UP" },
+  { value: "interested", label: "INTERESTED" },
+  { value: "callback", label: "CALLBACK" },
+  { value: "not_interested", label: "NOT INTERESTED" },
+  { value: "no_answer", label: "NO ANSWER" },
+  { value: "wrong_number", label: "WRONG NUMBER" },
+  { value: "closed_converted", label: "CLOSED / CONVERTED" },
+];
+const NEEDS_REASON = new Set(["not_interested", "wrong_number"]);
+
+const CALL_STATES: Opt[] = [
+  { value: "connected", label: "Connected — কথা হয়েছে" },
+  { value: "no_answer", label: "Not Connected — ধরেনি" },
+  { value: "busy", label: "Busy — ব্যস্ত" },
+  { value: "failed", label: "Failed — কল যায়নি" },
+];
+const DIRECTIONS: Opt[] = [
+  { value: "outgoing", label: "আউটগোয়িং — আমি কল করেছি" },
+  { value: "incoming", label: "ইনকামিং — ক্রেতা কল করেছেন" },
+];
+const INTEREST: Opt[] = [
+  { value: "high", label: "High — বেশি" },
+  { value: "medium", label: "Medium — মাঝারি" },
+  { value: "low", label: "Low — কম" },
+  { value: "fake", label: "Fake / Invalid" },
+];
+const RESPONSES: Opt[] = [
+  { value: "interested", label: "Interested" },
+  { value: "need_info", label: "Need More Information" },
+  { value: "price_concern", label: "Price Concern" },
+  { value: "family_discussion", label: "Family Discussion" },
+  { value: "need_time", label: "Need Time" },
+  { value: "site_visit", label: "Site Visit Interested" },
+  { value: "decide_later", label: "Will Decide Later" },
+  { value: "not_interested", label: "Not Interested" },
+  { value: "other", label: "Other" },
+];
+const NEXT_ACTIONS: Opt[] = [
+  { value: "call_again", label: "Call Again" },
+  { value: "send_details", label: "Send Details" },
+  { value: "send_price", label: "Send Price" },
+  { value: "site_visit", label: "Arrange Site Visit" },
+  { value: "send_location", label: "Send Location" },
+  { value: "no_action", label: "No Action" },
+  { value: "other", label: "Other" },
+];
+const NO_FU_REASONS: Opt[] = [
+  { value: "not_interested", label: "Customer Not Interested" },
+  { value: "info_completed", label: "Information Completed" },
+  { value: "converted", label: "Converted / Closed" },
+  { value: "wrong_number", label: "Wrong Number" },
+  { value: "duplicate", label: "Duplicate" },
+  { value: "no_contact", label: "Customer Requested No Further Contact" },
+  { value: "other", label: "Other" },
+];
+const TEMPERATURES: Opt[] = [
+  { value: "hot", label: "HOT" },
+  { value: "warm", label: "WARM" },
+  { value: "cold", label: "COLD" },
+];
+const GRADES: Opt[] = ["A", "B", "C", "D"].map((g) => ({ value: g, label: g }));
+
+const labelOf = (opts: Opt[], value: string) => opts.find((o) => o.value === value)?.label ?? value;
+
+/** datetime-local value in the browser's own clock. */
+function localInput(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
+type Rec = { value: string; reason: string };
+type Recs = Partial<
+  Record<
+    | "category"
+    | "interest"
+    | "requirement"
+    | "response"
+    | "nextAction"
+    | "followUp"
+    | "temperature"
+    | "grade",
+    Rec
+  >
+>;
+
+type Suggestion = {
+  summary: string[];
+  requirements: string[];
+  objections: string[];
+  interest: "high" | "medium" | "low" | "unknown";
+  suggestedCategory: string | null;
+  suggestedTemperature: string | null;
+  suggestedGrade: string | null;
+} | null;
+
+/** Recommendations from the stored call analysis only — nothing invented. */
+function buildRecs(connected: boolean, s: Suggestion, inventory: string[]): Recs {
+  if (!connected) {
+    return { category: { value: "no_answer", reason: "কল ধরেনি — লিড কিউ-এর শেষে আবার আসবে।" } };
+  }
+  if (!s) return {};
+  const recs: Recs = {};
+  const objections = s.objections.join(" ").toLowerCase();
+  const text = [...s.summary, ...s.requirements].join(" ").toLowerCase();
+
+  if (s.suggestedCategory) {
+    recs.category = {
+      value: s.suggestedCategory,
+      reason:
+        s.suggestedCategory === "follow_up"
+          ? "আগ্রহ আছে, তবে সিদ্ধান্ত এখনো হয়নি।"
+          : s.suggestedCategory === "hot_lead"
+            ? "কথায় ইতিবাচক সাড়া পাওয়া গেছে।"
+            : s.suggestedCategory === "callback"
+              ? "ক্রেতা পরে কল করতে বলেছেন।"
+              : s.suggestedCategory === "not_interested"
+                ? "কথায় স্পষ্ট অনাগ্রহ।"
+                : "কল বিশ্লেষণ অনুযায়ী।",
+    };
+  }
+  if (s.interest !== "unknown") {
+    recs.interest = {
+      value: s.interest,
+      reason: s.interest === "high" ? "কথার সুর ইতিবাচক।" : s.interest === "medium" ? "নিরপেক্ষ সুর।" : "নেতিবাচক সুর।",
+    };
+  }
+  const req = inventory.find((label) => text.includes(label.toLowerCase()));
+  if (req) recs.requirement = { value: req, reason: `কথায় "${req}" এর উল্লেখ আছে।` };
+
+  let response: Rec | null = null;
+  if (/দাম|price|বাজেট|budget/.test(objections)) response = { value: "price_concern", reason: "দাম নিয়ে আপত্তি ছিল।" };
+  else if (/পরিবার|family|ফ্যামিলি/.test(objections + text)) response = { value: "family_discussion", reason: "পরিবারের সাথে আলোচনা করবেন।" };
+  else if (/সাইট|visit|ভিজিট/.test(text)) response = { value: "site_visit", reason: "সাইট দেখতে আগ্রহী।" };
+  else if (/সময়|time|পরে/.test(objections)) response = { value: "need_time", reason: "সময় চেয়েছেন।" };
+  else if (s.interest === "high") response = { value: "interested", reason: "আগ্রহ দেখিয়েছেন।" };
+  if (response) recs.response = response;
+
+  const cat = s.suggestedCategory ?? "";
+  if (["follow_up", "callback", "hot_lead", "interested"].includes(cat)) {
+    recs.nextAction = { value: "call_again", reason: "আলোচনা চালিয়ে যেতে আবার কল দরকার।" };
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(17, 0, 0, 0);
+    recs.followUp = { value: localInput(tomorrow), reason: "আবার আলোচনার জন্য পরের দিন বিকেল।" };
+  } else if (cat === "not_interested" || cat === "closed_converted") {
+    recs.nextAction = { value: "no_action", reason: "আর কোনো কাজ বাকি নেই।" };
+  }
+  if (s.suggestedTemperature)
+    recs.temperature = { value: s.suggestedTemperature, reason: "কল বিশ্লেষণের তাপমাত্রা।" };
+  if (s.suggestedGrade) recs.grade = { value: s.suggestedGrade, reason: "কল বিশ্লেষণের গ্রেড।" };
+  return recs;
+}
+
+/** One report row: AI recommendation (Confirm / Skip) + the agent's own pick. */
+function SmartRow({
+  id,
+  label,
+  required,
+  options,
+  value,
+  onChange,
+  rec,
+  onSkip,
+  skipped,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  options: Opt[];
+  value: string;
+  onChange: (value: string) => void;
+  rec?: Rec | undefined;
+  skipped?: boolean | undefined;
+  onSkip?: (() => void) | undefined;
+}) {
+  const confirmed = Boolean(rec && value === rec.value);
+  return (
+    <div className="space-y-1.5 rounded-lg border border-border bg-card p-2.5">
+      <Label htmlFor={id} className="text-xs font-semibold">
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </Label>
+      {rec && !skipped ? (
+        <div
+          className={`flex flex-wrap items-center gap-2 rounded-md px-2 py-1.5 text-xs ${
+            confirmed ? "bg-success/10" : "bg-primary/5"
+          }`}
+        >
+          <Bot className="size-3.5 shrink-0 text-primary" />
+          <span className="font-bold">{labelOf(options, rec.value)}</span>
+          <span className="min-w-0 flex-1 text-muted-foreground">{rec.reason}</span>
+          {confirmed ? (
+            <span className="flex items-center gap-1 font-semibold text-success">
+              <Check className="size-3.5" /> নিশ্চিত
+            </span>
+          ) : (
+            <>
+              <Button type="button" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => onChange(rec.value)}>
+                <Check className="size-3" /> Confirm
+              </Button>
+              <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-[11px]" onClick={onSkip}>
+                <X className="size-3" /> Skip
+              </Button>
+            </>
+          )}
+        </div>
+      ) : null}
+      <select
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <option value="">{rec && !skipped ? "Change — অন্যটি বাছাই করুন" : "বাছাই করুন"}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export function PostCallReportGate() {
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
   const fetchPending = useServerFn(myPendingReport);
   const submit = useServerFn(submitMyReport);
+  const fetchInventory = useServerFn(listInventory);
 
   const pending = useQuery({
     queryKey: ["pending-call-report", adminToken ? "pin" : "session"],
     queryFn: () => fetchPending({ data: { adminToken } }),
     refetchInterval: 20_000,
   });
+  const detail = pending.data;
 
-  const [category, setCategory] = useState<string>("");
-  const [summary, setSummary] = useState("");
-  const [note, setNote] = useState("");
-  const [reason, setReason] = useState("");
-  const [when, setWhen] = useState("");
-  const [noFollowUp, setNoFollowUp] = useState(false);
-  const [noFollowUpNote, setNoFollowUpNote] = useState("");
-  const [direction, setDirection] = useState<"outgoing" | "incoming" | null>(null);
-  const [callState, setCallState] = useState<"connected" | "no_answer" | "busy" | "failed" | null>(
-    null,
+  const inventory = useQuery({
+    queryKey: ["inventory-requirements"],
+    enabled: Boolean(detail),
+    staleTime: 5 * 60_000,
+    queryFn: () => fetchInventory({ data: { adminToken } }),
+  });
+  const inventoryOpts: Opt[] = useMemo(
+    () => (inventory.data?.items ?? []).map((i) => ({ value: i.label, label: i.label })),
+    [inventory.data],
   );
+
+  const [direction, setDirection] = useState("");
+  const [callState, setCallState] = useState("");
   const [duration, setDuration] = useState("");
-  const [temperature, setTemperature] = useState<"hot" | "warm" | "cold" | null>(null);
-  const [grade, setGrade] = useState<"A" | "B" | "C" | "D" | null>(null);
-  const [aiDecision, setAiDecision] = useState<"accepted" | "edited" | "rejected" | null>(null);
-  const [smart, setSmart] = useState<string | null>(null);
-  const [smartBusy, setSmartBusy] = useState(false);
-  // The agent may close an unfinished report to look something up; it stays
-  // pending on the server and reopens from the floating button (and still
-  // blocks the next call).
+  const [category, setCategory] = useState("");
+  const [interest, setInterest] = useState("");
+  const [requirement, setRequirement] = useState("");
+  const [response, setResponse] = useState("");
+  const [responseNote, setResponseNote] = useState("");
+  const [nextAction, setNextAction] = useState("");
+  const [nextActionNote, setNextActionNote] = useState("");
+  const [followMode, setFollowMode] = useState<"set" | "none">("set");
+  const [when, setWhen] = useState("");
+  const [noFuReason, setNoFuReason] = useState("");
+  const [noFuNote, setNoFuNote] = useState("");
+  const [temperature, setTemperature] = useState("");
+  const [grade, setGrade] = useState("");
+  const [voiceNote, setVoiceNote] = useState("");
+  const [skipped, setSkipped] = useState<Record<string, boolean>>({});
   const [dismissedId, setDismissedId] = useState<string | null>(null);
 
-  const detail = pending.data;
-  const suggestion = detail?.suggestion ?? null;
-
-  // Reports already saved on this phone (waiting for sync) must not keep the
-  // gate open — the work is done from the agent's side, the queue owns the rest.
   const [queuedReportIds, setQueuedReportIds] = useState<string[]>([]);
   useEffect(
     () =>
@@ -122,87 +313,353 @@ export function PostCallReportGate() {
     [],
   );
 
+  const reportId = detail?.report?.id ?? null;
   useEffect(() => {
+    setCategory("");
+    setInterest("");
+    setRequirement("");
+    setResponse("");
+    setResponseNote("");
+    setNextAction("");
+    setNextActionNote("");
+    setFollowMode("set");
+    setWhen("");
+    setNoFuReason("");
+    setNoFuNote("");
+    setTemperature("");
+    setGrade("");
+    setVoiceNote("");
+    setSkipped({});
+    setDismissedId(null);
     if (!detail) {
-      setCategory("");
-      setSummary("");
-      setNote("");
-      setReason("");
-      setWhen("");
-      setNoFollowUp(false);
-      setNoFollowUpNote("");
-      setDirection(null);
-      setCallState(null);
+      setDirection("");
+      setCallState("");
       setDuration("");
-      setTemperature(null);
-      setGrade(null);
-      setAiDecision(null);
-      setSmart(null);
       return;
     }
-    // Whatever the phone already knows is filled in — the agent confirms or corrects it.
+    // What the phone already measured is filled in — the agent can correct it.
     setDirection(detail.recording?.call_direction === "incoming_callback" ? "incoming" : "outgoing");
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
-  }, [detail?.report?.id, detail]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportId]);
 
-  // A new pending report always opens — the dismissed flag applies to one
-  // report only, never silences the next call's report.
-  useEffect(() => {
-    setDismissedId(null);
-  }, [detail?.report?.id]);
+  const connected = callState === "connected";
+  const suggestion = (detail?.suggestion ?? null) as Suggestion;
+  const recs = useMemo(
+    () => buildRecs(connected, suggestion, inventoryOpts.map((o) => o.value)),
+    [connected, suggestion, inventoryOpts],
+  );
+  const skip = (key: string) => () => setSkipped((prev) => ({ ...prev, [key]: true }));
 
-  // Smart summary from the agent's own words — no transcript needed. Debounced,
-  // so a long note costs one short AI call after the agent pauses, not one per key.
-  const draft = useServerFn(draftReportSummary);
-  const lastAsked = useRef("");
-  useEffect(() => {
-    if (!detail) return;
-    const text = `${summary}\n${note}`.trim();
-    if (text.length < 40 || text === lastAsked.current) return;
-    const timer = window.setTimeout(() => {
-      lastAsked.current = text;
-      setSmartBusy(true);
-      draft({ data: { adminToken, text, category: category || null } })
-        .then((result) => setSmart(result.summary))
-        .catch(() => setSmart(null))
-        .finally(() => setSmartBusy(false));
-    }, 2500);
-    return () => window.clearTimeout(timer);
-  }, [summary, note, category, detail, adminToken, draft]);
+  if (!detail || queuedReportIds.includes(detail.report.id)) return null;
 
-  const payloadOf = () => ({
-    adminToken,
-    reportId: detail!.report.id,
-    category,
-    summary: summary.trim() || null,
-    note: note.trim() || null,
-    reason: reason.trim() || null,
-    followUpAt: !noFollowUp && when ? new Date(when).toISOString() : null,
-    reminderMinutes: 30,
-    temperature,
-    grade,
-    aiDecision,
-    direction,
-    callStatus: callState,
-    durationSeconds: Math.max(0, Math.round(Number(duration) || 0)),
-    followUpNeeded: !noFollowUp,
-    followUpNote: noFollowUp ? noFollowUpNote.trim() || null : null,
-  });
+  const seconds = Math.max(0, Math.round(Number(duration) || 0));
+  const noFuLabel = noFuReason
+    ? `${labelOf(NO_FU_REASONS, noFuReason)}${noFuReason === "other" && noFuNote.trim() ? ` — ${noFuNote.trim()}` : ""}`
+    : "";
+  const responseLabel = response
+    ? `${labelOf(RESPONSES, response)}${response === "other" && responseNote.trim() ? ` — ${responseNote.trim()}` : ""}`
+    : "";
+  const actionLabel = nextAction
+    ? `${labelOf(NEXT_ACTIONS, nextAction)}${nextAction === "other" && nextActionNote.trim() ? ` — ${nextActionNote.trim()}` : ""}`
+    : "";
+  const reasonText = noFuLabel || (connected && response === "not_interested" ? responseLabel : "");
 
+  // First missing requirement, in form order.
+  const missing: string | null = !direction
+    ? "কলের দিক বাছাই করুন"
+    : !callState
+      ? "Call Status বাছাই করুন"
+      : connected && seconds < 1
+        ? "কথা হওয়া কলের সময়কাল (সেকেন্ড) দিন"
+        : !category
+          ? "Lead Category বাছাই করুন (Confirm বা Change)"
+          : connected && category === "no_answer"
+            ? "কথা হওয়া কলে NO ANSWER দেওয়া যাবে না"
+            : connected && !interest
+              ? "Customer Interest বাছাই করুন"
+              : connected && !requirement
+                ? "Requirement বাছাই করুন"
+                : connected && !response
+                  ? "Customer Response বাছাই করুন"
+                  : connected && response === "other" && responseNote.trim().length < 2
+                    ? "Customer Response-এ Other হলে ছোট নোট দিন"
+                    : connected && !nextAction
+                      ? "Next Action বাছাই করুন"
+                      : connected && nextAction === "other" && nextActionNote.trim().length < 2
+                        ? "Next Action-এ Other হলে ছোট নোট দিন"
+                        : connected && !temperature
+                          ? "Temperature (HOT / WARM / COLD) বাছাই করুন"
+                          : connected && !grade
+                            ? "Grade (A / B / C / D) বাছাই করুন"
+                            : connected && followMode === "set" && !when
+                              ? "Follow-up সময় দিন, নয়তো 'No Follow-up Required' বাছাই করুন"
+                              : connected && followMode === "none" && !noFuReason
+                                ? "Follow-up না লাগার কারণ বাছাই করুন"
+                                : connected && noFuReason === "other" && noFuNote.trim().length < 2
+                                  ? "কারণ Other হলে ছোট নোট দিন"
+                                  : NEEDS_REASON.has(category) && !reasonText
+                                    ? "NOT INTERESTED / WRONG NUMBER-এ 'No Follow-up Required' বেছে কারণ দিন"
+                                    : null;
 
+  const aiUsed = Object.keys(recs).length > 0;
+  const aiAllConfirmed =
+    aiUsed &&
+    (recs.category?.value === category || !recs.category) &&
+    (recs.temperature?.value === temperature || !recs.temperature) &&
+    (recs.grade?.value === grade || !recs.grade);
+
+  const payloadOf = () => {
+    const summary = connected
+      ? [
+          `আগ্রহ: ${labelOf(INTEREST, interest)}`,
+          `চাহিদা: ${requirement}`,
+          `প্রতিক্রিয়া: ${responseLabel}`,
+        ].join(" · ")
+      : `কল অবস্থা: ${labelOf(CALL_STATES, callState)}`;
+    const note =
+      [connected ? `পরের কাজ: ${actionLabel}` : "কথা হয়নি — কিউ-এর শেষে আবার কল হবে", voiceNote.trim()]
+        .filter(Boolean)
+        .join(" — ");
+    const followUpAt = connected && followMode === "set" && when ? new Date(when).toISOString() : null;
+    const smartReasons: Record<string, string> = {};
+    for (const [key, rec] of Object.entries(recs)) if (rec) smartReasons[key] = `${rec.value}: ${rec.reason}`;
+    return {
+      adminToken,
+      reportId: detail.report.id,
+      category,
+      summary,
+      note,
+      reason: reasonText || null,
+      followUpAt,
+      reminderMinutes: 30,
+      temperature: connected ? (temperature as "hot" | "warm" | "cold") : null,
+      grade: connected ? (grade as "A" | "B" | "C" | "D") : null,
+      aiDecision: aiUsed ? (aiAllConfirmed ? ("accepted" as const) : ("edited" as const)) : null,
+      direction: direction as "outgoing" | "incoming",
+      callStatus: callState as "connected" | "no_answer" | "busy" | "failed",
+      durationSeconds: seconds,
+      followUpNeeded: Boolean(followUpAt),
+      followUpNote: followUpAt
+        ? null
+        : connected
+          ? noFuLabel
+          : "কথা হয়নি — কিউ-এর শেষে আবার আসবে",
+      interest: connected ? (interest as "high" | "medium" | "low" | "fake") : null,
+      requirement: connected ? requirement : null,
+      customerResponse: connected ? response : null,
+      nextAction: connected ? nextAction : null,
+      noFollowUpReason: followUpAt ? null : connected ? noFuReason || null : "not_connected",
+      smartReasons: Object.keys(smartReasons).length ? smartReasons : null,
+    };
+  };
+
+  return (
+    <ReportDialog
+      detail={detail}
+      dismissed={dismissedId === detail.report.id}
+      onDismiss={() => setDismissedId(detail.report.id)}
+      onReopen={() => setDismissedId(null)}
+      payloadOf={payloadOf}
+      missing={missing}
+      submit={submit}
+      queryClient={queryClient}
+    >
+      <div className="space-y-2 rounded-xl border border-primary/25 bg-primary/5 p-3">
+        <p className="flex items-center gap-1.5 text-xs font-bold text-primary">
+          <Bot className="size-3.5" /> AI Analysis
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {aiUsed
+            ? "কলের তথ্য থেকে সম্ভাব্য রিপোর্ট সাজানো হয়েছে। প্রতিটি ঘরে Confirm চাপুন, অথবা নিচের তালিকা থেকে বদলান।"
+            : connected
+              ? "এই কলের AI বিশ্লেষণ এখনো নেই — প্রতিটি ঘর নিজে বাছাই করুন।"
+              : "কথা হয়নি — শুধু ক্যাটাগরি নিশ্চিত করুন।"}
+        </p>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <SmartRow id="sr-direction" label="কলের দিক" required options={DIRECTIONS} value={direction} onChange={setDirection} />
+        <SmartRow id="sr-status" label="Call Status" required options={CALL_STATES} value={callState} onChange={setCallState} />
+      </div>
+      {!connected && callState ? (
+        <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+          কথা হয়নি — লিডটি কিউ-এর শেষে চলে যাবে এবং আবার নিজে থেকেই আসবে।
+        </p>
+      ) : null}
+      {connected ? (
+        <div className="space-y-1">
+          <Label htmlFor="sr-duration" className="text-xs font-semibold">
+            সময়কাল (সেকেন্ড) <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="sr-duration"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={duration}
+            onChange={(event) => setDuration(event.target.value)}
+          />
+        </div>
+      ) : null}
+
+      <SmartRow
+        id="sr-category"
+        label="Lead Category"
+        required
+        options={CATEGORIES}
+        value={category}
+        onChange={setCategory}
+        rec={recs.category}
+        skipped={skipped["category"]}
+        onSkip={skip("category")}
+      />
+
+      {connected ? (
+        <>
+          <SmartRow id="sr-interest" label="Customer Interest" required options={INTEREST} value={interest} onChange={setInterest} rec={recs.interest} skipped={skipped["interest"]} onSkip={skip("interest")} />
+          <SmartRow
+            id="sr-requirement"
+            label="Requirement"
+            required
+            options={inventoryOpts}
+            value={requirement}
+            onChange={setRequirement}
+            rec={recs.requirement}
+            skipped={skipped["requirement"]}
+            onSkip={skip("requirement")}
+          />
+          {inventory.isSuccess && inventoryOpts.length === 0 ? (
+            <p className="text-[11px] text-destructive">ইনভেন্টরি তালিকা খালি — HQ-কে ইনভেন্টরি পেজে যোগ করতে বলুন।</p>
+          ) : null}
+          <SmartRow id="sr-response" label="Customer Response" required options={RESPONSES} value={response} onChange={setResponse} rec={recs.response} skipped={skipped["response"]} onSkip={skip("response")} />
+          {response === "other" ? (
+            <Input value={responseNote} maxLength={120} onChange={(e) => setResponseNote(e.target.value)} placeholder="ছোট নোট" aria-label="Customer Response নোট" />
+          ) : null}
+          <SmartRow id="sr-next" label="Next Action" required options={NEXT_ACTIONS} value={nextAction} onChange={(v) => { setNextAction(v); if (v === "call_again") setFollowMode("set"); }} rec={recs.nextAction} skipped={skipped["nextAction"]} onSkip={skip("nextAction")} />
+          {nextAction === "other" ? (
+            <Input value={nextActionNote} maxLength={120} onChange={(e) => setNextActionNote(e.target.value)} placeholder="ছোট নোট" aria-label="Next Action নোট" />
+          ) : null}
+
+          <div className="space-y-2 rounded-lg border border-border bg-card p-2.5">
+            <p className="text-xs font-semibold">
+              Follow-up <span className="text-destructive">*</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["set", "none"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setFollowMode(mode)}
+                  aria-pressed={followMode === mode}
+                  className={`rounded-md border px-2 py-2 text-xs font-medium transition ${
+                    followMode === mode ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {mode === "set" ? "Follow-up দিন" : "No Follow-up Required"}
+                </button>
+              ))}
+            </div>
+            {followMode === "set" ? (
+              <>
+                {recs.followUp && !skipped["followUp"] ? (
+                  <div className={`flex flex-wrap items-center gap-2 rounded-md px-2 py-1.5 text-xs ${when === recs.followUp.value ? "bg-success/10" : "bg-primary/5"}`}>
+                    <Bot className="size-3.5 text-primary" />
+                    <span className="font-bold">
+                      {new Date(recs.followUp.value).toLocaleString("bn-BD", { weekday: "short", hour: "numeric", minute: "2-digit" })}
+                    </span>
+                    <span className="min-w-0 flex-1 text-muted-foreground">{recs.followUp.reason}</span>
+                    {when === recs.followUp.value ? (
+                      <span className="flex items-center gap-1 font-semibold text-success"><Check className="size-3.5" /> নিশ্চিত</span>
+                    ) : (
+                      <>
+                        <Button type="button" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setWhen(recs.followUp!.value)}>
+                          <Check className="size-3" /> Accept
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={skip("followUp")}>
+                          <X className="size-3" /> Skip
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ) : null}
+                <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} aria-label="ফলো-আপের তারিখ ও সময়" />
+                <p className="text-[11px] text-muted-foreground">
+                  রিমাইন্ডার: ৩০ মিনিট আগে, ১৫ মিনিট আগে এবং ঠিক সময়ে — শব্দসহ। সময়ে কল না হলে Overdue দেখাবে।
+                </p>
+              </>
+            ) : (
+              <>
+                <select
+                  value={noFuReason}
+                  onChange={(e) => setNoFuReason(e.target.value)}
+                  aria-label="Follow-up না লাগার কারণ"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  <option value="">কারণ বাছাই করুন *</option>
+                  {NO_FU_REASONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                {noFuReason === "other" ? (
+                  <Input value={noFuNote} maxLength={200} onChange={(e) => setNoFuNote(e.target.value)} placeholder="ছোট নোট" aria-label="কারণের নোট" />
+                ) : null}
+              </>
+            )}
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <SmartRow id="sr-temp" label="Temperature" required options={TEMPERATURES} value={temperature} onChange={setTemperature} rec={recs.temperature} skipped={skipped["temperature"]} onSkip={skip("temperature")} />
+            <SmartRow id="sr-grade" label="Grade" required options={GRADES} value={grade} onChange={setGrade} rec={recs.grade} skipped={skipped["grade"]} onSkip={skip("grade")} />
+          </div>
+        </>
+      ) : null}
+
+      <div className="space-y-1.5 rounded-lg border border-dashed border-border p-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="sr-voice" className="text-xs">Voice Note (ঐচ্ছিক)</Label>
+          <DictateButton onAppend={(text) => setVoiceNote((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text))} />
+        </div>
+        <Textarea id="sr-voice" rows={2} value={voiceNote} onChange={(e) => setVoiceNote(e.target.value)} placeholder="চাইলে মুখে ১০–২০ সেকেন্ড বলুন — ছোট নোট হয়ে যাবে" />
+      </div>
+    </ReportDialog>
+  );
+}
+
+/** Dialog shell + submit (online or saved offline). */
+function ReportDialog({
+  detail,
+  dismissed,
+  onDismiss,
+  onReopen,
+  payloadOf,
+  missing,
+  submit,
+  queryClient,
+  children,
+}: {
+  detail: NonNullable<Awaited<ReturnType<typeof myPendingReport>>>;
+  dismissed: boolean;
+  onDismiss: () => void;
+  onReopen: () => void;
+  payloadOf: () => Record<string, unknown> & { reportId: string };
+  missing: string | null;
+  submit: ReturnType<typeof useServerFn<typeof submitMyReport>>;
+  queryClient: ReturnType<typeof useQueryClient>;
+  children: React.ReactNode;
+}) {
   const send = useMutation({
     mutationFn: async () => {
       const payload = payloadOf();
-      // No internet: keep it on this phone, honestly labelled, and sync later.
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
-        enqueue("report_submit", `কল রিপোর্ট (${detail!.lead?.name ?? "লিড"})`, {
+        enqueue("report_submit", `কল রিপোর্ট (${detail.lead?.name ?? "লিড"})`, {
           ...payload,
-          clientEventId: `report-${detail!.report.id}`,
+          clientEventId: `report-${detail.report.id}`,
         });
         return { offline: true as const };
       }
-      await submit({ data: payload });
+      await submit({ data: payload } as never);
       return { offline: false as const };
     },
     onSuccess: (result) => {
@@ -214,450 +671,59 @@ export function PostCallReportGate() {
       void queryClient.invalidateQueries({ queryKey: ["pending-call-report"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      void queryClient.invalidateQueries({ queryKey: ["followup-reminders"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
-  if (!detail || queuedReportIds.includes(detail.report.id)) return null;
-
-  const isDismissed = dismissedId === detail.report.id;
-  const callTypeLabel =
-    detail.recording?.call_direction === "incoming_callback"
-      ? "ইনকামিং — ক্রেতা কল করেছেন"
-      : "আউটগোয়িং — আমি কল করেছি";
-  const callSeconds = Math.max(0, detail.report.duration_seconds ?? 0);
-  const callDurationLabel =
-    callSeconds >= 60
-      ? `${Math.floor(callSeconds / 60)} মিনিট ${callSeconds % 60} সেকেন্ড`
-      : `${callSeconds} সেকেন্ড`;
-
-  const reasonRequired = NEEDS_REASON.has(category);
-  // The customer answered -> classification (Hot/Warm/Cold + A/B/C/D) is what
-  // turns the lead into COMPLETED. Not answered -> the lead goes back to retry.
-  const received = detail.report.connected !== false || callState === "connected";
-  const seconds = Math.max(0, Math.round(Number(duration) || 0));
-  // Call facts (direction, outcome, length) plus category, summary and note are
-  // all mandatory. Follow-up: either a date, or an explicit written reason why not.
-  // First missing requirement, in form order — shown above the submit button
-  // so the agent always knows exactly what blocks the report.
-  const missing: string | null = !direction
-    ? "কলের দিক বাছাই করুন — ইনকামিং না আউটগোয়িং"
-    : !callState
-      ? "কলের অবস্থা বাছাই করুন"
-      : !Number.isFinite(Number(duration)) || (callState === "connected" && seconds < 1)
-        ? "কথা হওয়া কলের সময়কাল (সেকেন্ড) লিখুন — ০ হতে পারে না"
-        : !category
-          ? "কল ক্যাটেগরি বাছাই করুন"
-          : callState === "connected" && category === "no_answer"
-            ? "কথা হওয়া কলে NO ANSWER দেওয়া যাবে না"
-            : summary.trim().length < 2
-              ? "কলের সারাংশ লিখুন"
-              : note.trim().length < 2
-                ? "নোট / পরের কাজ লিখুন"
-                : received && !temperature
-                  ? "কথা হওয়া কলে Hot / Warm / Cold বাছাই করুন"
-                  : received && !grade
-                    ? "কথা হওয়া কলে গ্রেড A / B / C / D বাছাই করুন"
-                    : reasonRequired && reason.trim().length < 2
-                      ? "কারণ লিখুন (NOT INTERESTED / WRONG NUMBER-এ বাধ্যতামূলক)"
-                      : noFollowUp
-                        ? noFollowUpNote.trim().length < 2
-                          ? "ফলো-আপ কেন দরকার নেই, তা লিখুন"
-                          : null
-                        : !when
-                          ? "ফলো-আপের তারিখ ও সময় দিন, নয়তো 'ফলো-আপ দরকার নেই' বেছে কারণ লিখুন"
-                          : null;
-  const ready = missing === null;
-
-
-  const applySuggestion = () => {
-    if (!suggestion) return;
-    if (suggestion.suggestedCategory) setCategory(suggestion.suggestedCategory);
-    if (suggestion.suggestedFollowUpAt) {
-      setWhen(new Date(suggestion.suggestedFollowUpAt).toISOString().slice(0, 16));
-    }
-    if (!summary.trim() && suggestion.summary.length) {
-      setSummary(suggestion.summary.join(" • "));
-    }
-    if (!note.trim() && suggestion.nextAction) setNote(suggestion.nextAction);
-    // AI never overwrites a classification the agent already picked.
-    if (!temperature && suggestion.suggestedTemperature)
-      setTemperature(suggestion.suggestedTemperature);
-    if (!grade && suggestion.suggestedGrade) setGrade(suggestion.suggestedGrade);
-    setAiDecision("accepted");
-  };
+  const secs = Math.max(0, detail.report.duration_seconds ?? 0);
+  const durationLabel = secs >= 60 ? `${Math.floor(secs / 60)} মি ${secs % 60} সে` : `${secs} সে`;
 
   return (
     <>
-      {isDismissed ? (
-        <Button
-          className="fixed bottom-4 right-4 z-50 gap-1.5 shadow-lg"
-          onClick={() => setDismissedId(null)}
-        >
-          <AlertTriangle className="size-4" />
-          কল রিপোর্ট বাকি আছে — খুলুন
+      {dismissed ? (
+        <Button className="fixed bottom-4 right-4 z-50 gap-1.5 shadow-lg" onClick={onReopen}>
+          <AlertTriangle className="size-4" /> কল রিপোর্ট বাকি আছে — খুলুন
         </Button>
       ) : null}
-      <Dialog
-        open={!isDismissed}
-        onOpenChange={(open) => {
-          if (!open) setDismissedId(detail.report.id);
-        }}
-      >
-      <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-lg overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <AlertTriangle className="size-4 text-warning" />
-            কল শেষ — রিপোর্ট পূরণ করুন
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary/20 bg-muted/40 p-3 text-xs sm:grid-cols-3">
-          <div className="min-w-0">
-            <p className="text-muted-foreground">লিড</p>
-            <p className="truncate font-semibold">{detail.lead?.name ?? "লিড"}</p>
-            <p className="truncate tabular-nums text-muted-foreground">
-              {detail.lead?.phone_number ?? detail.report.phone_number ?? ""}
-            </p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">কলের ধরন</p>
-            <p className="font-semibold">{callTypeLabel}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">কলের সময়কাল</p>
+      <Dialog open={!dismissed} onOpenChange={(open) => (!open ? onDismiss() : undefined)}>
+        <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-lg space-y-1 overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="size-4 text-warning" /> Post-Call Smart Report
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs">
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{detail.lead?.name ?? "লিড"}</p>
+              <p className="truncate tabular-nums text-muted-foreground">
+                {detail.lead?.phone_number ?? detail.report.phone_number ?? ""}
+              </p>
+            </div>
             <p className="font-semibold tabular-nums">
-              {callDurationLabel}
+              {durationLabel}
               {detail.report.connected ? "" : " · কথা হয়নি"}
             </p>
           </div>
-        </div>
-
-        {(detail.queuedCount ?? 0) > 0 ? (
-          <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-            আরও {detail.queuedCount}টি কলের রিপোর্ট সারিতে অপেক্ষা করছে — এটি জমা দিলেই পরেরটি খুলবে।
-          </p>
-        ) : null}
-
-
-        {detail.recording && detail.recording.analysis_status !== "completed" ? (
-          <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-            {detail.recording.analysis_status === "failed"
-              ? "AI বিশ্লেষণ ব্যর্থ হয়েছে — রিপোর্ট নিজেই লিখে দিন।"
-              : detail.recording.analysis_status === "not_available"
-                ? "এই কলে কথা শোনা যায়নি — রিপোর্ট নিজেই লিখুন।"
-                : "AI বিশ্লেষণ চলছে… রিপোর্ট এখনই জমা দিতে পারেন।"}
-          </p>
-        ) : null}
-
-        {suggestion ? (
-          <div className="space-y-2 rounded-xl border border-primary/25 bg-primary/5 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-primary">
-              <Bot className="size-3.5" /> AI সহকারীর পরামর্শ (চূড়ান্ত সিদ্ধান্ত আপনারই)
+          {(detail.queuedCount ?? 0) > 0 ? (
+            <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+              আরও {detail.queuedCount}টি কলের রিপোর্ট অপেক্ষায় — এটি জমা দিলেই পরেরটি খুলবে।
             </p>
-            {suggestion.summary.length ? (
-              <ul className="list-disc space-y-0.5 pl-4 text-xs">
-                {suggestion.summary.slice(0, 4).map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            ) : null}
-            {suggestion.objections.length ? (
-              <p className="text-xs">আপত্তি: {suggestion.objections.join(", ")}</p>
-            ) : null}
-            <p className="text-xs">
-              আগ্রহ: {suggestion.interest} · পরামর্শ: {suggestion.nextAction}
-            </p>
-            {suggestion.suggestedTemperature || suggestion.suggestedGrade ? (
-              <p className="text-xs">
-                পরামর্শ শ্রেণি:{" "}
-                {suggestion.suggestedTemperature
-                  ? { hot: "হট", warm: "ওয়ার্ম", cold: "কোল্ড" }[suggestion.suggestedTemperature]
-                  : "—"}{" "}
-                · গ্রেড {suggestion.suggestedGrade ?? "—"}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={applySuggestion} className="gap-1">
-                <Check className="size-3.5" /> মেনে নিন
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setAiDecision("edited")}
-                className="gap-1"
-              >
-                <Pencil className="size-3.5" /> নিজে বদলাবো
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setAiDecision("rejected")}
-                className="gap-1"
-              >
-                <X className="size-3.5" /> মানছি না
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
-          <p className="text-xs font-bold">কলের তথ্য (বাধ্যতামূলক)</p>
-          <div className="space-y-1.5">
-            <Label className="text-xs">কলের দিক</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {DIRECTIONS.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setDirection(item.value)}
-                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                    direction === item.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-muted"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">কলের অবস্থা</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {CALL_STATES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setCallState(item.value)}
-                  className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                    callState === item.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-muted"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="call-duration" className="text-xs">
-              সময়কাল (সেকেন্ড)
-            </Label>
-            <Input
-              id="call-duration"
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={duration}
-              onChange={(event) => setDuration(event.target.value)}
-              placeholder="যেমন ১২০"
-            />
-            {callState === "connected" && seconds < 1 ? (
-              <p className="text-[11px] text-destructive">
-                কথা হয়েছে বললে সময়কাল অবশ্যই ১ সেকেন্ড বা বেশি দিন।
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs">কল ক্যাটাগরি (বাধ্যতামূলক)</Label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {CATEGORIES.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setCategory(item.value)}
-                className={`rounded-lg border px-3 py-2 text-left text-xs font-medium transition ${
-                  category === item.value
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:bg-muted"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {received ? (
-          <div className="space-y-2 rounded-xl border border-warning/30 bg-warning/5 p-3">
-            <p className="text-xs font-bold">শ্রেণিবিন্যাস (বাধ্যতামূলক — কথা হয়েছে)</p>
-            <div className="space-y-1.5">
-              <Label className="text-xs">লিডের তাপমাত্রা</Label>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {TEMPERATURES.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setTemperature(item.value)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                      temperature === item.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">গ্রেড</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {GRADES.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setGrade(item.value)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
-                      grade === item.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              শ্রেণিবিন্যাস ছাড়া লিড COMPLETED হবে না। AI নিজে থেকে এটি বসাবে না।
-            </p>
-          </div>
-        ) : (
-          <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-            কথা হয়নি — লিড PENDING থাকবে এবং আবার কলের তালিকায় ফিরে যাবে।
-          </p>
-        )}
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="call-summary" className="text-xs">
-              কলের সারাংশ (বাধ্যতামূলক)
-            </Label>
-            <DictateButton onAppend={(text) => setSummary((prev) => joinText(prev, text))} />
-          </div>
-          <Textarea
-            id="call-summary"
-            rows={3}
-            value={summary}
-            onChange={(event) => setSummary(event.target.value)}
-            placeholder="কল-এ কী কথা হলো, সংক্ষেপে"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="note" className="text-xs">
-              নোট (বাধ্যতামূলক)
-            </Label>
-            <DictateButton onAppend={(text) => setNote((prev) => joinText(prev, text))} />
-          </div>
-          <Textarea
-            id="note"
-            rows={3}
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="ক্রেতা কী বলেছেন, পরের ধাপ কী"
-          />
-        </div>
-
-        {smartBusy || smart ? (
-          <div className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-primary">
-              <Sparkles className="size-3.5" /> আপনার লেখা থেকে সাজানো সারাংশ
-            </p>
-            {smartBusy ? (
-              <p className="text-xs text-muted-foreground">তৈরি হচ্ছে…</p>
-            ) : (
-              <>
-                <p className="whitespace-pre-line text-xs text-muted-foreground">{smart}</p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 px-2 text-[11px]"
-                  onClick={() => {
-                    setSummary(smart ?? "");
-                    toast.success("সারাংশে বসানো হয়েছে — দরকার হলে বদলে নিন");
-                  }}
-                >
-                  সারাংশে বসান
-                </Button>
-              </>
-            )}
-          </div>
-        ) : null}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="follow-when" className="text-xs">
-            ফলো-আপের তারিখ ও সময় (বাধ্যতামূলক)
-          </Label>
-          <Input
-            id="follow-when"
-            type="datetime-local"
-            value={when}
-            disabled={noFollowUp}
-            onChange={(event) => setWhen(event.target.value)}
-          />
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
-              className="size-3.5"
-              checked={noFollowUp}
-              onChange={(event) => {
-                setNoFollowUp(event.target.checked);
-                if (event.target.checked) setWhen("");
-              }}
-            />
-            ফলো-আপ দরকার নেই
-          </label>
-          {noFollowUp ? (
-            <Textarea
-              rows={2}
-              value={noFollowUpNote}
-              onChange={(event) => setNoFollowUpNote(event.target.value)}
-              placeholder="ফলো-আপ কেন দরকার নেই, লিখুন (বাধ্যতামূলক)"
-            />
           ) : null}
-        </div>
-
-        {reasonRequired ? (
-          <div className="space-y-1.5">
-            <Label htmlFor="reason" className="text-xs">
-              কারণ (বাধ্যতামূলক)
-            </Label>
-            <Textarea
-              id="reason"
-              rows={2}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="কেন আগ্রহী নন / নম্বরটি কেন ভুল"
-            />
-          </div>
-        ) : null}
-
-        {missing ? (
-          <p role="status" aria-live="polite" className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium">
-            জমা দিতে বাকি: {missing}
+          <div className="space-y-2">{children}</div>
+          {missing ? (
+            <p role="status" aria-live="polite" className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium">
+              জমা দিতে বাকি: {missing}
+            </p>
+          ) : null}
+          <Button className="w-full" disabled={Boolean(missing) || send.isPending} onClick={() => send.mutate()}>
+            {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            Confirm &amp; Submit
+          </Button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না।
           </p>
-        ) : null}
-        <Button
-          className="w-full"
-          disabled={!ready || send.isPending}
-          onClick={() => send.mutate()}
-        >
-          {send.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          রিপোর্ট জমা দিন
-        </Button>
-        <p className="text-center text-[11px] text-muted-foreground">
-          রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না। বন্ধ করলেও ডান-নিচের বাটন থেকে আবার
-          খুলতে পারবেন।
-        </p>
-      </DialogContent>
+        </DialogContent>
       </Dialog>
     </>
   );

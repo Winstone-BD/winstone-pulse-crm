@@ -42,6 +42,7 @@ const NAV = [
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
   { to: "/dispatch", label: "Coordinator Deck", scopes: ["authority", "coordinator"] },
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
+  { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },
   { to: "/ingest", label: "Ingest Check", scopes: ["authority"] },
