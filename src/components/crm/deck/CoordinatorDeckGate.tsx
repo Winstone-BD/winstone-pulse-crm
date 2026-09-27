@@ -16,6 +16,7 @@ const REASONS: Record<string, string> = {
   pin: "PIN ঠিক নয়।",
   gmail: "এই পথে শুধু Gmail (Google) সাইন-ইন চলে।",
   signin: "আগে Gmail দিয়ে সাইন ইন করুন।",
+  account: "এই অ্যাকাউন্টটি ইতিমধ্যে এজেন্ট হিসেবে অনুমোদিত — Coordinator PIN এখানে প্রযোজ্য নয়।",
   locked: "বারবার ভুল PIN — ১৫ মিনিট পর আবার চেষ্টা করুন।",
 };
 

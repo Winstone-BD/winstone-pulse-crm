@@ -11,6 +11,8 @@ export const unlockCoordinatorDeck = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(null);
     if (!caller.userId) return { ok: false as const, reason: "signin" as const };
+    // Approved agent/HQ accounts keep their own access — this shortcut never widens them.
+    if (caller.scope !== "none") return { ok: false as const, reason: "account" as const };
     const gate = await import("@/lib/coordinator-gate.server");
     const email = await gate.googleEmailFor(caller.userId);
     if (!email) return { ok: false as const, reason: "gmail" as const };
