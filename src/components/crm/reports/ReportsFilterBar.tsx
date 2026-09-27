@@ -11,15 +11,23 @@ import {
 } from "@/components/ui/select";
 import { LEAD_STATUSES, type LeadStatus, type Profile } from "@/lib/crm-data";
 import { defaultFilters, type ReportFilters } from "@/lib/crm-reports";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Search, X } from "lucide-react";
 
 const PRESETS = [
-  { label: "7 days", days: 7 },
-  { label: "30 days", days: 30 },
-  { label: "90 days", days: 90 },
+  { label: "আজ", days: 1 },
+  { label: "৭ দিন", days: 7 },
+  { label: "৩০ দিন", days: 30 },
+  { label: "৯০ দিন", days: 90 },
 ] as const;
 
-/** Date range, agent, source and stage filters — inline on desktop, collapsible on mobile. */
+const SENTIMENTS = [
+  { key: "positive", label: "পজিটিভ" },
+  { key: "neutral", label: "নিরপেক্ষ" },
+  { key: "negative", label: "নেগেটিভ" },
+  { key: "critical", label: "ক্রিটিক্যাল" },
+] as const;
+
+/** Date range, search, agent, source, stage and sentiment filters — inline on desktop, collapsible on mobile. */
 export function ReportsFilterBar({
   filters,
   patch,
@@ -35,12 +43,60 @@ export function ReportsFilterBar({
   sources: string[];
   visible: boolean;
 }) {
+  const active: { key: string; label: string; clear: () => void }[] = [];
+  if (filters.query.trim())
+    active.push({
+      key: "query",
+      label: `খোঁজ: ${filters.query.trim()}`,
+      clear: () => patch({ query: "" }),
+    });
+  if (filters.agentId !== "all") {
+    const agent = agents.find((a) => a.id === filters.agentId);
+    active.push({
+      key: "agent",
+      label: `এজেন্ট: ${agent?.name ?? filters.agentId}`,
+      clear: () => patch({ agentId: "all" }),
+    });
+  }
+  if (filters.source !== "all")
+    active.push({
+      key: "source",
+      label: `সোর্স: ${filters.source}`,
+      clear: () => patch({ source: "all" }),
+    });
+  if (filters.status !== "all") {
+    const st = LEAD_STATUSES.find((s) => s.key === filters.status);
+    active.push({
+      key: "status",
+      label: `স্ট্যাটাস: ${st?.label ?? filters.status}`,
+      clear: () => patch({ status: "all" }),
+    });
+  }
+  if (filters.sentiment !== "all") {
+    const se = SENTIMENTS.find((s) => s.key === filters.sentiment);
+    active.push({
+      key: "sentiment",
+      label: `সেন্টিমেন্ট: ${se?.label ?? filters.sentiment}`,
+      clear: () => patch({ sentiment: "all" }),
+    });
+  }
+
   return (
     <section
       className={`card-elevated flex-col gap-3 p-3 sm:p-4 ${visible ? "flex" : "hidden lg:flex"}`}
     >
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={filters.query}
+          onChange={(e) => patch({ query: e.target.value })}
+          placeholder="নাম, মোবাইল বা রেফারেন্স দিয়ে খুঁজুন…"
+          className="h-10 pl-9"
+          aria-label="লিড খুঁজুন"
+        />
+      </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:flex xl:flex-wrap xl:items-end">
-        <Field label="From">
+        <Field label="শুরু">
           <Input
             type="date"
             value={filters.from}
@@ -49,7 +105,7 @@ export function ReportsFilterBar({
             className="h-9 w-full xl:w-[150px]"
           />
         </Field>
-        <Field label="To">
+        <Field label="শেষ">
           <Input
             type="date"
             value={filters.to}
@@ -58,13 +114,13 @@ export function ReportsFilterBar({
             className="h-9 w-full xl:w-[150px]"
           />
         </Field>
-        <Field label="Agent">
+        <Field label="এজেন্ট">
           <Select value={filters.agentId} onValueChange={(v) => patch({ agentId: v })}>
             <SelectTrigger className="h-9 w-full xl:w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All agents</SelectItem>
+              <SelectItem value="all">সব এজেন্ট</SelectItem>
               {agents.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
                   {a.name}
@@ -73,13 +129,13 @@ export function ReportsFilterBar({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Lead source">
+        <Field label="লিড সোর্স">
           <Select value={filters.source} onValueChange={(v) => patch({ source: v })}>
             <SelectTrigger className="h-9 w-full xl:w-[165px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All sources</SelectItem>
+              <SelectItem value="all">সব সোর্স</SelectItem>
               {sources.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}
@@ -88,7 +144,7 @@ export function ReportsFilterBar({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Lead stage">
+        <Field label="লিড স্ট্যাটাস">
           <Select
             value={filters.status}
             onValueChange={(v) => patch({ status: v as LeadStatus | "all" })}
@@ -97,8 +153,23 @@ export function ReportsFilterBar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All stages</SelectItem>
+              <SelectItem value="all">সব স্ট্যাটাস</SelectItem>
               {LEAD_STATUSES.map((s) => (
+                <SelectItem key={s.key} value={s.key}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="সেন্টিমেন্ট">
+          <Select value={filters.sentiment} onValueChange={(v) => patch({ sentiment: v })}>
+            <SelectTrigger className="h-9 w-full xl:w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">সব ধরনের</SelectItem>
+              {SENTIMENTS.map((s) => (
                 <SelectItem key={s.key} value={s.key}>
                   {s.label}
                 </SelectItem>
@@ -118,10 +189,25 @@ export function ReportsFilterBar({
             </Button>
           ))}
           <Button variant="ghost" size="sm" onClick={() => setFilters(defaultFilters(30))}>
-            <RotateCcw className="size-4" /> Reset
+            <RotateCcw className="size-4" /> রিসেট
           </Button>
         </div>
       </div>
+      {active.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" aria-label="সক্রিয় ফিল্টার">
+          {active.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={chip.clear}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent"
+            >
+              {chip.label}
+              <X className="size-3" />
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
