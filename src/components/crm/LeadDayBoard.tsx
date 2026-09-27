@@ -86,6 +86,7 @@ export function LeadDayBoard() {
     queryKey: ["my-day-performance", day, adminToken],
     queryFn: () => performance({ data: { adminToken, day } }),
     refetchInterval: 60_000,
+    retry: false,
   });
   const stats = perf.data;
   const minutes = Math.round((stats?.talkSeconds ?? 0) / 60);
