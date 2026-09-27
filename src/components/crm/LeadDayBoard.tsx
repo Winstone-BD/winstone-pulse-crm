@@ -151,6 +151,7 @@ export function LeadDayBoard() {
                 <p className="tabular truncate text-xs text-muted-foreground">
                   {lead.phone_number} · {dayOf(lead)} ·{" "}
                   {WORK_LABELS[lead.work_state] ?? lead.work_state}
+                  {lead.reference_by ? ` · রেফ: ${lead.reference_by}` : ""}
                 </p>
               </div>
               <Button
