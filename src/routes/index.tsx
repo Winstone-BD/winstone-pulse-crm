@@ -59,6 +59,7 @@ function EntryHall() {
   };
 
   // One CRM, three layouts: the choice is only a remembered preference.
+  // Android/Web mode scrolls to the shared sign-in section; desktop goes to HQ.
   const chooseMode = (mode: "android" | "web" | "desktop") => {
     try {
       localStorage.setItem("winstone.view-mode", mode);
@@ -70,8 +71,7 @@ function EntryHall() {
       else openPin("/hq");
       return;
     }
-    if (scope !== "none") void navigate({ to: "/desk" });
-    else void navigate({ to: "/auth", search: { role: "agent", mode: "signin" } });
+    document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -147,7 +147,7 @@ function EntryHall() {
           ))}
         </ul>
 
-        <h2 className="mt-12 text-center text-xl font-bold tracking-tight">Sign in to your workspace</h2>
+        <h2 id="workspace-signin" className="mt-12 scroll-mt-6 text-center text-xl font-bold tracking-tight">Sign in to your workspace</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <EntryCard
             icon={<Headphones className="size-6" />}
