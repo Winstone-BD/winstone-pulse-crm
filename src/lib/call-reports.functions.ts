@@ -307,6 +307,12 @@ export const submitMyReport = createServerFn({ method: "POST" })
       durationSeconds: z.number().int().min(0).max(86400).nullable().optional(),
       followUpNeeded: z.boolean().optional(),
       followUpNote: z.string().trim().max(500).nullable().optional(),
+      interest: z.enum(["high", "medium", "low", "fake"]).nullable().optional(),
+      requirement: z.string().trim().max(80).nullable().optional(),
+      customerResponse: z.string().trim().max(60).nullable().optional(),
+      nextAction: z.string().trim().max(60).nullable().optional(),
+      noFollowUpReason: z.string().trim().max(60).nullable().optional(),
+      smartReasons: z.record(z.string(), z.string().max(300)).nullable().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -329,6 +335,12 @@ export const submitMyReport = createServerFn({ method: "POST" })
       durationSeconds: data.durationSeconds ?? null,
       followUpNeeded: data.followUpNeeded ?? true,
       followUpNote: data.followUpNote ?? null,
+      interest: data.interest ?? null,
+      requirement: data.requirement ?? null,
+      customerResponse: data.customerResponse ?? null,
+      nextAction: data.nextAction ?? null,
+      noFollowUpReason: data.noFollowUpReason ?? null,
+      smartReasons: data.smartReasons ?? null,
     });
   });
 

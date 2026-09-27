@@ -351,6 +351,13 @@ export async function submitCallReport(input: {
   durationSeconds?: number | null;
   followUpNeeded?: boolean;
   followUpNote?: string | null;
+  /** Smart Report structured picks (web). Optional so the phone keeps working. */
+  interest?: string | null;
+  requirement?: string | null;
+  customerResponse?: string | null;
+  nextAction?: string | null;
+  noFollowUpReason?: string | null;
+  smartReasons?: Record<string, string> | null;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const category = input.category as CallCategory;
@@ -402,6 +409,12 @@ export async function submitCallReport(input: {
       temperature,
       grade,
       ai_decision: input.aiDecision ?? null,
+      interest: input.interest ?? null,
+      requirement: input.requirement ?? null,
+      customer_response: input.customerResponse ?? null,
+      next_action: input.nextAction ?? null,
+      no_follow_up_reason: input.followUpAt ? null : (input.noFollowUpReason ?? null),
+      smart_reasons: input.smartReasons ?? null,
       submitted_at: new Date().toISOString(),
     })
     .eq("id", input.reportId)
