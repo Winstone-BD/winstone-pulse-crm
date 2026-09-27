@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { usePersistentTab } from "@/lib/use-persistent-tab";
+
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
@@ -213,7 +215,7 @@ function DeskPage() {
   const signOut = useSignOut();
   const [tab, setTab] = usePersistentTab(
     "desk:last-tab",
-    DESK_TABS.map((t) => t.tab),
+    SECTION_RAIL.map((t) => t.tab),
     "leads",
   );
 
