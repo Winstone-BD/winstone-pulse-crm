@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/crm/AppShell";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEMO_CSV, parseCsv, toLeadRows, type CsvLeadRow } from "@/lib/csv-leads";
@@ -67,7 +66,7 @@ function ImportScreen() {
   const run = useServerFn(importLeads);
   const [rows, setRows] = useState<CsvLeadRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [autoAssign, setAutoAssign] = useState(true);
+  const autoAssign = false;
   const [sheetUrl, setSheetUrl] = useState("");
   const [sheetTabs, setSheetTabs] = useState<string[]>([]);
   const [sheetTab, setSheetTab] = useState<string | null>(null);
@@ -147,10 +146,7 @@ function ImportScreen() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox checked={autoAssign} onCheckedChange={(v) => setAutoAssign(v === true)} />
-          <Label>চালু এজেন্টদের মধ্যে সমানভাবে ভাগ করে দিন</Label>
-        </label>
+        <p className="rounded-md border border-border bg-surface-2 px-3 py-2 text-xs text-muted-foreground">সব ইমপোর্ট হেড লিড স্টোরে UNASSIGNED হিসেবে যায় — বণ্টন হয় Coordinator Deck-এর Distribution থেকে।</p>
       </section>
 
       <section className="card-elevated space-y-3 p-4">

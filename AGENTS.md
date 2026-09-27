@@ -9,3 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Coordinator Deck access = `deckAccess()` in access.server.ts (full/intake/none); Sell Team Admin intake is server-enforced, never widens dispatch/IT — why: UI hiding alone is not security.
+
+- Imports and coordinator intake always land in the Head Lead Store UNASSIGNED; only Coordinator Deck distribution (daily quota) or manual assignment moves leads to agents — why: one source of truth, no bypass of the 50/day rule.

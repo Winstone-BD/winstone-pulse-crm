@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Lock, Send, Shuffle, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -36,6 +36,25 @@ import { useMyAccount } from "@/lib/session";
 import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
 import { DeckReadinessPanel } from "@/components/crm/DeckReadinessPanel";
 import { DeckLeadSearch } from "@/components/crm/DeckLeadSearch";
+import { DeckKpis } from "@/components/crm/deck/DeckKpis";
+import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
+import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
+import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
+import { CallReportsPanel } from "@/components/crm/CallReportsPanel";
+import { usePersistentTab } from "@/lib/use-persistent-tab";
+
+const DECK_TABS = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "store", label: "Lead Store" },
+  { key: "import", label: "Import Leads" },
+  { key: "distribution", label: "Distribution" },
+  { key: "agents", label: "Agents" },
+  { key: "followups", label: "Follow-ups" },
+  { key: "reports", label: "Call Reports" },
+  { key: "quality", label: "Data Quality" },
+  { key: "activity", label: "Activity Log" },
+] as const;
+type DeckTab = (typeof DECK_TABS)[number]["key"];
 
 export const Route = createFileRoute("/dispatch")({
   head: () => ({
@@ -158,13 +177,17 @@ function Dispatcher() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const agentOptions = agents.map((a) => ({ id: a.id, name: a.name }));
+  const [tab, setTab] = usePersistentTab<DeckTab>("deck:last-tab", DECK_TABS.map((t) => t.key), "dashboard");
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Lead Dispatcher</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Distribution Command Center</p>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Coordinator Deck</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {leads.length} leads in the pipeline · {unassigned} waiting for an owner
+            Head Lead Store → Coordinator Deck → Agent Queue · {unassigned} waiting for an owner
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -173,23 +196,66 @@ function Dispatcher() {
         </div>
       </div>
 
-      <SmartInsightStrip scope="floor" />
+      <div className="grid gap-5 lg:grid-cols-[210px_minmax(0,1fr)]">
+        <nav aria-label="Coordinator Deck" className="flex gap-1 overflow-x-auto lg:sticky lg:top-4 lg:flex-col lg:self-start">
+          {DECK_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              aria-current={tab === t.key ? "page" : undefined}
+              className={`whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm transition ${
+                tab === t.key
+                  ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                  : "text-foreground hover:bg-surface-2"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DeckReadinessPanel />
-        <HeadLeadIntakePanel />
-      </div>
-
-      <LeadDatabasePanel />
-
-      <DeckLeadSearch agents={agents.map((a) => ({ id: a.id, name: a.name }))} full />
-
-      <ExtraLeadPanel />
-
-      <TeamSupportInbox />
-
+        <div className="min-w-0 space-y-6">
+          {tab === "dashboard" && (
+            <>
+              <DeckKpis />
+              <SmartInsightStrip scope="floor" />
+              <div className="grid gap-6 lg:grid-cols-2">
+                <DeckReadinessPanel />
+                <HeadLeadIntakePanel />
+              </div>
+            </>
+          )}
+          {tab === "store" && (
+            <>
+              <HeadLeadIntakePanel />
+              <LeadStorePanel agents={agentOptions} canAssign />
+            </>
+          )}
+          {tab === "import" && (
+            <>
+              <section className="card-elevated space-y-2 p-4">
+                <h2 className="text-sm font-semibold">Import Leads</h2>
+                <p className="text-xs text-muted-foreground">
+                  Upload CSV/Excel → mapping → phone normalization → duplicate check → preview → confirm →
+                  Head Lead Store (UNASSIGNED). Imports never go straight to an agent.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <CsvImportDialog />
+                  <Button asChild variant="secondary" size="sm">
+                    <Link to="/import">Full import screen (Sheet / Excel)</Link>
+                  </Button>
+                </div>
+              </section>
+              <ImportHistoryPanel />
+            </>
+          )}
+          {tab === "distribution" && (
+            <>
+              <LeadDatabasePanel />
+              <LeadStorePanel agents={agentOptions} canAssign defaultAssignment="unassigned" title="Unassigned Lead Pool — manual assignment" />
+              <ExtraLeadPanel />
       <section className="card-elevated p-4">
-        <h2 className="text-sm font-semibold">Bulk push</h2>
+        <h2 className="text-sm font-semibold">Quick push (oldest eligible first)</h2>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Select value={agentId} onValueChange={setAgentId}>
             <SelectTrigger className="w-full sm:w-[240px]">
@@ -234,19 +300,16 @@ function Dispatcher() {
             ) : (
               <Shuffle className="size-4" />
             )}
-            Balance all {unassigned > 0 ? `(${unassigned})` : ""}
+            Auto distribute (daily quota) {unassigned > 0 ? `(${unassigned})` : ""}
           </Button>
         </div>
       </section>
 
-      <CommandAgentPanel surface="dispatch" />
-
-      <CallOpsPanel />
-
-      <AssignmentHistory />
-
-      <SelfClaimsFeed />
-
+              <AssignmentHistory />
+            </>
+          )}
+          {tab === "agents" && (
+            <>
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Team load</h2>
         <div className="overflow-x-auto card-elevated">
@@ -299,9 +362,33 @@ function Dispatcher() {
         </div>
       </section>
 
-      <section className="border-t border-border pt-6">
-        <QueueBoard title="Agent Queue" canSeeAllAgents showManualLog />
-      </section>
+              <TeamSupportInbox />
+            </>
+          )}
+          {tab === "followups" && <FollowUpCalendar />}
+          {tab === "reports" && (
+            <>
+              <CallReportsPanel />
+              <CallOpsPanel />
+            </>
+          )}
+          {tab === "quality" && (
+            <>
+              <LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title="Data Quality — invalid phones" />
+              <LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title="Duplicates (parked, never deleted)" />
+              <LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="missing_reference" title="Missing Reference By" />
+            </>
+          )}
+          {tab === "activity" && (
+            <>
+              <AssignmentHistory />
+              <SelfClaimsFeed />
+              <CommandAgentPanel surface="dispatch" />
+              <QueueBoard title="Agent Queue" canSeeAllAgents showManualLog />
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

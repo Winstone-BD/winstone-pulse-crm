@@ -168,56 +168,17 @@ export const autoDistributeLeads = createServerFn({ method: "POST" })
     const mutator = await resolveCaller(data.adminToken ?? null);
     requireDispatch(mutator);
     requireWrite(mutator);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const [{ data: agents, error: agentError }, { data: leadCandidates, error: leadError }] =
-      await Promise.all([
-        supabaseAdmin
-          .from("profiles")
-          .select("id")
-          .eq("is_active", true)
-          .in("role", ["agent", "team_leader"])
-          .order("name"),
-        supabaseAdmin.from("leads").select("id").is("assigned_to", null).order("created_at"),
-      ]);
-
-    if (agentError) throw new Error(agentError.message);
-    if (leadError) throw new Error(leadError.message);
-    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
-    const eligible = new Set(await eligibleLeadIds((leadCandidates ?? []).map((lead) => lead.id)));
-    const leads = (leadCandidates ?? []).filter((lead) => eligible.has(lead.id));
-    if (!agents?.length) throw new Error("No active agents to distribute to");
-    if (!leads?.length) return { assigned: 0, agents: agents.length };
-
-    const assignments = await Promise.all(
-      leads.map(async (lead, index) => {
-        const agent = agents[index % agents.length];
-        if (!agent) return null;
-        const { data: updated, error } = await supabaseAdmin
-          .from("leads")
-          .update({
-            assigned_to: agent.id,
-            assigned_agent_id: agent.id,
-            assignment_source: "coordinator",
-          })
-          .eq("id", lead.id)
-          .is("assigned_to", null)
-          .is("assigned_agent_id", null)
-          .select("id")
-          .maybeSingle();
-        if (error || !updated) return null;
-        return { lead_id: lead.id, to_agent_id: agent.id };
-      }),
-    );
-    const completed = assignments.filter(
-      (row): row is { lead_id: string; to_agent_id: string } => row !== null,
-    );
-    if (completed.length) {
-      await supabaseAdmin.from("lead_assignments").insert(
-        completed.map((row) => ({ ...row, source: "auto_distribute" })),
-      );
-    }
-    return { assigned: completed.length, agents: agents.length };
+    // Same idempotent daily rule as the Coordinator Deck: per-agent quota
+    // (default 50), oldest eligible first, today's allocations preserved.
+    const { distributeDailyLeads, dailyPlan } = await import("@/lib/lead-pool.server");
+    const plan = await dailyPlan();
+    const result = await distributeDailyLeads({
+      perAgent: plan.perAgent,
+      actorProfileId: mutator.profile?.id ?? null,
+      actorLabel: mutator.profile?.name ?? "IT Console",
+      trigger: "manual",
+    });
+    return { assigned: result.moved, agents: result.agents };
   });
 
 const ImportRow = z.object({
@@ -251,8 +212,10 @@ export const importLeads = createServerFn({ method: "POST" })
       "@/lib/lead-phone"
     );
 
+    // Canonical flow: imports land in the HEAD LEAD STORE as UNASSIGNED. The
+    // legacy autoAssign flag is accepted for old clients but ignored.
     let agents: { id: string }[] = [];
-    if (data.autoAssign) {
+    if (false as boolean) {
       const { data: activeAgents, error } = await supabaseAdmin
         .from("profiles")
         .select("id")
@@ -345,7 +308,8 @@ export const importLeads = createServerFn({ method: "POST" })
         excludedAlreadyWorkedOrAssigned,
         excludedDuplicate,
         eligibleNew,
-        autoAssign: data.autoAssign,
+        autoAssign: false,
+        destination: "head_lead_store",
         source: "Winstone Company",
         leadType: "Company Lead",
       },
