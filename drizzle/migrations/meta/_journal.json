@@ -351,6 +351,13 @@
       "when": 1790494861115,
       "tag": "0049_faster_filter_eligible_lead_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1790549317656,
+      "tag": "0050_smart_report_fields_and_inventory",
+      "breakpoints": true
     }
   ]
 }
