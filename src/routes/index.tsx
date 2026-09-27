@@ -52,17 +52,12 @@ function EntryHall() {
   };
 
   // One CRM, three layouts: the choice is only a remembered preference.
-  // Android/Web mode scrolls to the shared sign-in section; desktop goes to HQ.
+  // Every mode leads to the same existing access screen below.
   const chooseMode = (mode: "android" | "web" | "desktop") => {
     try {
       localStorage.setItem("winstone.view-mode", mode);
     } catch {
       // storage blocked: layout still adapts to the screen
-    }
-    if (mode === "desktop") {
-      if (scope === "authority" || scope === "coordinator") void navigate({ to: "/hq" });
-      else openPin("/hq");
-      return;
     }
     document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
