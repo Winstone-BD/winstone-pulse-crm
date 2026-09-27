@@ -98,7 +98,7 @@ function DispatchPage() {
   }
   return (
     <AppShell>
-      <CoordinatorDeckGate>
+      <CoordinatorDeckGate deck={<Dispatcher />}>
       <RoleGate
         allow={["authority", "coordinator"]}
         icon={<Users className="size-7" />}
