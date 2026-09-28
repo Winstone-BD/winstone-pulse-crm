@@ -421,7 +421,11 @@ export const assignLeadsToAgent = createServerFn({ method: "POST" })
       .eq("status", "pending")
       .order("created_at")
       .limit(data.count);
-    if (data.onlyUnassigned) query = query.is("assigned_to", null);
+    if (data.onlyUnassigned) {
+      const { assertDistributionDay } = await import("@/lib/business-day");
+      assertDistributionDay();
+      query = query.is("assigned_to", null);
+    }
     else query = query.neq("assigned_to", data.agentId);
 
     const { data: candidates, error } = await query;

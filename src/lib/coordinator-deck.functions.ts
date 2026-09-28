@@ -74,6 +74,8 @@ export const coordinatorAllocation = createServerFn({ method: "POST" })
     await fullDeck(data.adminToken);
     const pool = await import("@/lib/lead-pool.server");
     const today = pool.dhakaToday();
+    const { isDistributionDay, FRIDAY_BLOCK_MESSAGE } = await import("@/lib/business-day");
+    const distributionOpen = isDistributionDay(today);
     const [available, agents, held, plan] = await Promise.all([
       pool.usablePoolCount(),
       pool.activeAgents(),
@@ -82,6 +84,8 @@ export const coordinatorAllocation = createServerFn({ method: "POST" })
     ]);
     return {
       today,
+      distributionOpen,
+      distributionNotice: distributionOpen ? null : FRIDAY_BLOCK_MESSAGE,
       available,
       perAgent: plan.perAgent,
       agents: agents.map((a) => ({
@@ -112,6 +116,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { caller, requireWrite } = await fullDeck(data.adminToken);
     requireWrite(caller);
+    const { assertDistributionDay } = await import("@/lib/business-day");
+    assertDistributionDay();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const pool = await import("@/lib/lead-pool.server");
     const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");

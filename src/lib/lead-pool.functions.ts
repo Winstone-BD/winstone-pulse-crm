@@ -546,6 +546,8 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
     const caller = await dispatcher(data.adminToken);
     const { requireWrite } = await import("@/lib/access.server");
     requireWrite(caller);
+    const { assertDistributionDay } = await import("@/lib/business-day");
+    assertDistributionDay();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { activeAgents, dhakaToday } = await import("@/lib/lead-pool.server");
     const agent = (await activeAgents()).find((a) => a.id === data.agentId);

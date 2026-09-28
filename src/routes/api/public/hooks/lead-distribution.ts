@@ -46,6 +46,10 @@ export const Route = createFileRoute("/api/public/hooks/lead-distribution")({
           // first — this runs even on a same-day retry, it only touches the past.
           const { rolloverPendingLeads } = await import("@/lib/lead-pool.server");
           const rolledOver = await rolloverPendingLeads(today);
+          const { isDistributionDay } = await import("@/lib/business-day");
+          if (!isDistributionDay(today)) {
+            return Response.json({ ok: true, skipped: "friday_no_distribution", today, rolledOver });
+          }
           const plan = await dailyPlan();
           if (plan.lastRunDate === today) {
             return Response.json({ ok: true, skipped: "already_done_today", today, rolledOver });
