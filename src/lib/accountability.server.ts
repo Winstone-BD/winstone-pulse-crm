@@ -5,6 +5,7 @@ import {
   nextDate,
   type AccountabilityMetrics,
 } from "@/lib/accountability";
+import { isBusinessDay, nextBusinessDay } from "@/lib/business-day";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -83,7 +84,7 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
  * never re-flagged. A day on which the agent's queue was locked is skipped.
  */
 export async function evaluateDay(day: string, agentIds: string[]): Promise<number> {
-  if (!agentIds.length || day < ACCOUNTABILITY_START_DATE) return 0;
+  if (!agentIds.length || day < ACCOUNTABILITY_START_DATE || !isBusinessDay(day)) return 0;
   const db = await admin();
   const { data: existing } = await db
     .from("agent_accountability_reviews")
@@ -103,7 +104,7 @@ export async function evaluateDay(day: string, agentIds: string[]): Promise<numb
         {
           agent_id: agentId,
           business_date: day,
-          unlock_for_date: nextDate(day),
+          unlock_for_date: nextBusinessDay(day),
           assigned_count: m.assigned,
           eligible_count: m.eligible,
           completed_count: m.completed,

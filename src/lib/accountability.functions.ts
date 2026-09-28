@@ -13,7 +13,7 @@ export const myAccountability = createServerFn({ method: "POST" })
     const { dhakaDate, isLocked } = await import("@/lib/accountability");
     const { evaluateDay } = await import("@/lib/accountability.server");
     const today = dhakaDate(0);
-    await evaluateDay(dhakaDate(-1), [caller.profile.id]);
+    await evaluateDay((await import("@/lib/business-day")).previousBusinessDay(dhakaDate(0)), [caller.profile.id]);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
@@ -44,7 +44,7 @@ export const listAccountabilityReviews = createServerFn({ method: "POST" })
     const { evaluateDay } = await import("@/lib/accountability.server");
     const { activeAgents } = await import("@/lib/lead-pool.server");
     const agents = await activeAgents();
-    await evaluateDay(dhakaDate(-1), agents.map((a) => a.id));
+    await evaluateDay((await import("@/lib/business-day")).previousBusinessDay(dhakaDate(0)), agents.map((a) => a.id));
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin

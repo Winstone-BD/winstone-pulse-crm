@@ -158,6 +158,10 @@ async function runTool(
     if (!pool.length)
       return { data: { assigned: 0, note: "No unassigned pending leads left" }, mutated: false };
 
+    const { isDistributionDay, FRIDAY_BLOCK_MESSAGE } = await import("@/lib/business-day");
+    const { dhakaToday } = await import("@/lib/lead-pool.server");
+    if (!isDistributionDay(dhakaToday()))
+      return { data: { assigned: 0, note: FRIDAY_BLOCK_MESSAGE }, mutated: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: updated, error } = await supabaseAdmin
       .from("leads")

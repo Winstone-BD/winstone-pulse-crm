@@ -170,6 +170,8 @@ export async function distributeDailyLeads(options: {
   /** Give every included desk exactly `perAgent`, ignoring lighter fixed quotas. */
   ignoreFixedQuota?: boolean | undefined;
 }): Promise<DistributionResult> {
+  const { assertDistributionDay } = await import("@/lib/business-day");
+  assertDistributionDay();
   const supabaseAdmin = await admin();
   const today = dhakaToday();
   const skip = new Set(
@@ -488,6 +490,8 @@ export async function grantExtraLeads(input: {
   actorProfileId?: string | null;
   actorLabel?: string | null;
 }): Promise<{ moved: number; remaining: number; workDate: string }> {
+  const { assertDistributionDay } = await import("@/lib/business-day");
+  assertDistributionDay();
   const supabaseAdmin = await admin();
   const today = dhakaToday();
 
