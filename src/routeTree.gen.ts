@@ -26,6 +26,7 @@ import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
+import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -160,6 +161,11 @@ const McpRoute = McpRouteImport.update({
 const MigrationRoute = MigrationRouteImport.update({
   id: '/migration',
   path: '/migration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationExportRoute = MigrationExportRouteImport.update({
+  id: '/migration-export',
+  path: '/migration-export',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -444,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
+  '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/security': typeof SecurityRoute
@@ -513,6 +520,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
+  '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/security': typeof SecurityRoute
@@ -583,6 +591,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
+  '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/security': typeof SecurityRoute
@@ -654,6 +663,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/mcp'
     | '/migration'
+    | '/migration-export'
     | '/privacy'
     | '/reports'
     | '/security'
@@ -723,6 +733,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/mcp'
     | '/migration'
+    | '/migration-export'
     | '/privacy'
     | '/reports'
     | '/security'
@@ -792,6 +803,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/mcp'
     | '/migration'
+    | '/migration-export'
     | '/privacy'
     | '/reports'
     | '/security'
@@ -862,6 +874,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
+  MigrationExportRoute: typeof MigrationExportRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
   SecurityRoute: typeof SecurityRoute
@@ -1033,6 +1046,13 @@ declare module '@tanstack/react-router' {
       path: '/migration'
       fullPath: '/migration'
       preLoaderRoute: typeof MigrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration-export': {
+      id: '/migration-export'
+      path: '/migration-export'
+      fullPath: '/migration-export'
+      preLoaderRoute: typeof MigrationExportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1406,6 +1426,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
+  MigrationExportRoute: MigrationExportRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
   SecurityRoute: SecurityRoute,
