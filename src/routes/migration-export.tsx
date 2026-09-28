@@ -88,8 +88,11 @@ function ExportCenter() {
         let total = 0;
         const chunks: Array<Record<string, unknown>> = [];
         do {
-          const res: { rows: Array<Record<string, unknown>>; nextAfterId: string | null } =
-            await exportTableChunk({ data: { adminToken, table, afterId } });
+          const raw = await exportTableChunk({ data: { adminToken, table, afterId } });
+          const res = {
+            rows: JSON.parse(raw.rowsJson) as Array<Record<string, unknown>>,
+            nextAfterId: raw.nextAfterId,
+          };
           part += 1;
           total += res.rows.length;
           const base = `data/${table}/${table}.part${String(part).padStart(4, "0")}`;

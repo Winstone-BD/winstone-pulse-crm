@@ -115,6 +115,6 @@ export const exportTableChunk = createServerFn({ method: "POST" })
     if (error) throw new Error(`${data.table}: ${error.message}`);
     const list = (rows ?? []) as unknown as Array<Record<string, unknown>>;
     const clean = list.map((r) => scrub(r) as Record<string, unknown>);
-    const last = list.length ? String(list[list.length - 1]!.id) : null;
-    return { rows: clean, nextAfterId: list.length === CHUNK_SIZE ? last : null };
+    const last = list.length ? String(list[list.length - 1]!["id"]) : null;
+    return { rowsJson: JSON.stringify(clean), nextAfterId: list.length === CHUNK_SIZE ? last : null };
   });
