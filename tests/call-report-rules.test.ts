@@ -78,6 +78,22 @@ describe("no-follow-up reason (structured)", () => {
     expect(validateReport({ ...base, noFollowUpReason: "other" })?.field).toBe("followUpAt");
     expect(validateReport({ ...base, noFollowUpReason: "other", followUpNote: "অন্য কারণ" })).toBeNull();
   });
+  it("correcting an auto-connected call to no_answer needs no classification", () => {
+    // Phone auto-marked the call answered; agent corrects it to rang-out.
+    // The corrected payload (connected: false, no temperature/grade) must pass.
+    expect(
+      validateReport({
+        ...base,
+        category: "no_answer",
+        callStatus: "no_answer",
+        connected: false,
+        temperature: null,
+        grade: null,
+        durationSeconds: 0,
+        noFollowUpReason: "not_connected",
+      }),
+    ).toBeNull();
+  });
   it("a non-connected call never needs temperature or grade", () => {
     expect(
       validateReport({ ...base, category: "no_answer", callStatus: "no_answer", connected: false, temperature: null, grade: null, noFollowUpReason: "not_connected", durationSeconds: 0 }),
