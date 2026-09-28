@@ -1,4 +1,5 @@
 import {
+  ACCOUNTABILITY_START_DATE,
   computeAccountability,
   dhakaDayBounds,
   nextDate,
@@ -82,7 +83,7 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
  * never re-flagged. A day on which the agent's queue was locked is skipped.
  */
 export async function evaluateDay(day: string, agentIds: string[]): Promise<number> {
-  if (!agentIds.length) return 0;
+  if (!agentIds.length || day < ACCOUNTABILITY_START_DATE) return 0;
   const db = await admin();
   const { data: existing } = await db
     .from("agent_accountability_reviews")

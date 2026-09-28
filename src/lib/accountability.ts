@@ -7,6 +7,9 @@
 
 export const PENDING_THRESHOLD_PERCENT = 10;
 
+/** First business day the rule applies to — earlier days are never flagged retroactively. */
+export const ACCOUNTABILITY_START_DATE = "2026-09-28";
+
 export type AccountabilityStatus = "review_required" | "approved" | "hold";
 
 export const STATUS_LABEL: Record<AccountabilityStatus, string> = {
