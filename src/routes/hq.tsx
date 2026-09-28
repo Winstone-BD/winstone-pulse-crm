@@ -29,6 +29,7 @@ import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
 import { FloorLockAdminPanel } from "@/components/crm/hq/FloorLockAdminPanel";
 
 import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
+import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReviewPanel";
 import { ReportsBoard } from "@/routes/reports";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
@@ -283,6 +284,7 @@ function ControlBoard() {
 
             {tab === "tools" && (
               <div className="space-y-8">
+                <AccountabilityReviewPanel surface="hq" />
                 <FloorLockAdminPanel />
                 <ServiceBillPanel mode="hq" />
                 <ShiftSummaryPanel scope="hq" />

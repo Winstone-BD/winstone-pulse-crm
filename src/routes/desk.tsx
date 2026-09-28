@@ -29,6 +29,7 @@ import { MyReports } from "@/components/crm/MyReports";
 import { NewLeadDialog } from "@/components/crm/NewLeadDialog";
 import { LeadImportDialog } from "@/components/crm/LeadImportDialog";
 import { LeadDeadlineBanner } from "@/components/crm/LeadDeadlineBanner";
+import { AccountabilityBanner, useMyAccountability } from "@/components/crm/AccountabilityBanner";
 import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
 import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
@@ -211,9 +212,19 @@ function Tile({
   );
 }
 
+function QueueLockedNote() {
+  return (
+    <div role="status" className="rounded-2xl border border-warning/50 bg-warning/10 p-4 text-sm text-foreground">
+      আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় আছে। Executive HQ অনুমোদন দিলে এখানে লিড দেখা যাবে। ফলো-আপ ও রিপোর্ট ট্যাব খোলা আছে।
+    </div>
+  );
+}
+
 function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
+  const accountability = useMyAccountability();
+  const queueLocked = scope === "agent" && Boolean(accountability.data?.locked);
   const [tab, setTab] = usePersistentTab<string>(
     "desk:last-tab",
     SECTION_RAIL.map((t) => t.tab),
@@ -301,6 +312,7 @@ function DeskPage() {
         </nav>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
+          <AccountabilityBanner />
           <LeadDeadlineBanner />
           <MyProfileCard />
           <MyPhoneSetup />
@@ -322,13 +334,13 @@ function DeskPage() {
 
         <SmartInsightStrip scope="desk" />
 
-        <MobileLeadQueue />
+        {!queueLocked && <MobileLeadQueue />}
 
         <FollowUpAlarm />
 
-        <CarryOverLeads />
+        {!queueLocked && <CarryOverLeads />}
 
-        <LeadDayBoard />
+        {!queueLocked && <LeadDayBoard />}
 
         <CommandAgentPanel surface="desk" />
 
@@ -375,15 +387,21 @@ function DeskPage() {
             <TeamSupportPanel />
           </TabsContent>
           <TabsContent value="leads" className="space-y-4">
-            <LeadTable />
+            {queueLocked ? <QueueLockedNote /> : <LeadTable />}
           </TabsContent>
           <TabsContent value="queue" className="space-y-4">
-            <OpenLeadsCard />
-            <QueueBoard
-              title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
-              canSeeAllAgents={scope !== "agent"}
-              showManualLog={scope !== "agent"}
-            />
+            {queueLocked ? (
+              <QueueLockedNote />
+            ) : (
+              <>
+                <OpenLeadsCard />
+                <QueueBoard
+                  title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
+                  canSeeAllAgents={scope !== "agent"}
+                  showManualLog={scope !== "agent"}
+                />
+              </>
+            )}
           </TabsContent>
           <TabsContent value="calls">
             <MyCallLog />

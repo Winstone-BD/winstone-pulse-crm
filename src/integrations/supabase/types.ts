@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_accountability_reviews: {
+        Row: {
+          agent_id: string
+          approval_note: string | null
+          assigned_count: number
+          business_date: string
+          completed_count: number
+          created_at: string
+          eligible_count: number
+          evidence: Json
+          id: string
+          missed_reports: number
+          overdue_followups: number
+          pending_count: number
+          pending_percent: number
+          review_history: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          trigger_reason: string
+          unlock_for_date: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          approval_note?: string | null
+          assigned_count?: number
+          business_date: string
+          completed_count?: number
+          created_at?: string
+          eligible_count?: number
+          evidence?: Json
+          id?: string
+          missed_reports?: number
+          overdue_followups?: number
+          pending_count?: number
+          pending_percent?: number
+          review_history?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trigger_reason: string
+          unlock_for_date: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          approval_note?: string | null
+          assigned_count?: number
+          business_date?: string
+          completed_count?: number
+          created_at?: string
+          eligible_count?: number
+          evidence?: Json
+          id?: string
+          missed_reports?: number
+          overdue_followups?: number
+          pending_count?: number
+          pending_percent?: number
+          review_history?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          trigger_reason?: string
+          unlock_for_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_accountability_reviews_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_devices: {
         Row: {
           android_version: string | null
