@@ -47,6 +47,7 @@ const NAV = [
   { to: "/system", label: "IT Console", scopes: ["authority"] },
   { to: "/ingest", label: "Ingest Check", scopes: ["authority"] },
   { to: "/migration", label: "Migration Checklist", scopes: ["authority"] },
+  { to: "/migration-export", label: "Migration Export", scopes: ["authority"] },
   { to: "/security", label: "PIN ও অ্যাক্সেস", scopes: ["authority", "coordinator", "agent"] },
   { to: "/docs", label: "Docs", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/docs-admin", label: "Docs Admin", scopes: ["authority", "coordinator"] },
