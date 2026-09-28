@@ -113,18 +113,18 @@ export function validateReport(input: {
   /** false = the agent explicitly says no follow-up is needed, and says why. */
   followUpNeeded?: boolean;
   followUpNote?: string | null;
+  /** Structured no-follow-up reason code; "other" also needs a short note. */
+  noFollowUpReason?: string | null;
 }): ReportValidationError | null {
   const category = input.category as CallCategory | null;
   if (!category || !CALL_CATEGORIES.includes(category)) {
     return { field: "category", message: "কল ক্যাটেগরি বাছাই করুন" };
   }
   const summary = (input.summary ?? "").trim();
-  const note = (input.note ?? "").trim();
   const reason = (input.reason ?? "").trim();
 
-  // Every call, every category: summary + note are mandatory.
+  // Summary is built from the structured picks; the agent note is optional.
   if (summary.length < 2) return { field: "summary", message: "কলের সারাংশ লিখুন" };
-  if (note.length < 2) return { field: "note", message: "নোট লিখুন" };
 
   if ((category === "not_interested" || category === "wrong_number") && !reason) {
     return { field: "reason", message: "কারণ লিখুন" };
@@ -156,7 +156,9 @@ export function validateReport(input: {
       return { field: "durationSeconds", message: "কথা হওয়া কলের সময়কাল ০ হতে পারে না" };
     }
     const followUpNote = (input.followUpNote ?? "").trim();
-    if (!input.followUpAt && !(input.followUpNeeded === false && followUpNote.length > 1)) {
+    const code = (input.noFollowUpReason ?? "").trim();
+    const reasonGiven = code ? code !== "other" || followUpNote.length > 1 : followUpNote.length > 1;
+    if (!input.followUpAt && !(input.followUpNeeded === false && reasonGiven)) {
       return {
         field: "followUpAt",
         message: "ফলো-আপের তারিখ ও সময় দিন, নয়তো কেন ফলো-আপ দরকার নেই তা লিখুন",
@@ -395,7 +397,7 @@ export async function submitCallReport(input: {
         .filter(Boolean)
         .join(" — ") || null;
 
-  const { error } = await supabaseAdmin
+  const { data: claimed, error } = await supabaseAdmin
     .from("call_reports")
     .update({
       status: "submitted",
@@ -418,8 +420,12 @@ export async function submitCallReport(input: {
       submitted_at: new Date().toISOString(),
     })
     .eq("id", input.reportId)
-    .eq("agent_id", input.agentId);
+    .eq("agent_id", input.agentId)
+    .neq("status", "submitted")
+    .select("id");
   if (error) throw new Error(error.message);
+  // A concurrent submit (double tap, offline replay) already won: no side effects twice.
+  if (!claimed?.length) return { ok: true, alreadySubmitted: true as const };
 
   // Direction and call state belong to the call itself, so the linked call row
   // carries what the agent confirmed in the popup.
@@ -496,6 +502,35 @@ export async function submitCallReport(input: {
       .eq("report_id", report.id)
       .maybeSingle();
     if (existing) followUpId = existing.id;
+  }
+  if (input.followUpAt && !followUpId) {
+    // One open follow-up per lead + agent: a newer report moves the open task
+    // instead of stacking a duplicate reminder for the same customer.
+    const { data: open } = await supabaseAdmin
+      .from("follow_up_events")
+      .select("id")
+      .eq("lead_id", report.lead_id)
+      .eq("agent_id", input.agentId)
+      .neq("status", "done")
+      .order("scheduled_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (open) {
+      await supabaseAdmin
+        .from("follow_up_events")
+        .update({
+          report_id: report.id,
+          category,
+          priority: category === "callback" ? "high" : "normal",
+          note: input.note?.trim() || null,
+          scheduled_at: input.followUpAt,
+          reminder_minutes: input.reminderMinutes ?? 30,
+          notified_at: null,
+          status: "upcoming",
+        })
+        .eq("id", open.id);
+      followUpId = open.id;
+    }
   }
   if (input.followUpAt && !followUpId) {
     const { data: event } = await supabaseAdmin
