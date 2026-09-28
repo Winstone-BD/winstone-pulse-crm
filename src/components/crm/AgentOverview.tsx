@@ -1,3 +1,4 @@
+import { dhakaDay } from "@/lib/lead-groups";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarClock,
@@ -63,10 +64,10 @@ export function AgentOverview() {
   const { leads, calls, messages } = useSnapshot();
 
   const stats = useMemo(() => {
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
+    const today = dhakaDay(new Date());
+    const yesterday = dhakaDay(new Date(Date.now() - 86_400_000));
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => new Date(r.created_at).toDateString() === day);
+      rows.filter((r) => dhakaDay(new Date(r.created_at)) === day);
 
     const todayCalls = onDay(calls, today);
     const connected = todayCalls.filter(
