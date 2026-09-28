@@ -64,3 +64,23 @@ describe("post-call report rules", () => {
     expect(LEAD_GRADES).toEqual(["A", "B", "C", "D"]);
   });
 });
+
+describe("no-follow-up reason (structured)", () => {
+  const base = {
+    category: "interested", summary: "দাম জানতে চেয়েছেন", temperature: "warm", grade: "B",
+    requireCallFacts: true, direction: "outgoing", callStatus: "connected", durationSeconds: 60,
+    followUpNeeded: false,
+  };
+  it("accepts a structured reason without any note", () => {
+    expect(validateReport({ ...base, noFollowUpReason: "already_bought" })).toBeNull();
+  });
+  it("needs a short note only when the reason is Other", () => {
+    expect(validateReport({ ...base, noFollowUpReason: "other" })?.field).toBe("followUpAt");
+    expect(validateReport({ ...base, noFollowUpReason: "other", followUpNote: "অন্য কারণ" })).toBeNull();
+  });
+  it("a non-connected call never needs temperature or grade", () => {
+    expect(
+      validateReport({ ...base, category: "no_answer", callStatus: "no_answer", connected: false, temperature: null, grade: null, noFollowUpReason: "not_connected", durationSeconds: 0 }),
+    ).toBeNull();
+  });
+});
