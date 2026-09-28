@@ -222,7 +222,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
 
       <div className="flex flex-wrap gap-2">
         {!confirming ? (
-          <Button size="lg" disabled={!valid.length || dupAgents || available === 0} onClick={() => setConfirming(true)}>
+          <Button size="lg" disabled={!valid.length || dupAgents || available === 0 || alloc.data?.distributionOpen === false} onClick={() => setConfirming(true)}>
             Preview
           </Button>
         ) : (
