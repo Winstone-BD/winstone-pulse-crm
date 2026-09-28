@@ -1,3 +1,4 @@
+import { dhakaDay } from "@/lib/lead-groups";
 import {
   AlertTriangle,
   CalendarClock,
@@ -127,7 +128,7 @@ export function ExecutiveKpiBoard({
 }) {
   const m = useMemo(() => {
     const now = Date.now();
-    const today = new Date().toDateString();
+    const today = dhakaDay(new Date());
     const connected = calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
     const contactedLeads = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
     const hot = leads.filter((l) => l.temperature === "hot").length;
@@ -148,7 +149,7 @@ export function ExecutiveKpiBoard({
     const hotReady = leads.filter(
       (l) => l.temperature === "hot" && l.status !== "closed",
     ).length;
-    const todayCalls = calls.filter((c) => new Date(c.created_at).toDateString() === today);
+    const todayCalls = calls.filter((c) => dhakaDay(new Date(c.created_at)) === today);
     const contactedToday = new Set(
       todayCalls
         .filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS)

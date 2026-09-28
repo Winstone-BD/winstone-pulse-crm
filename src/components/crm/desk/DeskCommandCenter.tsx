@@ -1,3 +1,4 @@
+import { dhakaDay } from "@/lib/lead-groups";
 import { Link } from "@tanstack/react-router";
 import {
   AlarmClock,
@@ -263,9 +264,9 @@ export function DeskCommandCenter({
 
   const stats = useMemo(() => {
     const now = Date.now();
-    const today = new Date().toDateString();
+    const today = dhakaDay(new Date());
     const onToday = <T extends { created_at: string }>(rows: T[]) =>
-      rows.filter((r) => new Date(r.created_at).toDateString() === today);
+      rows.filter((r) => dhakaDay(new Date(r.created_at)) === today);
 
     const todayCalls = onToday(calls);
     const connected = todayCalls.filter(
@@ -274,7 +275,7 @@ export function DeskCommandCenter({
     const followUps = leads.filter((l) => l.status === "follow_up");
     const overdue = followUps.filter((l) => l.retry_after && Date.parse(l.retry_after) < now);
     const dueToday = followUps.filter(
-      (l) => l.retry_after && new Date(l.retry_after).toDateString() === today,
+      (l) => l.retry_after && dhakaDay(new Date(l.retry_after)) === today,
     );
     const done = leads.filter((l) => l.work_state === "completed").length;
     return {

@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
+import { dhakaDay, plausibleSeconds } from "@/lib/lead-groups";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
 export const Route = createFileRoute("/desk")({
@@ -83,15 +84,16 @@ function DeskStats() {
 
   const stats = useMemo(() => {
     const now = new Date();
-    const today = now.toDateString();
-    const yesterday = new Date(now.getTime() - 86_400_000).toDateString();
+    // Dhaka business day, whatever timezone the device is set to.
+    const today = dhakaDay(now);
+    const yesterday = dhakaDay(now.getTime() - 86_400_000);
     const onDay = <T extends { created_at: string }>(rows: T[], day: string) =>
-      rows.filter((r) => new Date(r.created_at).toDateString() === day);
+      rows.filter((r) => dhakaDay(r.created_at) === day);
 
     const todayCalls = onDay(calls, today);
     const yCalls = onDay(calls, yesterday);
-    const talk = todayCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
-    const yTalk = yCalls.reduce((sum, c) => sum + c.duration_seconds, 0);
+    const talk = todayCalls.reduce((sum, c) => sum + plausibleSeconds(c.duration_seconds), 0);
+    const yTalk = yCalls.reduce((sum, c) => sum + plausibleSeconds(c.duration_seconds), 0);
     const connectedOf = (rows: typeof calls) =>
       rows.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS).length;
     return {

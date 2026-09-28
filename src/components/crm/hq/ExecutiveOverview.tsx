@@ -1,3 +1,4 @@
+import { dhakaDay } from "@/lib/lead-groups";
 import {
   Activity,
   CalendarCheck,
@@ -82,7 +83,7 @@ export function ExecutiveOverview({
   onSelectAgent?: (agentId: string) => void;
 }) {
   const kpi = useMemo(() => {
-    const today = new Date().toDateString();
+    const today = dhakaDay(new Date());
     const connected = calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
     const contacted = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
     const hot = leads.filter((l) => l.temperature === "hot").length;
@@ -97,7 +98,7 @@ export function ExecutiveOverview({
       qualified: hot + warm,
       followUp,
       won,
-      todayCalls: calls.filter((c) => new Date(c.created_at).toDateString() === today).length,
+      todayCalls: calls.filter((c) => dhakaDay(new Date(c.created_at)) === today).length,
       contactRate: leads.length ? Math.round((contacted / leads.length) * 100) : 0,
       qualifiedRate: leads.length ? Math.round(((hot + warm) / leads.length) * 100) : 0,
       wonRate: leads.length ? Math.round((won / leads.length) * 100) : 0,
@@ -153,10 +154,10 @@ export function ExecutiveOverview({
     const days: { label: string; calls: number }[] = [];
     for (let i = 13; i >= 0; i -= 1) {
       const day = new Date(Date.now() - i * 86_400_000);
-      const key = day.toDateString();
+      const key = dhakaDay(day);
       days.push({
         label: day.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }),
-        calls: calls.filter((c) => new Date(c.created_at).toDateString() === key).length,
+        calls: calls.filter((c) => dhakaDay(new Date(c.created_at)) === key).length,
       });
     }
     return days;

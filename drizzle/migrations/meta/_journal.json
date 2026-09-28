@@ -365,6 +365,13 @@
       "when": 1790553427334,
       "tag": "0051_agent_accountability_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1790554020389,
+      "tag": "0052_logic_audit_hardening",
+      "breakpoints": true
     }
   ]
 }
