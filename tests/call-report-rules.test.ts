@@ -16,13 +16,11 @@ describe("post-call report rules", () => {
     ).toBe("category");
   });
 
-  it("requires a summary and a note, but not a follow-up", () => {
+  it("requires a summary; the agent note and follow-up are optional", () => {
     expect(validateReport({ ...base, summary: "", temperature: "hot", grade: "A" })?.field).toBe(
       "summary",
     );
-    expect(validateReport({ ...base, note: "", temperature: "hot", grade: "A" })?.field).toBe(
-      "note",
-    );
+    expect(validateReport({ ...base, note: "", temperature: "hot", grade: "A" })).toBeNull();
     expect(
       validateReport({ ...base, followUpAt: null, temperature: "hot", grade: "A" }),
     ).toBeNull();
