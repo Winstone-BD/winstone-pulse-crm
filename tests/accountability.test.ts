@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeAccountability, isLocked, nextDate } from "./accountability";
+import { computeAccountability, isLocked, nextDate } from "@/lib/accountability";
 
 const leads = (done: number, total: number) =>
   Array.from({ length: total }, (_, i) => ({ id: String(i), completed: i < done }));
