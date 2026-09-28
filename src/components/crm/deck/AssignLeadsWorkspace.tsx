@@ -130,6 +130,11 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
 
   return (
     <section className="card-elevated space-y-4 p-4">
+      {alloc.data && alloc.data.distributionOpen === false && (
+        <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm font-medium text-foreground">
+          {alloc.data.distributionNotice}
+        </div>
+      )}
       <header className="flex flex-wrap items-end gap-3">
         <div>
           <h2 className="text-base font-semibold">Assign Leads</h2>
