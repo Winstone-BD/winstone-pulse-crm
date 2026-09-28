@@ -1,3 +1,4 @@
+import { clampBrief, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -158,5 +159,150 @@ export async function buildPreCallBrief(leadId: string): Promise<PreCallBrief> {
   } catch (error) {
     console.error("precall failed", error);
     return { ...base, ...fallback(lead, hasHistory), aiAvailable: false };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Compact 1-line brief shown right before dialling (never blocks the call).
+
+
+async function loadFacts(leadId: string): Promise<{ facts: BriefFacts; inventory: string[] }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const [leadRes, repRes, fuRes, invRes] = await Promise.all([
+    supabaseAdmin
+      .from("leads")
+      .select("name, reference_by, source, temperature, grade, call_attempts, last_call_at")
+      .eq("id", leadId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("call_reports")
+      .select("category, summary, requirement, interest, customer_response, next_action, submitted_at")
+      .eq("lead_id", leadId)
+      .eq("status", "submitted")
+      .order("submitted_at", { ascending: false })
+      .limit(1),
+    supabaseAdmin
+      .from("follow_up_events")
+      .select("scheduled_at")
+      .eq("lead_id", leadId)
+      .neq("status", "done")
+      .order("scheduled_at", { ascending: true })
+      .limit(1),
+    supabaseAdmin.from("inventory_requirements").select("label").eq("active", true).limit(60),
+  ]);
+  if (leadRes.error) throw new Error(leadRes.error.message);
+  if (!leadRes.data) throw new Error("লিড পাওয়া যায়নি");
+  const lead = leadRes.data;
+  const rep = repRes.data?.[0] ?? null;
+  const fu = fuRes.data?.[0] ?? null;
+  const inventory = (invRes.data ?? []).map((r) => r.label);
+  const requirement = rep?.requirement ?? null;
+  return {
+    facts: {
+      name: lead.name ?? "",
+      referenceBy: lead.reference_by ?? null,
+      source: lead.source ?? null,
+      temperature: lead.temperature ?? null,
+      grade: lead.grade ?? null,
+      attempts: lead.call_attempts ?? 0,
+      lastCallAt: lead.last_call_at ?? null,
+      requirement,
+      interest: rep?.interest ?? null,
+      customerResponse: rep?.customer_response ?? null,
+      lastNextAction: rep?.next_action ?? null,
+      lastCategory: rep?.category ?? null,
+      lastSummary: rep?.summary ? rep.summary.slice(0, 300) : null,
+      followUpAt: fu?.scheduled_at ?? null,
+      followUpOverdue: Boolean(fu && new Date(fu.scheduled_at).getTime() < Date.now()),
+      inventoryMatch: requirement && inventory.includes(requirement) ? requirement : null,
+    },
+    inventory,
+  };
+}
+
+const QUICK_SYSTEM = `You write a pre-call brief for a Bangladesh real-estate tele-sales agent (Winstone Properties).
+Use ONLY the JSON facts given. Never invent budgets, prices, locations, projects or promises. Omit anything missing.
+Write in Bengali. Output JSON with:
+- "line": ONE line, max 25 words, format WHO/CONTEXT · CONTEXT · NEXT MOVE (e.g. "Uttara 3-bed, budget ~৳90L; আগে দাম জানতে চেয়েছেন; আজ বাজেট ও সাইট ভিজিট নিশ্চিত করুন").
+- "opener": one polite opening sentence the agent can say.`;
+
+async function aiBrief(facts: BriefFacts, key: string): Promise<QuickBrief | null> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
+    body: JSON.stringify({
+      model: "openai/gpt-6-astra",
+      stream: true,
+      store: false,
+      reasoning: { effort: "low" },
+      input: [
+        { role: "system", content: [{ type: "input_text", text: QUICK_SYSTEM }] },
+        { role: "user", content: [{ type: "input_text", text: JSON.stringify(facts) }] },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "brief",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            required: ["line", "opener"],
+            properties: { line: { type: "string" }, opener: { type: "string" } },
+          },
+        },
+      },
+    }),
+  });
+  if (!res.ok || !res.body) {
+    console.error("quick brief gateway", res.status, await res.text().catch(() => ""));
+    return null;
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let text = "";
+  let failed = false;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let idx: number;
+    while ((idx = buf.indexOf("\n\n")) >= 0) {
+      const frame = buf.slice(0, idx);
+      buf = buf.slice(idx + 2);
+      const data = frame.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
+      if (!data || data === "[DONE]") continue;
+      try {
+        const evt = JSON.parse(data) as { type?: string; delta?: string };
+        if (evt.type === "response.output_text.delta" && evt.delta) text += evt.delta;
+        if (evt.type === "response.failed" || evt.type === "error" || evt.type === "response.refusal.delta") failed = true;
+      } catch {
+        /* partial frame */
+      }
+    }
+  }
+  if (failed || !text) return null;
+  try {
+    const parsed = JSON.parse(text) as { line?: unknown; opener?: unknown };
+    const line = clampBrief(parsed.line);
+    const opener = clampBrief(parsed.opener, 200);
+    return line && opener ? { line, opener, source: "ai" } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Deterministic brief instantly; AI rephrasing only when asked and available. */
+export async function buildQuickBrief(leadId: string, useAi: boolean): Promise<QuickBrief> {
+  const { facts } = await loadFacts(leadId);
+  const rules = ruleBrief(facts);
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!useAi || !key) return rules;
+  try {
+    return (await aiBrief(facts, key)) ?? rules;
+  } catch (error) {
+    console.error("quick brief failed", error);
+    return rules;
   }
 }
