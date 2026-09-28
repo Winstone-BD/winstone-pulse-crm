@@ -212,9 +212,19 @@ function Tile({
   );
 }
 
+function QueueLockedNote() {
+  return (
+    <div role="status" className="rounded-2xl border border-warning/50 bg-warning/10 p-4 text-sm text-foreground">
+      আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় আছে। Executive HQ অনুমোদন দিলে এখানে লিড দেখা যাবে। ফলো-আপ ও রিপোর্ট ট্যাব খোলা আছে।
+    </div>
+  );
+}
+
 function DeskPage() {
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
+  const accountability = useMyAccountability();
+  const queueLocked = scope === "agent" && Boolean(accountability.data?.locked);
   const [tab, setTab] = usePersistentTab<string>(
     "desk:last-tab",
     SECTION_RAIL.map((t) => t.tab),
@@ -380,12 +390,18 @@ function DeskPage() {
             {queueLocked ? <QueueLockedNote /> : <LeadTable />}
           </TabsContent>
           <TabsContent value="queue" className="space-y-4">
-            <OpenLeadsCard />
-            <QueueBoard
-              title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
-              canSeeAllAgents={scope !== "agent"}
-              showManualLog={scope !== "agent"}
-            />
+            {queueLocked ? (
+              <QueueLockedNote />
+            ) : (
+              <>
+                <OpenLeadsCard />
+                <QueueBoard
+                  title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
+                  canSeeAllAgents={scope !== "agent"}
+                  showManualLog={scope !== "agent"}
+                />
+              </>
+            )}
           </TabsContent>
           <TabsContent value="calls">
             <MyCallLog />
