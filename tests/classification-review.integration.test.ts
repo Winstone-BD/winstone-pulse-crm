@@ -1,6 +1,6 @@
 /**
  * End-to-end check of the review alerts against the real database, using
- * throwaway rows that are deleted again. Skipped when no service credentials
+ * throwaway rows (the probe lead is parked, never deleted). Skipped when no service credentials
  * are present (e.g. a plain CI checkout).
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -45,13 +45,23 @@ describe.runIf(hasService)("review alerts (live database)", () => {
     ({ supabaseAdmin: admin } = await import("@/integrations/supabase/client.server"));
     const { data: agent } = await admin.from("profiles").select("id").limit(1).maybeSingle();
     agentId = agent?.id ?? null;
-    const { data: lead, error } = await admin
+    // Leads can never be deleted, so the probe reuses one parked test lead.
+    const { data: existing } = await admin
       .from("leads")
-      .insert({ name: `${CLEAN_MARK}-lead`, phone_number: "01799000001", source: "manual" })
       .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    leadId = lead.id;
+      .eq("phone_number", "01799000001")
+      .maybeSingle();
+    if (existing) {
+      leadId = existing.id;
+    } else {
+      const { data: lead, error } = await admin
+        .from("leads")
+        .insert({ name: `${CLEAN_MARK}-lead`, phone_number: "01799000001", source: "manual", assignment_source: "duplicate_skipped" })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      leadId = lead.id;
+    }
 
     const { data: recording, error: recErr } = await admin
       .from("call_recordings")
@@ -77,8 +87,8 @@ describe.runIf(hasService)("review alerts (live database)", () => {
     if (recordingId) await admin.from("call_recordings").delete().eq("id", recordingId);
     if (leadId) {
       await admin.from("audit_logs").delete().in("entity_id", reportIds);
-      await admin.from("lead_phone_keys").delete().eq("lead_id", leadId);
-      await admin.from("leads").delete().eq("id", leadId);
+      // Keep the lead parked so distribution never hands it out.
+      await admin.from("leads").update({ assignment_source: "duplicate_skipped" }).eq("id", leadId);
     }
   });
 
