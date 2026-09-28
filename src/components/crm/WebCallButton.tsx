@@ -1,10 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, PhoneOutgoing, Square } from "lucide-react";
+import { Loader2, PhoneOutgoing, Sparkles, Square } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getQuickBrief } from "@/lib/precall.functions";
 import { logAnyNumberCall, openMyReport, startMyCall } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { cn } from "@/lib/utils";
@@ -62,6 +64,24 @@ export function WebCallButton({
   const logAny = useServerFn(logAnyNumberCall);
   const [live, setLive] = useState<Live | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [briefOpen, setBriefOpen] = useState(false);
+  const quick = useServerFn(getQuickBrief);
+  // Rules brief first (instant, no AI), AI line replaces it when ready.
+  const rulesBrief = useQuery({
+    queryKey: ["quick-brief", leadId, "rules"],
+    queryFn: () => quick({ data: { leadId: leadId!, token: adminToken, ai: false } }),
+    enabled: briefOpen && Boolean(leadId),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const aiBrief = useQuery({
+    queryKey: ["quick-brief", leadId, "ai"],
+    queryFn: () => quick({ data: { leadId: leadId!, token: adminToken, ai: true } }),
+    enabled: briefOpen && Boolean(leadId),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const brief = aiBrief.data?.source === "ai" ? aiBrief.data : (rulesBrief.data ?? aiBrief.data);
 
   // One stable handle for this call target, lead or bare number.
   const handle = leadId ?? `tel:${phone}`;
@@ -154,6 +174,48 @@ export function WebCallButton({
   }
 
   return (
+    <>
+    <Dialog open={briefOpen} onOpenChange={setBriefOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="size-4 text-primary" /> কলের আগে এক নজরে
+          </DialogTitle>
+          <DialogDescription className="sr-only">Pre-call brief</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          {brief ? (
+            <>
+              <p className="font-medium text-foreground">{brief.line}</p>
+              <div className="rounded-lg border border-border bg-surface-2/60 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">শুরুর কথা</p>
+                <p className="mt-1">{brief.opener}</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {brief.source === "ai" ? "AI ব্রিফ — শুধু CRM-এর তথ্য থেকে" : aiBrief.isFetching ? "AI ব্রিফ তৈরি হচ্ছে…" : "CRM তথ্য থেকে সারাংশ"}
+              </p>
+            </>
+          ) : rulesBrief.isError ? (
+            <p className="text-xs text-muted-foreground">ব্রিফ পাওয়া যায়নি — তবু কল করতে পারেন।</p>
+          ) : (
+            <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-4 animate-spin" /> ব্রিফ লোড হচ্ছে…</p>
+          )}
+          <Button
+            type="button"
+            size="lg"
+            className="h-11 w-full rounded-xl text-base font-semibold"
+            disabled={start.isPending}
+            onClick={() => {
+              setBriefOpen(false);
+              start.mutate();
+            }}
+          >
+            {start.isPending ? <Loader2 className="size-5 animate-spin" /> : <PhoneOutgoing className="size-5" />}
+            এখনই কল করুন
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
     <Button
       type="button"
       size="lg"
@@ -162,7 +224,7 @@ export function WebCallButton({
         className,
       )}
       disabled={start.isPending}
-      onClick={() => start.mutate()}
+      onClick={() => (leadId ? setBriefOpen(true) : start.mutate())}
       title="কল করুন — কল শেষে রিপোর্ট বাধ্যতামূলক"
       aria-label={ariaLabel}
     >
@@ -173,5 +235,6 @@ export function WebCallButton({
       )}
       {label}
     </Button>
+    </>
   );
 }
