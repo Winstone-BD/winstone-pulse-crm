@@ -377,7 +377,14 @@ export async function submitCallReport(input: {
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
   // may only *upgrade* an unanswered call to "কথা হয়েছে", never the other way.
-  const received = report.connected !== false || input.callStatus === "connected";
+  // The agent's submitted call status is the correction channel: when the
+  // phone auto-marked the call as answered but it actually rang out, the
+  // agent's "no_answer/busy/failed" choice must override the stored flag,
+  // otherwise the server would keep demanding Hot/Warm/Cold + grade for a
+  // call the form (correctly) hides those fields on.
+  const received = input.callStatus
+    ? input.callStatus === "connected"
+    : report.connected !== false;
   const invalid = validateReport({ ...input, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
 
