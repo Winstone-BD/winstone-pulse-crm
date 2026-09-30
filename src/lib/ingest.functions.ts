@@ -46,7 +46,15 @@ export const runIngestDiagnostics = createServerFn({ method: "POST" })
     const { BD_PHONE } = await import("@/lib/ingest-schemas");
 
     const [leadsRes, callsRes, msgRes, bucketRes] = await Promise.all([
-      supabaseAdmin.from("leads").select("id, phone_number, assigned_to, created_at"),
+      (async () => {
+        const all: { id: string; phone_number: string; assigned_to: string | null; created_at: string }[] = [];
+        for (let from = 0; ; from += 1000) {
+          const { data, error } = await supabaseAdmin.from("leads").select("id, phone_number, assigned_to, created_at").order("id").range(from, from + 999);
+          if (error) return { data: all, error };
+          all.push(...(data ?? []));
+          if (!data || data.length < 1000) return { data: all, error: null };
+        }
+      })(),
       supabaseAdmin
         .from("call_recordings")
         .select("id, lead_id, agent_id, sync_status, transcription_text, created_at")

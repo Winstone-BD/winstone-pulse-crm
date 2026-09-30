@@ -37,3 +37,16 @@ describe("handover documents", () => {
     for (const f of ["public/winstone-system-manual.pdf", "public/winstone-client-handover.pdf", "public/winstone-audit-report.pdf"]) expect(existsSync(f)).toBe(true);
   });
 });
+
+import { readFileSync as rf2 } from "node:fs";
+import { describe as d2, expect as e2, it as i2 } from "vitest";
+d2("audit 2026-09-30 fixes", () => {
+  i2("legacy coordinator assignment endpoints are retired (LeadHub only)", () => {
+    const s = rf2("src/lib/crm.functions.ts", "utf8");
+    e2(s).not.toMatch(/assignment_source: "coordinator"/);
+    e2(s).not.toMatch(/distributeDailyLeads/);
+  });
+  i2("ingest diagnostics page through every lead", () => {
+    e2(rf2("src/lib/ingest.functions.ts", "utf8")).toMatch(/range\(from, from \+ 999\)/);
+  });
+});
