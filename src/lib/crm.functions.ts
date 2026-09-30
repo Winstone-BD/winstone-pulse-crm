@@ -187,22 +187,9 @@ export const getAudioUrl = createServerFn({ method: "POST" })
 /** Splits every unassigned lead evenly across the active agents. Coordinator or PIN. */
 export const autoDistributeLeads = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ adminToken: OptionalToken }).parse(input))
-  .handler(async ({ data }) => {
-    const { resolveCaller, requireDispatch, requireWrite } = await import("@/lib/access.server");
-    const mutator = await resolveCaller(data.adminToken ?? null);
-    requireDispatch(mutator);
-    requireWrite(mutator);
-    // Same idempotent daily rule as the Coordinator Deck: per-agent quota
-    // (default 50), oldest eligible first, today's allocations preserved.
-    const { distributeDailyLeads, dailyPlan } = await import("@/lib/lead-pool.server");
-    const plan = await dailyPlan();
-    const result = await distributeDailyLeads({
-      perAgent: plan.perAgent,
-      actorProfileId: mutator.profile?.id ?? null,
-      actorLabel: mutator.profile?.name ?? "IT Console",
-      trigger: "manual",
-    });
-    return { assigned: result.moved, agents: result.agents };
+  .handler(async () => {
+    // Retired: LeadHub Nexus is the only assignment path.
+    throw new Error("এই পথ বন্ধ — লিড বণ্টন শুধু LeadHub Nexus থেকে হয়");
   });
 
 const ImportRow = z.object({
@@ -433,69 +420,7 @@ const AssignInput = z.object({
 /** Coordinator dispatcher: push a batch of pending leads under one agent. */
 export const assignLeadsToAgent = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AssignInput.parse(input))
-  .handler(async ({ data }) => {
-    const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
-    requireDispatch(caller);
-    (await import("@/lib/access.server")).requireWrite(caller);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    let query = supabaseAdmin
-      .from("leads")
-      .select("id, assigned_to")
-      .eq("status", "pending")
-      .order("created_at")
-      .limit(data.count);
-    if (data.onlyUnassigned) {
-      const { assertDistributionDay } = await import("@/lib/business-day");
-      assertDistributionDay();
-      query = query.is("assigned_to", null);
-    }
-    else query = query.neq("assigned_to", data.agentId);
-
-    const { data: candidates, error } = await query;
-    if (error) throw new Error(error.message);
-    const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
-    const eligible = new Set(await eligibleLeadIds((candidates ?? []).map((lead) => lead.id)));
-    const pool = (candidates ?? []).filter((lead) => eligible.has(lead.id));
-    if (!pool?.length) return { assigned: 0 };
-
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from("leads")
-      .update({
-        assigned_to: data.agentId,
-        assigned_agent_id: data.agentId,
-        assignment_source: "coordinator",
-      })
-      .in(
-        "id",
-        pool.map((l) => l.id),
-      )
-      .is("assigned_to", null)
-      .is("assigned_agent_id", null)
-      .select("id");
-    if (updateError) throw new Error(updateError.message);
-    const updatedIds = new Set((updated ?? []).map((lead) => lead.id));
-    const assignedRows = pool.filter((lead) => updatedIds.has(lead.id));
-
-    // Audit trail so the Coordinator Deck can show who moved what.
-    await supabaseAdmin.from("lead_assignments").insert(
-      assignedRows.map((l) => ({
-        lead_id: l.id,
-        from_agent_id: l.assigned_to ?? null,
-        to_agent_id: data.agentId,
-        source: "coordinator",
-      })),
-    );
-
-    const { logAudit } = await import("@/lib/audit.server");
-    await logAudit({
-      action: "lead_assigned",
-      entityType: "lead",
-      entityId: null,
-      actorProfileId: caller.profile?.id ?? null,
-      actorLabel: caller.profile?.name ?? "Authority PIN",
-      metadata: { agentId: data.agentId, count: assignedRows.length, source: "coordinator" },
-    });
-    return { assigned: assignedRows.length };
+  .handler(async () => {
+    // Retired: LeadHub Nexus is the only assignment path.
+    throw new Error("এই পথ বন্ধ — লিড বণ্টন শুধু LeadHub Nexus থেকে হয়");
   });
