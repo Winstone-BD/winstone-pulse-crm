@@ -17,6 +17,8 @@ import {
   LifeBuoy,
   Lightbulb,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Network,
   PhoneCall,
   Server,
@@ -25,7 +27,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -67,12 +69,30 @@ const GROUPS: { title: string; routes: string[] }[] = [
   { title: "সহায়তা", routes: ["/docs", "/docs-admin", "/help"] },
 ];
 
+const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+/** Arrow keys / Home / End move focus between menu links. */
+function onNavKeys(e: KeyboardEvent<HTMLElement>) {
+  if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+  const links = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-nav-link]")];
+  if (!links.length) return;
+  e.preventDefault();
+  const i = links.indexOf(document.activeElement as HTMLElement);
+  const next =
+    e.key === "Home" ? 0 : e.key === "End" ? links.length - 1
+    : e.key === "ArrowDown" ? (i + 1) % links.length
+    : (i - 1 + links.length) % links.length;
+  links[next]?.focus();
+}
+
 function NavContent({
   items,
   onNavigate,
+  collapsed = false,
 }: {
   items: readonly Item[];
   onNavigate?: () => void;
+  collapsed?: boolean;
 }) {
   const byRoute = new Map(items.map((i) => [i.to, i]));
   const path = useRouterState({ select: (st) => st.location.pathname });
@@ -84,7 +104,7 @@ function NavContent({
         if (list.length === 0) return null;
         return (
           <div key={group.title} className="mb-5">
-            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <p hidden={collapsed} className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {group.title}
             </p>
             <nav className="flex flex-col gap-0.5">
@@ -97,12 +117,15 @@ function NavContent({
                     to={item.to}
                     activeOptions={{ exact: item.to === "/" }}
                     onClick={onNavigate}
-                    className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/60 hover:text-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm"
+                    data-nav-link
+                    title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? item.label : undefined}
+                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/60 hover:text-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm`}
                   >
                     <Icon className="size-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
-                  {subs && path === item.to && (
+                  {!collapsed && subs && path === item.to && (
                     <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
                       {subs.map((sub, i) => {
                         const on = activeS === sub.key || (!subs.some((x) => x.key === activeS) && i === 0);
@@ -112,7 +135,8 @@ function NavContent({
                             to={item.to}
                             search={{ s: sub.key } as never}
                             onClick={onNavigate}
-                            className={`rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+                            data-nav-link
+                            className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
                           >
                             {sub.label}
                           </Link>
@@ -131,11 +155,52 @@ function NavContent({
   );
 }
 
-/** Grouped left navigator for desktop; mobile uses the left drawer below. */
+/** Grouped left navigator for desktop; collapsible to icons (Ctrl/⌘+B). */
 export function NavSidebar({ items }: { items: readonly Item[] }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    setCollapsed(localStorage.getItem("nav-collapsed") === "1");
+  }, []);
+  const toggle = () =>
+    setCollapsed((c) => {
+      localStorage.setItem("nav-collapsed", c ? "0" : "1");
+      return !c;
+    });
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        toggle();
+      }
+      // Alt+M jumps keyboard focus into the menu.
+      if (e.altKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        (ref.current?.querySelector('[data-status="active"]') as HTMLElement | null ?? ref.current?.querySelector<HTMLElement>("[data-nav-link]"))?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-card/60 px-3 py-5 backdrop-blur lg:block">
-      <NavContent items={items} />
+    <aside
+      ref={ref}
+      aria-label="প্রধান নেভিগেশন"
+      onKeyDown={onNavKeys}
+      className={`sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-r border-border bg-card/60 py-4 backdrop-blur transition-[width] duration-200 lg:block ${collapsed ? "w-16 px-2" : "w-60 px-3"}`}
+    >
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "সাইডবার প্রসারিত করুন (Ctrl+B)" : "সাইডবার ভাঁজ করুন (Ctrl+B)"}
+        title={collapsed ? "প্রসারিত করুন (Ctrl+B)" : "ভাঁজ করুন (Ctrl+B)"}
+        className={`${FOCUS} mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-muted-foreground hover:bg-accent/60 hover:text-foreground ${collapsed ? "justify-center" : ""}`}
+      >
+        {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        {!collapsed && <span>ভাঁজ করুন</span>}
+      </button>
+      <NavContent items={items} collapsed={collapsed} />
     </aside>
   );
 }
@@ -143,13 +208,23 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
 /** Left-side navigation drawer for tablet and mobile widths. */
 export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === "m" && window.innerWidth < 1024) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
-          aria-label="নেভিগেশন মেনু খুলুন"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-200 hover:bg-accent/60 lg:hidden"
+          aria-label="নেভিগেশন মেনু খুলুন (Alt+M)"
+          className={`${FOCUS} inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-200 hover:bg-accent/60 lg:hidden`}
         >
           <Menu className="size-4.5" />
         </button>
@@ -177,7 +252,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
             </span>
           </SheetTitle>
         </SheetHeader>
-        <div className="px-3 py-4">
+        <div className="px-3 py-4" onKeyDown={onNavKeys}>
           <NavContent items={items} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
