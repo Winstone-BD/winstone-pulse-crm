@@ -32,7 +32,7 @@ export const Route = createFileRoute("/handover")({
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         {SHOTS.map((s) => (
           <figure key={s.src} className="break-inside-avoid">
-            <img src={s.src} alt={s.caption} className="w-full rounded-md border border-border" loading="lazy" />
+            <img src={s.src} alt={s.caption} className="w-full rounded-md border border-border" />
             <figcaption className="mt-1 text-xs text-muted-foreground">{s.caption}</figcaption>
           </figure>
         ))}
