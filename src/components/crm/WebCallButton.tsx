@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WebsiteAnswerBox } from "@/components/crm/WebsiteAnswerBox";
 import { getQuickBrief } from "@/lib/precall.functions";
 import { logAnyNumberCall, openMyReport, startMyCall } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
@@ -211,6 +212,7 @@ export function WebCallButton({
           ) : (
             <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-4 animate-spin" /> ব্রিফ লোড হচ্ছে…</p>
           )}
+          <WebsiteAnswerBox compact leadContext={brief?.line ?? null} />
           <Button
             type="button"
             size="lg"

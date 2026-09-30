@@ -17,6 +17,7 @@ import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
 import { BackendHealthPanel } from "@/components/crm/BackendHealthPanel";
+import { WebsiteKnowledgePanel } from "@/components/crm/WebsiteKnowledgePanel";
 import { VersionDataPanel } from "@/components/crm/VersionDataPanel";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { StaffAccountsTable } from "@/components/crm/StaffAccountsTable";
@@ -151,6 +152,8 @@ function SystemBoard() {
       <ReportSheetPanel />
 
       <BackendHealthPanel />
+
+      <WebsiteKnowledgePanel />
 
       <SheetSyncHealthPanel />
 
