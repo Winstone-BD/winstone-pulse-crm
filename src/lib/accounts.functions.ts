@@ -11,45 +11,74 @@ function phoneKey(value: string): string | null {
   return digits.length >= 10 ? digits.slice(-10) : null;
 }
 
+const SIGN_IN_FAILED = "সাইন ইন ব্যর্থ — আইডি বা পাসওয়ার্ড ভুল";
+
 /**
- * Agents sign in with a phone number or Employee ID instead of an email.
- * Resolves whatever they typed to the email of their desk account.
+ * Agents sign in with a phone number, Employee ID or email. The identifier is
+ * resolved and the password checked on the server, so no account email is ever
+ * returned to an unauthenticated browser. Returns session tokens only.
  */
-export const resolveSignInEmail = createServerFn({ method: "POST" })
+export const signInWithIdentifier = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ identifier: z.string().trim().min(3).max(160) }).parse(input),
+    z
+      .object({
+        identifier: z.string().trim().min(3).max(160),
+        password: z.string().min(1).max(200),
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const raw = data.identifier.trim();
-    if (raw.includes("@")) return { email: raw };
+    let email: string | null = raw.includes("@") ? raw : null;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
-      .from("profiles")
-      .select("email, phone, employee_id")
-      .not("email", "is", null)
-      .limit(500);
-
-    const wantId = raw.toUpperCase().replace(/\s+/g, "");
-    const wantPhone = phoneKey(raw);
-
-    // Employee ID is unique, so it always wins over a phone number that two
-    // desks may share.
-    const byId = (rows ?? []).find(
-      (row) => (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId,
-    );
-    if (byId?.email) return { email: byId.email };
-
-    const byPhone = (rows ?? []).filter(
-      (row) => wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone,
-    );
-    if (byPhone.length > 1) {
-      throw new Error(
-        "এই ফোন নম্বরটি একাধিক অ্যাকাউন্টে আছে — Employee ID বা ইমেইল দিয়ে সাইন ইন করুন",
+    if (!email) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows } = await supabaseAdmin
+        .from("profiles")
+        .select("email, phone, employee_id")
+        .not("email", "is", null)
+        .limit(500);
+      const wantId = raw.toUpperCase().replace(/\s+/g, "");
+      const wantPhone = phoneKey(raw);
+      const byId = (rows ?? []).find(
+        (row) => (row.employee_id ?? "").toUpperCase().replace(/\s+/g, "") === wantId,
       );
+      if (byId?.email) email = byId.email;
+      else {
+        const byPhone = (rows ?? []).filter(
+          (row) => wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone,
+        );
+        if (byPhone.length === 1 && byPhone[0].email) email = byPhone[0].email;
+      }
     }
-    if (!byPhone[0]?.email) throw new Error("এই ফোন নম্বর বা Employee ID পাওয়া যায়নি");
-    return { email: byPhone[0].email };
+    if (!email) throw new Error(SIGN_IN_FAILED);
+
+    const url = process.env["SUPABASE_URL"];
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!url || !key) throw new Error(SIGN_IN_FAILED);
+    const { createClient } = await import("@supabase/supabase-js");
+    const client = createClient(url, key, {
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const headers = new Headers(init?.headers);
+          if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
+            headers.delete("Authorization");
+          }
+          headers.set("apikey", key);
+          return fetch(input, { ...init, headers });
+        },
+      },
+    });
+    const { data: auth, error } = await client.auth.signInWithPassword({
+      email,
+      password: data.password,
+    });
+    if (error || !auth.session) throw new Error(SIGN_IN_FAILED);
+    return {
+      access_token: auth.session.access_token,
+      refresh_token: auth.session.refresh_token,
+    };
   });
 
 /**
