@@ -27,3 +27,5 @@
 - Agent self-claim (`claimLead`) is retired; only LeadHub assignment moves pool leads — why: single canonical assignment path.
 - Agent mutations call `assertAgentBriefing`/`assertBriefingForCaller` from agent-briefing.server — why: 9:05 gate must be server-side on every protected action.
 - Monthly maintenance lock ($35.29 USD, 14th 00:00 Dhaka) is decided only in `maintenance.server.ts`; `resolveCaller` and `src/server.ts` (device 423) enforce it, IT full PIN + /architect exempt — why: one server-authoritative state, no UI-only lock.
+
+- Staging E2E suite (tests/staging, vitest.staging.config.ts) is opt-in and refuses the live project ref — why: one backend serves preview+published, so real-DB flow tests must never hit live data.
