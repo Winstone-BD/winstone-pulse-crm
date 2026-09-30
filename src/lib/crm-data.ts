@@ -34,8 +34,9 @@ export const snapshotQueryFor = (scope: { token: string | null }) =>
   queryOptions({
     queryKey: ["crm-snapshot", scope.token ? "authority" : "session"],
     queryFn: () => getCrmSnapshot({ data: { token: scope.token } }),
-    refetchInterval: 10_000,
-    staleTime: 2_000,
+    // Live changes arrive through realtime below; the poll is only a safety net.
+    refetchInterval: 45_000,
+    staleTime: 20_000,
   });
 
 const EMPTY_SNAPSHOT = {
@@ -54,8 +55,15 @@ const EMPTY_SNAPSHOT = {
 function useLiveCrmRefresh() {
   const queryClient = useQueryClient();
   useEffect(() => {
+    // Bursts of row changes (imports, a phone replaying its queue) collapse
+    // into one reload instead of dozens of full snapshot downloads.
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const invalidate = () => {
-      void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
+      }, 1500);
     };
     // A submitted report must land instantly on Reports, Executive HQ and the
     // Coordinator Deck, so report/follow-up writes refresh those panels too.
@@ -94,6 +102,7 @@ function useLiveCrmRefresh() {
       )
       .subscribe();
     return () => {
+      if (timer) clearTimeout(timer);
       void supabase.removeChannel(channel);
     };
   }, [queryClient]);
