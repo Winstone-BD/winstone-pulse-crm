@@ -161,50 +161,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 px-3 pb-2 lg:hidden">
-          <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.to === "/" }}
-              className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground data-[status=active]:border-primary/30 data-[status=active]:bg-accent data-[status=active]:text-primary"
-            >
-              {item.label}
-            </Link>
-          ))}
-          </div>
-          {moreNav.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label="Open more navigation links"
-                  className={`size-7 shrink-0 rounded-full ${moreIsActive ? "border-primary/30 bg-accent text-primary" : ""}`}
-                >
-                  <Menu className="size-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>More tools</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {moreNav.map((item) => (
-                  <DropdownMenuItem key={item.to} asChild>
-                    <Link
-                      to={item.to}
-                      activeOptions={{ exact: item.to === "/" }}
-                      className="w-full cursor-pointer data-[status=active]:bg-accent data-[status=active]:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </nav>
       </header>
 
       <div className="mx-auto flex w-full max-w-[1600px]">
