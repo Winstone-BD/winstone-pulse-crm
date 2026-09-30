@@ -11,7 +11,7 @@
 - [ ] Lead brief per assigned lead: why given, value, call script, conversion tips, callback date
 - [ ] Per-project daily/monthly report: leads, calls, site visits, bookings
 - [ ] APK nearby-lead cards (blocked: sign-in cannot be removed — security)
-- [ ] Locked V2 scoring (6 questions, auto category/priority, no manual Hot/Warm/Cold)
+- [x] Locked V2 scoring (6 questions, auto category/priority, no manual Hot/Warm/Cold) — web/server/Android
 - [ ] 9:05 daily briefing acknowledgement gate (server-side)
 - [ ] Smarter distribution: project expertise, site visits, prior follow-ups
-- [x] V2 six-question scoring on web report + server (phone API accepts answers; APK screen still to update)
+- [x] V2 six-question scoring on web/server/Android (version 2.13 mandatory release published)

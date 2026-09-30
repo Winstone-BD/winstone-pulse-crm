@@ -21,6 +21,7 @@ import com.winstone.connect.telephony.CallPhase
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.ui.DeskScreen
 import com.winstone.connect.ui.LiveCallScreen
+import com.winstone.connect.ui.MaintenanceScreen
 import com.winstone.connect.ui.DeskViewModel
 import com.winstone.connect.ui.RoleSelectionScreen
 import com.winstone.connect.ui.SignInScreen
@@ -28,6 +29,8 @@ import com.winstone.connect.ui.collectAsStateSafe
 import com.winstone.connect.ui.theme.WinstoneTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import com.winstone.connect.data.remote.MaintenanceControl
 
 class MainActivity : ComponentActivity() {
 
@@ -41,6 +44,13 @@ class MainActivity : ComponentActivity() {
                 val vm: DeskViewModel = viewModel { DeskViewModel(application) }
                 val state by vm.state.collectAsStateSafe()
                 val phase by LiveCallLauncher.phase.collectAsStateSafe()
+                var maintenance by remember { mutableStateOf(MaintenanceControl.cached(this@MainActivity)) }
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        maintenance = MaintenanceControl.refresh(this@MainActivity)
+                        delay(20_000)
+                    }
+                }
 
                 // Mandatory post-call report gate: even if the app was closed
                 // after the call, the report opens itself on the next launch
@@ -60,7 +70,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (phase != CallPhase.Idle) {
+                if (maintenance.active) {
+                    MaintenanceScreen(maintenance)
+                } else if (phase != CallPhase.Idle) {
                     LiveCallScreen(phase = phase)
                 } else if (state.employeeId.isNullOrBlank()) {
                     SignInScreen(

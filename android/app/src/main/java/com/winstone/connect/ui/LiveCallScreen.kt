@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.winstone.connect.data.remote.WinstoneApi
+import com.winstone.connect.data.LeadEvaluation
 import com.winstone.connect.data.sync.CallSyncQueue
 import com.winstone.connect.telephony.CallPhase
 import com.winstone.connect.telephony.LiveCallLauncher
@@ -212,7 +213,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     var duration by remember { mutableStateOf("") }
     var noFollowUp by remember { mutableStateOf(false) }
     var noFollowUpNote by remember { mutableStateOf("") }
-    var temperature by remember { mutableStateOf<String?>(null) }
+    var evaluationAnswers by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     var grade by remember { mutableStateOf<String?>(null) }
 
     // Wait for the server-side report (opened by the sync worker when the call ended).
@@ -253,12 +254,15 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     val needsReason = category == "not_interested" || category == "wrong_number"
     val seconds = duration.trim().toIntOrNull() ?: -1
     val received = callState == "connected"
+    val evaluationComplete = LeadEvaluation.isComplete(evaluationAnswers)
+    val evaluationScore = LeadEvaluation.score(evaluationAnswers)
+    val temperature = if (evaluationComplete) LeadEvaluation.category(evaluationScore) else null
     val ready = category.isNotBlank() &&
         seconds >= 0 && (!received || seconds >= 1) &&
         summary.trim().length > 1 &&
         note.trim().length > 1 &&
         (if (noFollowUp) noFollowUpNote.trim().length > 1 else (date.length == 10 && time.length == 5)) &&
-        (!received || (temperature != null && grade != null)) &&
+        (!received || (evaluationComplete && grade != null)) &&
         (!needsReason || reason.trim().length > 1)
 
     if (dismissed) {
@@ -341,13 +345,30 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
             )
             if (received) {
                 Spacer(Modifier.height(8.dp))
-                Text("শ্রেণিবিন্যাস (কথা হয়েছে — বাধ্যতামূলক)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                TEMPERATURES.forEach { (value, label) ->
-                    OutlinedButton(
-                        onClick = { temperature = value },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                    ) { Text(if (temperature == value) "✓ $label" else label) }
+                Text("লিড মূল্যায়ন — সব প্রশ্নের হ্যাঁ / না দিন", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(4.dp))
+                LeadEvaluation.questions.forEach { question ->
+                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Text("${question.label}  +${question.points}", fontSize = 12.sp)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(true to "হ্যাঁ", false to "না").forEach { (value, label) ->
+                                OutlinedButton(
+                                    onClick = { evaluationAnswers = evaluationAnswers + (question.key to value) },
+                                    modifier = Modifier.weight(1f),
+                                ) { Text(if (evaluationAnswers[question.key] == value) "✓ $label" else label) }
+                            }
+                        }
+                    }
                 }
+                Text(
+                    "স্কোর: $evaluationScore/${LeadEvaluation.MAX_SCORE}" +
+                        (temperature?.let { " · ${it.uppercase()} (স্বয়ংক্রিয়)" } ?: " · সব উত্তর দিন"),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text("Grade (বাধ্যতামূলক)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Row(Modifier.fillMaxWidth()) {
                     listOf("A", "B", "C", "D").forEach { value ->
                         OutlinedButton(
@@ -447,6 +468,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                             followUpNote = if (noFollowUp) noFollowUpNote else null,
                             temperature = temperature,
                             grade = grade,
+                            evaluationAnswers = if (received) evaluationAnswers else null,
                         )
                         val result = runCatching { WinstoneApi.submitReportRaw(payload) }
                         busy = false
@@ -490,12 +512,6 @@ private val CALL_STATES = listOf(
     "no_answer" to "ধরেনি",
     "busy" to "ব্যস্ত ছিল",
     "failed" to "কল যায়নি",
-)
-
-private val TEMPERATURES = listOf(
-    "hot" to "HOT — গরম",
-    "warm" to "WARM — কিছুটা আগ্রহী",
-    "cold" to "COLD — ঠান্ডা",
 )
 
 private val CATEGORIES = listOf(
