@@ -6,7 +6,7 @@ import { briefingRequiredAt } from "@/lib/agent-briefing.server";
 
 const base = {
   category: "not_interested", summary: "কথা হয়েছে", note: "নোট", reason: "দাম বেশি", direction: "outgoing",
-  callStatus: "connected", durationSeconds: 40, connected: true, followUpAt: null, followUpNeeded: false,
+  callStatus: "connected", durationSeconds: 40, temperature: "cold", grade: "C", requireCallFacts: true, connected: true, followUpAt: null, followUpNeeded: false,
 } as never;
 
 describe("contact-close reason contract", () => {
