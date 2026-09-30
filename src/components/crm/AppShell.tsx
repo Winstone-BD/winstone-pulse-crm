@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ChevronDown, Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
 import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
 import { useState, type ReactNode } from "react";
@@ -52,12 +52,6 @@ export const NAV = [
   { to: "/help", label: "Help Centre", scopes: ["authority", "coordinator", "agent", "none"] },
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
-const PRIMARY_ROUTES: Record<Scope, readonly string[]> = {
-  authority: ["/", "/leadhub", "/hq", "/system"],
-  coordinator: ["/", "/desk", "/reports"],
-  agent: ["/", "/desk", "/coach", "/reports"],
-  none: ["/", "/docs", "/help"],
-};
 
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
