@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { Lock, ShieldAlert } from "lucide-react";
+import { Lock, LogIn, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
 import { MAINTENANCE_FEE_LABEL, dhakaTime } from "@/lib/maintenance-rules";
@@ -45,6 +46,29 @@ function RequestButton() {
   return (
     <Button variant="destructive" className="w-full" disabled={send.isPending || send.isSuccess} onClick={() => send.mutate()}>
       {send.isSuccess ? "REQUEST SENT TO IT CONSOLE" : "PAYMENT / UNLOCK REQUEST"}
+    </Button>
+  );
+}
+
+/** Direct Google sign-in for IT Console / System Architect from the lock screen. */
+function LockSignInButton() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      className="w-full"
+      disabled={busy}
+      onClick={() => {
+        setBusy(true);
+        void lovable.auth
+          .signInWithOAuth("google", { redirect_uri: window.location.origin })
+          .then((r) => {
+            if (r.error) toast.error(r.error.message);
+          })
+          .finally(() => setBusy(false));
+      }}
+    >
+      <LogIn className="size-4" /> {busy ? "Signing in…" : "Sign in with Google (IT / Architect)"}
     </Button>
   );
 }
@@ -153,6 +177,10 @@ export function MaintenanceGate() {
             <Lock className="size-5" /> SYSTEM MAINTENANCE LOCKED
           </h1>
           <NoticeBody s={data} />
+          <LockSignInButton />
+          <p className="text-center text-xs text-muted-foreground">
+            IT Console বা System Architect হলে Google দিয়ে সাইন ইন করুন — সাইন ইনের পর IT Console খুলবে।
+          </p>
         </div>
       </div>
     );
