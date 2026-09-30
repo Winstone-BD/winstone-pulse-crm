@@ -19,6 +19,7 @@ import { myFollowUps } from "@/lib/call-reports.functions";
 import { useSnapshot } from "@/lib/crm-data";
 import { shortDate } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
+import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 const ALL = "all";
 
@@ -169,6 +170,11 @@ export function FollowUpWeek() {
                       {section.overdue && (
                         <Badge className="shrink-0 bg-destructive/15 text-destructive">
                           সময় পার
+                        </Badge>
+                      )}
+                      {!section.overdue && event.priority && (
+                        <Badge variant={event.priority === "high" ? "destructive" : "secondary"}>
+                          {FOLLOW_UP_PRIORITY_LABEL[event.priority] ?? event.priority}
                         </Badge>
                       )}
                     </div>

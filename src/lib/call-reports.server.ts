@@ -395,6 +395,10 @@ export async function submitCallReport(input: {
   const answers = received ? parseAnswers(input.evaluationAnswers) : null;
   const evaluation = answers ? evaluate(answers, Boolean(input.followUpAt)) : null;
   const effectiveTemperature = evaluation ? evaluation.category : (input.temperature ?? null);
+  const { followUpPriorityFor } = await import("@/lib/follow-up-priority");
+  const followUpPriority = input.followUpAt
+    ? evaluation?.priority ?? followUpPriorityFor(effectiveTemperature)
+    : followUpPriorityFor(effectiveTemperature);
 
   const invalid = validateReport({ ...input, temperature: effectiveTemperature, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
@@ -544,7 +548,7 @@ export async function submitCallReport(input: {
         .update({
           report_id: report.id,
           category,
-          priority: category === "callback" ? "high" : "normal",
+          priority: followUpPriority,
           note: input.note?.trim() || null,
           scheduled_at: input.followUpAt,
           reminder_minutes: input.reminderMinutes ?? 30,
@@ -566,7 +570,7 @@ export async function submitCallReport(input: {
         customer_name: lead?.name ?? null,
         phone_number: lead?.phone_number ?? report.phone_number,
         category,
-        priority: category === "callback" ? "high" : "normal",
+        priority: followUpPriority,
         note: input.note?.trim() || null,
         scheduled_at: input.followUpAt,
         reminder_minutes: input.reminderMinutes ?? 30,
@@ -872,6 +876,7 @@ export async function editSubmittedReport(input: {
   const temperature = received ? ((input.temperature ?? null) as LeadTemperature | null) : null;
   const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
   const nowIso = new Date().toISOString();
+  const { followUpPriorityFor } = await import("@/lib/follow-up-priority");
 
   const { error } = await supabaseAdmin
     .from("call_reports")
@@ -918,7 +923,7 @@ export async function editSubmittedReport(input: {
         category,
         note: input.note?.trim() || null,
         scheduled_at: input.followUpAt,
-        priority: category === "callback" ? "high" : "normal",
+        priority: followUpPriorityFor(temperature),
       })
       .eq("report_id", report.id)
       .neq("status", "done");

@@ -177,7 +177,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
 
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select(`id, name, phone_number, ${LEAD_OWNER_COLUMNS}`)
+      .select(`id, name, phone_number, temperature, ${LEAD_OWNER_COLUMNS}`)
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error(LEAD_NOT_YOURS);
@@ -193,6 +193,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
 
     let scheduledAt: string | null = null;
     if (data.action === "follow_up") {
+      const { followUpPriorityFor } = await import("@/lib/follow-up-priority");
       // Tomorrow 10:00 Dhaka (UTC+6) => 04:00 UTC.
       const next = new Date();
       next.setUTCDate(next.getUTCDate() + 1);
@@ -204,6 +205,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
         category: "follow_up",
         customer_name: lead.name,
         phone_number: lead.phone_number,
+        priority: followUpPriorityFor(lead.temperature),
         note: data.note ?? "মোবাইল কিউ থেকে ফলো-আপে রাখা হয়েছে",
         scheduled_at: scheduledAt,
       });
@@ -251,7 +253,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
 
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select(`id, name, phone_number, status, ${LEAD_OWNER_COLUMNS}`)
+      .select(`id, name, phone_number, status, temperature, ${LEAD_OWNER_COLUMNS}`)
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error(LEAD_NOT_YOURS);
@@ -262,6 +264,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
     const nowIso = new Date().toISOString();
 
     if (data.action === "reschedule") {
+      const { followUpPriorityFor } = await import("@/lib/follow-up-priority");
       const scheduledAt = new Date(Date.now() + (data.hours ?? 24) * 3_600_000).toISOString();
       const { error } = await supabaseAdmin
         .from("leads")
@@ -275,6 +278,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
         category: "follow_up",
         customer_name: lead.name,
         phone_number: lead.phone_number,
+        priority: followUpPriorityFor(lead.temperature),
         note: data.note ?? "ডেস্ক থেকে আবার ফলো-আপ সময় দেওয়া হয়েছে",
         scheduled_at: scheduledAt,
       });

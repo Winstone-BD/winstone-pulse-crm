@@ -54,6 +54,12 @@ describe.runIf(url && key)("RLS: an unauthenticated client cannot read productio
     expect(blocked(await anon.from("audit_logs").select("id, action").limit(1))).toBe(true);
   });
 
+  it("cannot read IT Council notices or their conversations", async () => {
+    expect(blocked(await anon.from("it_notices").select("id, body").limit(1))).toBe(true);
+    expect(blocked(await anon.from("it_notice_recipients").select("id, profile_id").limit(1))).toBe(true);
+    expect(blocked(await anon.from("it_notice_replies").select("id, body").limit(1))).toBe(true);
+  });
+
   it("cannot read user roles", async () => {
     expect(blocked(await anon.from("user_roles").select("user_id, role").limit(1))).toBe(true);
   });
