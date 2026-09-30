@@ -50,6 +50,29 @@ function RequestButton() {
   );
 }
 
+/** Direct Google sign-in for IT Console / System Architect from the lock screen. */
+function LockSignInButton() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      className="w-full"
+      disabled={busy}
+      onClick={() => {
+        setBusy(true);
+        void lovable.auth
+          .signInWithOAuth("google", { redirect_uri: window.location.origin })
+          .then((r) => {
+            if (r.error) toast.error(r.error.message);
+          })
+          .finally(() => setBusy(false));
+      }}
+    >
+      <LogIn className="size-4" /> {busy ? "Signing in…" : "Sign in with Google (IT / Architect)"}
+    </Button>
+  );
+}
+
 function NoticeBody({ s }: { s: Status }) {
   return (
     <div className="space-y-3 text-sm">
