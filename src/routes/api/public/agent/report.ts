@@ -43,6 +43,7 @@ const Body = z.discriminatedUnion("action", [
     /** True when the report was written offline and replayed by the sync queue. */
     captured_offline: z.boolean().optional(),
     captured_at: z.string().datetime({ offset: true }).nullable().optional(),
+    evaluation_answers: z.record(z.string(), z.boolean()).nullable().optional(),
   }),
 ]);
 
@@ -176,6 +177,7 @@ export const Route = createFileRoute("/api/public/agent/report")({
             durationSeconds: body.duration_seconds ?? null,
             followUpNeeded: body.follow_up_needed ?? true,
             followUpNote: body.follow_up_note ?? null,
+            evaluationAnswers: body.evaluation_answers ?? null,
           });
 
           // Record which app version produced this report, so a replaced or
