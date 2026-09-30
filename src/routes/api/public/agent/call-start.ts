@@ -39,6 +39,14 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
         const briefingBlock = await requireAgentBriefing(caller.profile.id);
         if (briefingBlock) return json(briefingBlock, 409);
 
+        {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: pic } = await supabaseAdmin.from("profiles").select("photo_path").eq("id", caller.profile.id).maybeSingle();
+          if (!pic?.photo_path) {
+            return json({ blocked: true, reason: "অ্যাকাউন্টে নিজের পরিষ্কার ছবি যুক্ত করুন (ওয়েব ডেস্ক থেকে), তারপর কল শুরু করা যাবে" }, 409);
+          }
+        }
+
         const pending = await pendingReportFor(caller.profile.id);
         if (pending) {
           return json(
