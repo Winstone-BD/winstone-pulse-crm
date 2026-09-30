@@ -72,9 +72,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img
               src={logoAsset.url}
               alt="Winstone Properties Ltd. logo"
-              className="size-9 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-border"
+              className="size-8 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-border"
             />
-            <span className="min-w-0 leading-tight">
+            <span className="hidden min-w-0 leading-tight min-[480px]:block">
               <span className="block truncate text-[13px] font-bold tracking-tight">
                 Winstone Connect
               </span>
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
 
-          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 overflow-x-auto [scrollbar-width:none] sm:gap-2 [&>*]:shrink-0">
             {adminToken && <AgentSelector />}
 
             {scope !== "none" && <ReminderBell />}
@@ -108,8 +108,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               }}
               className={
                 adminToken
-                  ? "inline-flex h-8 items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-3 text-xs font-semibold text-accent-foreground transition-all duration-300 hover:shadow-sm"
-                  : "inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:shadow-sm"
+                  ? "inline-flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2 lg:px-3 text-xs font-semibold text-accent-foreground transition-all duration-300 hover:shadow-sm"
+                  : "inline-flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-2 lg:px-3 text-xs font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:shadow-sm"
               }
             >
               {adminToken ? <LockOpen className="size-3.5" /> : <Lock className="size-3.5" />}
@@ -135,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button
               size="sm"
               aria-label="Download Agent Android App"
-              className="h-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-2.5 text-xs font-semibold shadow-sm transition-all duration-300 hover:shadow-md sm:px-3.5"
+              className="h-8 w-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-0 text-xs font-semibold shadow-sm sm:w-auto sm:px-3.5 transition-all duration-300 hover:shadow-md sm:px-3.5"
               onClick={() => {
                 const a = document.createElement("a");
                 a.href = APK_URL;

@@ -26,7 +26,7 @@ export function AgentSelector() {
       onValueChange={(value) => setOperatorId(value === NONE ? null : value)}
     >
       <SelectTrigger
-        className="h-8 w-auto min-w-0 max-w-[150px] gap-1.5 overflow-hidden border-border/70 bg-secondary/60 text-xs xl:max-w-[230px]"
+        className="h-8 w-8 shrink-0 justify-center gap-1.5 overflow-hidden rounded-full border-border/70 bg-secondary/60 px-0 text-xs sm:w-auto sm:max-w-[150px] sm:justify-between sm:rounded-md sm:px-3 xl:max-w-[230px] [&>span]:hidden sm:[&>span]:inline [&>svg:last-child]:hidden sm:[&>svg:last-child]:block"
         aria-label="Operating as"
       >
         <UserRound className="size-4 shrink-0 text-muted-foreground" />

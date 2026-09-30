@@ -224,7 +224,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
         <button
           type="button"
           aria-label="নেভিগেশন মেনু খুলুন (Alt+M)"
-          className={`${FOCUS} inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-200 hover:bg-accent/60 lg:hidden`}
+          className={`${FOCUS} inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-200 hover:bg-accent/60 lg:hidden`}
         >
           <Menu className="size-4.5" />
         </button>
