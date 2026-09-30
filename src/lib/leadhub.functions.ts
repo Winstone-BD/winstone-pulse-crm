@@ -6,7 +6,7 @@ export const checkLeadHubAccess = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { requireLeadHub } = await import("@/lib/access.server");
     try {
-      requireLeadHub(data.adminToken);
+      await requireLeadHub(data.adminToken);
       return { allowed: true };
     } catch {
       return { allowed: false };

@@ -204,7 +204,7 @@ export const importLeads = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireLeadHub } = await import("@/lib/access.server");
-    requireLeadHub(data.adminToken);
+    await requireLeadHub(data.adminToken);
     const importer = { profile: null as null, label: "LeadHub Nexus" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");

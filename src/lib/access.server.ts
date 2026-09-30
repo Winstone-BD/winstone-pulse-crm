@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
 
 import type { Database } from "@/integrations/supabase/types";
-import { adminTokenScope } from "@/lib/admin-gate.server";
 import { PROFILE_SAFE_COLUMNS, type SafeProfile } from "@/lib/profile-columns";
 
 export type Profile = SafeProfile;
@@ -140,7 +139,8 @@ export function requireAuthority(caller: Caller) {
 }
 
 /** LeadHub has its own PIN scope; ordinary HQ/IT/Coordinator sessions do not inherit it. */
-export function requireLeadHub(token: string | null | undefined) {
+export async function requireLeadHub(token: string | null | undefined) {
+  const { adminTokenScope } = await import("@/lib/admin-gate.server");
   if (adminTokenScope(token) !== "leadhub") throw new Error("LeadHub PIN required");
 }
 
