@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BellRing } from "lucide-react";
 
-import type { Lead } from "@/lib/crm-data";
+import { useSnapshot, type Lead } from "@/lib/crm-data";
 import { useAdminToken } from "@/lib/local-session";
 import { createSiteVisit, listSiteVisits, setSiteVisitStatus, SITE_VISIT_STATUSES } from "@/lib/site-visits.functions";
 
@@ -20,7 +20,9 @@ export function useSiteVisits() {
 }
 
 /** Reminder for scheduled visits in the next 24h or already past their time but not updated. */
-export function SiteVisitReminder({ leads }: { leads: Lead[] }) {
+export function SiteVisitReminder({ leads: given }: { leads?: Lead[] }) {
+  const snap = useSnapshot();
+  const leads = given ?? snap.leads;
   const visits = useSiteVisits();
   const now = Date.now();
   const leadName = new Map(leads.map((l) => [l.id, l.name]));

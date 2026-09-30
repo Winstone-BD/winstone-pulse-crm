@@ -310,7 +310,7 @@ function DeskPage() {
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <AccountabilityBanner />
           <LeadDeadlineBanner />
-          <SiteVisitReminder leads={leads} />
+          <SiteVisitReminder />
           <MyProfileCard />
           <MyPhoneSetup />
 
