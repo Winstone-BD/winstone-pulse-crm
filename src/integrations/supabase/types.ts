@@ -3290,6 +3290,39 @@ export type Database = {
         }
         Relationships: []
       }
+      website_pages: {
+        Row: {
+          content: string
+          created_at: string
+          fetched_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          url: string
+          word_count: number
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          url: string
+          word_count?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          url?: string
+          word_count?: number
+        }
+        Relationships: []
+      }
       whatsapp_interactions: {
         Row: {
           agent_id: string | null
