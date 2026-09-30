@@ -41,8 +41,8 @@ export function MarketNewsFeed({ compact = false, manage = false }: { compact?: 
         </div>
       )}
       {q.isLoading && <div className="grid gap-3 md:grid-cols-2">{[0, 1].map((i) => <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted" />)}</div>}
-      {q.isError && <p className="rounded-xl border border-border bg-card p-4 text-sm">নিউজ দেখতে সাইন ইন করুন অথবা HQ PIN দিন।</p>}
-      {!q.isLoading && !q.isError && shown.length === 0 && (
+      {(q.isError || q.data?.pages[0]?.signedOut) && <p className="rounded-xl border border-border bg-card p-4 text-sm">নিউজ দেখতে সাইন ইন করুন অথবা HQ PIN দিন।</p>}
+      {!q.isLoading && !q.isError && !q.data?.pages[0]?.signedOut && shown.length === 0 && (
         <p className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">এখনো কোনো যাচাইকৃত খবর নেই।</p>
       )}
       <div className={compact ? "space-y-2" : "grid gap-3 md:grid-cols-2"}>

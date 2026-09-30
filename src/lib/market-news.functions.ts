@@ -12,8 +12,9 @@ export const newsFeed = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const m = await s();
-    const c = await m.newsCaller(data.adminToken);
-    return { scope: c.scope, ...(await m.listNews(c, { category: data.category ?? null, includeHidden: data.includeHidden === true, cursor: data.cursor ?? null, limit: 20 })) };
+    const c = await m.newsCaller(data.adminToken).catch(() => null);
+    if (!c) return { scope: "none" as const, signedOut: true, items: [], nextCursor: null };
+    return { scope: c.scope, signedOut: false, ...(await m.listNews(c, { category: data.category ?? null, includeHidden: data.includeHidden === true, cursor: data.cursor ?? null, limit: 20 })) };
   });
 
 export const newsPublishManual = createServerFn({ method: "POST" })
