@@ -228,7 +228,7 @@ async function leadIdsFor(db: Db, f: PitchFilters): Promise<string[] | null> {
   return (await all<{ id: string }>((a, b) => q.range(a, b))).map((r) => r.id);
 }
 
-function applyPitchFilters<Q extends { eq: (c: string, v: string) => Q; gte: (c: string, v: string) => Q; lt: (c: string, v: string) => Q; in: (c: string, v: string[]) => Q }>(q: Q, c: SiCaller, f: PitchFilters, leadIds: string[] | null) {
+export function applyPitchFilters<Q extends { eq: (c: string, v: string) => Q; gte: (c: string, v: string) => Q; lt: (c: string, v: string) => Q; in: (c: string, v: string[]) => Q }>(q: Q, c: SiCaller, f: PitchFilters, leadIds: string[] | null) {
   if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
   else if (f.agentId) q = q.eq("agent_id", f.agentId);
   if (f.leadId) q = q.eq("lead_id", f.leadId);
