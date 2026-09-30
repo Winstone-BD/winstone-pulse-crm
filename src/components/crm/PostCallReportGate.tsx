@@ -85,7 +85,7 @@ const NO_FU_REASONS: Opt[] = [
   { value: "no_contact", label: "Customer Requested No Further Contact" },
   { value: "other", label: "Other" },
 ];
-const TEMPERATURES: Opt[] = [
+export const _LEGACY_TEMPERATURES: Opt[] = [
   { value: "hot", label: "HOT" },
   { value: "warm", label: "WARM" },
   { value: "cold", label: "COLD" },

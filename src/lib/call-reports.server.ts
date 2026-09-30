@@ -394,7 +394,7 @@ export async function submitCallReport(input: {
   const { parseAnswers, evaluate, EVALUATION_MODEL } = await import("@/lib/lead-evaluation");
   const answers = received ? parseAnswers(input.evaluationAnswers) : null;
   const evaluation = answers ? evaluate(answers, Boolean(input.followUpAt)) : null;
-  const effectiveTemperature = evaluation ? evaluation.category : input.temperature;
+  const effectiveTemperature = evaluation ? evaluation.category : (input.temperature ?? null);
 
   const invalid = validateReport({ ...input, temperature: effectiveTemperature, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
