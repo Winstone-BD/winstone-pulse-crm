@@ -16,12 +16,12 @@ const caller = (scope: Caller["scope"], employeeId = "WIN2601", readOnly = false
   readOnly,
 });
 
-describe("Coordinator Deck access", () => {
-  it("gives Haidar (WIN2607) intake-only deck access", () => {
+describe("retired Coordinator Deck access", () => {
+  it("keeps Haidar (WIN2607) on agent access only", () => {
     const haidar = caller("agent", "WIN2607");
     expect(isSellTeamAdmin(haidar)).toBe(true);
-    expect(deckAccess(haidar)).toBe("intake");
-    expect(() => requireDeck(haidar)).not.toThrow();
+    expect(deckAccess(haidar)).toBe("none");
+    expect(() => requireDeck(haidar)).toThrow();
   });
 
   it("never gives Haidar dispatch or IT/authority powers", () => {
@@ -35,9 +35,9 @@ describe("Coordinator Deck access", () => {
     expect(() => requireDeck(caller("agent", "WIN2601"))).toThrow();
   });
 
-  it("gives coordinators and authority the full deck", () => {
-    expect(deckAccess(caller("coordinator"))).toBe("full");
-    expect(deckAccess(caller("authority"))).toBe("full");
+  it("requires the dedicated LeadHub PIN even for retired coordinators and authority", () => {
+    expect(deckAccess(caller("coordinator"))).toBe("none");
+    expect(deckAccess(caller("authority"))).toBe("none");
   });
 
   it("does not grant intake on a read-only session", () => {
