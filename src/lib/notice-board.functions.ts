@@ -28,7 +28,10 @@ async function accessibleNoticeIds(caller: Awaited<ReturnType<typeof callerFor>>
 export const listNoticeBoard = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.parse(input ?? {}))
   .handler(async ({ data }) => {
-    const caller = await callerFor(data.adminToken);
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    // Signed-out, pending, or LeadHub-only sessions simply see no notices.
+    if (caller.scope === "none") return { canPublish: false, profileId: null, notices: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const noticeIds = await accessibleNoticeIds(caller);
     const now = new Date().toISOString();
