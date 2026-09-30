@@ -39,7 +39,7 @@ export function WebsiteAnswerBox({
       }),
     onSuccess: (result) => setAnswer(result as Answer),
     onError: (error: Error) =>
-      setAnswer({ answer: error.message, covered: false, sources: [] }),
+      setAnswer({ answer: error.message, covered: false, sources: [], documents: [] }),
   });
 
   const submit = (text: string) => {
