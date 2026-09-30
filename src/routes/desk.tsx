@@ -1,3 +1,5 @@
+import { PhotoUpload } from "@/components/crm/PhotoUpload";
+import { StaffAvatar } from "@/components/crm/StaffAvatar";
 import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -278,6 +280,24 @@ function DeskPage() {
               </Button>
             </>
           )}
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (scope === "agent" && account?.profile && !account.profile.has_photo) {
+    return (
+      <AppShell>
+        <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-12 text-center">
+          <StaffAvatar profile={account.profile} className="size-20" />
+          <div>
+            <h1 className="text-xl font-bold">আপনার ছবি যুক্ত করুন</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              প্রত্যেক এজেন্টের অ্যাকাউন্টে নিজের বর্তমান, পরিষ্কার মুখের ছবি থাকা বাধ্যতামূলক। ছবি দেওয়ার পরই ডেস্ক খুলবে ও কল করা যাবে।
+            </p>
+          </div>
+          <PhotoUpload />
+          <p className="text-xs text-muted-foreground">সামনে থেকে, ভালো আলোয়, মুখ স্পষ্ট — সানগ্লাস বা গ্রুপ ছবি নয়।</p>
         </div>
       </AppShell>
     );
