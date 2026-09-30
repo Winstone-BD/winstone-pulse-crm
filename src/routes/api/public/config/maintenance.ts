@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { CRM_CLOSURE_START_MS } from "@/lib/service-interruption";
-
 function json(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -25,9 +23,8 @@ export const Route = createFileRoute("/api/public/config/maintenance")({
         const maintenance = saved && typeof saved === "object"
           ? (saved as Record<string, unknown>)
           : {};
-        const scheduled = Date.now() >= CRM_CLOSURE_START_MS;
         return json({
-          active: typeof maintenance["active"] === "boolean" ? maintenance["active"] : scheduled,
+          active: typeof maintenance["active"] === "boolean" ? maintenance["active"] : false,
           title:
             typeof maintenance["title"] === "string"
               ? maintenance["title"]
