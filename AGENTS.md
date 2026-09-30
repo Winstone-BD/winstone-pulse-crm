@@ -14,7 +14,7 @@
 
 - Daily accountability: agent_accountability_reviews table is server-only (no client RLS policies); unlock/approve requires the HQ PIN scope, never IT — why: business rule says final approval is Executive HQ only.
 
-- The temporary 2026-09-30 11:30 Asia/Dhaka maintenance closure is a global non-dismissible gate — why: home and every CRM role must stop using CRM until IT confirms reopening.
+- The temporary 2026-09-30 maintenance closure has ended; home, CRM roles, and Android default to open while retaining the server control for future emergencies — why: stale offline clients must not remain locked.
 
 - Android V2 reports send six raw yes/no evaluation answers; the server derives score/category/priority and legacy reports are never rescored — why: one locked rule across web, phone and offline replay.
 - Project reporting uses Inventory requirement labels as the current project dimension; site visits and bookings count only explicit saved report signals — why: no separate projects, site-visits, or bookings model exists yet, so free-text inference would invent facts.
