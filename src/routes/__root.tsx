@@ -175,6 +175,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // The app booted — clear the one-time deployment reload flag so the next
+  // deployment can recover normally again.
+  useEffect(() => {
+    (window as unknown as { __clearDeployReloadFlag?: () => void }).__clearDeployReloadFlag?.();
+  }, []);
+
   // One place that reacts to sign-in / sign-out so every board refetches with
   // the new identity.
   useEffect(() => {
