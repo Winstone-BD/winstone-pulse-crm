@@ -5,7 +5,6 @@ import {
   groundedAgainst,
   isFresh,
   looksRelevant,
-  normalizeTitle,
   parseRss,
   type RssItem,
 } from "@/lib/market-news-rules";
@@ -183,7 +182,7 @@ export async function collectNews(actor: string) {
           .insert({
             origin: "auto", status: "published", headline: a.headline.slice(0, 200), summary: a.summary.slice(0, 1200),
             key_points: (a.key_points ?? []).slice(0, 3), category, tags: (a.tags ?? []).slice(0, 4), sales_insight: a.sales_insight,
-            source_name: src.sourceName, source_url: src.link, source_title: normalizeTitle(src.title) && src.title,
+            source_name: src.sourceName, source_url: src.link, source_title: src.title,
             retrieved_excerpt: sourceText.slice(0, 2000), source_published_at: pub,
             dedupe_key: dedupeKey(src.title, src.sourceName), ai_model: MODEL, created_by: actor,
           })
