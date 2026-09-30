@@ -30,3 +30,10 @@ describe("call start ownership", () => {
     expect(leadNotAssignedTo({ assigned_agent_id: "me" }, "me")).toBe(false);
   });
 });
+
+import { existsSync } from "node:fs";
+describe("handover documents", () => {
+  it("canonical PDFs exist in the project", () => {
+    for (const f of ["public/winstone-system-manual.pdf", "public/winstone-client-handover.pdf", "public/winstone-audit-report.pdf"]) expect(existsSync(f)).toBe(true);
+  });
+});
