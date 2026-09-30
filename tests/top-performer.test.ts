@@ -19,7 +19,8 @@ const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   connectRate: 50,
   score: 56,
   quota: 50,
-  targetQuota: 50,
+  // Insight tests need no active quota branch: the ranking tests override it.
+  targetQuota: 0,
   assigned: 50,
   completed: 0,
   completionPercent: 0,
