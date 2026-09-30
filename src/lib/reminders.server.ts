@@ -146,9 +146,14 @@ export async function sweepReminders(now = new Date()) {
         now.getTime() - new Date(item.dueAt).getTime() <= FOLLOW_UP_PUSH_WINDOW_HOURS * 3_600_000,
     );
     for (const item of fresh.slice(0, MAX_PUSH_PER_SWEEP)) {
+      // Upcoming follow-ups buzz once when the reminder window opens; a missed
+      // (overdue) follow-up buzzes again every 3 hours until done or backlog.
+      const overdueBucket = Math.floor(now.getTime() / (3 * 3_600_000));
       const eventKey =
         item.kind === "follow_up"
-          ? `follow_up_due:${item.id}`
+          ? item.overdue
+            ? `follow_up_overdue:${item.id}:${overdueBucket}`
+            : `follow_up_due:${item.id}`
           : `report_pending:${item.id}:${hourBucket}`;
       const result = await sendPush({
         eventKey,
@@ -156,7 +161,7 @@ export async function sweepReminders(now = new Date()) {
         entityId: item.id,
         profileIds: [agent.id],
         payload: {
-          title: item.title,
+          title: item.kind === "follow_up" && item.overdue ? `⚠️ ${item.title}` : item.title,
           body: item.detail,
           path: item.kind === "follow_up" ? "/desk" : "/desk",
           data: { reminder_kind: item.kind, reminder_id: item.id, lead_id: item.leadId ?? "" },
