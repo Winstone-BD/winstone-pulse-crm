@@ -51,6 +51,44 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     if (caller.scope === "none")
       return { profiles: [], leads: [], calls: [], messages: [], events: [] };
 
+    // Agents: query only their own rows at the source, so their numbers are
+    // never cut short by a floor-wide limit or mixed with other agents' work.
+    if (caller.scope === "agent" && caller.profile) {
+      const me = caller.profile.id;
+      const [profile, ownLeadsA, ownLeadsB] = await Promise.all([
+        supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).eq("id", me),
+        supabaseAdmin.from("leads").select("*").eq("assigned_agent_id", me).limit(5000),
+        supabaseAdmin.from("leads").select("*").eq("assigned_to", me).limit(5000),
+      ]);
+      const leadMap = new Map<string, any>();
+      for (const l of [...(ownLeadsA.data ?? []), ...(ownLeadsB.data ?? [])]) {
+        if (leadOwner(l) === me) leadMap.set(l.id, l);
+      }
+      const myLeads = [...leadMap.values()].sort((a, b) =>
+        String(b.updated_at).localeCompare(String(a.updated_at)),
+      );
+      const [calls, messages, events] = await Promise.all([
+        supabaseAdmin.from("call_recordings").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: false }).limit(2000),
+        supabaseAdmin.from("whatsapp_interactions").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: true }).limit(2000),
+        supabaseAdmin.from("lead_events").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: false }).limit(2000),
+      ]);
+      const failed = [profile, ownLeadsA, ownLeadsB, calls, messages, events].find((r) => r.error);
+      if (failed?.error) throw new Error(failed.error.message);
+      const dedupe = <T extends { id: string }>(rows: T[]) => [
+        ...new Map(rows.map((r) => [r.id, r])).values(),
+      ];
+      return {
+        profiles: profile.data ?? [],
+        leads: myLeads,
+        calls: dedupe(calls.data ?? []),
+        messages: dedupe(messages.data ?? []),
+        events: dedupe(events.data ?? []),
+      };
+    }
+
     const [profiles, leads, calls, messages, events] = await Promise.all([
       supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
       allLeads(supabaseAdmin as never),
@@ -72,25 +110,6 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     ]);
     const failed = [profiles, leads, calls, messages, events].find((r) => r.error);
     if (failed?.error) throw new Error(failed.error.message);
-
-    if (caller.scope === "agent" && caller.profile) {
-      const me = caller.profile.id;
-      const myLeads = (leads.data ?? []).filter((l) => leadOwner(l) === me);
-      const myLeadIds = new Set(myLeads.map((l) => l.id));
-      return {
-        profiles: (profiles.data ?? []).filter((p) => p.id === me),
-        leads: myLeads,
-        calls: (calls.data ?? []).filter(
-          (c) => c.agent_id === me || (c.lead_id && myLeadIds.has(c.lead_id)),
-        ),
-        messages: (messages.data ?? []).filter(
-          (m) => m.agent_id === me || (m.lead_id && myLeadIds.has(m.lead_id)),
-        ),
-        events: (events.data ?? []).filter(
-          (e) => e.agent_id === me || (e.lead_id && myLeadIds.has(e.lead_id)),
-        ),
-      };
-    }
 
     return {
       profiles: profiles.data ?? [],
@@ -274,8 +293,10 @@ export const importLeads = createServerFn({ method: "POST" })
           outreachBn: row.outreach_bn ?? null,
         }),
         source: "Winstone Company",
-        assigned_to: agents.length ? agents[toInsert.length % agents.length]!.id : null,
-        assignment_source: agents.length ? "coordinator" : null,
+        // Imports always land unassigned; only LeadHub quantity assignment
+        // moves leads to agents.
+        assigned_to: null,
+        assignment_source: null,
       });
     });
 
