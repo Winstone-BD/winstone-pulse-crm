@@ -21,6 +21,7 @@ import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
+import { SalesCommandCenter } from "@/components/crm/hq/SalesCommandCenter";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
@@ -198,10 +199,18 @@ function ControlBoard() {
           </details>
 
           {/* White content surface */}
-          <div className="min-w-0 flex-1 rounded-2xl border border-border bg-white p-4 text-slate-900 shadow-sm sm:p-6 dark:bg-card dark:text-card-foreground">
+          <div className="min-w-0 flex-1 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
             <MaintenanceProfileNotice />
             {tab === "overview" && (
               <div className="space-y-8">
+                <SalesCommandCenter
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  loading={isPending}
+                  onDrill={setDrill}
+                  onSelectAgent={setOpenAgentId}
+                />
                 <SystemManualCard />
                 <ExecutiveKpiBoard
                   profiles={profiles}

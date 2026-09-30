@@ -10,15 +10,15 @@ export function HqHeader() {
         </span>
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
-            কন্ট্রোল বোর্ড
+            সেলস কমান্ড সেন্টার
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            পুরো ফ্লোরের প্রতিটি কল, রেকর্ডিং আর হোয়াটসঅ্যাপ কথা — সরাসরি লাইভ।
+            দেখুন → বুঝুন → ক্লিক করুন → কাজ করুন। সব সংখ্যা আসল রেকর্ড থেকে।
           </p>
         </div>
       </div>
       <p className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-        শুধু দেখার ভিউ · লিড অ্যাসাইন হয় কোঅর্ডিনেটর ডেস্ক থেকে
+        শুধু দেখার ভিউ · লিড অ্যাসাইন হয় LeadHub থেকে
       </p>
     </div>
   );
