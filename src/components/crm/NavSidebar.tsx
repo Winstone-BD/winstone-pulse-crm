@@ -15,6 +15,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LifeBuoy,
+  Lightbulb,
   Network,
   PhoneCall,
   Server,
@@ -33,6 +34,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/leadhub": Network,
   "/hq": LayoutDashboard,
   "/inventory": Building2,
+  "/sales-intel": Lightbulb,
   "/reports": BarChart3,
   "/system": Server,
   "/ingest": DatabaseZap,
@@ -50,7 +52,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 const GROUPS: { title: string; routes: string[] }[] = [
   { title: "প্রধান", routes: ["/", "/desk", "/coach"] },
-  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/inventory", "/reports"] },
+  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/inventory", "/reports"] },
   { title: "ম্যানেজমেন্ট", routes: ["/hq"] },
   { title: "সাপোর্ট", routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {

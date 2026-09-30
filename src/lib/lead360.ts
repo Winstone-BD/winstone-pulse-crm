@@ -41,6 +41,8 @@ export type L360Change = {
 };
 export type L360Event = { id: string; kind: string; detail: string | null; agentId: string | null; at: string };
 
+export type L360Pitch = { id: string; objection: string; action: string; text: string | null; project: string | null; factCount: number; agentId: string; at: string };
+
 export type TimelineItem = {
   id: string;
   at: string;
@@ -52,7 +54,8 @@ export type TimelineItem = {
     | "follow_up_rescheduled"
     | "follow_up_completed"
     | "follow_up_updated"
-    | "status_changed";
+    | "status_changed"
+    | "pitch_used";
   title: string;
   lines: string[];
   agentId: string | null;
@@ -114,6 +117,7 @@ export function buildLeadTimeline(input: {
   changes: L360Change[];
   events: L360Event[];
   stateChanges?: L360StateChange[];
+  pitches?: L360Pitch[];
   agentName: (id: string | null) => string;
 }): TimelineItem[] {
   const items: TimelineItem[] = [];
@@ -207,6 +211,23 @@ export function buildLeadTimeline(input: {
       title: FIELD[c.field] ?? "CHANGED",
       lines: [`${val(c.oldValue)} → ${val(c.newValue)}`, `Changed By: ${c.changedBy ? agentName(c.changedBy) : "System"}`, `Source: ${c.source}`],
       agentId: c.changedBy,
+    });
+  });
+  (input.pitches ?? []).forEach((p) => {
+    items.push({
+      id: `pitch:${p.id}`,
+      at: p.at,
+      kind: "pitch_used",
+      title: "PITCH USED",
+      lines: [
+        `Customer objection: ${p.objection}`,
+        `Action: ${p.action}`,
+        p.project ? `Project: ${p.project}` : "",
+        p.text ? p.text.slice(0, 280) : "",
+        p.factCount ? `Verified facts cited: ${p.factCount}` : "",
+        `Agent: ${agentName(p.agentId)}`,
+      ].filter(Boolean),
+      agentId: p.agentId,
     });
   });
   // De-duplicate by id so a retried event can never render twice.

@@ -34,6 +34,7 @@ import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
@@ -210,6 +211,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesIntelRoute = SalesIntelRouteImport.update({
+  id: '/sales-intel',
+  path: '/sales-intel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityRoute = SecurityRouteImport.update({
@@ -514,6 +520,7 @@ export interface FileRoutesByFullPath {
   '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
+  '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -593,6 +600,7 @@ export interface FileRoutesByTo {
   '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
+  '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -673,6 +681,7 @@ export interface FileRoutesById {
   '/migration-export': typeof MigrationExportRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
+  '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -754,6 +763,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/privacy'
     | '/reports'
+    | '/sales-intel'
     | '/security'
     | '/support'
     | '/support-admin'
@@ -833,6 +843,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/privacy'
     | '/reports'
+    | '/sales-intel'
     | '/security'
     | '/support'
     | '/support-admin'
@@ -912,6 +923,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/privacy'
     | '/reports'
+    | '/sales-intel'
     | '/security'
     | '/support'
     | '/support-admin'
@@ -992,6 +1004,7 @@ export interface RootRouteChildren {
   MigrationExportRoute: typeof MigrationExportRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
+  SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
@@ -1221,6 +1234,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales-intel': {
+      id: '/sales-intel'
+      path: '/sales-intel'
+      fullPath: '/sales-intel'
+      preLoaderRoute: typeof SalesIntelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/security': {
@@ -1616,6 +1636,7 @@ const rootRouteChildren: RootRouteChildren = {
   MigrationExportRoute: MigrationExportRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
+  SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,

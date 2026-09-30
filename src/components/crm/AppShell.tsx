@@ -43,6 +43,7 @@ export const NAV = [
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
   { to: "/leadhub", label: "LeadHub Nexus", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
+  { to: "/sales-intel", label: "Sales Intelligence", scopes: ["authority", "agent"] },
   { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },

@@ -21,6 +21,13 @@ export const PAGE_SECTIONS = {
     { key: "reports", label: "আমার রিপোর্ট" },
     { key: "support", label: "টিম সাপোর্ট" },
   ],
+  "/sales-intel": [
+    { key: "pitchbook", label: "AI Sales Brief ও Pitchbook" },
+    { key: "history", label: "Pitch History" },
+    { key: "market", label: "Market Intelligence" },
+    { key: "effectiveness", label: "Pitch Effectiveness" },
+    { key: "admin", label: "Knowledge Admin" },
+  ],
   "/system": [
     { key: "health", label: "সিস্টেম হেলথ" },
     { key: "leads", label: "লিড ডেটাবেস" },
