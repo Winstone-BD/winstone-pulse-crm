@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
 import { buildLeadTimeline, lead360Csv, summarize, type TimelineItem } from "@/lib/lead360";
-import { getLead360, searchLead360 } from "@/lib/lead360.functions";
+import { exportLead360Search, getLead360, searchLead360 } from "@/lib/lead360.functions";
 import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS } from "@/lib/contact-close-reasons";
 import { useAdminToken } from "@/lib/local-session";
 
@@ -48,19 +48,23 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
     queryKey: ["lead360-search", filters, cursor, adminToken],
     queryFn: () => search({ data: { adminToken, ...filters, cursor } }),
   });
-  const exportCsv = async () => {
-    const out: Array<Record<string, unknown>> = [];
-    for (let c: number | null = 0; c !== null; ) {
-      const page = await search({ data: { adminToken, ...filters, cursor: c, pageSize: 200 } });
-      if (page.locked) return;
-      out.push(...page.rows);
-      c = page.nextCursor;
+  const exportFn = useServerFn(exportLead360Search);
+  const [exporting, setExporting] = useState(false);
+  const runExport = async (kind: "csv" | "print") => {
+    setExporting(true);
+    try {
+      const out = await exportFn({ data: { adminToken, ...filters } });
+      if (out.locked) return;
+      if (kind === "csv") {
+        const url = URL.createObjectURL(new Blob(["\ufeff" + out.csv], { type: "text/csv" }));
+        const a = document.createElement("a"); a.href = url; a.download = "lead360-filtered.csv"; a.click(); URL.revokeObjectURL(url);
+      } else {
+        const url = URL.createObjectURL(new Blob([out.html], { type: "text/html" }));
+        window.open(url, "_blank");
+      }
+    } finally {
+      setExporting(false);
     }
-    const cols = ["id", "name", "phone", "source", "referenceBy", "calls", "connected", "followUps", "nextFollowUpAt", "fuState"];
-    const cell = (v: unknown) => { let t = v == null ? "" : String(v); if (/^[=+\-@]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; };
-    const csv = [cols.join(","), ...out.map((r) => cols.map((k) => cell(r[k])).join(","))].join("\n");
-    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
-    const a = document.createElement("a"); a.href = url; a.download = "lead360-filtered.csv"; a.click(); URL.revokeObjectURL(url);
   };
   return (
     <div className="space-y-4">
@@ -102,7 +106,8 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
           <option value="self_claimed">Self claimed</option>
         </select>
         <Button type="submit">খুঁজুন</Button>
-        <Button type="button" variant="outline" onClick={exportCsv}>CSV</Button>
+        <Button type="button" variant="outline" disabled={exporting} onClick={() => runExport("csv")}>CSV</Button>
+        <Button type="button" variant="outline" disabled={exporting} onClick={() => runExport("print")}>Print / PDF</Button>
       </form>
       {!res.data?.locked && res.data ? (
         <div className="flex items-center justify-between text-xs text-muted-foreground">

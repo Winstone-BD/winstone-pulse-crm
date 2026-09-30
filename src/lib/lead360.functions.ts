@@ -36,9 +36,7 @@ const SearchInput = z.object({
   pageSize: z.number().int().min(10).max(200).default(40),
 });
 
-export const searchLead360 = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => SearchInput.parse(i))
-  .handler(async ({ data }) => {
+async function runLead360Search(data: z.infer<typeof SearchInput>) {
     let db;
     try {
       db = await authority(data.adminToken);
@@ -121,6 +119,31 @@ export const searchLead360 = createServerFn({ method: "POST" })
       total,
       nextCursor,
     };
+}
+
+export const searchLead360 = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => SearchInput.parse(i))
+  .handler(async ({ data }) => runLead360Search(data));
+
+const FILTER_LABELS: Record<string, string> = { q: "Search", agentId: "Agent", source: "Source", followUpStatus: "Follow-up", from: "From", to: "To", requirement: "Requirement", reason: "Reason", eventKind: "Event type" };
+
+/** Server-built CSV + print-ready HTML of every HQ-filtered result, with filters and generated-at stamp. */
+export const exportLead360Search = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => SearchInput.parse(i))
+  .handler(async ({ data }) => {
+    const rows: Awaited<ReturnType<typeof runLead360Search>>["rows"] = [];
+    for (let c: number | null = 0; c !== null; ) {
+      const page = await runLead360Search({ ...data, cursor: c, pageSize: 200 });
+      if (page.locked) return { locked: true as const };
+      rows.push(...page.rows);
+      c = page.nextCursor;
+    }
+    const { buildLead360Export } = await import("@/lib/lead360-export");
+    const filters = Object.entries(FILTER_LABELS)
+      .map(([k, label]) => [label, (data as Record<string, unknown>)[k]] as const)
+      .filter(([, v]) => v !== null && v !== undefined && v !== "" && v !== "any")
+      .map(([label, v]) => ({ label, value: String(v) }));
+    return { locked: false as const, ...buildLead360Export(rows, filters, new Date()) };
   });
 
 export const getLead360 = createServerFn({ method: "POST" })
