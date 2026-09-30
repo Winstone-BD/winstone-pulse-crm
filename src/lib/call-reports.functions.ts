@@ -36,9 +36,12 @@ export const myPendingReport = createServerFn({ method: "POST" })
 
 /** Gate before dialling: refuses while a report is unfinished. */
 export const startMyCall = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => Base.extend({ leadId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => Base.extend({ leadId: z.string().uuid().nullable().optional() }).parse(input))
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+    const briefingBlock = await requireAgentBriefing(me.id);
+    if (briefingBlock) return briefingBlock;
     const { pendingReportFor } = await import("@/lib/call-reports.server");
     const pending = await pendingReportFor(me.id);
     if (pending) {
@@ -48,6 +51,8 @@ export const startMyCall = createServerFn({ method: "POST" })
         reason: "আগের কলের রিপোর্ট জমা দিন, তারপর নতুন কল শুরু করা যাবে",
       };
     }
+
+    if (!data.leadId) return { blocked: false as const };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin

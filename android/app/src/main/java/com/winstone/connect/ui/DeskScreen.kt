@@ -103,6 +103,9 @@ fun DeskScreen(
     var tab by remember { mutableStateOf(TAB_HOME) }
     val callScope = rememberCoroutineScope()
     var callBlocked by remember { mutableStateOf<String?>(null) }
+    var briefing by remember { mutableStateOf<org.json.JSONObject?>(null) }
+    var briefingError by remember { mutableStateOf<String?>(null) }
+    var briefingSaving by remember { mutableStateOf(false) }
     var showPendingReport by remember { mutableStateOf(false) }
     var showNewLead by remember { mutableStateOf(false) }
     // ফলো-আপ ট্যাব — নিজের সব কল রিপোর্ট, ফিল্টার সহ
@@ -122,6 +125,12 @@ fun DeskScreen(
             context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toInt()
         }.getOrDefault(0)
         update = UpdateChecker.check(installed)
+    }
+
+    LaunchedEffect(Unit) {
+        runCatching { WinstoneApi.briefingStatus() }
+            .onSuccess { briefing = it; briefingError = null }
+            .onFailure { briefingError = "ব্রিফিং যাচাই করতে ইন্টারনেট সংযোগ প্রয়োজন" }
     }
 
     // First launch on a new version: pull back anything earlier versions of the
@@ -185,10 +194,12 @@ fun DeskScreen(
     /** একটাই কল-পথ: সার্ভার গেট পাস করলে লাইভ কল, নইলে রিপোর্টের বার্তা। */
     fun startCall(lead: Lead) {
         callScope.launch {
-            val gate = runCatching { WinstoneApi.startCall(lead.id) }.getOrNull()
-            if (gate?.optBoolean("blocked", false) == true) {
-                callBlocked = gate.optString("reason").takeIf { it.isNotBlank() && it != "null" }
-                    ?: "আগের কলের রিপোর্ট জমা দিন"
+            val result = runCatching { WinstoneApi.startCall(lead.id) }
+            val gate = result.getOrNull()
+            if (result.isFailure || gate == null || gate.optInt("http_status", 500) !in 200..299 || gate.optBoolean("blocked", true)) {
+                callBlocked = gate?.optString("reason")?.takeIf { it.isNotBlank() && it != "null" }
+                    ?: "CRM যাচাই ছাড়া কল শুরু করা যাবে না — ইন্টারনেট সংযোগ পরীক্ষা করুন"
+                if (gate?.optJSONObject("briefing") != null) briefing = gate.optJSONObject("briefing")
             } else {
                 LiveCallLauncher.call(activity, lead.id, lead.phone, data?.agentId, lead.name)
             }
@@ -283,6 +294,7 @@ fun DeskScreen(
                                     agentName = data?.agentName ?: "…",
                                     employeeId = state.employeeId.orEmpty(),
                                     leads = leads,
+                                    onStartCall = { startCall(it) },
                                     onLeadDetail = { leadDetail = it },
                                     onViewAllLeads = { tab = TAB_LEADS },
                                     onViewAllFollowUps = { tab = TAB_CALLS },
@@ -386,7 +398,7 @@ fun DeskScreen(
                     val target = leadDetail
                     leadDetail = null
                     target?.let {
-                        LiveCallLauncher.call(activity, it.id, it.phone, state.data?.agentId, it.name)
+                        startCall(it)
                     }
                 }) { Text("কল করুন") }
             },
@@ -413,7 +425,7 @@ fun DeskScreen(
                     val target = openReportLead
                     openReportLead = null
                     target?.let {
-                        LiveCallLauncher.call(activity, it.id, it.phone, state.data?.agentId, it.name)
+                        startCall(it)
                     }
                 }) { Text("কল করুন") }
             },
@@ -441,6 +453,36 @@ fun DeskScreen(
                 callBlocked = null
                 onReportSubmitted()
                 vm.refresh()
+            },
+        )
+    }
+
+    val briefingRequired = briefing?.optBoolean("required", false) == true &&
+        briefing?.optBoolean("acknowledged", false) != true
+    if (briefingRequired) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(briefing?.optString("title") ?: "সকাল ৯:০৫-এর দৈনিক ব্রিফিং") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(briefing?.optString("detail").orEmpty())
+                    Text("এই নোটিশ স্বীকার না করা পর্যন্ত কোনো কল শুরু হবে না।", fontWeight = FontWeight.SemiBold)
+                    briefingError?.let { Text(it, color = WinRed, fontSize = 12.sp) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !briefingSaving,
+                    onClick = {
+                        briefingSaving = true
+                        callScope.launch {
+                            runCatching { WinstoneApi.acknowledgeBriefing() }
+                                .onSuccess { briefing = it; briefingError = null }
+                                .onFailure { briefingError = "সংযোগ পাওয়া যায়নি — আবার চেষ্টা করুন" }
+                            briefingSaving = false
+                        }
+                    },
+                ) { Text(if (briefingSaving) "সংরক্ষণ হচ্ছে…" else "বুঝেছি — কল শুরু করব") }
             },
         )
     }

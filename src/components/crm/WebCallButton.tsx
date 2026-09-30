@@ -109,7 +109,6 @@ export function WebCallButton({
 
   const start = useMutation({
     mutationFn: async () => {
-      if (!leadId) return { blocked: false as const };
       return begin({ data: { adminToken, leadId } });
     },
     onSuccess: (result) => {

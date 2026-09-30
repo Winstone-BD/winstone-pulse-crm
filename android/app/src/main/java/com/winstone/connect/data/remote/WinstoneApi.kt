@@ -215,6 +215,24 @@ object WinstoneApi {
         }
     }
 
+    /** Daily 9:05 Asia/Dhaka briefing state. Calls remain blocked until acknowledged. */
+    suspend fun briefingStatus(): JSONObject = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
+            .url("$BASE_URL/api/public/agent/briefing")
+            .header("x-device-token", authToken())
+            .get()
+            .build()
+        client.newCall(req).execute().use { res ->
+            val body = runCatching { JSONObject(res.body?.string().orEmpty()) }.getOrElse { JSONObject() }
+            if (!res.isSuccessful) error(body.optString("error", "HTTP ${res.code}"))
+            body
+        }
+    }
+
+    suspend fun acknowledgeBriefing(): JSONObject = withContext(Dispatchers.IO) {
+        post("/api/public/agent/briefing", JSONObject())
+    }
+
     /** Opens the mandatory post-call report the moment a call ends. */
     suspend fun openReport(
         leadId: String,

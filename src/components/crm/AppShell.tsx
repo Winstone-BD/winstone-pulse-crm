@@ -8,6 +8,7 @@ import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
 import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
+import { AgentBriefingGate } from "@/components/crm/AgentBriefingGate";
 
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { InstallAppButton } from "@/components/crm/InstallAppButton";
@@ -314,6 +315,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* The mandatory post-call report follows the agent across every page, not
           just the desk: a call that ended anywhere must be reported. */}
       {scope !== "none" && <PostCallReportGate />}
+      {scope === "agent" && <AgentBriefingGate />}
 
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </div>

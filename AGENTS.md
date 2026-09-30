@@ -18,3 +18,4 @@
 
 - Android V2 reports send six raw yes/no evaluation answers; the server derives score/category/priority and legacy reports are never rescored — why: one locked rule across web, phone and offline replay.
 - Project reporting uses Inventory requirement labels as the current project dimension; site visits and bookings count only explicit saved report signals — why: no separate projects, site-visits, or bookings model exists yet, so free-text inference would invent facts.
+- Agent calls require a daily 9:05 Asia/Dhaka briefing acknowledgement for the current policy version, enforced on the server across web and Android — why: UI-only notices are bypassable.
