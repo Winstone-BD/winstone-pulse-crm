@@ -61,7 +61,7 @@ const DECK_TABS = [
 ] as const;
 type DeckTab = (typeof DECK_TABS)[number]["key"];
 
-export const Route = createFileRoute("/dispatch")({
+export const Route = createFileRoute("/leadhub")({
   head: () => ({
     meta: [
       { title: "Lead Dispatcher — Winstone Connect" },
