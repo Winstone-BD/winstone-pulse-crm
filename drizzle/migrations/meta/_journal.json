@@ -470,6 +470,13 @@
       "when": 1790782134518,
       "tag": "0066_sales_intelligence",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1790784430278,
+      "tag": "0067_perf_snapshot_indexes",
+      "breakpoints": true
     }
   ]
 }
