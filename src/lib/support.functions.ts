@@ -198,6 +198,9 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     const { conversationByToken, appendMessage } = await import("@/lib/support.server");
     const conversation = await conversationByToken(data.token);
     if (!conversation) throw new Error("This conversation link is no longer valid");
+    if ((data.attachments ?? []).some((file) => !file.path.includes(`/${conversation.id}/`))) {
+      throw new Error("Attachments must be uploaded to this conversation");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: customer } = await supabaseAdmin
