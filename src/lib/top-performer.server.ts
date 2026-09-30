@@ -303,12 +303,12 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const ranked = rankPerformers(lines);
   const isActive = (line: PerformerLine) => line.score > 0 || line.completed > 0;
   const activeRanked = ranked.filter(isActive);
-  const leaderCompletion = activeRanked[0]?.completionPercent ?? 0;
+  const leaderScore = activeRanked[0]?.score ?? 0;
   const detailed = ranked.map((line, index): RankedPerformer => ({
     ...line,
     rank: index + 1,
-    // Gap is expressed in the same normalised percentage everyone is ranked on.
-    gapFromLeader: Math.max(0, leaderCompletion - line.completionPercent),
+    // Gap is expressed in the same score everyone is ranked on.
+    gapFromLeader: Math.max(0, leaderScore - line.score),
     ...performerInsight(line),
   }));
   const topThree = detailed.filter(isActive).slice(0, 3);
