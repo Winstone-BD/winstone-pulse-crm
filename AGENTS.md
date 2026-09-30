@@ -13,3 +13,5 @@
 - Imports and coordinator intake always land in the Head Lead Store UNASSIGNED; only Coordinator Deck distribution (daily quota) or manual assignment moves leads to agents — why: one source of truth, no bypass of the 50/day rule.
 
 - Daily accountability: agent_accountability_reviews table is server-only (no client RLS policies); unlock/approve requires the HQ PIN scope, never IT — why: business rule says final approval is Executive HQ only.
+
+- The temporary 2026-09-30 11:30 Asia/Dhaka maintenance closure is a global non-dismissible gate — why: home and every CRM role must stop using CRM until IT confirms reopening.
