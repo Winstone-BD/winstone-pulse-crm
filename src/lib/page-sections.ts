@@ -37,12 +37,12 @@ export type SectionRoute = keyof typeof PAGE_SECTIONS;
 export type SectionKey<R extends SectionRoute> = (typeof PAGE_SECTIONS)[R][number]["key"];
 
 export const sectionSearch = (s: Record<string, unknown>): { s?: string } =>
-  typeof s.s === "string" ? { s: s.s } : {};
+  typeof s["s"] === "string" ? { s: s["s"] } : {};
 
 export function useSection<R extends SectionRoute>(route: R): [SectionKey<R>, (k: SectionKey<R>) => void] {
-  const raw = useRouterState({ select: (st) => (st.location.search as { s?: unknown }).s });
+  const raw = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
   const list = PAGE_SECTIONS[route] as readonly { key: string }[];
-  const current = (list.find((x) => x.key === raw)?.key ?? list[0].key) as SectionKey<R>;
+  const current = (list.find((x) => x.key === raw)?.key ?? list[0]!.key) as SectionKey<R>;
   const navigate = useNavigate();
   const set = useCallback(
     (k: SectionKey<R>) => {

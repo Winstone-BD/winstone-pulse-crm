@@ -64,7 +64,7 @@ const GROUPS: { title: string; routes: string[] }[] = [
 export function NavSidebar({ items }: { items: readonly Item[] }) {
   const byRoute = new Map(items.map((i) => [i.to, i]));
   const path = useRouterState({ select: (st) => st.location.pathname });
-  const activeS = useRouterState({ select: (st) => (st.location.search as { s?: unknown }).s });
+  const activeS = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
   return (
     <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-card/60 px-3 py-5 backdrop-blur lg:block">
       {GROUPS.map((group) => {
