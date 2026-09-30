@@ -8,6 +8,21 @@
  */
 import { dhakaInstant, dhakaParts } from "@/lib/shift.server";
 
+/** Pure ranking used by the daily board: highest displayed score ranks first. */
+export function rankPerformers(lines: PerformerLine[]): PerformerLine[] {
+  return [...lines].sort(
+    (a, b) =>
+      // The board sorts by the score everyone sees on the card — biggest first.
+      b.score - a.score ||
+      b.completionPercent - a.completionPercent ||
+      b.connected - a.connected ||
+      b.reports - a.reports ||
+      b.talkMinutes - a.talkMinutes ||
+      a.name.localeCompare(b.name, "bn"),
+  );
+}
+
+
 /** Dhaka minute-of-day when the homepage reveals the winner (5:30 pm). */
 export const REVEAL_MINUTES = 17 * 60 + 30;
 
