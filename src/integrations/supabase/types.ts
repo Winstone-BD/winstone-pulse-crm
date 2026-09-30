@@ -2150,6 +2150,146 @@ export type Database = {
         }
         Relationships: []
       }
+      market_news: {
+        Row: {
+          ai_model: string | null
+          category: string
+          created_at: string
+          created_by: string
+          dedupe_key: string
+          headline: string
+          id: string
+          key_points: Json
+          origin: string
+          retrieved_excerpt: string | null
+          sales_insight: string | null
+          source_name: string | null
+          source_published_at: string | null
+          source_title: string | null
+          source_url: string | null
+          status: string
+          summary: string
+          tags: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          category?: string
+          created_at?: string
+          created_by: string
+          dedupe_key: string
+          headline: string
+          id?: string
+          key_points?: Json
+          origin: string
+          retrieved_excerpt?: string | null
+          sales_insight?: string | null
+          source_name?: string | null
+          source_published_at?: string | null
+          source_title?: string | null
+          source_url?: string | null
+          status?: string
+          summary: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          dedupe_key?: string
+          headline?: string
+          id?: string
+          key_points?: Json
+          origin?: string
+          retrieved_excerpt?: string | null
+          sales_insight?: string | null
+          source_name?: string | null
+          source_published_at?: string | null
+          source_title?: string | null
+          source_url?: string | null
+          status?: string
+          summary?: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      market_news_audit: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          detail: Json | null
+          id: string
+          news_id: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          news_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          news_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_news_audit_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "market_news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_news_runs: {
+        Row: {
+          added: number | null
+          error: string | null
+          fetched: number | null
+          finished_at: string | null
+          id: string
+          lease_until: string
+          skipped: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          added?: number | null
+          error?: string | null
+          fetched?: number | null
+          finished_at?: string | null
+          id?: string
+          lease_until: string
+          skipped?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          added?: number | null
+          error?: string | null
+          fetched?: number | null
+          finished_at?: string | null
+          id?: string
+          lease_until?: string
+          skipped?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null

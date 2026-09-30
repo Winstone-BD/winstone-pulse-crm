@@ -477,6 +477,13 @@
       "when": 1790784430278,
       "tag": "0067_perf_snapshot_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1790784737717,
+      "tag": "0068_market_news",
+      "breakpoints": true
     }
   ]
 }
