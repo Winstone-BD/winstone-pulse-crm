@@ -157,6 +157,7 @@ const KIND_STYLE: Record<TimelineItem["kind"], string> = {
   follow_up_completed: "bg-success/15 text-success",
   follow_up_updated: "bg-primary/10 text-primary",
   status_changed: "bg-accent text-foreground",
+  pitch_used: "bg-primary/15 text-primary",
 };
 
 function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
@@ -178,6 +179,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
         changes: d.changes,
         events: d.events,
         stateChanges: d.stateChanges,
+        pitches: d.pitches,
         agentName: name,
       }),
     };

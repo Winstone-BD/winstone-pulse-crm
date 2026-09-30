@@ -1453,6 +1453,39 @@ export type Database = {
           },
         ]
       }
+      knowledge_versions: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          entity: string
+          entity_id: string
+          id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          action: string
+          actor: string
+          created_at?: string
+          entity: string
+          entity_id: string
+          id?: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string
+          id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: []
+      }
       lead_assignments: {
         Row: {
           changed_by: string | null
@@ -2051,6 +2084,72 @@ export type Database = {
         }
         Relationships: []
       }
+      market_facts: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          effective_date: string
+          expiry_date: string | null
+          geography: string | null
+          id: string
+          metric: string
+          notes: string | null
+          review_date: string | null
+          source_name: string
+          source_url: string | null
+          status: string
+          unit: string | null
+          updated_at: string
+          value: string
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          effective_date: string
+          expiry_date?: string | null
+          geography?: string | null
+          id?: string
+          metric: string
+          notes?: string | null
+          review_date?: string | null
+          source_name: string
+          source_url?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          value: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          effective_date?: string
+          expiry_date?: string | null
+          geography?: string | null
+          id?: string
+          metric?: string
+          notes?: string | null
+          review_date?: string | null
+          source_name?: string
+          source_url?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          value?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null
@@ -2119,6 +2218,118 @@ export type Database = {
           surface?: string
           updated_at?: string
           updated_by_label?: string | null
+        }
+        Relationships: []
+      }
+      pitch_events: {
+        Row: {
+          action: string
+          agent_id: string
+          ai_grounded: boolean
+          call_id: string | null
+          correlation_key: string
+          created_at: string
+          fact_ids: string[]
+          final_text: string | null
+          follow_up_id: string | null
+          generated_text: string | null
+          id: string
+          lead_id: string
+          objection_code: string
+          project: string | null
+          template_id: string | null
+        }
+        Insert: {
+          action: string
+          agent_id: string
+          ai_grounded?: boolean
+          call_id?: string | null
+          correlation_key: string
+          created_at?: string
+          fact_ids?: string[]
+          final_text?: string | null
+          follow_up_id?: string | null
+          generated_text?: string | null
+          id?: string
+          lead_id: string
+          objection_code: string
+          project?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          action?: string
+          agent_id?: string
+          ai_grounded?: boolean
+          call_id?: string | null
+          correlation_key?: string
+          created_at?: string
+          fact_ids?: string[]
+          final_text?: string | null
+          follow_up_id?: string | null
+          generated_text?: string | null
+          id?: string
+          lead_id?: string
+          objection_code?: string
+          project?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_events_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitch_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitch_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pitch_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pitch_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          objection_code: string
+          status: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          objection_code: string
+          status?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          objection_code?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          version?: number
         }
         Relationships: []
       }

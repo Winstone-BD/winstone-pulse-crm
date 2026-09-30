@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { PITCH_ACTION_LABEL, objectionLabel, type PitchAction } from "@/lib/sales-intel-rules";
+
 /** HQ/IT-only Lead 360: search and full permanent history. Read-only. */
 async function authority(adminToken: string | null | undefined) {
   const { resolveCaller } = await import("@/lib/access.server");
@@ -159,7 +161,7 @@ export const getLead360 = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
-    const [rp, rc, fu, ch, ev, sc] = await Promise.all([
+    const [rp, rc, fu, ch, ev, sc, pe] = await Promise.all([
       all((a, b) => db.from("call_reports")
         .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, no_follow_up_note, reason")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
@@ -174,6 +176,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         .eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
       all((a, b) => db.from("lead_events").select("id, kind, detail, agent_id, created_at").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("lead_state_changes").select("id, field, old_value, new_value, changed_by, source, changed_at").eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
+      all((a, b) => db.from("pitch_events").select("id, objection_code, action, generated_text, final_text, project, fact_ids, agent_id, created_at").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
     ]);
     const reports = { data: rp }, recs = { data: rc }, fus = { data: fu }, changes = { data: ch }, events = { data: ev };
     // Other leads sharing a normalized phone: linked for context, never merged.
@@ -270,6 +273,7 @@ export const getLead360 = createServerFn({ method: "POST" })
       })),
       events: (events.data ?? []).map((e) => ({ id: e.id, kind: e.kind, detail: e.detail, agentId: e.agent_id, at: e.created_at })),
       stateChanges: sc.map((c) => ({ id: c.id, field: c.field, oldValue: c.old_value, newValue: c.new_value, changedBy: c.changed_by, source: c.source, at: c.changed_at })),
+      pitches: pe.map((p) => ({ id: p.id, objection: objectionLabel(p.objection_code), action: PITCH_ACTION_LABEL[p.action as PitchAction] ?? p.action, text: p.final_text ?? p.generated_text, project: p.project, factCount: (p.fact_ids ?? []).length, agentId: p.agent_id, at: p.created_at })),
       linkedLeads: (linked ?? []).map((l) => ({ id: l.id, name: l.name, phone: l.phone_number })),
       canonicalPhones: phones,
       agents,

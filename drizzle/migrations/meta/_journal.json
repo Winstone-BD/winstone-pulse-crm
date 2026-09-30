@@ -463,6 +463,13 @@
       "when": 1790777739517,
       "tag": "0065_maintenance_lock_system",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1790782134518,
+      "tag": "0066_sales_intelligence",
+      "breakpoints": true
     }
   ]
 }

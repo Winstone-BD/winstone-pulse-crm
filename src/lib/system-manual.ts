@@ -3,7 +3,7 @@
  * page, the HQ and IT Console reference cards and the downloadable PDF are
  * all generated from this content — never keep a second copy.
  */
-export const MANUAL_VERSION = "1.1.0";
+export const MANUAL_VERSION = "1.2.0";
 export const MANUAL_UPDATED = "2026-09-30";
 export const MANUAL_PDF_PATH = "/winstone-system-manual.pdf";
 
@@ -143,6 +143,24 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     ],
   },
   {
+    id: "sales-intel",
+    title: "16A. Sales Intelligence (Market Intelligence, Smart Pitchbook, Pitch History)",
+    body: [
+      "What it is: a module inside Winstone CRM (menu: Sales Intelligence). It uses the existing canonical lead record and Lead 360 — there is no second lead list.",
+      "AI Sales Brief: when an agent opens one of their own assigned leads, the brief lists requirement, location, budget, prior calls, last customer response, prior objections/pitches, current follow-up, score/category and today's objective. Every line is read from saved records and shows its source type; anything not recorded says 'রেকর্ড করা নেই'. Budget is not a stored field yet, so it always shows as not recorded.",
+      "Market Intelligence: HQ/IT enter facts (Daily Market Brief, Finance / Loan, Area Price Trend, Government / Regulatory, Project / Property Fact) with value, unit, source name/URL, effective date, review and expiry date. A fact moves draft → verified → published → expired. Any edit creates a new version and sends it back to draft. The app ships with no market numbers; the fact list starts empty.",
+      "Verified facts: only published facts that are not past their expiry date are used in pitches. Unverified and expired facts are labelled and excluded. Facts past their review date are still used but marked 'Review due'.",
+      "Smart Pitchbook: the agent picks an objection (Price is high, Loan rate is high, Market may fall, Need to discuss with family, Not ready now, Wants more information, Comparing other projects, Wants lower budget, Location concern, Payment concern, Other). The CRM shows a recommended response, 'Why this response' (from the lead's own records) and Supporting Facts with source, dates and status. Buttons: Copy Pitch, WhatsApp, Save to Lead History, Edit / Regenerate.",
+      "AI rule: Winstone AI only receives published facts plus the lead's real context. Its reply must cite fact ids, and every number in it must appear in a cited fact or the lead context. Otherwise the reply is rejected and the approved library template (or a neutral no-number fallback) is shown.",
+      "WhatsApp: opens a prefilled wa.me message on the agent's phone. It is recorded as 'WhatsApp opened / message prepared' — never as sent or delivered, because the WhatsApp Business provider is not connected.",
+      "Pitch History: every Copy/Edit/WhatsApp/Save creates a permanent pitch event linked to the lead, the signed-in agent, the last call report, the open follow-up, the objection, the template and the cited fact ids. Rows cannot be changed or deleted (database trigger). Retrying the same action does not create a second row. Pitch events appear in the Lead 360 timeline as 'PITCH USED'.",
+      "Pitch Effectiveness: a fixed counting rule, not an AI score. For each pitch, the first later follow-up, call, site visit and booking on the same lead within the chosen window (default 14 days, 1–90) is linked. Site visit and booking count only from explicit saved report signals. The linked records are listed. This shows association, not causation.",
+      "Filters and exports: lead, phone, Lead ID, agent (HQ), objection, action, outcome, project, source and date range, with page-by-page loading. CSV and Print/PDF include filters, generated time (Asia/Dhaka), data scope and document version. Agents only ever see and export their own pitch events.",
+      "Who manages it: HQ/IT with the IT PIN can add, verify, publish, expire and version facts and pitch templates (Knowledge Admin). An Executive HQ view session can read everything but cannot change it. Agents use published knowledge and cannot change it.",
+      "Example: A customer says the price is high. The agent opens Sales Intelligence → picks the lead → taps 'Price is high' → reviews the recommended reply and the published area-price fact it cites → taps WhatsApp. Lead 360 now shows 'PITCH USED — WhatsApp opened / message prepared' with the agent's name and time.",
+    ],
+  },
+  {
     id: "checklist",
     title: "17. Daily operational checklist",
     body: [
@@ -153,6 +171,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     id: "changelog",
     title: "18. Version and changelog",
     body: [
+      "1.2.0 (2026-09-30): Sales Intelligence module — AI Sales Brief, Smart Pitchbook, verified Market Facts with versioning, permanent Pitch History in Lead 360, deterministic Pitch Effectiveness, filtered CSV/PDF export.",
       "1.1.0 (2026-09-30): Contact-close reason enforced in the database and written to permanent lead history; Other note stored and shown; follow-up cancel/old-new values logged and deletes blocked; agent self-claim retired; 9:05 gate on all agent actions; Lead 360 filters (source, requirement, reason, event type) with totals, paging and filtered CSV.",
       "1.0.0 (2026-09-30): Handover release — sidebar sub-pages for HQ/Desk/IT, Lead 360 with full permanent history, structured follow-up and contact-close reasons, append-only history tables, briefing gate on report submission, home-page daily Top 3.",
     ],
