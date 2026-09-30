@@ -185,6 +185,8 @@
     /* Phones and iPhones: never a sideways scrollbar, and momentum scrolling
        that respects the notch / home-bar safe areas. */
     overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100vw;
     overscroll-behavior-y: none;
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -192,6 +194,7 @@
   /* Consistent controls on every page and screen. */
   html {
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
     text-size-adjust: 100%;
   }
   button,
