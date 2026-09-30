@@ -186,7 +186,7 @@ export const Route = createFileRoute("/api/public/agent/report")({
             // Builds before v2.15 send only a free-text note: keep it under the canonical "other" code.
             noFollowUpReason:
               body.no_follow_up_reason ??
-              (body.follow_up_at ? null : body.connected === false || body.call_status && body.call_status !== "connected" ? "not_connected" : body.follow_up_note ? "other" : null),
+              (body.follow_up_at ? null : body.call_status && body.call_status !== "connected" ? "not_connected" : body.follow_up_note ? "other" : null),
             evaluationAnswers: body.evaluation_answers ?? null,
           });
 
