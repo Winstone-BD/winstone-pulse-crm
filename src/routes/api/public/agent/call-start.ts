@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
         if (!parsed.success) return json({ error: "lead_id প্রয়োজন" }, 400);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { leadHeldByOther, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+        const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
         const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
         const { pendingReportFor } = await import("@/lib/call-reports.server");
 
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
           .eq("id", parsed.data.lead_id)
           .maybeSingle();
         if (!lead) return json({ error: "Unknown lead" }, 404);
-        if (leadHeldByOther(lead, caller.profile.id)) {
+        if (leadNotAssignedTo(lead, caller.profile.id)) {
           return json({ error: LEAD_NOT_YOURS }, 403);
         }
 

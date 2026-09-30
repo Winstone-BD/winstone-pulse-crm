@@ -26,3 +26,8 @@ export function leadHeldByOther(lead: LeadOwnerRow | null | undefined, profileId
 }
 
 export const LEAD_NOT_YOURS = "এই লিড আপনার তালিকায় নেই";
+
+/** Calls may only start on a lead assigned to this agent — unassigned pool leads are LeadHub-only. */
+export function leadNotAssignedTo(lead: LeadOwnerRow | null | undefined, profileId: string): boolean {
+  return leadOwnerId(lead) !== profileId;
+}
