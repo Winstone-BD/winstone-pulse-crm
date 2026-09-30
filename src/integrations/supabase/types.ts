@@ -665,12 +665,17 @@ export type Database = {
           customer_response: string | null
           device_id: string | null
           duration_seconds: number
+          evaluation_answers: Json | null
+          evaluation_model: string | null
+          evaluation_score: number | null
           follow_up_at: string | null
+          follow_up_priority: string | null
           grade: string | null
           id: string
           interest: string | null
           lead_id: string
           next_action: string | null
+          next_best_action: string | null
           no_follow_up_reason: string | null
           note: string | null
           phone_number: string | null
@@ -697,12 +702,17 @@ export type Database = {
           customer_response?: string | null
           device_id?: string | null
           duration_seconds?: number
+          evaluation_answers?: Json | null
+          evaluation_model?: string | null
+          evaluation_score?: number | null
           follow_up_at?: string | null
+          follow_up_priority?: string | null
           grade?: string | null
           id?: string
           interest?: string | null
           lead_id: string
           next_action?: string | null
+          next_best_action?: string | null
           no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
@@ -729,12 +739,17 @@ export type Database = {
           customer_response?: string | null
           device_id?: string | null
           duration_seconds?: number
+          evaluation_answers?: Json | null
+          evaluation_model?: string | null
+          evaluation_score?: number | null
           follow_up_at?: string | null
+          follow_up_priority?: string | null
           grade?: string | null
           id?: string
           interest?: string | null
           lead_id?: string
           next_action?: string | null
+          next_best_action?: string | null
           no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
