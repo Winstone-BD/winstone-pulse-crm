@@ -63,6 +63,21 @@ class ReminderWorker(context: Context, params: WorkerParameters) :
             // Stable id per reminder: an item still due only updates its own card.
             runCatching { manager.notify("$kind:$id".hashCode(), notification) }
         }
+        val notices = runCatching { WinstoneApi.notices().optJSONArray("notices") }.getOrNull()
+        if (notices != null) for (index in 0 until notices.length()) {
+            val item = notices.optJSONObject(index) ?: continue
+            val id = item.optString("id")
+            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("IT Council · ${item.optString("title")}")
+                .setContentText(item.optString("body"))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(item.optString("body")))
+                .setPriority(if (item.optString("severity") == "urgent") NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(open)
+                .build()
+            runCatching { manager.notify("it_notice:$id".hashCode(), notification) }
+        }
         return Result.success()
     }
 

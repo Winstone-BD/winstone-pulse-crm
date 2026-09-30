@@ -426,6 +426,20 @@ object WinstoneApi {
         }
     }
 
+    /** IT Council notices addressed to this signed-in agent. */
+    suspend fun notices(): JSONObject = withContext(Dispatchers.IO) {
+        val req = Request.Builder()
+            .url("$BASE_URL/api/public/agent/notices")
+            .header("x-device-token", authToken())
+            .get()
+            .build()
+        client.newCall(req).execute().use { res ->
+            val body = runCatching { JSONObject(res.body?.string().orEmpty()) }.getOrElse { JSONObject() }
+            if (!res.isSuccessful) error(body.optString("error", "HTTP ${res.code}"))
+            body
+        }
+    }
+
     private fun post(path: String, payload: JSONObject): JSONObject {
         val req = Request.Builder()
             .url(BASE_URL + path)
