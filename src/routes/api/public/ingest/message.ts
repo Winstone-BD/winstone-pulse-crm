@@ -65,7 +65,10 @@ export const Route = createFileRoute("/api/public/ingest/message")({
           media_url: body.media_url ?? null,
           duration_seconds: body.duration_seconds ?? null,
         });
-        if (error) return json({ error: error.message }, 500);
+        if (error) {
+          console.error("message ingest failed", error);
+          return json({ error: "Message could not be saved" }, 500);
+        }
 
         const { logLeadEvent } = await import("@/lib/lead-events.server");
         await logLeadEvent({
