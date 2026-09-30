@@ -97,9 +97,9 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
         <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={eventKind} onChange={(e) => setEventKind(e.target.value)} aria-label="ইভেন্টের ধরন">
           <option value="">সব ইভেন্ট</option>
           <option value="contact_closed">Contact closed</option>
-          <option value="assigned">Assigned</option>
-          <option value="call">Call</option>
-          <option value="report_submitted">Report submitted</option>
+          <option value="outcome_logged">Outcome logged</option>
+          <option value="call_connected">Call connected</option>
+          <option value="self_claimed">Self claimed</option>
         </select>
         <Button type="submit">খুঁজুন</Button>
         <Button type="button" variant="outline" onClick={exportCsv}>CSV</Button>
