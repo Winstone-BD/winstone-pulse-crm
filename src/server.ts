@@ -47,7 +47,7 @@ function isH3SwallowedErrorBody(body: string): boolean {
 /** Phone/device API paths that stay open while locked (sign-in and version checks). */
 const DEVICE_OPEN = ["/api/public/agent/login", "/api/public/agent/version", "/api/public/config/"];
 
-async function deviceLockResponse(request: Request): Promise<Response | null> {
+export async function deviceLockResponse(request: Request): Promise<Response | null> {
   if (!request.headers.get("x-device-token")) return null;
   const path = new URL(request.url).pathname;
   if (!path.startsWith("/api/public/agent/") && !path.startsWith("/api/public/ingest/")) return null;
