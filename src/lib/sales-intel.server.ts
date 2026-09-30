@@ -70,7 +70,7 @@ export async function listFacts(db: Db, opts: { onlyAuthoritative?: boolean | un
 }
 
 type Src = { kind: "lead" | "call_report" | "follow_up" | "pitch" | "fact"; id: string };
-export type BriefLine = { label: string; value: string; sources: Src[] };
+export type BriefLine = { label: string; value: string; sources: Src[]; group: "fact" | "next_action" };
 
 /** AI Sales Brief — every line built from existing rows; missing data says so. */
 export async function buildSalesBrief(c: SiCaller, leadId: string) {
@@ -89,7 +89,7 @@ export async function buildSalesBrief(c: SiCaller, leadId: string) {
   const req = [...submitted].reverse().find((r) => r.requirement?.trim());
   const openFu = followUps.find((f) => !["done", "completed", "cancelled", "canceled"].includes(f.status));
   const nr = "রেকর্ড করা নেই";
-  const lines: BriefLine[] = [
+  const raw: Omit<BriefLine, "group">[] = [
     { label: "Requirement", value: req?.requirement ?? nr, sources: req ? [{ kind: "call_report", id: req.id }] : [] },
     { label: "Location", value: lead.address?.trim() || nr, sources: lead.address ? [{ kind: "lead", id: lead.id }] : [] },
     { label: "Budget", value: nr, sources: [] },
@@ -105,6 +105,7 @@ export async function buildSalesBrief(c: SiCaller, leadId: string) {
       sources: openFu ? [{ kind: "follow_up", id: openFu.id }] : last ? [{ kind: "call_report", id: last.id }] : [],
     },
   ];
+  const lines: BriefLine[] = raw.map((l) => ({ ...l, group: l.label === "Today's objective" ? "next_action" : "fact" }));
   return { lead: { id: lead.id, name: lead.name, phone: lead.phone_number }, lines, lastReportId: last?.id ?? null, openFollowUpId: openFu?.id ?? null, contextText: lines.map((l) => `${l.label}: ${l.value}`).join("\n") };
 }
 

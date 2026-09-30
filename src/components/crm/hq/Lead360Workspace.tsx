@@ -12,6 +12,7 @@ import { buildLeadTimeline, lead360Csv, summarize, type TimelineItem } from "@/l
 import { exportLead360Search, getLead360, searchLead360 } from "@/lib/lead360.functions";
 import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS } from "@/lib/contact-close-reasons";
 import { useAdminToken } from "@/lib/local-session";
+import { SalesBriefCard } from "@/components/crm/sales-intel/SalesIntelPanels";
 
 const fmt = (iso: string | null, withTime = true) =>
   iso
@@ -309,6 +310,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
           </div>
         </>
       )}
+      <SalesBriefCard leadId={leadId} />
     </div>
   );
 }
