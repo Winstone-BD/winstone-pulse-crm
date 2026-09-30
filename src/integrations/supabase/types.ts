@@ -1096,6 +1096,51 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_up_changes: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          follow_up_id: string
+          id: string
+          lead_id: string | null
+          new_scheduled_at: string | null
+          new_status: string | null
+          note: string | null
+          old_scheduled_at: string | null
+          old_status: string | null
+          reason_code: string | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          follow_up_id: string
+          id?: string
+          lead_id?: string | null
+          new_scheduled_at?: string | null
+          new_status?: string | null
+          note?: string | null
+          old_scheduled_at?: string | null
+          old_status?: string | null
+          reason_code?: string | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          follow_up_id?: string
+          id?: string
+          lead_id?: string | null
+          new_scheduled_at?: string | null
+          new_status?: string | null
+          note?: string | null
+          old_scheduled_at?: string | null
+          old_status?: string | null
+          reason_code?: string | null
+        }
+        Relationships: []
+      }
       follow_up_events: {
         Row: {
           agent_id: string | null
@@ -1103,15 +1148,20 @@ export type Database = {
           completed_at: string | null
           created_at: string
           customer_name: string | null
+          customer_response: string | null
           id: string
           lead_id: string
+          next_action: string | null
           note: string | null
           notified_at: string | null
           phone_number: string | null
+          previous_call_id: string | null
           priority: string
+          reason_code: string | null
           recording_id: string | null
           reminder_minutes: number
           report_id: string | null
+          reschedule_count: number
           scheduled_at: string
           status: string
           updated_at: string
@@ -1122,15 +1172,20 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_name?: string | null
+          customer_response?: string | null
           id?: string
           lead_id: string
+          next_action?: string | null
           note?: string | null
           notified_at?: string | null
           phone_number?: string | null
+          previous_call_id?: string | null
           priority?: string
+          reason_code?: string | null
           recording_id?: string | null
           reminder_minutes?: number
           report_id?: string | null
+          reschedule_count?: number
           scheduled_at: string
           status?: string
           updated_at?: string
@@ -1141,15 +1196,20 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_name?: string | null
+          customer_response?: string | null
           id?: string
           lead_id?: string
+          next_action?: string | null
           note?: string | null
           notified_at?: string | null
           phone_number?: string | null
+          previous_call_id?: string | null
           priority?: string
+          reason_code?: string | null
           recording_id?: string | null
           reminder_minutes?: number
           report_id?: string | null
+          reschedule_count?: number
           scheduled_at?: string
           status?: string
           updated_at?: string
