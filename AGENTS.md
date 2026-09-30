@@ -30,3 +30,4 @@
 
 - Staging E2E suite (tests/staging, vitest.staging.config.ts) is opt-in and refuses the live project ref — why: one backend serves preview+published, so real-DB flow tests must never hit live data.
 - Sales Intelligence writes go only through sales-intel.server.ts (actor from session, pitch_events append-only + correlation_key, AI replies pass validateGrounding) — why: one grounded, auditable path on the canonical leads table.
+- Market News writes go only through market-news.server.ts; auto items must keep source_url + retrieved_excerpt and pass groundedAgainst (no numbers absent from the source); rows are unpublished, never deleted — why: AI must never invent news.
