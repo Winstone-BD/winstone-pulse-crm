@@ -52,58 +52,56 @@ const EMPTY_SNAPSHOT = {
  * recording or a WhatsApp message, the board reloads itself — no manual refresh.
  * The 10s poll above stays as a safety net for PIN-only (not signed-in) boards.
  */
+// One shared live-update connection per browser tab, however many panels use
+// the snapshot — previously every panel opened its own and each triggered a
+// separate full reload of the board.
+let liveUsers = 0;
+let liveTeardown: (() => void) | null = null;
+
+function startLive(queryClient: ReturnType<typeof useQueryClient>) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const invalidate = () => {
+    if (timer) return;
+    timer = setTimeout(() => {
+      timer = null;
+      // Don't cancel a reload that is already running; just mark stale.
+      void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] }, { cancelRefetch: false });
+    }, 1500);
+  };
+  // A submitted report must land instantly on Reports, Executive HQ and the
+  // Coordinator Deck, so report/follow-up writes refresh those panels too.
+  const invalidateReports = () => {
+    invalidate();
+    for (const key of ["call-ops", "my-call-reports", "follow-ups", "pending-call-report"]) {
+      void queryClient.invalidateQueries({ queryKey: [key] }, { cancelRefetch: false });
+    }
+  };
+  const channel = supabase
+    .channel(`crm-snapshot-${crypto.randomUUID()}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, invalidate)
+    .on("postgres_changes", { event: "*", schema: "public", table: "call_recordings" }, invalidate)
+    .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, invalidate)
+    .on("postgres_changes", { event: "*", schema: "public", table: "call_reports" }, invalidateReports)
+    .on("postgres_changes", { event: "*", schema: "public", table: "follow_up_events" }, invalidateReports)
+    .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_interactions" }, invalidate)
+    .subscribe();
+  return () => {
+    if (timer) clearTimeout(timer);
+    void supabase.removeChannel(channel);
+  };
+}
+
 function useLiveCrmRefresh() {
   const queryClient = useQueryClient();
   useEffect(() => {
-    // Bursts of row changes (imports, a phone replaying its queue) collapse
-    // into one reload instead of dozens of full snapshot downloads.
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const invalidate = () => {
-      if (timer) return;
-      timer = setTimeout(() => {
-        timer = null;
-        void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
-      }, 1500);
-    };
-    // A submitted report must land instantly on Reports, Executive HQ and the
-    // Coordinator Deck, so report/follow-up writes refresh those panels too.
-    const invalidateReports = () => {
-      invalidate();
-      for (const key of ["call-ops", "my-call-reports", "follow-ups", "pending-call-report"]) {
-        void queryClient.invalidateQueries({ queryKey: [key] });
-      }
-    };
-    // Each snapshot consumer mounts its own listener. Reusing one channel name
-    // makes the client return an already-subscribed channel, then adding another
-    // callback throws and takes down the whole desk.
-    const channel = supabase
-      .channel(`crm-snapshot-${crypto.randomUUID()}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, invalidate)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "call_recordings" },
-        invalidate,
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, invalidate)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "call_reports" },
-        invalidateReports,
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "follow_up_events" },
-        invalidateReports,
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "whatsapp_interactions" },
-        invalidate,
-      )
-      .subscribe();
+    liveUsers += 1;
+    if (!liveTeardown) liveTeardown = startLive(queryClient);
     return () => {
-      if (timer) clearTimeout(timer);
-      void supabase.removeChannel(channel);
+      liveUsers -= 1;
+      if (liveUsers === 0 && liveTeardown) {
+        liveTeardown();
+        liveTeardown = null;
+      }
     };
   }, [queryClient]);
 }
