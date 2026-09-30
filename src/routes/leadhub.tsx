@@ -57,7 +57,7 @@ function LeadHubGate() {
   });
 
   if (isPending || (token && access.isPending)) return <SnapshotSkeleton />;
-  if (scope === "authority" && access.data?.allowed) return <LeadHubWorkspace />;
+  if (access.data?.allowed) return <LeadHubWorkspace />;
 
   return (
     <section className="card-elevated mx-auto max-w-md space-y-4 p-6 text-center">
@@ -68,7 +68,7 @@ function LeadHubGate() {
         <p className="mt-1 text-sm text-muted-foreground">Executive HQ বা IT PIN দিয়ে Canonical Lead Database খুলুন। Agent account এখানে প্রবেশ করতে পারে না।</p>
       </div>
       <Button size="lg" className="w-full" onClick={() => setPinOpen(true)}><KeyRound className="size-4" /> PIN দিয়ে খুলুন</Button>
-      <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} surface="system" />
+      <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} surface="leadhub" />
     </section>
   );
 }
