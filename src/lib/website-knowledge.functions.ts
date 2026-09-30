@@ -21,13 +21,19 @@ export const askWebsite = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none") {
-      return { answer: "অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন।", covered: false, sources: [] };
+      return {
+        answer: "অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন।",
+        covered: false,
+        sources: [],
+        documents: [],
+      };
     }
     const { answerFromWebsite } = await import("@/lib/website-knowledge.server");
     return answerFromWebsite({
       question: data.question,
       leadContext: data.leadContext ?? null,
       actorProfileId: caller.profile?.id ?? null,
+      actorLabel: caller.label ?? null,
     });
   });
 

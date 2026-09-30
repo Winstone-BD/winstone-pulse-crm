@@ -18,6 +18,7 @@ import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
 import { BackendHealthPanel } from "@/components/crm/BackendHealthPanel";
 import { WebsiteKnowledgePanel } from "@/components/crm/WebsiteKnowledgePanel";
+import { DriveKnowledgePanel } from "@/components/crm/DriveKnowledgePanel";
 import { VersionDataPanel } from "@/components/crm/VersionDataPanel";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { StaffAccountsTable } from "@/components/crm/StaffAccountsTable";
@@ -154,6 +155,7 @@ function SystemBoard() {
       <BackendHealthPanel />
 
       <WebsiteKnowledgePanel />
+      <DriveKnowledgePanel />
 
       <SheetSyncHealthPanel />
 

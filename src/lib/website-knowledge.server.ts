@@ -23,10 +23,20 @@ const PAGE_CHARS = 6000;
 
 export type WebsiteSource = { url: string; title: string; fetchedAt: string; live: boolean };
 
+export type DriveSource = {
+  fileId: string;
+  name: string;
+  folderName: string | null;
+  webViewLink: string | null;
+  indexedAt: string;
+};
+
 export type WebsiteAnswer = {
   answer: string;
   covered: boolean;
   sources: WebsiteSource[];
+  /** Approved Drive documents used, if any. */
+  documents: DriveSource[];
 };
 
 export async function websiteBaseUrl(): Promise<string> {
@@ -315,20 +325,24 @@ async function askJson(system: string, user: string): Promise<{ answer: string; 
 
 const SYSTEM = [
   "তুমি Winstone Properties-এর বিক্রয় এজেন্টদের সহকারী।",
-  "শুধুমাত্র নিচে দেওয়া ওয়েবসাইট পেজের লেখা থেকে উত্তর দাও।",
+  "শুধুমাত্র নিচে দেওয়া ওয়েবসাইট পেজ ও অনুমোদিত ডকুমেন্টের লেখা থেকে উত্তর দাও।",
+  "ওয়েবসাইটের তথ্য আগে গুরুত্ব পাবে; ডকুমেন্ট শুধু পরিপূরক তথ্য হিসেবে ব্যবহার করবে।",
   "কোনো দাম, আয়তন, অবস্থান বা সুবিধা নিজে বানাবে না।",
-  "পেজে উত্তর না থাকলে covered=false দিয়ে বলবে যে ওয়েবসাইটে এই তথ্য নেই।",
+  "উত্তর না থাকলে covered=false দিয়ে বলবে যে অনুমোদিত তথ্যে এটি নেই।",
   "উত্তর বাংলায়, সংক্ষিপ্ত, ৩-৫ বাক্য, এজেন্ট কথায় বলতে পারবে এমন ভাষায়।",
 ].join(" ");
 
 /**
- * Grounded answer from the company website: stored copy plus one live re-read
- * of the best-matching page so today's website text wins.
+ * Grounded answer for agents. Sources in priority order: the company website
+ * (stored copy plus one live re-read of the best-matching page, so today's
+ * website text wins), then extracts from Drive folders an admin approved.
+ * Approved-document retrieval is audited inside the Drive layer.
  */
 export async function answerFromWebsite(input: {
   question: string;
   leadContext?: string | null;
   actorProfileId?: string | null;
+  actorLabel?: string | null;
 }): Promise<WebsiteAnswer> {
   const pages = await storedPages();
   const picked = rankPages(pages, input.question);
@@ -356,14 +370,28 @@ export async function answerFromWebsite(input: {
     });
   }
 
-  if (used.length === 0) {
+  // Approved Drive documents: supplementary, never a replacement for live data.
+  let driveUsed: { source: DriveSource; content: string }[] = [];
+  try {
+    const { driveExtractsFor } = await import("@/lib/drive-knowledge.server");
+    driveUsed = await driveExtractsFor({
+      question: input.question,
+      actorProfileId: input.actorProfileId ?? null,
+      actorLabel: input.actorLabel ?? null,
+    });
+  } catch (error) {
+    console.error("[knowledge] drive extracts unavailable", error);
+  }
+
+  if (used.length === 0 && driveUsed.length === 0) {
     return {
       answer:
         pages.length === 0
           ? "ওয়েবসাইটের তথ্য এখনো CRM-এ পড়া হয়নি — আইটি কনসোল থেকে একবার রিফ্রেশ করতে হবে।"
-          : "এই প্রশ্নের উত্তর ওয়েবসাইটে পাওয়া যায়নি। নিশ্চিত না হয়ে কিছু বলবেন না।",
+          : "এই প্রশ্নের উত্তর অনুমোদিত তথ্যে পাওয়া যায়নি। নিশ্চিত না হয়ে কিছু বলবেন না।",
       covered: false,
       sources: [],
+      documents: [],
     };
   }
 
@@ -373,6 +401,13 @@ export async function answerFromWebsite(input: {
     "",
     "ওয়েবসাইট পেজ:",
     ...used.map((entry) => `--- ${entry.source.title} (${entry.source.url})\n${entry.content}`),
+    ...(driveUsed.length > 0
+      ? [
+          "",
+          "অনুমোদিত ডকুমেন্ট (Google Drive):",
+          ...driveUsed.map((entry) => `--- ${entry.source.name}\n${entry.content}`),
+        ]
+      : []),
   ]
     .filter(Boolean)
     .join("\n");
@@ -385,5 +420,10 @@ export async function answerFromWebsite(input: {
     actorProfileId: input.actorProfileId ?? null,
   });
 
-  return { answer: result.answer, covered: result.covered, sources: used.map((e) => e.source) };
+  return {
+    answer: result.answer,
+    covered: result.covered,
+    sources: used.map((e) => e.source),
+    documents: driveUsed.map((e) => e.source),
+  };
 }
