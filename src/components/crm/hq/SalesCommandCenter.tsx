@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 
 import type { DrillSpec } from "@/components/crm/HqDrillSheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SiteVisitsPanel } from "@/components/crm/hq/SiteVisitsPanel";
 import { getCommandCenterFeed } from "@/lib/command-center.functions";
 import { computeCommandCenter, presetRange, type CcFilters } from "@/lib/command-center";
 import type { CallRecording, Lead, Profile } from "@/lib/crm-data";
@@ -345,6 +346,8 @@ export function SalesCommandCenter({
           {agentId && <p className="mt-2 text-[10px] text-muted-foreground">ফিল্টার: {agentName(agentId)}</p>}
         </Panel>
       </div>
+
+      <SiteVisitsPanel leads={leads} fromDay={range.fromDay} toDay={range.toDay} agentId={agentId} />
     </div>
   );
 }
