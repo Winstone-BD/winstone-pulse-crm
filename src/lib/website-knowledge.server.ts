@@ -207,11 +207,16 @@ export function rankPages(pages: StoredPage[], query: string, limit = 3): Stored
       }
       return { page, score };
     })
-    .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((entry) => entry.page);
 }
+
+/**
+ * Bengali questions rarely share words with English pages, so keyword misses
+ * must not mean "no answer" — the highest-signal pages are sent anyway and the
+ * model decides whether they cover the question.
+ */
 
 export async function websiteKnowledgeStatus() {
   const [{ count }, pages] = await Promise.all([
