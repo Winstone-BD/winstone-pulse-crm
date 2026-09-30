@@ -21,3 +21,8 @@
 - [x] Android foreground-only nearby-lead sorting from saved addresses (on-device geocoding; GPS never uploaded)
 - [ ] Smarter distribution: project expertise, site visits, prior follow-ups
 - [x] V2 six-question scoring on web/server/Android (version 2.13 mandatory release published)
+
+## Open — Daily performance engine (rules locked 2026-09-30)
+- [ ] Capped weighted KPI performance %, separate compliance state
+- [ ] Deterministic 5:30 PM Top 3 from stored snapshot
+- [ ] 6:00 PM Dhaka finalization lock + admin correction with reason/audit
