@@ -5,7 +5,7 @@ import { contactCloseReasonLabel, CONTACT_CLOSE_REASONS } from "@/lib/contact-cl
 import { briefingRequiredAt } from "@/lib/agent-briefing.server";
 
 const base = {
-  category: "not_interested", summary: "কথা হয়েছে", note: "নোট", direction: "outgoing",
+  category: "not_interested", summary: "কথা হয়েছে", note: "নোট", reason: "দাম বেশি", direction: "outgoing",
   callStatus: "connected", durationSeconds: 40, connected: true, followUpAt: null, followUpNeeded: false,
 } as never;
 

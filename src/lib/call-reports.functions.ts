@@ -382,7 +382,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Paged through every matching row — no silent truncation. Agents only get their own.
-    const events: Array<Record<string, any>> = [];
+    const events: import("@/integrations/supabase/types").Database["public"]["Tables"]["follow_up_events"]["Row"][] = [];
     for (let from = 0; ; from += 1000) {
       let query = supabaseAdmin
         .from("follow_up_events")
