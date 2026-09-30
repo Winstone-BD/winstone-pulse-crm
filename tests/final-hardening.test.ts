@@ -21,3 +21,19 @@ describe("final hardening", () => {
     for (const k of ["report_status", "report_correction", "call_logged"]) expect(s).toContain(k);
   });
 });
+
+import { leadNotAssignedTo } from "@/lib/lead-access.server";
+describe("call start ownership", () => {
+  it("refuses unassigned and other-agent leads, allows own", () => {
+    expect(leadNotAssignedTo({ assigned_to: null, assigned_agent_id: null }, "me")).toBe(true);
+    expect(leadNotAssignedTo({ assigned_to: "x" }, "me")).toBe(true);
+    expect(leadNotAssignedTo({ assigned_agent_id: "me" }, "me")).toBe(false);
+  });
+});
+
+import { existsSync } from "node:fs";
+describe("handover documents", () => {
+  it("canonical PDFs exist in the project", () => {
+    for (const f of ["public/winstone-system-manual.pdf", "public/winstone-client-handover.pdf", "public/winstone-audit-report.pdf"]) expect(existsSync(f)).toBe(true);
+  });
+});

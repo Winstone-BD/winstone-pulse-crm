@@ -65,12 +65,12 @@ export const startMyCall = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, name, phone_number, assigned_to")
+      .select("id, name, phone_number, assigned_to, assigned_agent_id")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
-    if (lead.assigned_to && lead.assigned_to !== me.id)
-      throw new Error("এই লিড আপনার তালিকায় নেই");
+    const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+    if (leadNotAssignedTo(lead, me.id)) throw new Error(LEAD_NOT_YOURS);
 
     const { logLeadEvent } = await import("@/lib/lead-events.server");
     await logLeadEvent({

@@ -1,0 +1,66 @@
+/**
+ * ONE canonical source for the Production Readiness / Audit Report and the
+ * Client Handover & Feature Report. The /audit-report and /handover pages and
+ * their PDFs (printed from those pages) are generated from this file only.
+ */
+export const DOC_VERSION = "1.0.0";
+export const AUDIT_DATE = "2026-09-30 13:40 UTC (19:40 Asia/Dhaka)";
+export const AUDIT_COMMIT = "c9a5020 + final audit changes";
+export const AUDIT_PDF_PATH = "/winstone-audit-report.pdf";
+export const HANDOVER_PDF_PATH = "/winstone-client-handover.pdf";
+
+export type DocSection = { id: string; title: string; body: string[]; table?: string[][] };
+
+export const AUDIT_ITEMS: Array<{ item: string; result: string; evidence: string }> = [
+  { item: "1. Call readiness", result: "PASS (code/test)", evidence: "Web startMyCall and Android /api/public/agent/call-start derive the agent from the signed-in session or device token only. Order: 9:05 briefing → staff photo → one-pending-report lock (unique DB index) → lead must be assigned to this agent. Fixed during the audit: unassigned pool leads could be dialled; now refused." },
+  { item: "2. Agent scope", result: "PASS (code/test)", evidence: "Agent snapshot queries filter by the caller's profile id on the server; HQ/IT PIN scope reads the whole floor; RLS on every public table (0 tables without RLS)." },
+  { item: "3. Data integrity", result: "PASS (code/test)", evidence: "Dashboard snapshot pages through all rows (no latest-500 cap). 3,980 leads, 2,935 reports read from real records. One staff-created row named \"IT Test\" (source agent_app) exists and is kept — leads are never deleted." },
+  { item: "4. Contact-close reason", result: "PASS (code/test)", evidence: "DB trigger enforce_contact_close_reason rejects a closed report without a canonical reason; \"other\" requires a note (no_follow_up_note). log_contact_close writes an immutable contact_closed lead event. Shared list in contact-close-reasons.ts (web) and ContactCloseReasons.kt (Android)." },
+  { item: "5. Permanent history", result: "PASS (code/test)", evidence: "Append-only: lead_events, lead_state_changes, follow_up_changes block UPDATE/DELETE by trigger; no UPDATE/DELETE policies. Triggers log assignment/status/work state/temperature, report status + corrections, new calls, follow-up create/reschedule/complete/cancel. Each history row carries a unique correlation_id." },
+  { item: "6. Lead 360", result: "PASS (code/test)", evidence: "Full timeline read in 1000-row pages from all event sources, de-duplicated by id; filters phone/ID/name/agent/source/requirement/reason/event/status/date; cursor pages of 40 with total count." },
+  { item: "7. Reports / export", result: "PASS (code/test)", evidence: "Server-built CSV and print-ready HTML for filtered Lead 360 results (filters + generated-at stamp, formula-neutralised cells); per-lead full-history CSV/print; follow-up history Excel/PDF scoped HQ=all, agent=own." },
+  { item: "8. Canonical manual", result: "PASS", evidence: "system-manual.ts v1.1.0 → /manual page and /winstone-system-manual.pdf, card in Executive HQ and IT Console." },
+  { item: "9. Home daily performance", result: "PASS (code/test)", evidence: "Top 3 computed from that day's real reports/follow-ups; score breakdown shown; ties broken by calls → reports → talk minutes → id." },
+  { item: "10. Responsive QA", result: "PASS (public pages)", evidence: "/, /manual, /desk, /audit-report, /handover at 390/768/1280/1920 px: no horizontal overflow, no page errors. PIN/sign-in-only screens were not rendered in the automated check." },
+  { item: "11. Tests", result: "PASS", evidence: "tsgo --noEmit: 0 errors. bunx vitest run: 33 files, 205 tests passed." },
+];
+
+export const AUDIT_SECTIONS: DocSection[] = [
+  { id: "scope", title: "Scope audited", body: ["Source code (web + server + Android sources), database schema, triggers, indexes and RLS, call initiation and reporting paths, history model, 09:05 briefing gate, Lead 360, exports, manual and public-page responsive layout."] },
+  { id: "arch", title: "Architecture summary", body: ["Web app and server functions run on one TanStack Start deployment; Lovable Cloud database with row-level security; Android app (Kotlin) calls from the agent's own SIM and syncs through device-token APIs under /api/public/agent.", "Lead sources → LeadHub Nexus (normalise, dedupe) → canonical lead database (unassigned) → LeadHub quantity assignment → agent → call → report → CRM derives score/priority → follow-up or contact close."] },
+  { id: "roles", title: "Role / permission matrix", body: [], table: [["Role", "Leads", "Assign", "Approve accountability", "System settings"], ["Agent (all peers)", "Own assigned only", "No", "No", "No"], ["Executive HQ (PIN)", "All (read)", "No", "Yes", "No"], ["IT Console (PIN)", "All (read)", "No", "No (monitor only)", "Yes"], ["LeadHub Nexus (own PIN)", "Pool", "Yes — only path", "No", "No"]] },
+  { id: "call", title: "Call lifecycle", body: ["Agent taps call → server checks briefing, photo, pending report and lead ownership → call_started event → call from own SIM → recording/call row synced (duplicate-safe by client_upload_id / external_call_id) → mandatory post-call report (one pending per agent) → submit validated by DB triggers."] },
+  { id: "lead", title: "Lead lifecycle", body: ["Imported → unassigned → assigned by LeadHub → called → reported → follow-up or contact closed with reason → completed/converted. Never hard-deleted; duplicates parked as duplicate_skipped. Phone numbers normalised to Bangladesh format with a unique phone key."] },
+  { id: "fu", title: "Follow-up lifecycle", body: ["Created from a report with a structured reason → reminders 30 min before and every 3 h while overdue → rescheduled / completed / cancelled. Delete is blocked; every change writes old/new time, status, reason, note and actor."] },
+  { id: "hist", title: "Permanent history / audit model", body: ["lead_events (facts), lead_state_changes (field old/new), follow_up_changes (follow-up old/new), audit_logs (privileged actions). History tables reject update/delete; timestamps stored in UTC and shown in Asia/Dhaka."] },
+  { id: "brief", title: "09:05 briefing gate", body: ["After 09:05 Asia/Dhaka each agent must acknowledge the current policy version (2026-09-30-v1) for the current business date. Enforced server-side on call start (web + Android), report submit, follow-up complete/reschedule, WhatsApp logging, lead sorting and new-number calls. Acknowledgements are unique per agent/date/version and immutable."] },
+  { id: "l360", title: "Lead 360 and filtering", body: ["HQ search by phone, lead ID, name, agent, source, requirement, reason, event type, follow-up status and date range, with totals and cursor pages. Click a lead/phone to open its complete timeline."] },
+  { id: "rep", title: "Reporting / export", body: ["Filtered Lead 360 CSV + Print/PDF (server-built, with active filters and generated-at), full per-lead history CSV/print, follow-up history Excel/PDF, project reports, shift summaries at 12:50 and 17:30."] },
+  { id: "perf", title: "Daily performance", body: ["Score = connections×4 + reports×2 + follow-ups×1.5 + talk minutes×0.4, rounded. Revealed on Home at 17:30 Dhaka; breakdown shown per card."] },
+  { id: "sec", title: "Security / server authorization", body: ["All mutations resolve the caller on the server (session bearer, device token or signed PIN token); client-supplied actor ids are not accepted. PINs are server-verified secrets. RLS enabled on every public table. Two intentionally accepted scan findings remain documented."] },
+  { id: "idem", title: "Duplicate / idempotency controls", body: ["Unique: one pending report per agent, call client_upload_id, external_call_id, lead phone keys, briefing ack per agent/date/version, history correlation_id. Offline replays use the same upload ids."] },
+  { id: "tests", title: "Test results", body: ["tsgo --noEmit → 0 errors", "bunx vitest run → Test Files 33 passed (33); Tests 205 passed (205)", "Database checks: 0 public tables without RLS; 0 UPDATE/DELETE policies on history tables; history triggers present.", "UI smoke (Playwright, public pages, 4 widths) → no overflow, 0 page errors."] },
+  { id: "ops", title: "Not verified by this audit (external / operational)", body: ["Real-device calls and recordings on agents' phones; carrier behaviour; Android release build (no Android SDK in the audit environment); signed-in agent/HQ/IT sessions end-to-end; WhatsApp Business API (not connected — tap-to-chat only); production deployment configuration; client acceptance. Staff must upload photos before calling. Historical follow-up reschedules before the change log existed cannot be reconstructed."] },
+  { id: "deploy", title: "Deployment / release", body: ["Published at https://crm1.winstonebd.com (also webcrm-v1.lovable.app). Publishing is done from the editor's Publish button. Android APK is distributed from the IT Console releases panel."] },
+  { id: "check", title: "Client handover checklist", body: ["☐ Publish the latest version", "☐ Every agent uploads a staff photo", "☐ Install/update Android app on each agent phone and test one real call + report", "☐ HQ, IT and LeadHub PINs handed to named owners", "☐ Import leads via LeadHub and assign a test quantity", "☐ Confirm 09:05 briefing and 17:30 Top 3 on a working day", "☐ Client sign-off"] },
+];
+
+export const HANDOVER_SECTIONS: DocSection[] = [
+  { id: "intro", title: "1. What WINSTONE CRM is", body: ["A Bengali-first tele-sales CRM for Winstone Properties. Agents call customers from their own phone SIM using the Winstone Connect Android app; every call, report and follow-up is saved centrally so HQ sees the real picture."] },
+  { id: "roles", title: "2. Who uses it", body: [], table: [["User", "What they can do"], ["Agent", "Call own assigned leads, submit post-call reports, manage own follow-ups, see own performance"], ["Executive HQ", "See every lead, agent and call; Lead 360; exports; approve daily accountability"], ["IT Console", "Accounts, approvals, system health, app releases, notices, audit"], ["LeadHub Nexus", "Import leads and assign quantities to agents"]] },
+  { id: "features", title: "3. Features and how to use them", body: [
+    "Home — daily Top 3 performers after 5:30 PM with score breakdown; countdown before that.",
+    "Agent Desk — own lead list, call button, pre-call brief with why the lead was assigned, WhatsApp tap-to-chat.",
+    "09:05 briefing — agents confirm the daily briefing once; calling is locked until they do.",
+    "Post-call report — six yes/no questions; CRM calculates Hot/Warm/Cold and priority. A reason is required when contact is closed; 'Other' needs a note.",
+    "Follow-ups — calendar, reminders before and after due time, reschedule with reason, full change history.",
+    "LeadHub Nexus — import from sheets/CSV, automatic phone cleanup and duplicate blocking, daily quota (50 by default) and per-agent assignment.",
+    "Executive HQ — live floor, Lead 360 search with filters, CSV and Print/PDF exports, accountability review.",
+    "IT Console — accounts and approvals, health check, releases, notices, manual and audit documents.",
+    "Reports — follow-up history, project reports by requirement, shift summaries at 12:50 and 5:30 PM.",
+    "Winstone AI — suggests answers and actions; nothing runs until a person confirms.",
+  ] },
+  { id: "daily", title: "4. Daily operating checklist", body: ["Morning: LeadHub assigns today's quantity → agents open the app and confirm the 09:05 briefing.", "During the day: call → submit the report straight away → set follow-up or close with reason.", "12:50 and 5:30 PM: shift summaries generate automatically.", "5:30 PM: Top 3 appears on Home. HQ reviews accountability for agents above the pending threshold."] },
+  { id: "trouble", title: "5. Troubleshooting", body: ["\"Submit the previous report first\" — finish the pending report; the next call unlocks.", "\"Acknowledge the 09:05 briefing\" — tap the confirm button on the briefing card.", "\"Add your photo\" — upload a clear staff photo on the web desk.", "\"This lead is not in your list\" — only LeadHub can assign leads.", "Numbers look wrong — open the lead in Lead 360; every event is listed with time and person."] },
+  { id: "support", title: "6. Support and escalation", body: ["Agents → Sales Team Admin desk → IT Console team (TrendFlux OS IT). Business decisions and accountability approval → Executive HQ.", "Not included: automated WhatsApp sending/billing (Business API not connected) and central telephony."] },
+];

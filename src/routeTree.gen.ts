@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CreditsRouteImport } from './routes/credits'
@@ -18,6 +19,7 @@ import { Route as DeskRouteImport } from './routes/desk'
 import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsAdminRouteImport } from './routes/docs-admin'
+import { Route as HandoverRouteImport } from './routes/handover'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HqRouteImport } from './routes/hq'
 import { Route as ImportRouteImport } from './routes/import'
@@ -89,6 +91,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditReportRoute = AuditReportRouteImport.update({
+  id: '/audit-report',
+  path: '/audit-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -127,6 +134,11 @@ const DocsRoute = DocsRouteImport.update({
 const DocsAdminRoute = DocsAdminRouteImport.update({
   id: '/docs-admin',
   path: '/docs-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HandoverRoute = HandoverRouteImport.update({
+  id: '/handover',
+  path: '/handover',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -472,6 +484,7 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
@@ -480,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/handover': typeof HandoverRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -548,6 +562,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
@@ -556,6 +571,7 @@ export interface FileRoutesByTo {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/handover': typeof HandoverRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -625,6 +641,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
@@ -633,6 +650,7 @@ export interface FileRoutesById {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/handover': typeof HandoverRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -703,6 +721,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/audit-report'
     | '/auth'
     | '/coach'
     | '/credits'
@@ -711,6 +730,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/handover'
     | '/help'
     | '/hq'
     | '/import'
@@ -779,6 +799,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/audit-report'
     | '/auth'
     | '/coach'
     | '/credits'
@@ -787,6 +808,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/handover'
     | '/help'
     | '/hq'
     | '/import'
@@ -855,6 +877,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/audit-report'
     | '/auth'
     | '/coach'
     | '/credits'
@@ -863,6 +886,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/handover'
     | '/help'
     | '/hq'
     | '/import'
@@ -932,6 +956,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
   CoachRoute: typeof CoachRoute
   CreditsRoute: typeof CreditsRoute
@@ -940,6 +965,7 @@ export interface RootRouteChildren {
   DispatchRoute: typeof DispatchRoute
   DocsRoute: typeof DocsRoute
   DocsAdminRoute: typeof DocsAdminRoute
+  HandoverRoute: typeof HandoverRoute
   HelpRoute: typeof HelpRoute
   HqRoute: typeof HqRoute
   ImportRoute: typeof ImportRoute
@@ -1016,6 +1042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit-report': {
+      id: '/audit-report'
+      path: '/audit-report'
+      fullPath: '/audit-report'
+      preLoaderRoute: typeof AuditReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -1070,6 +1103,13 @@ declare module '@tanstack/react-router' {
       path: '/docs-admin'
       fullPath: '/docs-admin'
       preLoaderRoute: typeof DocsAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/handover': {
+      id: '/handover'
+      path: '/handover'
+      fullPath: '/handover'
+      preLoaderRoute: typeof HandoverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -1532,6 +1572,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
   CoachRoute: CoachRoute,
   CreditsRoute: CreditsRoute,
@@ -1540,6 +1581,7 @@ const rootRouteChildren: RootRouteChildren = {
   DispatchRoute: DispatchRoute,
   DocsRoute: DocsRoute,
   DocsAdminRoute: DocsAdminRoute,
+  HandoverRoute: HandoverRoute,
   HelpRoute: HelpRoute,
   HqRoute: HqRoute,
   ImportRoute: ImportRoute,
