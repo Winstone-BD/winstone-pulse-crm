@@ -98,7 +98,6 @@ function NewsCard({ n, compact, manage }: { n: Item; compact: boolean; manage: b
         )}
         {n.status === "pending" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-warning">অনুমোদন অপেক্ষায়</span>}
         {n.status === "unpublished" && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">অপ্রকাশিত</span>}
-        <span className="ml-auto text-muted-foreground">{when(n.source_published_at ?? n.created_at)}</span>
       </div>
       {editing ? (
         <div className="space-y-2">
@@ -122,14 +121,24 @@ function NewsCard({ n, compact, manage }: { n: Item; compact: boolean; manage: b
           )}
         </>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        {n.source_url ? (
-          <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1 text-primary underline-offset-2 hover:underline">
-            <ExternalLink className="size-3.5 shrink-0" /><span className="truncate">উৎস: {n.source_name ?? "মূল খবর"}</span>
-          </a>
-        ) : (
-          <span className="text-muted-foreground">উৎস: {n.source_name ?? n.created_by}</span>
+      <div className="mt-3 space-y-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-muted/50 px-2.5 py-1.5 text-muted-foreground">
+          {n.source_url ? (
+            <a href={n.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-1 font-medium text-primary underline-offset-2 hover:underline">
+              <ExternalLink className="size-3.5 shrink-0" /><span className="truncate">মূল উৎস: {n.source_name ?? "মূল খবর"}</span>
+            </a>
+          ) : (
+            <span className="font-medium">মূল উৎস: {n.source_name ?? n.created_by}</span>
+          )}
+          <span>প্রকাশ: {when(n.source_published_at ?? n.created_at)}</span>
+        </div>
+        {n.origin === "auto" && (
+          <p className="px-1 text-[11px] text-muted-foreground">
+            উপরের সারাংশ AI তৈরি করেছে — শুধুমাত্র মূল উৎসের তথ্য থেকে; কোনো নতুন তথ্য যোগ হয়নি। যাচাইয়ের জন্য মূল উৎস দেখুন।
+          </p>
         )}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
         {manage && !editing && (
           <span className="ml-auto flex gap-1">
             <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditing(true)}><Pencil className="size-3.5" /></Button>
