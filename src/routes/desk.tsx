@@ -17,6 +17,7 @@ import { useMemo, useState } from "react";
 
 
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
+import { SiteVisitReminder } from "@/components/crm/hq/SiteVisitsPanel";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { MyCallLog } from "@/components/crm/MyCallLog";
@@ -309,6 +310,7 @@ function DeskPage() {
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <AccountabilityBanner />
           <LeadDeadlineBanner />
+          <SiteVisitReminder />
           <MyProfileCard />
           <MyPhoneSetup />
 

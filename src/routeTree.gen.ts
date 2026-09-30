@@ -37,6 +37,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SiteVisitsRouteImport } from './routes/site-visits'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
 import { Route as SystemRouteImport } from './routes/system'
@@ -228,6 +229,11 @@ const SalesIntelRoute = SalesIntelRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteVisitsRoute = SiteVisitsRouteImport.update({
+  id: '/site-visits',
+  path: '/site-visits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -618,6 +625,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -701,6 +709,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -785,6 +794,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/site-visits'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -867,6 +877,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/site-visits'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -949,6 +960,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/site-visits'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1032,6 +1044,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
+  SiteVisitsRoute: typeof SiteVisitsRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
   SystemRoute: typeof SystemRoute
@@ -1282,6 +1295,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/site-visits': {
+      id: '/site-visits'
+      path: '/site-visits'
+      fullPath: '/site-visits'
+      preLoaderRoute: typeof SiteVisitsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -1680,6 +1700,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
+  SiteVisitsRoute: SiteVisitsRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,
   SystemRoute: SystemRoute,

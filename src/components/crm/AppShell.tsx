@@ -37,6 +37,7 @@ export const NAV = [
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
   { to: "/sales-intel", label: "Sales Intelligence", scopes: ["authority", "agent"] },
   { to: "/news", label: "মার্কেট নিউজ", scopes: ["authority", "agent"] },
+  { to: "/site-visits", label: "সাইট ভিজিট", scopes: ["authority", "agent"] },
   { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },
