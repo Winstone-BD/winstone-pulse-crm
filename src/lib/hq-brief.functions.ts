@@ -10,8 +10,9 @@ export const executiveBrief = createServerFn({ method: "POST" })
     z.object({ adminToken: z.string().nullable().optional() }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
-    requireDispatch(await resolveCaller(data.adminToken ?? null));
+    const { resolveCaller, canDispatch } = await import("@/lib/access.server");
+    // Locked/expired HQ session: show the locked state instead of crashing the page.
+    if (!canDispatch(await resolveCaller(data.adminToken ?? null))) return null;
     const { executiveBriefNow } = await import("@/lib/hq-brief.server");
     return executiveBriefNow();
   });
