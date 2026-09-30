@@ -14,11 +14,12 @@ export function rankPerformers(lines: PerformerLine[]): PerformerLine[] {
     (a, b) =>
       // The board sorts by the score everyone sees on the card — biggest first.
       b.score - a.score ||
-      b.completionPercent - a.completionPercent ||
-      b.connected - a.connected ||
+      // Fixed tie-breakers for equal scores: calls → reports → talk minutes,
+      // then agent id so the order never flips between refreshes.
+      b.called - a.called ||
       b.reports - a.reports ||
       b.talkMinutes - a.talkMinutes ||
-      a.name.localeCompare(b.name, "bn"),
+      (a.agentId < b.agentId ? -1 : a.agentId > b.agentId ? 1 : 0),
   );
 }
 
@@ -56,6 +57,7 @@ export type PerformerLine = {
 export type RankedPerformer = PerformerLine & {
   rank: number;
   gapFromLeader: number;
+  breakdown: ScorePart[];
   reason: string;
   gap: string;
   advice: string;
@@ -118,6 +120,23 @@ export function scoreOf(
   line: Pick<PerformerLine, "connected" | "reports" | "followUps" | "talkMinutes">,
 ): number {
   return line.connected * 4 + line.reports * 2 + line.followUps * 1.5 + line.talkMinutes * 0.4;
+}
+
+export type ScorePart = { label: string; count: number; weight: number; points: number };
+
+/** How the displayed score was built — same weights as scoreOf, rounded per line. */
+export function scoreBreakdown(
+  line: Pick<PerformerLine, "connected" | "reports" | "followUps" | "talkMinutes">,
+): ScorePart[] {
+  const part = (label: string, count: number, weight: number) => ({
+    label, count, weight, points: Math.round(count * weight * 10) / 10,
+  });
+  return [
+    part("সংযোগ", line.connected, 4),
+    part("রিপোর্ট", line.reports, 2),
+    part("ফলো-আপ", line.followUps, 1.5),
+    part("কথার মিনিট", line.talkMinutes, 0.4),
+  ];
 }
 
 export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "reason" | "gap" | "advice"> {
@@ -309,6 +328,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     rank: index + 1,
     // Gap is expressed in the same score everyone is ranked on.
     gapFromLeader: Math.max(0, leaderScore - line.score),
+    breakdown: scoreBreakdown(line),
     ...performerInsight(line),
   }));
   const topThree = detailed.filter(isActive).slice(0, 3);

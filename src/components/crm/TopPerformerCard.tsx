@@ -192,6 +192,19 @@ export function TopPerformerCard() {
                   <span className="text-muted-foreground">স্কোর</span>
                   <strong className="tabular text-lg text-primary">{agent.score}</strong>
                 </div>
+                <ul className="tabular mt-2 space-y-0.5 rounded-md bg-muted/50 p-2 text-[11px] text-muted-foreground" aria-label="স্কোরের হিসাব">
+                  {agent.breakdown.map((p) => (
+                    <li key={p.label} className="flex justify-between gap-2">
+                      <span>{p.label} {p.count} × {p.weight}</span>
+                      <span className="text-foreground">{p.points}</span>
+                    </li>
+                  ))}
+                  <li className="flex justify-between gap-2 border-t border-border pt-0.5 font-semibold text-foreground">
+                    <span>মোট (পূর্ণ সংখ্যায়)</span>
+                    <span>{agent.score}</span>
+                  </li>
+                </ul>
+                <p className="mt-1 text-[10px] text-muted-foreground">সমান স্কোরে ক্রম: বেশি কল → বেশি রিপোর্ট → বেশি কথার মিনিট</p>
                 <p className="tabular mt-1 text-[11px] text-muted-foreground">
                   দৈনিক কোটা {agent.quota}টি · অনুপাত-স্কোর {agent.fairScore}
                 </p>
