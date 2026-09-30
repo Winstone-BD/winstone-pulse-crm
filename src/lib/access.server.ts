@@ -63,7 +63,9 @@ async function userIdFromRequest(): Promise<string | null> {
  * signed-in agent or coordinator account. Everything else is anonymous.
  */
 export async function resolveCaller(adminToken?: string | null): Promise<Caller> {
-  const pinScope = adminTokenScope(adminToken ?? null);
+  // Loaded on demand so a hot reload of the PIN module never leaves a stale binding.
+  const gate = await import("@/lib/admin-gate.server");
+  const pinScope = gate.adminTokenScope(adminToken ?? null);
   if (pinScope === "full" || pinScope === "hq") {
     return {
       scope: "authority",
