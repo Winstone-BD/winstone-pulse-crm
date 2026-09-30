@@ -150,6 +150,8 @@ function SystemBoard() {
 
       <ReportSheetPanel />
 
+      <BackendHealthPanel />
+
       <SheetSyncHealthPanel />
 
       <VersionDataPanel />
