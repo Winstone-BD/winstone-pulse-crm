@@ -75,7 +75,7 @@ export function mintAdminToken(scope: AdminScope = "full"): string {
 export function adminTokenScope(token: string | null | undefined): AdminScope | null {
   if (!token) return null;
   try {
-    for (const scope of ["full", "hq"] as AdminScope[]) {
+    for (const scope of ["full", "hq", "leadhub"] as AdminScope[]) {
       if (timingSafeEqual(sha(token), sha(mintAdminToken(scope)))) return scope;
     }
   } catch {
