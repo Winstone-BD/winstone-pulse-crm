@@ -33,7 +33,7 @@ export function AgentSelector() {
         <SelectValue placeholder="Select agent" />
       </SelectTrigger>
       <SelectContent align="end">
-        <SelectItem value={NONE}>Observer (no agent)</SelectItem>
+        <SelectItem value={NONE}>Observer</SelectItem>
         {agents.map((agent) => (
           <SelectItem key={agent.id} value={agent.id}>
             {agent.name}
