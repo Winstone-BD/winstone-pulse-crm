@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Lightbulb } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
+import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
 import {
   EffectivenessPanel,
   FactsBoard,
@@ -67,6 +68,13 @@ function SalesIntelPage() {
         {scope !== "none" && section === "history" && <PitchHistoryPanel />}
         {scope !== "none" && section === "market" && (
           <>
+            <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-semibold">সর্বশেষ মার্কেট নিউজ</h2>
+                <Link to="/news" className="text-xs font-medium text-primary hover:underline">সব খবর →</Link>
+              </div>
+              <MarketNewsFeed compact />
+            </section>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setCat(null)} className={`rounded-full px-3 py-1.5 text-xs font-medium ${cat === null ? "bg-primary text-primary-foreground" : "bg-muted"}`}>সব</button>
               {FACT_CATEGORIES.map((c) => (
