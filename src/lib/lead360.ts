@@ -197,7 +197,7 @@ export function buildLeadTimeline(input: {
         agentId: e.agentId,
       }),
     );
-  const FIELD: Record<string, string> = { assigned_to: "ASSIGNMENT CHANGED", status: "STATUS CHANGED", work_state: "WORK STATE CHANGED", temperature: "CATEGORY CHANGED" };
+  const FIELD: Record<string, string> = { assigned_to: "ASSIGNMENT CHANGED", status: "STATUS CHANGED", work_state: "WORK STATE CHANGED", temperature: "CATEGORY CHANGED", report_status: "REPORT STATUS CHANGED", report_correction: "REPORT CORRECTED", call_logged: "CALL LOGGED" };
   (input.stateChanges ?? []).forEach((c) => {
     const val = (v: string | null) => (c.field === "assigned_to" ? agentName(v) : v ?? "—");
     items.push({
