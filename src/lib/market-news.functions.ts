@@ -64,3 +64,13 @@ export const newsRuns = createServerFn({ method: "POST" })
     const m = await s();
     return m.lastRuns(await m.newsCaller(data.adminToken));
   });
+
+export const newsAutoPublish = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ ...Tok, enabled: z.boolean().optional() }).parse(d))
+  .handler(async ({ data }) => {
+    const m = await s();
+    const c = await m.newsCaller(data.adminToken);
+    if (c.scope !== "authority") throw new Error("শুধু HQ");
+    if (typeof data.enabled === "boolean") return m.setAutoPublish(c, data.enabled);
+    return { enabled: await m.getAutoPublish() };
+  });

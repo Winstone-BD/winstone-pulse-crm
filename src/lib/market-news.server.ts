@@ -167,6 +167,7 @@ export async function collectNews(actor: string) {
     }
     const todo = fresh.filter((f) => !existing.has(dedupeKey(f.title, f.sourceName))).slice(0, paused?.length ? 1 : PER_RUN_CAP);
     skipped = fetched - todo.length;
+    const autoPublish = await getAutoPublish();
     if (todo.length) {
       const ai = await summarise(todo);
       for (const a of ai) {
@@ -180,7 +181,7 @@ export async function collectNews(actor: string) {
         const { data: ins, error } = await db
           .from("market_news")
           .insert({
-            origin: "auto", status: "published", headline: a.headline.slice(0, 200), summary: a.summary.slice(0, 1200),
+            origin: "auto", status: autoPublish ? "published" : "pending", headline: a.headline.slice(0, 200), summary: a.summary.slice(0, 1200),
             key_points: (a.key_points ?? []).slice(0, 3), category, tags: (a.tags ?? []).slice(0, 4), sales_insight: a.sales_insight,
             source_name: src.sourceName, source_url: src.link, source_title: src.title,
             retrieved_excerpt: sourceText.slice(0, 2000), source_published_at: pub,
@@ -207,4 +208,21 @@ export async function lastRuns(c: NewsCaller) {
   const db = await admin();
   const { data } = await db.from("market_news_runs").select("started_at,status,fetched,added,skipped,error").order("started_at", { ascending: false }).limit(5);
   return data ?? [];
+}
+
+/** HQ setting: publish AI items immediately, or hold them as pending for HQ approval. Default: publish. */
+export async function getAutoPublish() {
+  const db = await admin();
+  const { data } = await db.from("system_settings").select("value").eq("key", "news_auto_publish").maybeSingle();
+  const v = data?.value as { enabled?: boolean } | null | undefined;
+  return v?.enabled !== false;
+}
+
+export async function setAutoPublish(c: NewsCaller, enabled: boolean) {
+  requireHq(c);
+  const db = await admin();
+  const { error } = await db.from("system_settings").upsert({ key: "news_auto_publish", value: { enabled } as never }, { onConflict: "key" });
+  if (error) throw new Error(error.message);
+  await audit(null, enabled ? "auto_publish_on" : "auto_publish_off", c.actor, null);
+  return { enabled };
 }

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminToken } from "@/lib/local-session";
 import { NEWS_CATEGORIES, newsCategoryLabel, type NewsCategory } from "@/lib/market-news-rules";
-import { newsCollectNow, newsEdit, newsFeed, newsPublishManual, newsRuns, newsSetStatus } from "@/lib/market-news.functions";
+import { newsAutoPublish, newsCollectNow, newsEdit, newsFeed, newsPublishManual, newsRuns, newsSetStatus } from "@/lib/market-news.functions";
 
 type Item = Awaited<ReturnType<typeof newsFeed>>["items"][number];
 
@@ -96,7 +96,8 @@ function NewsCard({ n, compact, manage }: { n: Item; compact: boolean; manage: b
         ) : (
           <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"><Megaphone className="size-3" />HQ</span>
         )}
-        {n.status !== "published" && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">অপ্রকাশিত</span>}
+        {n.status === "pending" && <span className="rounded-full bg-warning/15 px-2 py-0.5 text-warning">অনুমোদন অপেক্ষায়</span>}
+        {n.status === "unpublished" && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">অপ্রকাশিত</span>}
         <span className="ml-auto text-muted-foreground">{when(n.source_published_at ?? n.created_at)}</span>
       </div>
       {editing ? (
@@ -149,6 +150,13 @@ export function NewsAdminPanel() {
   const collect = useServerFn(newsCollectNow);
   const runsFn = useServerFn(newsRuns);
   const runs = useQuery({ queryKey: ["news-runs", adminToken], queryFn: () => runsFn({ data: { adminToken } }) });
+  const autoFn = useServerFn(newsAutoPublish);
+  const auto = useQuery({ queryKey: ["news-auto", adminToken], queryFn: () => autoFn({ data: { adminToken } }) });
+  const setAuto = useMutation({
+    mutationFn: (enabled: boolean) => autoFn({ data: { adminToken, enabled } }),
+    onSuccess: () => auto.refetch(),
+    onError: (e) => toast.error((e as Error).message),
+  });
   const [headline, setHeadline] = useState("");
   const [summary, setSummary] = useState("");
   const [points, setPoints] = useState("");
@@ -189,6 +197,10 @@ export function NewsAdminPanel() {
             <RefreshCw className={`size-3.5 ${run.isPending ? "animate-spin" : ""}`} /> এখনই সংগ্রহ
           </Button>
         </div>
+        <label className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2 text-sm">
+          <span>{auto.data?.enabled === false ? "AI খবর HQ অনুমোদনের পর প্রকাশ হবে" : "AI খবর সরাসরি প্রকাশ হবে"}</span>
+          <input type="checkbox" className="size-4" checked={auto.data?.enabled !== false} disabled={auto.isLoading || setAuto.isPending} onChange={(e) => setAuto.mutate(e.target.checked)} aria-label="AI খবর সরাসরি প্রকাশ" />
+        </label>
         <p className="text-xs text-muted-foreground">Google News → প্রাসঙ্গিকতা ও ডুপ্লিকেট ছাঁকনি → AI শুধু উৎসের তথ্য সংক্ষেপ করে → উৎস লিংকসহ ফিডে। উৎসে নেই এমন সংখ্যা থাকলে খবরটি বাতিল হয়।</p>
         <ul className="space-y-1 text-xs">
           {(runs.data ?? []).map((r, i) => (
