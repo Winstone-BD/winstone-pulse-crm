@@ -11,7 +11,7 @@ const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
 
 async function dispatcher(adminToken: string | null | undefined) {
   const { requireLeadHub } = await import("@/lib/access.server");
-  requireLeadHub(adminToken);
+  await requireLeadHub(adminToken);
   return { label: "LeadHub Nexus" };
 }
 
@@ -26,7 +26,7 @@ export type LeadPoolAgent = {
 /** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
   const { requireLeadHub } = await import("@/lib/access.server");
-  requireLeadHub(adminToken);
+  await requireLeadHub(adminToken);
   return { label: "LeadHub Nexus" };
 }
 

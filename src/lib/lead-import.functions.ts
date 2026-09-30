@@ -59,7 +59,7 @@ export const parseLeadFile = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ParseInput.parse(input))
   .handler(async ({ data }) => {
     const { requireLeadHub } = await import("@/lib/access.server");
-    requireLeadHub(data.adminToken);
+    await requireLeadHub(data.adminToken);
 
     const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength > MAX_BYTES) {

@@ -60,7 +60,7 @@ export const coordinatorDeckStatus = createServerFn({ method: "POST" })
 
 async function fullDeck(adminToken: string | null | undefined) {
   const { requireLeadHub } = await import("@/lib/access.server");
-  requireLeadHub(adminToken);
+  await requireLeadHub(adminToken);
   return { caller: { profile: null, label: "LeadHub Nexus" } };
 }
 
