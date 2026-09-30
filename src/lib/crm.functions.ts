@@ -301,8 +301,8 @@ export const importLeads = createServerFn({ method: "POST" })
     await logAudit({
       action: "lead_imported",
       entityType: "lead",
-      actorProfileId: importer.profile?.id ?? null,
-        actorLabel: importer.label,
+      actorProfileId: null,
+      actorLabel: importer.label,
       metadata: {
         incoming,
         excludedAlreadyWorkedOrAssigned,
