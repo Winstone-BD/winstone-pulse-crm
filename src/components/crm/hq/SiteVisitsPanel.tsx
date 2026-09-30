@@ -39,8 +39,8 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId }: { leads: Lea
     return d >= fromDay && d <= toDay && (!agentId || v.agent_id === agentId);
   });
   const counts = Object.fromEntries(SITE_VISIT_STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length]));
-  const done = counts.completed ?? 0;
-  const closed = done + (counts.no_show ?? 0);
+  const done = counts["completed"] ?? 0;
+  const closed = done + (counts["no_show"] ?? 0);
 
   const add = useMutation({
     mutationFn: () => create({ data: { adminToken, leadId, visitAt: new Date(`${at}:00+06:00`).toISOString(), project: project || null } }),
