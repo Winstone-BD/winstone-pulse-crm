@@ -211,6 +211,7 @@ export function WebCallButton({
           ) : (
             <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="size-4 animate-spin" /> ব্রিফ লোড হচ্ছে…</p>
           )}
+          <WebsiteAnswerBox compact leadContext={brief?.line ?? null} />
           <Button
             type="button"
             size="lg"
