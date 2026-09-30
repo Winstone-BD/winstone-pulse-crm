@@ -1,3 +1,4 @@
+import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -40,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/system")({
+  validateSearch: sectionSearch,
   head: () => ({
     meta: [
       { title: "System & Billing — Winstone Connect" },
@@ -110,6 +112,7 @@ function SystemBoard() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [leads]);
 
+  const [sec] = useSection("/system");
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
@@ -126,57 +129,69 @@ function SystemBoard() {
 
       <SystemNoticeBar surface="it" />
 
-      <NoticeBoardPanel composer />
+      {sec === "health" && (
+        <div className="space-y-6">
+          <SystemUpdateReport />
+          <BackendHealthPanel />
+          <SheetSyncHealthPanel />
+          <VersionDataPanel />
+          <CommandAgentPanel surface="system" />
+        </div>
+      )}
 
-      <SystemUpdateReport />
+      {sec === "leads" && (
+        <div className="space-y-6">
+          <LeadDatabasePanel />
+          <ExtraLeadPanel />
+          <YearArchivePanel />
+        </div>
+      )}
 
-      <CommandAgentPanel surface="system" />
+      {sec === "calls" && (
+        <div className="space-y-6">
+          <CallOpsPanel showControls />
+          <RecordingPipelinePanel />
+          <SyncedCallsPanel />
+          <DayCallExportPanel />
+          <DriveBackupPanel />
+          <DocSummaryPanel />
+          <ReportSheetPanel />
+          <ShiftSummaryPanel scope="it" />
+        </div>
+      )}
 
-      <LeadDatabasePanel />
+      {sec === "knowledge" && (
+        <div className="space-y-6">
+          <WebsiteKnowledgePanel />
+          <DriveKnowledgePanel />
+        </div>
+      )}
 
-      <ExtraLeadPanel />
+      {sec === "notices" && (
+        <div className="space-y-6">
+          <NoticeBoardPanel composer />
+          <TeamSupportInbox />
+        </div>
+      )}
 
-      <TeamSupportInbox />
+      {sec === "access" && (
+        <div className="space-y-6">
+          <AccountabilityReviewPanel surface="it" />
+          <StaffAccountsTable />
+          <AccountApprovals />
+          <SystemCustomizer />
+        </div>
+      )}
 
-      <CallOpsPanel showControls />
+      {sec === "releases" && (
+        <div className="space-y-6">
+          <ApkInstallCard />
+          <AppReleasePanel />
+        </div>
+      )}
 
-      <RecordingPipelinePanel />
-
-      <SyncedCallsPanel />
-
-      <DayCallExportPanel />
-
-      <DriveBackupPanel />
-
-      <DocSummaryPanel />
-
-      <ReportSheetPanel />
-
-      <BackendHealthPanel />
-
-      <WebsiteKnowledgePanel />
-      <DriveKnowledgePanel />
-
-      <SheetSyncHealthPanel />
-
-      <VersionDataPanel />
-
-      <AccountabilityReviewPanel surface="it" />
-
-      <StaffAccountsTable />
-
-      <ShiftSummaryPanel scope="it" />
-
-      <AccountApprovals />
-
-      <SystemCustomizer />
-
-      <ApkInstallCard />
-
-      <AppReleasePanel />
-
-      <YearArchivePanel />
-
+      {sec === "billing" && (
+        <div className="space-y-6">
       <ServiceBillPanel mode="it" />
 
       <AuditTrail />
@@ -290,6 +305,8 @@ function SystemBoard() {
           </ul>
         </div>
       </section>
+        </div>
+      )}
     </div>
   );
 }
