@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.winstone.connect.data.DashboardMetrics
 import com.winstone.connect.data.Lead
 import com.winstone.connect.data.remote.WinstoneApi
+import com.winstone.connect.location.asDistanceLabel
 import com.winstone.connect.ui.theme.WinAmber
 import com.winstone.connect.ui.theme.WinBorder
 import com.winstone.connect.ui.theme.WinCreamDeep
@@ -453,6 +454,7 @@ private fun ScheduledCallRowV2(lead: Lead, onClick: () -> Unit) {
             ) {
                 Text(lead.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = WinInk)
                 Text(lead.phone, fontSize = 12.sp, color = WinInkMuted)
+                lead.distanceKm?.let { Text(it.asDistanceLabel(), fontSize = 11.sp, color = WinGreen) }
             }
             StatusPill(lead.status)
         }
