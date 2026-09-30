@@ -1709,6 +1709,39 @@ export type Database = {
           },
         ]
       }
+      lead_state_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          field: string
+          id: string
+          lead_id: string
+          new_value: string | null
+          old_value: string | null
+          source: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          field: string
+          id?: string
+          lead_id: string
+          new_value?: string | null
+          old_value?: string | null
+          source?: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          field?: string
+          id?: string
+          lead_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       lead_year_archives: {
         Row: {
           archive_year: number

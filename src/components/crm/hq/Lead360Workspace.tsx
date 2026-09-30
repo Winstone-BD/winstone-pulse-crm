@@ -1,3 +1,4 @@
+import { useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CalendarClock, Phone, PhoneMissed, Search, UserRound } from "lucide-react";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
-import { buildLeadTimeline, summarize, type TimelineItem } from "@/lib/lead360";
+import { buildLeadTimeline, lead360Csv, summarize, type TimelineItem } from "@/lib/lead360";
 import { getLead360, searchLead360 } from "@/lib/lead360.functions";
 import { useAdminToken } from "@/lib/local-session";
 
@@ -23,7 +24,8 @@ const fmt = (iso: string | null, withTime = true) =>
     : "—";
 
 export function Lead360Workspace() {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const fromUrl = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["lead"] ?? "") });
+  const [openId, setOpenId] = useState<string | null>(fromUrl || null);
   return openId ? <Lead360Detail leadId={openId} onBack={() => setOpenId(null)} /> : <Lead360Search onOpen={setOpenId} />;
 }
 
@@ -125,6 +127,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
         followUps: d.followUps,
         changes: d.changes,
         events: d.events,
+        stateChanges: d.stateChanges,
         agentName: name,
       }),
     };
@@ -132,7 +135,29 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
 
   return (
     <div className="space-y-5">
-      <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="size-4" /> খোঁজে ফিরুন</Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="size-4" /> খোঁজে ফিরুন</Button>
+        {view && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const csv = lead360Csv({ lead: view.d.lead.name ?? view.d.lead.id, phone: view.d.lead.phone, generatedAt: new Date() }, view.timeline);
+                const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `lead360-${view.d.lead.id}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}>Print / PDF</Button>
+          </div>
+        )}
+      </div>
       {res.isError && <p className="text-sm text-destructive">{(res.error as Error).message}</p>}
       {!view ? (
         <p className="text-sm text-muted-foreground">লোড হচ্ছে…</p>
@@ -153,6 +178,12 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
             </div>
           </header>
 
+          {view.d.linkedLeads.length > 0 && (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
+              একই নম্বরে আরও {view.d.linkedLeads.length}টি লিড আছে (আলাদা ব্যক্তি হতে পারে, একত্র করা হয়নি):{" "}
+              {view.d.linkedLeads.map((l) => `${l.name ?? "নাম নেই"} (${l.phone})`).join(", ")}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
             {[
               ["মোট Call", view.sum.totalCalls],
@@ -172,7 +203,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
 
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
             <section className="space-y-3">
-              <h3 className="font-semibold">সম্পূর্ণ Activity Timeline</h3>
+              <h3 className="font-semibold">সম্পূর্ণ Activity Timeline <span className="text-xs font-normal text-muted-foreground">— মোট {view.timeline.length}টি ঘটনা</span></h3>
               <ol className="relative space-y-3 border-l border-border pl-5">
                 {view.timeline.map((t) => (
                   <li key={t.id} className="relative">

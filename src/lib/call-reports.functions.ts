@@ -326,6 +326,9 @@ export const submitMyReport = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+    const briefingBlock = await requireAgentBriefing(me.id);
+    if (briefingBlock) throw new Error(briefingBlock.reason);
     const { submitCallReport } = await import("@/lib/call-reports.server");
     return submitCallReport({
       reportId: data.reportId,

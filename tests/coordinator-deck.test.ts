@@ -105,6 +105,7 @@ describe("report category → lead status", () => {
       durationSeconds: 60,
     };
     expect(validateReport(base)?.field).toBe("followUpAt");
-    expect(validateReport({ ...base, followUpNeeded: false, followUpNote: "কিনে ফেলেছেন" })).toBeNull();
+    expect(validateReport({ ...base, followUpNeeded: false, followUpNote: "কিনে ফেলেছেন" })?.field).toBe("followUpAt");
+    expect(validateReport({ ...base, followUpNeeded: false, noFollowUpReason: "other", followUpNote: "কিনে ফেলেছেন" })).toBeNull();
   });
 });

@@ -72,7 +72,8 @@ describe("no-follow-up reason (structured)", () => {
     followUpNeeded: false,
   };
   it("accepts a structured reason without any note", () => {
-    expect(validateReport({ ...base, noFollowUpReason: "already_bought" })).toBeNull();
+    expect(validateReport({ ...base, noFollowUpReason: "already_bought" })?.field).toBe("noFollowUpReason");
+    expect(validateReport({ ...base, noFollowUpReason: "info_completed" })).toBeNull();
   });
   it("needs a short note only when the reason is Other", () => {
     expect(validateReport({ ...base, noFollowUpReason: "other" })?.field).toBe("followUpAt");

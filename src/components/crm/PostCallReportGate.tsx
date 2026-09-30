@@ -1,4 +1,5 @@
 import { EVALUATION_QUESTIONS, categoryForScore, type EvaluationKey } from "@/lib/lead-evaluation";
+import { CONTACT_CLOSE_REASONS } from "@/lib/contact-close-reasons";
 import { FOLLOW_UP_REASONS, type FollowUpReasonCode } from "@/lib/follow-up-reasons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,15 +78,7 @@ const NEXT_ACTIONS: Opt[] = [
   { value: "no_action", label: "No Action" },
   { value: "other", label: "Other" },
 ];
-const NO_FU_REASONS: Opt[] = [
-  { value: "not_interested", label: "Customer Not Interested" },
-  { value: "info_completed", label: "Information Completed" },
-  { value: "converted", label: "Converted / Closed" },
-  { value: "wrong_number", label: "Wrong Number" },
-  { value: "duplicate", label: "Duplicate" },
-  { value: "no_contact", label: "Customer Requested No Further Contact" },
-  { value: "other", label: "Other" },
-];
+const NO_FU_REASONS: Opt[] = CONTACT_CLOSE_REASONS.map((r) => ({ value: r.code, label: r.label }));
 export const _LEGACY_TEMPERATURES: Opt[] = [
   { value: "hot", label: "HOT" },
   { value: "warm", label: "WARM" },

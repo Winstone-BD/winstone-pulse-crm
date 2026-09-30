@@ -15,6 +15,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useMyAccount } from "@/lib/session";
 import { toast } from "sonner";
 
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
@@ -70,6 +72,7 @@ export function LeadDossier({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { scope } = useMyAccount();
   const agent = agents.find((a) => a.id === lead?.assigned_to);
 
   return (
@@ -86,6 +89,11 @@ export function LeadDossier({
                 {lead.company ? `${lead.company} · ` : ""}
                 <span className="tabular">{lead.phone_number}</span>
               </p>
+              {scope === "authority" && (
+                <Link to="/hq" search={{ s: "lead360", lead: lead.id }} className="mt-1 inline-block text-xs font-semibold text-primary hover:underline">
+                  Lead 360 — পুরো ইতিহাস দেখুন →
+                </Link>
+              )}
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span className="rounded-full border border-border bg-card px-2.5 py-1 capitalize">
                   {lead.status.replace("_", " ")}
