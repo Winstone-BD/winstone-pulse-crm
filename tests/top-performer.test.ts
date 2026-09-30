@@ -68,7 +68,7 @@ describe("Top 3 performer intelligence", () => {
   });
 
   it("breaks score ties by calls, then reports, then talk minutes", () => {
-    const tieA = line({ agentId: "a", score: 30, called: 4, reports: 9 });
+    const tieA = line({ agentId: "a", score: 30, called: 4, reports: 9, talkMinutes: 3 });
     const tieB = line({ agentId: "b", score: 30, called: 6, reports: 1 });
     const tieC = line({ agentId: "c", score: 30, called: 4, reports: 9, talkMinutes: 12 });
     const ranked = rankPerformers([tieA, tieC, tieB]);
