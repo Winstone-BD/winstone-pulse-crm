@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAdminToken } from "@/lib/local-session";
 import { myReminders, registerReminderDevice } from "@/lib/reminders.functions";
 import { PUSH_MESSAGES, pushConfigured, requestWebPushToken } from "@/lib/web-push";
+import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 /**
  * The reminder bell: unfinished reports and due follow-ups, refreshed every
@@ -108,6 +109,11 @@ export function ReminderBell() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold">{item.title}</p>
                   <p className="break-words text-xs text-muted-foreground">{item.detail}</p>
+                  {item.kind === "follow_up" && item.priority ? (
+                    <p className="mt-0.5 text-[10px] font-semibold text-primary">
+                      {FOLLOW_UP_PRIORITY_LABEL[item.priority] ?? item.priority}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))

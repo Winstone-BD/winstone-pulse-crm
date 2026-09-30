@@ -10,6 +10,7 @@ import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { myCallReports } from "@/lib/call-reports.functions";
 import { clockTime, relativeTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
+import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 /** The agent's own call reports and the follow-up work waiting for them. */
 export function MyReports() {
@@ -66,7 +67,7 @@ export function MyReports() {
                   </p>
                 </div>
                 <Badge variant={event.priority === "high" ? "destructive" : "secondary"}>
-                  {event.priority === "high" ? "জরুরি" : "সাধারণ"}
+                  {FOLLOW_UP_PRIORITY_LABEL[event.priority ?? ""] ?? "সাধারণ"}
                 </Badge>
               </li>
             ))}

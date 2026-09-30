@@ -379,6 +379,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const now = Date.now();
+    const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
     return (events ?? []).map((event) => {
       const at = new Date(event.scheduled_at).getTime();
       const due = at - (event.reminder_minutes ?? 30) * 60_000;
@@ -387,7 +388,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
       return { ...event, state } as typeof event & {
         state: "done" | "overdue" | "due" | "upcoming";
       };
-    });
+    }).sort((a, b) => compareFollowUpPriority(a, b, now));
   });
 
 export const completeFollowUp = createServerFn({ method: "POST" })
@@ -443,13 +444,14 @@ export const myCallReports = createServerFn({ method: "POST" })
       .limit(20);
 
     const { reportEditable } = await import("@/lib/call-reports.server");
+    const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
     return {
       reports: (reports ?? []).map((r) => ({
         ...r,
         lead: leadById.get(r.lead_id ?? "") ?? null,
         editable: r.status === "submitted" && reportEditable(r.call_ended_at),
       })),
-      upcoming: upcoming ?? [],
+      upcoming: [...(upcoming ?? [])].sort((a, b) => compareFollowUpPriority(a, b)),
       overdueCount: (upcoming ?? []).filter((e) => e.scheduled_at < nowIso).length,
     };
   });

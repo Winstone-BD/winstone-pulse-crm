@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { completeFollowUp, myFollowUps, rescheduleFollowUp } from "@/lib/call-reports.functions";
 import { dhakaDay } from "@/lib/lead-groups";
 import { useAdminToken } from "@/lib/local-session";
+import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 type View = "day" | "week" | "month" | "agenda";
 
@@ -133,7 +134,7 @@ export function FollowUpCalendar() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(event.scheduled_at).toLocaleString("bn-BD")} · {event.category}
-                  {event.priority ? ` · ${event.priority}` : ""}
+                  {event.priority ? ` · ${FOLLOW_UP_PRIORITY_LABEL[event.priority] ?? event.priority}` : ""}
                 </p>
                 {event.note ? <p className="mt-1 text-xs">{event.note}</p> : null}
               </div>

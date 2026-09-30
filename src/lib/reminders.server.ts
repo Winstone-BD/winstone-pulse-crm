@@ -103,7 +103,19 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     });
   }
 
-  return out.sort((a, b) => Number(b.overdue) - Number(a.overdue) || a.dueAt.localeCompare(b.dueAt));
+  const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
+  return out.sort((a, b) => {
+    // Unfinished reports remain mandatory and stay pinned before follow-ups.
+    if (a.kind !== b.kind) return a.kind === "report" ? -1 : 1;
+    if (a.kind === "follow_up" && b.kind === "follow_up") {
+      return compareFollowUpPriority(
+        { id: a.id, scheduled_at: a.dueAt, priority: a.priority },
+        { id: b.id, scheduled_at: b.dueAt, priority: b.priority },
+        nowMs,
+      );
+    }
+    return a.dueAt.localeCompare(b.dueAt);
+  });
 }
 
 /**
