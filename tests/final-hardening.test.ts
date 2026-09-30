@@ -21,3 +21,12 @@ describe("final hardening", () => {
     for (const k of ["report_status", "report_correction", "call_logged"]) expect(s).toContain(k);
   });
 });
+
+import { leadNotAssignedTo } from "@/lib/lead-access.server";
+describe("call start ownership", () => {
+  it("refuses unassigned and other-agent leads, allows own", () => {
+    expect(leadNotAssignedTo({ assigned_to: null, assigned_agent_id: null }, "me")).toBe(true);
+    expect(leadNotAssignedTo({ assigned_to: "x" }, "me")).toBe(true);
+    expect(leadNotAssignedTo({ assigned_agent_id: "me" }, "me")).toBe(false);
+  });
+});
