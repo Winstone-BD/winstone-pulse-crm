@@ -1,4 +1,4 @@
-import { clampBrief, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
+import { assignmentReasons, clampBrief, followUpScript, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
