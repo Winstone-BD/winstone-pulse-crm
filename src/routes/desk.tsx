@@ -1,3 +1,4 @@
+import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowDownRight,
@@ -12,7 +13,6 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { usePersistentTab } from "@/lib/use-persistent-tab";
 
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { AppShell } from "@/components/crm/AppShell";
@@ -47,6 +47,7 @@ import { dhakaDay, plausibleSeconds } from "@/lib/lead-groups";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
 export const Route = createFileRoute("/desk")({
+  validateSearch: sectionSearch,
   head: () => ({
     meta: [
       { title: "আমার ডেস্ক — Winstone Connect" },
@@ -227,11 +228,9 @@ function DeskPage() {
   const signOut = useSignOut();
   const accountability = useMyAccountability();
   const queueLocked = scope === "agent" && Boolean(accountability.data?.locked);
-  const [tab, setTab] = usePersistentTab<string>(
-    "desk:last-tab",
-    SECTION_RAIL.map((t) => t.tab),
-    "leads",
-  );
+  const [tabKey, setTabKey] = useSection("/desk");
+  const tab: string = tabKey;
+  const setTab = (next: string) => setTabKey(next as typeof tabKey);
 
   if (isPending) {
     return (
@@ -286,32 +285,7 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="grid gap-4 xl:grid-cols-[186px_minmax(0,1fr)]">
-        {/* Section rail — desktop-first shortcut to the desk's existing panels */}
-        <nav className="hidden xl:block">
-          <div className="card-elevated sticky top-20 space-y-1 p-2">
-            <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              আমার ডেস্ক
-            </p>
-            {SECTION_RAIL.map((item) => (
-              <button
-                key={item.tab}
-                type="button"
-                onClick={() => {
-                  setTab(item.tab);
-                  document.getElementById("desk-tabs")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className={`w-full truncate rounded-lg px-2.5 py-2 text-left text-[12px] font-medium transition-colors ${
-                  tab === item.tab
-                    ? "bg-primary/12 text-primary"
-                    : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </nav>
+      <div className="grid gap-4">
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <AccountabilityBanner />
@@ -332,6 +306,8 @@ function DeskPage() {
             }
           />
 
+        {tab === "today" && (
+          <div className="space-y-4 sm:space-y-6">
         <DeskStats />
 
         <SmartInsightStrip scope="desk" />
@@ -348,9 +324,12 @@ function DeskPage() {
 
         <TeamSupportInbox />
 
+          </div>
+        )}
+
         <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
           {/* Mobile: collapsible section menu */}
-          <details className="group rounded-xl border border-border bg-card sm:hidden">
+          <details className="group rounded-xl border border-border bg-card lg:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
               <span>{SECTION_RAIL.find((s) => s.tab === tab)?.label ?? "সেকশন"}</span>
               <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
@@ -376,15 +355,7 @@ function DeskPage() {
               ))}
             </div>
           </details>
-          <TabsList className="hidden w-full min-w-0 justify-start gap-1 overflow-x-auto sm:flex">
-            <TabsTrigger className="shrink-0" value="leads">লিড ড্যাশবোর্ড</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="queue">কার্ড ভিউ</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="calls">কল রেকর্ড</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="whatsapp">হোয়াটসঅ্যাপ</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="calendar">ফলো-আপ</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="reports">আমার রিপোর্ট</TabsTrigger>
-            <TabsTrigger className="shrink-0" value="support">টিম সাপোর্ট</TabsTrigger>
-          </TabsList>
+          
           <TabsContent value="support">
             <TeamSupportPanel />
           </TabsContent>

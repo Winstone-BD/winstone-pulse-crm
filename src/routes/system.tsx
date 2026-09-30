@@ -1,3 +1,4 @@
+import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -40,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/system")({
+  validateSearch: sectionSearch,
   head: () => ({
     meta: [
       { title: "System & Billing — Winstone Connect" },
@@ -110,6 +112,7 @@ function SystemBoard() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [leads]);
 
+  const [sec, setSec] = useSection("/system");
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
@@ -126,57 +129,82 @@ function SystemBoard() {
 
       <SystemNoticeBar surface="it" />
 
-      <NoticeBoardPanel composer />
+      <nav aria-label="IT Console sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
+        {PAGE_SECTIONS["/system"].map((x) => (
+          <button
+            key={x.key}
+            type="button"
+            onClick={() => setSec(x.key)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${sec === x.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </nav>
 
-      <SystemUpdateReport />
+      {sec === "health" && (
+        <div className="space-y-6">
+          <SystemUpdateReport />
+          <BackendHealthPanel />
+          <SheetSyncHealthPanel />
+          <VersionDataPanel />
+          <CommandAgentPanel surface="system" />
+        </div>
+      )}
 
-      <CommandAgentPanel surface="system" />
+      {sec === "leads" && (
+        <div className="space-y-6">
+          <LeadDatabasePanel />
+          <ExtraLeadPanel />
+          <YearArchivePanel />
+        </div>
+      )}
 
-      <LeadDatabasePanel />
+      {sec === "calls" && (
+        <div className="space-y-6">
+          <CallOpsPanel showControls />
+          <RecordingPipelinePanel />
+          <SyncedCallsPanel />
+          <DayCallExportPanel />
+          <DriveBackupPanel />
+          <DocSummaryPanel />
+          <ReportSheetPanel />
+          <ShiftSummaryPanel scope="it" />
+        </div>
+      )}
 
-      <ExtraLeadPanel />
+      {sec === "knowledge" && (
+        <div className="space-y-6">
+          <WebsiteKnowledgePanel />
+          <DriveKnowledgePanel />
+        </div>
+      )}
 
-      <TeamSupportInbox />
+      {sec === "notices" && (
+        <div className="space-y-6">
+          <NoticeBoardPanel composer />
+          <TeamSupportInbox />
+        </div>
+      )}
 
-      <CallOpsPanel showControls />
+      {sec === "access" && (
+        <div className="space-y-6">
+          <AccountabilityReviewPanel surface="it" />
+          <StaffAccountsTable />
+          <AccountApprovals />
+          <SystemCustomizer />
+        </div>
+      )}
 
-      <RecordingPipelinePanel />
+      {sec === "releases" && (
+        <div className="space-y-6">
+          <ApkInstallCard />
+          <AppReleasePanel />
+        </div>
+      )}
 
-      <SyncedCallsPanel />
-
-      <DayCallExportPanel />
-
-      <DriveBackupPanel />
-
-      <DocSummaryPanel />
-
-      <ReportSheetPanel />
-
-      <BackendHealthPanel />
-
-      <WebsiteKnowledgePanel />
-      <DriveKnowledgePanel />
-
-      <SheetSyncHealthPanel />
-
-      <VersionDataPanel />
-
-      <AccountabilityReviewPanel surface="it" />
-
-      <StaffAccountsTable />
-
-      <ShiftSummaryPanel scope="it" />
-
-      <AccountApprovals />
-
-      <SystemCustomizer />
-
-      <ApkInstallCard />
-
-      <AppReleasePanel />
-
-      <YearArchivePanel />
-
+      {sec === "billing" && (
+        <div className="space-y-6">
       <ServiceBillPanel mode="it" />
 
       <AuditTrail />
@@ -290,6 +318,8 @@ function SystemBoard() {
           </ul>
         </div>
       </section>
+        </div>
+      )}
     </div>
   );
 }

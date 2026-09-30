@@ -1,4 +1,5 @@
 import { EVALUATION_QUESTIONS, categoryForScore, type EvaluationKey } from "@/lib/lead-evaluation";
+import { FOLLOW_UP_REASONS, type FollowUpReasonCode } from "@/lib/follow-up-reasons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
@@ -293,6 +294,8 @@ export function PostCallReportGate() {
   const [nextActionNote, setNextActionNote] = useState("");
   const [followMode, setFollowMode] = useState<"set" | "none">("set");
   const [when, setWhen] = useState("");
+  const [fuReason, setFuReason] = useState<FollowUpReasonCode | null>(null);
+  const [fuReasonNote, setFuReasonNote] = useState("");
   const [noFuReason, setNoFuReason] = useState("");
   const [noFuNote, setNoFuNote] = useState("");
   const [answers, setAnswers] = useState<Partial<Record<EvaluationKey, boolean>>>({});
@@ -437,6 +440,8 @@ export function PostCallReportGate() {
       note,
       reason: reasonText || null,
       followUpAt,
+      followUpReason: followUpAt ? fuReason : null,
+      followUpReasonNote: followUpAt && fuReason === "other" ? fuReasonNote.trim() || null : null,
       reminderMinutes: 30,
       temperature: connected ? (temperature as "hot" | "warm" | "cold") : null,
       grade: connected ? (grade as "A" | "B" | "C" | "D") : null,
@@ -590,6 +595,25 @@ export function PostCallReportGate() {
                   </div>
                 ) : null}
                 <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} aria-label="ফলো-আপের তারিখ ও সময়" />
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground">কেন ফলো-আপ?</p>
+                  <div className="flex flex-wrap gap-1">
+                    {FOLLOW_UP_REASONS.map((r) => (
+                      <button
+                        key={r.code}
+                        type="button"
+                        onClick={() => setFuReason(r.code)}
+                        aria-pressed={fuReason === r.code}
+                        className={`rounded-full border px-2 py-1 text-[11px] font-medium ${fuReason === r.code ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                  {fuReason === "other" && (
+                    <Input value={fuReasonNote} maxLength={120} onChange={(e) => setFuReasonNote(e.target.value)} placeholder="ছোট নোট (ঐচ্ছিক)" />
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   রিমাইন্ডার: ৩০ মিনিট আগে, ১৫ মিনিট আগে এবং ঠিক সময়ে — শব্দসহ। সময়ে কল না হলে Overdue দেখাবে।
                 </p>

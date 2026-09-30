@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { PAGE_SECTIONS, type SectionRoute } from "@/lib/page-sections";
 import {
   BarChart3,
   BookOpen,
@@ -62,6 +63,8 @@ const GROUPS: { title: string; routes: string[] }[] = [
 /** Grouped left navigator for desktop; mobile keeps the top pill bar. */
 export function NavSidebar({ items }: { items: readonly Item[] }) {
   const byRoute = new Map(items.map((i) => [i.to, i]));
+  const path = useRouterState({ select: (st) => st.location.pathname });
+  const activeS = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
   return (
     <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border bg-card/60 px-3 py-5 backdrop-blur lg:block">
       {GROUPS.map((group) => {
@@ -75,9 +78,10 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
             <nav className="flex flex-col gap-0.5">
               {list.map((item) => {
                 const Icon = ICONS[item.to] ?? LifeBuoy;
+                const subs = PAGE_SECTIONS[item.to as SectionRoute];
                 return (
+                  <div key={item.to}>
                   <Link
-                    key={item.to}
                     to={item.to}
                     activeOptions={{ exact: item.to === "/" }}
                     className="group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/60 hover:text-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm"
@@ -85,6 +89,24 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
                     <Icon className="size-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
                   </Link>
+                  {subs && path === item.to && (
+                    <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+                      {subs.map((sub, i) => {
+                        const on = activeS === sub.key || (!subs.some((x) => x.key === activeS) && i === 0);
+                        return (
+                          <Link
+                            key={sub.key}
+                            to={item.to}
+                            search={{ s: sub.key } as never}
+                            className={`rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+                          >
+                            {sub.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  </div>
                 );
               })}
             </nav>

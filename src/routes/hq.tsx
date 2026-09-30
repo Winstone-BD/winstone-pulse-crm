@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { usePersistentTab } from "@/lib/use-persistent-tab";
+import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
+import { Lead360Workspace } from "@/components/crm/hq/Lead360Workspace";
 
 import { AgentDossier } from "@/components/crm/AgentDossier";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
@@ -34,17 +35,10 @@ import { ReportsBoard } from "@/routes/reports";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
-type HqTab = "overview" | "performance" | "leads" | "reports" | "tools";
-
-const HQ_TABS: { key: HqTab; label: string }[] = [
-  { key: "overview", label: "ওভারভিউ" },
-  { key: "performance", label: "এজেন্ট পারফরম্যান্স" },
-  { key: "leads", label: "লিড ও ফানেল" },
-  { key: "reports", label: "রিপোর্ট" },
-  { key: "tools", label: "টুলস ও সেটিংস" },
-];
+const HQ_TABS = PAGE_SECTIONS["/hq"];
 
 export const Route = createFileRoute("/hq")({
+  validateSearch: sectionSearch,
   head: () => ({
     meta: [
       { title: "Control Board — Tele-Sales CRM OS" },
@@ -165,11 +159,7 @@ function ControlBoard() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
   const openAgent = profiles.find((p) => p.id === openAgentId) ?? null;
-  const [tab, setTab] = usePersistentTab<HqTab>(
-    "hq:last-tab",
-    HQ_TABS.map((t) => t.key),
-    "overview",
-  );
+  const [tab, setTab] = useSection("/hq");
   const activeLabel = HQ_TABS.find((t) => t.key === tab)?.label ?? "";
 
   return (
@@ -205,28 +195,6 @@ function ControlBoard() {
               ))}
             </nav>
           </details>
-
-          {/* Desktop: left grouped tabs */}
-          <nav
-            aria-label="HQ sections"
-            className="hidden gap-2 lg:sticky lg:top-20 lg:flex lg:w-52 lg:shrink-0 lg:flex-col"
-          >
-            {HQ_TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setTab(t.key)}
-                aria-current={tab === t.key ? "page" : undefined}
-                className={`whitespace-nowrap rounded-xl border px-4 py-2.5 text-left text-sm font-semibold transition-colors lg:w-full ${
-                  tab === t.key
-                    ? "border-primary/40 bg-primary text-primary-foreground shadow-sm"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
 
           {/* White content surface */}
           <div className="min-w-0 flex-1 rounded-2xl border border-border bg-white p-4 text-slate-900 shadow-sm sm:p-6 dark:bg-card dark:text-card-foreground">
@@ -280,7 +248,9 @@ function ControlBoard() {
               </div>
             )}
 
-            {tab === "reports" && <ReportsBoard />}
+            {tab === "followups" && <ReportsBoard />}
+
+            {tab === "lead360" && <Lead360Workspace />}
 
             {tab === "tools" && (
               <div className="space-y-8">
