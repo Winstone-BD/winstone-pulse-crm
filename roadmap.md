@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+0. **Google Drive reconnection** — Reconnect the project to Google Drive in the new workspace and verify the linked account.
 0. **LeadHub Nexus consolidation** — Completed: Coordinator entry removed; dedicated PIN-only canonical database, import, quality, oldest-first quantity assignment and safe `/dispatch` redirect added.
 1. **Correct agent performance analysis** — Use actual call duration/connected status/outcomes from `call_reports`/`calls`/`recordings`, not report submission counts. Identify who is actually wasting leads (short/no-answer/fake reports) vs genuinely working them.
 2. **Google Sheets reconnection** — Pending; user paused to fix report logic first.
