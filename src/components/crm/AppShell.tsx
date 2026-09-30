@@ -3,7 +3,6 @@ import { ChevronDown, Lock, LockOpen, LogOut, Menu, Smartphone, Sparkles } from 
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import apkAsset from "@/assets/winstone-connect.apk.asset.json";
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
@@ -32,7 +31,6 @@ import { useMyAccount, useSignOut } from "@/lib/session";
 
 // Latest build is streamed from the backend; the bundled asset stays as a fallback.
 const APK_URL = "/api/public/download/apk";
-void apkAsset;
 
 type Scope = "authority" | "coordinator" | "agent" | "none";
 
