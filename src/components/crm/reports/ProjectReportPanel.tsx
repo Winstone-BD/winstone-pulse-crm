@@ -87,7 +87,7 @@ export function ProjectReportPanel() {
             <Metric icon={<TicketCheck className="size-4" />} label="বুকিং" value={report.data?.totals.bookings ?? 0} />
           </div>
 
-          <div className="overflow-x-auto rounded-md border border-border bg-card">
+          <div className="table-scroll rounded-md border border-border bg-card">
             <table className="w-full min-w-[680px] text-sm">
               <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                 <tr>

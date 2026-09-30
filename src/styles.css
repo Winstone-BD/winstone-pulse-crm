@@ -232,7 +232,11 @@
 
   /* Wide data tables scroll inside their own box instead of pushing the page. */
   .table-scroll {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-gutter: stable;
     -webkit-overflow-scrolling: touch;
   }
 

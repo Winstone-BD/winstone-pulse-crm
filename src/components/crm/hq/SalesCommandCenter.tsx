@@ -275,7 +275,7 @@ export function SalesCommandCenter({
             ))}
           </div>
           {sortedSources.length === 0 ? <Empty text="কোনো লিড নেই।" /> : (
-            <div className="overflow-x-auto">
+            <div className="table-scroll">
               <table className="w-full min-w-[420px] text-xs">
                 <thead className="text-left text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr><th className="py-1.5 font-medium">সোর্স</th><th className="text-right font-medium">লিড</th><th className="text-right font-medium">আগ্রহী</th><th className="text-right font-medium">সাইট ভিজিট</th><th className="text-right font-medium">বুকিং</th></tr>

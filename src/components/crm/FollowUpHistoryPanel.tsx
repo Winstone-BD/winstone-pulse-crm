@@ -280,7 +280,7 @@ ${rows.map((r) => `<tr>${toCells(r).map((v) => `<td>${esc(v)}</td>`).join("")}</
           ) : !rows.length ? (
             <p className="text-sm text-muted-foreground">এই ফিল্টারে কোনো ফলো-আপ নেই।</p>
           ) : (
-            <div className="max-h-[640px] overflow-auto rounded-lg border border-border">
+            <div className="table-scroll max-h-[640px] rounded-lg border border-border">
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-muted text-left">
                   <tr>

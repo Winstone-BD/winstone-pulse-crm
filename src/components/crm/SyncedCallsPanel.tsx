@@ -86,7 +86,16 @@ export function SyncedCallsPanel() {
       )}
 
       {data && data.calls.length > 0 && (
-        <div className="mt-3 max-h-80 overflow-auto">
+        <>
+        <ul className="mt-3 max-h-96 space-y-2 overflow-y-auto md:hidden">
+          {data.calls.map((call) => (
+            <li key={call.id} className="rounded-lg border border-border p-3 text-xs">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><div className="min-w-0"><p className="truncate font-semibold">{call.leadName}</p><p className="truncate text-muted-foreground">{call.agentName} · {call.atDhaka}</p></div><span className="tabular font-semibold">{call.durationLabel}</span></div>
+              <div className="mt-2 flex items-center justify-between gap-2"><span className="tabular text-muted-foreground">{call.phone}</span>{call.audioUrl ? <a href={call.audioUrl} target="_blank" rel="noreferrer" className="font-medium text-primary underline">শুনুন</a> : <Badge variant="outline">{RECORDING_TEXT[call.recordingStatus] ?? call.recordingStatus}</Badge>}</div>
+            </li>
+          ))}
+        </ul>
+        <div className="table-scroll mt-3 hidden max-h-80 md:block">
           <table className="w-full min-w-[620px] text-sm">
             <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr className="border-b border-border">
@@ -127,6 +136,7 @@ export function SyncedCallsPanel() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </section>
   );

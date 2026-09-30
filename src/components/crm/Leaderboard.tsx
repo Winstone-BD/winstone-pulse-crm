@@ -22,8 +22,19 @@ export function Leaderboard({
         <Trophy className="size-5 text-idle" />
       </div>
 
-      <div className="overflow-hidden card-elevated">
-        <div className="overflow-x-auto">
+      <ol className="space-y-2 md:hidden">
+        {stats.map((row, index) => (
+          <li key={row.profile.id}>
+            <button type="button" disabled={!onSelectAgent} onClick={() => onSelectAgent?.(row.profile.id)} className="card-elevated w-full p-3 text-left disabled:cursor-default">
+              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"><span className="tabular text-muted-foreground">#{index + 1}</span><span className="truncate font-semibold">{row.profile.name}</span><span className="tabular font-bold">{row.conversionRate.toFixed(0)}%</span></div>
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div><dt className="text-muted-foreground">মোট কল</dt><dd className="tabular font-semibold">{row.dials}</dd></div><div><dt className="text-muted-foreground">কথা হয়েছে</dt><dd className="tabular font-semibold">{row.connected}</dd></div><div><dt className="text-muted-foreground">কথার সময়</dt><dd className="tabular font-semibold">{formatTalkTime(row.talkSeconds)}</dd></div></dl>
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <div className="hidden overflow-hidden card-elevated md:block">
+        <div className="table-scroll">
           <table className="w-full min-w-[860px] text-sm">
             <thead className="bg-surface-2 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>

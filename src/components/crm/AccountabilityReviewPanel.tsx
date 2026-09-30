@@ -75,7 +75,19 @@ export function AccountabilityReviewPanel({ surface }: { surface: "hq" | "it" })
       ) : rows.length === 0 ? (
         <GroupState kind="empty" message="No pending-review records in the last 30 days" />
       ) : (
-        <div className="overflow-x-auto">
+        <>
+        <ul className="space-y-2 md:hidden">
+          {rows.map((r) => {
+            const agent = r.agent as { name?: string; employee_id?: string } | null;
+            const st = r.status as AccountabilityStatus;
+            return <li key={r.id} className="rounded-lg border border-border p-3 text-xs">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><div className="min-w-0"><p className="truncate font-semibold">{agent?.name ?? "—"}</p><p className="text-muted-foreground">{agent?.employee_id ?? ""} · {r.business_date}</p></div><span className={`self-start rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TONE[st]}`}>{STATUS_LABEL[st]}</span></div>
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-center"><div><dt className="text-muted-foreground">Eligible</dt><dd className="tabular font-semibold">{r.eligible_count}</dd></div><div><dt className="text-muted-foreground">Done</dt><dd className="tabular font-semibold">{r.completed_count}</dd></div><div><dt className="text-muted-foreground">Pending</dt><dd className="tabular font-semibold">{r.pending_count} · {r.pending_percent}%</dd></div></dl>
+              <Button className="mt-3 w-full" size="sm" variant="outline" onClick={() => { setNote(""); setOpenId(r.id); }}>Review details</Button>
+            </li>;
+          })}
+        </ul>
+        <div className="table-scroll hidden md:block">
           <table className="w-full min-w-[820px] text-left text-xs">
             <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border">
@@ -108,6 +120,7 @@ export function AccountabilityReviewPanel({ surface }: { surface: "hq" | "it" })
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <Dialog open={Boolean(open)} onOpenChange={(v) => !v && setOpenId(null)}>

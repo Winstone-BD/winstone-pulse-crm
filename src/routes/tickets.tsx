@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
 import { ConversationWorkspace } from "@/components/support/ConversationWorkspace";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminToken } from "@/lib/local-session";
 import { listSupportTickets } from "@/lib/support-staff.functions";
@@ -78,12 +79,12 @@ function TicketsPage() {
             {rows.length} ticket{rows.length === 1 ? "" : "s"} in this view
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search ref or title"
-            className="h-9 w-48"
+            className="h-9 w-full sm:w-48"
             aria-label="Search tickets"
           />
           <select
@@ -115,7 +116,28 @@ function TicketsPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="rounded-xl border border-border bg-card md:hidden">
+        {tickets.isLoading ? <p className="p-6 text-center text-xs text-muted-foreground"><Loader2 className="inline size-3.5 animate-spin" /> Loading…</p> : null}
+        {!tickets.isLoading && rows.length === 0 ? <p className="p-6 text-center text-xs text-muted-foreground">No tickets in this view.</p> : null}
+        <ul className="divide-y divide-border">
+          {rows.map((ticket) => (
+            <li key={ticket.id} className="space-y-2 p-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                <div className="min-w-0"><p className="truncate font-semibold">{ticket.title}</p><p className="font-mono text-xs text-muted-foreground">{ticket.ref}</p></div>
+                <span className="text-xs font-medium">{PRIORITY_LABEL[ticket.priority as Priority]}</span>
+              </div>
+              <dl className="grid grid-cols-2 gap-2 text-xs">
+                <div><dt className="text-muted-foreground">Customer</dt><dd className="truncate">{ticket.customer?.name ?? ticket.customer?.email ?? "—"}</dd></div>
+                <div><dt className="text-muted-foreground">Status</dt><dd>{TICKET_STATUS_LABEL[ticket.status as TicketStatus]}</dd></div>
+                <div><dt className="text-muted-foreground">Opened by</dt><dd className="capitalize">{ticket.created_by_kind}</dd></div>
+                <div><dt className="text-muted-foreground">Created</dt><dd>{relativeTime(ticket.created_at)}</dd></div>
+              </dl>
+              {ticket.conversation_id ? <Button size="sm" variant="outline" className="w-full" onClick={() => setOpenConversation(ticket.conversation_id)}>Open thread</Button> : null}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="table-scroll hidden rounded-xl border border-border bg-card md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-2/60 text-[11px] uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -165,13 +187,7 @@ function TicketsPage() {
                 </td>
                 <td className="px-3 py-2 text-right">
                   {ticket.conversation_id && (
-                    <button
-                      type="button"
-                      className="text-xs text-primary underline-offset-2 hover:underline"
-                      onClick={() => setOpenConversation(ticket.conversation_id)}
-                    >
-                      Open thread
-                    </button>
+                    <Button size="sm" variant="ghost" onClick={() => setOpenConversation(ticket.conversation_id)}>Open thread</Button>
                   )}
                 </td>
               </tr>
