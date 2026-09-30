@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDown, Lock, LockOpen, LogOut, Menu, Smartphone, Sparkles } from "lucide-react";
+import { NavSidebar } from "@/components/crm/NavSidebar";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -36,7 +37,7 @@ const APK_URL = "/api/public/download/apk";
 
 type Scope = "authority" | "coordinator" | "agent" | "none";
 
-const NAV = [
+export const NAV = [
   { to: "/", label: "Home", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/desk", label: "My Desk", scopes: ["coordinator", "agent"] },
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
@@ -98,50 +99,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </Link>
 
-          <nav className="ml-2 hidden min-w-0 items-center gap-0.5 rounded-full border border-border bg-surface-2/70 p-1 lg:flex">
-            {primaryNav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                activeOptions={{ exact: item.to === "/" }}
-                className="whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-all duration-300 hover:text-foreground data-[status=active]:bg-card data-[status=active]:text-primary data-[status=active]:shadow-sm"
-              >
-                {item.label}
-              </Link>
-            ))}
-            {moreNav.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Open more navigation links"
-                    className={`h-8 gap-1 rounded-full px-3 text-[13px] font-medium ${
-                      moreIsActive ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
-                    }`}
-                  >
-                    More <ChevronDown className="size-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel>More tools</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {moreNav.map((item) => (
-                    <DropdownMenuItem key={item.to} asChild>
-                      <Link
-                        to={item.to}
-                        activeOptions={{ exact: item.to === "/" }}
-                        className="w-full cursor-pointer data-[status=active]:bg-accent data-[status=active]:text-primary"
-                      >
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             {adminToken && <AgentSelector />}
@@ -265,10 +222,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] animate-rise px-3 py-5 sm:px-6 sm:py-6">
-        <OfflineSyncBar />
-        {children}
-      </main>
+      <div className="mx-auto flex w-full max-w-[1600px]">
+        <NavSidebar items={nav} />
+        <main className="min-w-0 flex-1 animate-rise px-3 py-5 sm:px-6 sm:py-6">
+          <OfflineSyncBar />
+          {children}
+        </main>
+      </div>
 
 
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
