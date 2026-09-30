@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const RequestedRole = z.enum(["agent", "coordinator"]);
+const RequestedRole = z.literal("agent");
 
 /** Digits only, compared on the last 10 so 01805049668 / +8801805049668 match. */
 function phoneKey(value: string): string | null {
@@ -118,7 +118,7 @@ export const registerMyAccount = createServerFn({ method: "POST" })
       phone: data.phone || null,
       email,
       role: rostered ?? "agent",
-      requested_role: rostered ?? (data.requestedRole === "coordinator" ? "team_leader" : "agent"),
+      requested_role: rostered ?? "agent",
       approval_status: "pending",
       is_active: true,
     });
@@ -194,14 +194,14 @@ export const listAccountRequests = createServerFn({ method: "POST" })
     return { accounts: rows ?? [] };
   });
 
-/** Approve as agent or coordinator, or reject. Master PIN only. */
+/** Approve as agent or reject. Coordinator accounts are retired. */
 export const decideAccount = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
         adminToken: z.string(),
         profileId: z.string().uuid(),
-        decision: z.enum(["approve_agent", "approve_coordinator", "reject"]),
+        decision: z.enum(["approve_agent", "reject"]),
       })
       .parse(input),
   )
@@ -221,10 +221,7 @@ export const decideAccount = createServerFn({ method: "POST" })
         : {
             approval_status: "approved",
             is_active: true,
-            role:
-              data.decision === "approve_coordinator"
-                ? ("team_leader" as const)
-                : ("agent" as const),
+            role: "agent" as const,
           };
 
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.profileId);
@@ -253,7 +250,7 @@ export const decideAccount = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const StaffRole = z.enum(["agent", "coordinator"]);
+const StaffRole = z.literal("agent");
 
 function fallbackEmail(employeeId: string | null, phone: string | null) {
   const local = (employeeId || phone || "").replace(/[^A-Za-z0-9]/g, "").toLowerCase();
@@ -342,7 +339,7 @@ export const createStaffAccount = createServerFn({ method: "POST" })
       throw new Error(created.error?.message ?? "সাইন-ইন অ্যাকাউন্ট তৈরি হয়নি");
     }
 
-    const role = data.role === "coordinator" ? ("team_leader" as const) : ("agent" as const);
+    const role = "agent" as const;
     const { data: profile, error } = await supabaseAdmin
       .from("profiles")
       .insert({
