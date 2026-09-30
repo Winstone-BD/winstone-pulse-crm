@@ -41,6 +41,17 @@ async function allLeads(
  * Authority (HQ / IT PIN) and coordinators get the whole floor; a signed-in
  * agent gets only their own leads, calls and messages. Anyone else gets nothing.
  */
+/** Reads every matching row in 1000-row pages — no silent "latest N" cut-off. */
+async function pageAll(build: (from: number, to: number) => PromiseLike<{ data: any[] | null; error: any }>) {
+  const out: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await build(from, from + 999);
+    if (error) return { data: null, error };
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) return { data: out, error: null };
+  }
+}
+
 export const getCrmSnapshot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SnapshotScope.parse(input ?? {}))
   .handler(async ({ data }) => {
@@ -68,12 +79,12 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         String(b.updated_at).localeCompare(String(a.updated_at)),
       );
       const [calls, messages, events] = await Promise.all([
-        supabaseAdmin.from("call_recordings").select("*").eq("agent_id", me)
-          .order("created_at", { ascending: false }).limit(2000),
-        supabaseAdmin.from("whatsapp_interactions").select("*").eq("agent_id", me)
-          .order("created_at", { ascending: true }).limit(2000),
-        supabaseAdmin.from("lead_events").select("*").eq("agent_id", me)
-          .order("created_at", { ascending: false }).limit(2000),
+        pageAll((a, b) => supabaseAdmin.from("call_recordings").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: false }).order("id").range(a, b)),
+        pageAll((a, b) => supabaseAdmin.from("whatsapp_interactions").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: true }).order("id").range(a, b)),
+        pageAll((a, b) => supabaseAdmin.from("lead_events").select("*").eq("agent_id", me)
+          .order("created_at", { ascending: false }).order("id").range(a, b)),
       ]);
       const failed = [profile, ownLeadsA, ownLeadsB, calls, messages, events].find((r) => r.error);
       if (failed?.error) throw new Error(failed.error.message);
@@ -92,21 +103,14 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     const [profiles, leads, calls, messages, events] = await Promise.all([
       supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).order("name"),
       allLeads(supabaseAdmin as never),
-      supabaseAdmin
-        .from("call_recordings")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500),
-      supabaseAdmin
-        .from("whatsapp_interactions")
-        .select("*")
-        .order("created_at", { ascending: true })
-        .limit(1000),
-      supabaseAdmin
-        .from("lead_events")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000),
+      pageAll((a, b) => supabaseAdmin.from("call_recordings").select("*")
+        .order("created_at", { ascending: false }).order("id").range(a, b)),
+      pageAll((a, b) => supabaseAdmin.from("whatsapp_interactions").select("*")
+        .order("created_at", { ascending: true }).order("id").range(a, b)),
+      // Floor-wide events: every row of the last 31 days (dashboard windows), fully paged.
+      pageAll((a, b) => supabaseAdmin.from("lead_events").select("*")
+        .gte("created_at", new Date(Date.now() - 31 * 864e5).toISOString())
+        .order("created_at", { ascending: false }).order("id").range(a, b)),
     ]);
     const failed = [profiles, leads, calls, messages, events].find((r) => r.error);
     if (failed?.error) throw new Error(failed.error.message);

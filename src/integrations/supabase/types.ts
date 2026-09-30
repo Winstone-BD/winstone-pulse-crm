@@ -1104,6 +1104,7 @@ export type Database = {
           action: string
           changed_at: string
           changed_by: string | null
+          correlation_id: string
           follow_up_id: string
           id: string
           lead_id: string | null
@@ -1120,6 +1121,7 @@ export type Database = {
           action: string
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string
           follow_up_id: string
           id?: string
           lead_id?: string | null
@@ -1136,6 +1138,7 @@ export type Database = {
           action?: string
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string
           follow_up_id?: string
           id?: string
           lead_id?: string | null
@@ -1722,6 +1725,7 @@ export type Database = {
         Row: {
           changed_at: string
           changed_by: string | null
+          correlation_id: string
           field: string
           id: string
           lead_id: string
@@ -1732,6 +1736,7 @@ export type Database = {
         Insert: {
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string
           field: string
           id?: string
           lead_id: string
@@ -1742,6 +1747,7 @@ export type Database = {
         Update: {
           changed_at?: string
           changed_by?: string | null
+          correlation_id?: string
           field?: string
           id?: string
           lead_id?: string
