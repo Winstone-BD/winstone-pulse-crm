@@ -408,6 +408,33 @@ export type Database = {
         }
         Relationships: []
       }
+      architect_auth_attempts: {
+        Row: {
+          at: string
+          email: string | null
+          id: string
+          ip: string | null
+          stage: string
+          success: boolean
+        }
+        Insert: {
+          at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          stage: string
+          success: boolean
+        }
+        Update: {
+          at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          stage?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1922,6 +1949,108 @@ export type Database = {
           },
         ]
       }
+      maintenance_audit: {
+        Row: {
+          action: string
+          actor: string
+          actor_role: string
+          at: string
+          billing_period: string | null
+          duration_minutes: number | null
+          expires_at: string | null
+          id: string
+          metadata: Json
+          new_state: string | null
+          previous_state: string | null
+          reason: string | null
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          actor_role: string
+          at?: string
+          billing_period?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          new_state?: string | null
+          previous_state?: string | null
+          reason?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          actor_role?: string
+          at?: string
+          billing_period?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          new_state?: string | null
+          previous_state?: string | null
+          reason?: string | null
+          request_id?: string | null
+        }
+        Relationships: []
+      }
+      maintenance_unlock_requests: {
+        Row: {
+          billing_period: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          duration_minutes: number | null
+          id: string
+          payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at_request: string | null
+          reason: string | null
+          requested_at: string
+          requested_by: string
+          requested_hours: number
+          status: Database["public"]["Enums"]["maintenance_unlock_status"]
+          unlock_expires_at: string | null
+          unlock_started_at: string | null
+        }
+        Insert: {
+          billing_period: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          duration_minutes?: number | null
+          id?: string
+          payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at_request?: string | null
+          reason?: string | null
+          requested_at?: string
+          requested_by: string
+          requested_hours?: number
+          status?: Database["public"]["Enums"]["maintenance_unlock_status"]
+          unlock_expires_at?: string | null
+          unlock_started_at?: string | null
+        }
+        Update: {
+          billing_period?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          duration_minutes?: number | null
+          id?: string
+          payment_status_at_request?: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at_request?: string | null
+          reason?: string | null
+          requested_at?: string
+          requested_by?: string
+          requested_hours?: number
+          status?: Database["public"]["Enums"]["maintenance_unlock_status"]
+          unlock_expires_at?: string | null
+          unlock_started_at?: string | null
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null
@@ -3145,6 +3274,69 @@ export type Database = {
           },
         ]
       }
+      system_maintenance: {
+        Row: {
+          approval_reason: string | null
+          approved_by: string | null
+          billing_period: string
+          created_at: string
+          due_date: string
+          fee_usd: number
+          id: string
+          lock_at: string
+          lock_status: string
+          locked_logged_at: string | null
+          payment_ref: string | null
+          payment_status: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at: string | null
+          payment_verified_by: string | null
+          unlock_expires_at: string | null
+          unlock_started_at: string | null
+          unlock_status: Database["public"]["Enums"]["maintenance_unlock_status"]
+          updated_at: string
+        }
+        Insert: {
+          approval_reason?: string | null
+          approved_by?: string | null
+          billing_period: string
+          created_at?: string
+          due_date: string
+          fee_usd?: number
+          id?: string
+          lock_at: string
+          lock_status?: string
+          locked_logged_at?: string | null
+          payment_ref?: string | null
+          payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at?: string | null
+          payment_verified_by?: string | null
+          unlock_expires_at?: string | null
+          unlock_started_at?: string | null
+          unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
+          updated_at?: string
+        }
+        Update: {
+          approval_reason?: string | null
+          approved_by?: string | null
+          billing_period?: string
+          created_at?: string
+          due_date?: string
+          fee_usd?: number
+          id?: string
+          lock_at?: string
+          lock_status?: string
+          locked_logged_at?: string | null
+          payment_ref?: string | null
+          payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
+          payment_verified_at?: string | null
+          payment_verified_by?: string | null
+          unlock_expires_at?: string | null
+          unlock_started_at?: string | null
+          unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           key: string
@@ -3597,6 +3789,13 @@ export type Database = {
       call_direction: "outgoing" | "incoming_callback"
       call_sentiment: "positive" | "neutral" | "negative" | "critical"
       lead_status: "pending" | "contacted" | "follow_up" | "closed"
+      maintenance_payment_status: "unpaid" | "pending" | "verified"
+      maintenance_unlock_status:
+        | "none"
+        | "requested"
+        | "approved"
+        | "denied"
+        | "expired"
       message_type: "text" | "voice_note" | "image" | "document"
       sender_type: "agent" | "customer"
       sync_status: "uploaded" | "verified" | "failed"
@@ -3732,6 +3931,14 @@ export const Constants = {
       call_direction: ["outgoing", "incoming_callback"],
       call_sentiment: ["positive", "neutral", "negative", "critical"],
       lead_status: ["pending", "contacted", "follow_up", "closed"],
+      maintenance_payment_status: ["unpaid", "pending", "verified"],
+      maintenance_unlock_status: [
+        "none",
+        "requested",
+        "approved",
+        "denied",
+        "expired",
+      ],
       message_type: ["text", "voice_note", "image", "document"],
       sender_type: ["agent", "customer"],
       sync_status: ["uploaded", "verified", "failed"],
