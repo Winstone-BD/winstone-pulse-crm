@@ -26,12 +26,14 @@ export function AgentSelector() {
       onValueChange={(value) => setOperatorId(value === NONE ? null : value)}
     >
       <SelectTrigger
-        className="h-9 w-auto min-w-0 max-w-[130px] gap-1.5 border-border/70 bg-secondary/60 text-xs sm:max-w-[240px] sm:gap-2"
+        className="h-8 w-auto min-w-0 max-w-[150px] gap-1.5 overflow-hidden border-border/70 bg-secondary/60 text-xs xl:max-w-[230px]"
         aria-label="Operating as"
       >
         <UserRound className="size-4 shrink-0 text-muted-foreground" />
-        <span className="hidden text-muted-foreground sm:inline">Operating as:</span>
-        <SelectValue placeholder="Select agent" />
+        <span className="hidden shrink-0 text-muted-foreground 2xl:inline">Operating as:</span>
+        <span className="min-w-0 flex-1 truncate text-left">
+          <SelectValue placeholder="Select agent" />
+        </span>
       </SelectTrigger>
       <SelectContent align="end">
         <SelectItem value={NONE}>Observer (no agent)</SelectItem>
