@@ -266,6 +266,8 @@ export function CommandAgentPanel({ surface }: { surface: Surface }) {
             </button>
           ))}
         </div>
+
+        <WebsiteAnswerBox compact />
       </div>
     </section>
   );
