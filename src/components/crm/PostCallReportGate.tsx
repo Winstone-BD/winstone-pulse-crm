@@ -446,7 +446,7 @@ export function PostCallReportGate() {
       followUpNote: followUpAt
         ? null
         : connected
-          ? noFuLabel
+          ? noFuNote.trim() || null
           : "কথা হয়নি — কিউ-এর শেষে আবার আসবে",
       interest: connected ? (interest as "high" | "medium" | "low" | "fake") : null,
       requirement: connected ? requirement : null,
