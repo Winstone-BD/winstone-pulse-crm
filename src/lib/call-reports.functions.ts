@@ -206,6 +206,7 @@ export const logAnyNumberCall = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertAgentBriefing(me.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
     const { resolveLeadIdByPhone } = await import("@/lib/lead-eligibility.server");
@@ -415,6 +416,7 @@ export const completeFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ eventId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertAgentBriefing(me.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("follow_up_events")
@@ -747,6 +749,7 @@ export const rescheduleFollowUp = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const { canReschedule } = await import("@/lib/lead-groups");
     const caller = await resolveCaller(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: event } = await supabaseAdmin
       .from("follow_up_events")

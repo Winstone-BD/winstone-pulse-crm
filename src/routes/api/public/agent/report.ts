@@ -160,6 +160,11 @@ export const Route = createFileRoute("/api/public/agent/report")({
           return json({ ok: true, report_id: report.id, reused: report.reused }, 201);
         }
 
+        {
+          const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+          const block = await requireAgentBriefing(caller.profile.id);
+          if (block) return json({ error: block.reason, briefing: block.briefing }, 403);
+        }
         try {
           const result = await submitCallReport({
             reportId: body.report_id,

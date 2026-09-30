@@ -130,6 +130,7 @@ export const logMyWhatsappMessage = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -173,6 +174,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { LEAD_OWNER_COLUMNS, leadHeldByOther, LEAD_NOT_YOURS } = await import(
@@ -249,6 +251,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { LEAD_OWNER_COLUMNS, leadHeldByOther, LEAD_NOT_YOURS } = await import(
