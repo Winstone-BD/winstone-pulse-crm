@@ -2894,6 +2894,63 @@ export type Database = {
         }
         Relationships: []
       }
+      site_visits: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_id: string
+          notes: string | null
+          project: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+          visit_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          project?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          visit_at: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          project?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          visit_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_visits_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           buyer_email: string | null
