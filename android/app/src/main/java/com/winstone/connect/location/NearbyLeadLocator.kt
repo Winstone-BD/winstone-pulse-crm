@@ -22,7 +22,7 @@ object NearbyLeadLocator {
         if (!Geocoder.isPresent()) return@withContext leads
 
         val geocoder = Geocoder(context, Locale("bn", "BD"))
-        leads.map { lead ->
+        sortNearbyLeads(leads.map { lead ->
             val address = lead.address?.trim().orEmpty()
             if (address.isBlank()) return@map lead
             val target = runCatching {
@@ -38,9 +38,12 @@ object NearbyLeadLocator {
                 result,
             )
             lead.copy(distanceKm = result[0].toDouble() / 1000.0)
-        }.sortedWith(compareBy<Lead> { it.distanceKm == null }.thenBy { it.distanceKm })
+        })
     }
 }
+
+fun sortNearbyLeads(leads: List<Lead>): List<Lead> =
+    leads.sortedWith(compareBy<Lead> { it.distanceKm == null }.thenBy { it.distanceKm })
 
 fun Double.asDistanceLabel(): String =
     if (this < 1.0) "${(this * 1000).toInt()} মিটার দূরে" else String.format(Locale.US, "%.1f কিমি দূরে", this)
