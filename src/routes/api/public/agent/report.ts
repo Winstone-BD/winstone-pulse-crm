@@ -37,6 +37,7 @@ const Body = z.discriminatedUnion("action", [
     duration_seconds: z.number().int().min(0).max(86400).nullable().optional(),
     follow_up_needed: z.boolean().optional(),
     follow_up_note: z.string().trim().max(500).nullable().optional(),
+    no_follow_up_reason: z.string().trim().max(60).nullable().optional(),
     /** Which app version produced this report, for the version data ledger. */
     app_version: z.string().trim().max(40).nullable().optional(),
     version_code: z.number().int().nullable().optional(),
@@ -177,6 +178,10 @@ export const Route = createFileRoute("/api/public/agent/report")({
             durationSeconds: body.duration_seconds ?? null,
             followUpNeeded: body.follow_up_needed ?? true,
             followUpNote: body.follow_up_note ?? null,
+            // Builds before v2.15 send only a free-text note: keep it under the canonical "other" code.
+            noFollowUpReason:
+              body.no_follow_up_reason ??
+              (body.follow_up_at ? null : body.connected === false || body.call_status && body.call_status !== "connected" ? "not_connected" : body.follow_up_note ? "other" : null),
             evaluationAnswers: body.evaluation_answers ?? null,
           });
 
