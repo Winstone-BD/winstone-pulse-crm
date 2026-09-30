@@ -89,7 +89,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
     const leadIds = [...new Set(followUps.map((f) => f.lead_id))];
     type Report = {
       lead_id: string; agent_id: string | null; call_ended_at: string; connected: boolean;
-      category: string | null; reason: string | null; no_follow_up_reason: string | null;
+      category: string | null; reason: string | null; no_follow_up_reason: string | null; no_follow_up_note: string | null;
       customer_response: string | null; temperature: string | null; follow_up_priority: string | null; status: string;
     };
     const reports: Report[] = [];
@@ -99,7 +99,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
       const [r, l] = await Promise.all([
         supabaseAdmin
           .from("call_reports")
-          .select("lead_id, agent_id, call_ended_at, connected, category, reason, no_follow_up_reason, customer_response, temperature, follow_up_priority, status")
+          .select("lead_id, agent_id, call_ended_at, connected, category, reason, no_follow_up_reason, no_follow_up_note, customer_response, temperature, follow_up_priority, status")
           .in("lead_id", ids)
           .neq("status", "pending")
           .order("call_ended_at", { ascending: true })
@@ -136,7 +136,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
         Boolean(last) &&
         (STOP_CATEGORIES.has(last!.category ?? "") || Boolean(last!.no_follow_up_reason) || !last!.follow_up_priority);
       const stopReason = stopped
-        ? contactCloseReasonLabel(last!.no_follow_up_reason) || last!.reason || last!.customer_response || last!.category || "আর ফলো-আপ দেওয়া হয়নি"
+        ? contactCloseReasonLabel(last!.no_follow_up_reason, last!.no_follow_up_note) || last!.reason || last!.customer_response || last!.category || "আর ফলো-আপ দেওয়া হয়নি"
         : null;
 
       const events: Event[] = [
@@ -156,7 +156,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
           at: r.call_ended_at,
           kind: "call" as const,
           label: r.connected ? "কল — সংযুক্ত" : "কল — সংযোগ হয়নি",
-          detail: [r.category, r.reason, contactCloseReasonLabel(r.no_follow_up_reason)].filter(Boolean).join(" · ") || null,
+          detail: [r.category, r.reason, contactCloseReasonLabel(r.no_follow_up_reason, r.no_follow_up_note)].filter(Boolean).join(" · ") || null,
         })),
       ].sort((a, b) => a.at.localeCompare(b.at));
 

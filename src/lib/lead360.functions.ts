@@ -108,7 +108,7 @@ export const getLead360 = createServerFn({ method: "POST" })
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
     const [rp, rc, fu, ch, ev, sc] = await Promise.all([
       all((a, b) => db.from("call_reports")
-        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, reason")
+        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, no_follow_up_note, reason")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("call_recordings")
         .select("id, agent_id, started_at, created_at, duration_seconds, call_status")
@@ -117,7 +117,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         .select("id, agent_id, scheduled_at, status, reason_code, note, created_at, completed_at, reschedule_count")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("follow_up_changes")
-        .select("id, follow_up_id, action, old_scheduled_at, new_scheduled_at, reason_code, note, changed_by, changed_at")
+        .select("id, follow_up_id, action, old_scheduled_at, new_scheduled_at, old_status, new_status, old_reason_code, reason_code, old_note, note, changed_by, changed_at")
         .eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
       all((a, b) => db.from("lead_events").select("id, kind, detail, agent_id, created_at").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("lead_state_changes").select("id, field, old_value, new_value, changed_by, source, changed_at").eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
@@ -147,6 +147,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         summary: r.summary,
         requirement: r.requirement,
         closeReason: r.no_follow_up_reason,
+        closeNote: r.no_follow_up_note,
       })),
       ...(recs.data ?? [])
         .filter((r) => !reported.has(r.id))
