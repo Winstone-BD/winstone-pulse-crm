@@ -69,6 +69,7 @@ import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api
 import { Route as ApiPublicHooksRemindersRouteImport } from './routes/api/public/hooks/reminders'
 import { Route as ApiPublicHooksServiceBillingRouteImport } from './routes/api/public/hooks/service-billing'
 import { Route as ApiPublicHooksShiftSummaryRouteImport } from './routes/api/public/hooks/shift-summary'
+import { Route as ApiPublicHooksWebsiteKnowledgeRouteImport } from './routes/api/public/hooks/website-knowledge'
 import { Route as ApiPublicIngestAnalyzeRouteImport } from './routes/api/public/ingest/analyze'
 import { Route as ApiPublicIngestLeadRouteImport } from './routes/api/public/ingest/lead'
 import { Route as ApiPublicIngestMessageRouteImport } from './routes/api/public/ingest/message'
@@ -392,6 +393,12 @@ const ApiPublicHooksShiftSummaryRoute =
     path: '/api/public/hooks/shift-summary',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksWebsiteKnowledgeRoute =
+  ApiPublicHooksWebsiteKnowledgeRouteImport.update({
+    id: '/api/public/hooks/website-knowledge',
+    path: '/api/public/hooks/website-knowledge',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicIngestAnalyzeRoute = ApiPublicIngestAnalyzeRouteImport.update({
   id: '/api/public/ingest/analyze',
   path: '/api/public/ingest/analyze',
@@ -518,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
+  '/api/public/hooks/website-knowledge': typeof ApiPublicHooksWebsiteKnowledgeRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
   '/api/public/ingest/message': typeof ApiPublicIngestMessageRoute
@@ -592,6 +600,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
+  '/api/public/hooks/website-knowledge': typeof ApiPublicHooksWebsiteKnowledgeRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
   '/api/public/ingest/message': typeof ApiPublicIngestMessageRoute
@@ -667,6 +676,7 @@ export interface FileRoutesById {
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
+  '/api/public/hooks/website-knowledge': typeof ApiPublicHooksWebsiteKnowledgeRoute
   '/api/public/ingest/analyze': typeof ApiPublicIngestAnalyzeRoute
   '/api/public/ingest/lead': typeof ApiPublicIngestLeadRoute
   '/api/public/ingest/message': typeof ApiPublicIngestMessageRoute
@@ -743,6 +753,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
+    | '/api/public/hooks/website-knowledge'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
     | '/api/public/ingest/message'
@@ -817,6 +828,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
+    | '/api/public/hooks/website-knowledge'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
     | '/api/public/ingest/message'
@@ -891,6 +903,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
+    | '/api/public/hooks/website-knowledge'
     | '/api/public/ingest/analyze'
     | '/api/public/ingest/lead'
     | '/api/public/ingest/message'
@@ -966,6 +979,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
   ApiPublicHooksServiceBillingRoute: typeof ApiPublicHooksServiceBillingRoute
   ApiPublicHooksShiftSummaryRoute: typeof ApiPublicHooksShiftSummaryRoute
+  ApiPublicHooksWebsiteKnowledgeRoute: typeof ApiPublicHooksWebsiteKnowledgeRoute
   ApiPublicIngestAnalyzeRoute: typeof ApiPublicIngestAnalyzeRoute
   ApiPublicIngestLeadRoute: typeof ApiPublicIngestLeadRoute
   ApiPublicIngestMessageRoute: typeof ApiPublicIngestMessageRoute
@@ -1402,6 +1416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksShiftSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/website-knowledge': {
+      id: '/api/public/hooks/website-knowledge'
+      path: '/api/public/hooks/website-knowledge'
+      fullPath: '/api/public/hooks/website-knowledge'
+      preLoaderRoute: typeof ApiPublicHooksWebsiteKnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ingest/analyze': {
       id: '/api/public/ingest/analyze'
       path: '/api/public/ingest/analyze'
@@ -1551,6 +1572,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
   ApiPublicHooksServiceBillingRoute: ApiPublicHooksServiceBillingRoute,
   ApiPublicHooksShiftSummaryRoute: ApiPublicHooksShiftSummaryRoute,
+  ApiPublicHooksWebsiteKnowledgeRoute: ApiPublicHooksWebsiteKnowledgeRoute,
   ApiPublicIngestAnalyzeRoute: ApiPublicIngestAnalyzeRoute,
   ApiPublicIngestLeadRoute: ApiPublicIngestLeadRoute,
   ApiPublicIngestMessageRoute: ApiPublicIngestMessageRoute,
