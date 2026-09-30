@@ -30,10 +30,7 @@ export function AgentSelector() {
         aria-label="Operating as"
       >
         <UserRound className="size-4 shrink-0 text-muted-foreground" />
-        <span className="hidden shrink-0 text-muted-foreground 2xl:inline">Operating as:</span>
-        <span className="min-w-0 flex-1 truncate text-left">
-          <SelectValue placeholder="Select agent" />
-        </span>
+        <SelectValue placeholder="Select agent" />
       </SelectTrigger>
       <SelectContent align="end">
         <SelectItem value={NONE}>Observer (no agent)</SelectItem>
