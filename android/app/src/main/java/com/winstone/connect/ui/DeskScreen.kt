@@ -70,6 +70,7 @@ import com.winstone.connect.data.remote.UpdateChecker
 import com.winstone.connect.data.remote.VersionHandoff
 import com.winstone.connect.telephony.RecordingCapabilityCheck
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.winstone.connect.ui.theme.WinAmber
 import com.winstone.connect.ui.theme.WinBorder
@@ -128,9 +129,12 @@ fun DeskScreen(
     }
 
     LaunchedEffect(Unit) {
-        runCatching { WinstoneApi.briefingStatus() }
-            .onSuccess { briefing = it; briefingError = null }
-            .onFailure { briefingError = "ব্রিফিং যাচাই করতে ইন্টারনেট সংযোগ প্রয়োজন" }
+        while (true) {
+            runCatching { WinstoneApi.briefingStatus() }
+                .onSuccess { briefing = it; briefingError = null }
+                .onFailure { briefingError = "ব্রিফিং যাচাই করতে ইন্টারনেট সংযোগ প্রয়োজন" }
+            delay(60_000)
+        }
     }
 
     // First launch on a new version: pull back anything earlier versions of the
@@ -457,15 +461,16 @@ fun DeskScreen(
         )
     }
 
-    val briefingRequired = briefing?.optBoolean("required", false) == true &&
-        briefing?.optBoolean("acknowledged", false) != true
+    val briefingRequired = briefingError != null ||
+        (briefing?.optBoolean("required", false) == true && briefing?.optBoolean("acknowledged", false) != true)
     if (briefingRequired) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text(briefing?.optString("title") ?: "সকাল ৯:০৫-এর দৈনিক ব্রিফিং") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(briefing?.optString("detail").orEmpty())
+                    Text(briefing?.optString("detail")?.takeIf { it.isNotBlank() }
+                        ?: "আজকের ব্রিফিং যাচাই করে তারপর কল শুরু করুন।")
                     Text("এই নোটিশ স্বীকার না করা পর্যন্ত কোনো কল শুরু হবে না।", fontWeight = FontWeight.SemiBold)
                     briefingError?.let { Text(it, color = WinRed, fontSize = 12.sp) }
                 }
@@ -476,13 +481,21 @@ fun DeskScreen(
                     onClick = {
                         briefingSaving = true
                         callScope.launch {
-                            runCatching { WinstoneApi.acknowledgeBriefing() }
+                            val action = if (briefingError != null) WinstoneApi::briefingStatus
+                                else WinstoneApi::acknowledgeBriefing
+                            runCatching { action() }
                                 .onSuccess { briefing = it; briefingError = null }
                                 .onFailure { briefingError = "সংযোগ পাওয়া যায়নি — আবার চেষ্টা করুন" }
                             briefingSaving = false
                         }
                     },
-                ) { Text(if (briefingSaving) "সংরক্ষণ হচ্ছে…" else "বুঝেছি — কল শুরু করব") }
+                ) {
+                    Text(
+                        if (briefingSaving) "যাচাই হচ্ছে…"
+                        else if (briefingError != null) "আবার যাচাই করুন"
+                        else "বুঝেছি — কল শুরু করব",
+                    )
+                }
             },
         )
     }

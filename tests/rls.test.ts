@@ -67,6 +67,12 @@ describe.runIf(url && key)("RLS: an unauthenticated client cannot read productio
       true,
     );
   });
+
+  it("cannot read agent briefing acknowledgements", async () => {
+    expect(
+      blocked(await anon.from("agent_briefing_acknowledgements").select("id, agent_id").limit(1)),
+    ).toBe(true);
+  });
 });
 
 describe.runIf(url && key)("RLS: an unauthenticated client cannot write production data", () => {
@@ -119,6 +125,16 @@ describe.runIf(url && key)("RLS: an unauthenticated client cannot write producti
       .from("ai_usage_events")
       .insert({ category: "probe", units: 1, est_credits: 1 })
       .select("id");
+    expect(result.error).toBeTruthy();
+  });
+
+  it("cannot forge a briefing acknowledgement", async () => {
+    const result = await anon.from("agent_briefing_acknowledgements").insert({
+      agent_id: "00000000-0000-4000-8000-000000000000",
+      business_date: "2026-09-30",
+      policy_version: "forged",
+      source: "web",
+    });
     expect(result.error).toBeTruthy();
   });
 });
