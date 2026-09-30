@@ -193,14 +193,17 @@ function tokens(query: string): string[] {
     .slice(0, 12);
 }
 
+/** Pages that answer most customer questions, used when keywords do not match. */
+const HIGH_SIGNAL = ["sales", "price", "project", "contact", "about", "address", "faq"];
+
 /** Simple keyword ranking — enough for a handful of marketing pages. */
 export function rankPages(pages: StoredPage[], query: string, limit = 3): StoredPage[] {
   const words = tokens(query);
-  if (words.length === 0) return pages.slice(0, limit);
   return pages
     .map((page) => {
       const haystack = `${page.title}\n${page.content}`.toLowerCase();
-      let score = 0;
+      const label = `${page.title} ${page.url}`.toLowerCase();
+      let score = HIGH_SIGNAL.some((hint) => label.includes(hint)) ? 1 : 0;
       for (const word of words) {
         const hits = haystack.split(word).length - 1;
         if (hits > 0) score += Math.min(hits, 5) + (page.title.toLowerCase().includes(word) ? 3 : 0);
