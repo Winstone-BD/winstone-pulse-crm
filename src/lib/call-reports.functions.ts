@@ -43,6 +43,13 @@ export const startMyCall = createServerFn({ method: "POST" })
     const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
     const briefingBlock = await requireAgentBriefing(me.id);
     if (briefingBlock) return briefingBlock;
+    {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: me2 } = await supabaseAdmin.from("profiles").select("photo_path").eq("id", me.id).maybeSingle();
+      if (!me2?.photo_path) {
+        return { blocked: true as const, reason: "অ্যাকাউন্টে নিজের পরিষ্কার ছবি যুক্ত করুন, তারপর কল শুরু করা যাবে" };
+      }
+    }
     const { pendingReportFor } = await import("@/lib/call-reports.server");
     const pending = await pendingReportFor(me.id);
     if (pending) {

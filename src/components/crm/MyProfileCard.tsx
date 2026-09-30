@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { PhotoUpload } from "@/components/crm/PhotoUpload";
+import { StaffAvatar } from "@/components/crm/StaffAvatar";
 import { updateMyProfile } from "@/lib/accounts.functions";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
@@ -60,12 +62,7 @@ export function MyProfileCard() {
     <section className="card-elevated p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
-          <span
-            className="grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
-            style={{ backgroundColor: `hsl(${profile.avatar_hue} 65% 45%)` }}
-          >
-            {profile.name.slice(0, 2).toUpperCase()}
-          </span>
+          <StaffAvatar profile={profile} className="size-14" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{profile.name}</p>
             <p className="truncate text-xs text-muted-foreground">
@@ -76,6 +73,7 @@ export function MyProfileCard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+          <PhotoUpload label={profile.has_photo ? "ছবি বদলান" : "ছবি আপলোড করুন"} />
           <Button
             variant="secondary"
             size="sm"

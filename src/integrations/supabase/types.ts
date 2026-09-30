@@ -1992,6 +1992,8 @@ export type Database = {
           legal_name: string | null
           name: string
           phone: string | null
+          photo_path: string | null
+          photo_updated_at: string | null
           pin_hash: string | null
           presence: Database["public"]["Enums"]["agent_presence"]
           requested_role: Database["public"]["Enums"]["app_role"]
@@ -2014,6 +2016,8 @@ export type Database = {
           legal_name?: string | null
           name: string
           phone?: string | null
+          photo_path?: string | null
+          photo_updated_at?: string | null
           pin_hash?: string | null
           presence?: Database["public"]["Enums"]["agent_presence"]
           requested_role?: Database["public"]["Enums"]["app_role"]
@@ -2036,6 +2040,8 @@ export type Database = {
           legal_name?: string | null
           name?: string
           phone?: string | null
+          photo_path?: string | null
+          photo_updated_at?: string | null
           pin_hash?: string | null
           presence?: Database["public"]["Enums"]["agent_presence"]
           requested_role?: Database["public"]["Enums"]["app_role"]

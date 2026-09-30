@@ -176,6 +176,8 @@ export const getMyAccount = createServerFn({ method: "POST" })
             email: caller.profile.email,
             employee_id: caller.profile.employee_id,
             avatar_hue: caller.profile.avatar_hue,
+            photo_updated_at: caller.profile.photo_updated_at ?? null,
+            has_photo: Boolean(caller.profile.photo_path),
             role: caller.profile.role,
             requested_role: caller.profile.requested_role,
           }
