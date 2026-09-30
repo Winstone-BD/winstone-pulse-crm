@@ -285,17 +285,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     };
   });
 
-  const ranked = [...lines].sort(
-    (a, b) =>
-      // Quota-normalised completion first: finishing your own list is the job.
-      b.completionPercent - a.completionPercent ||
-      b.fairScore - a.fairScore ||
-      b.score - a.score ||
-      b.connected - a.connected ||
-      b.reports - a.reports ||
-      b.talkMinutes - a.talkMinutes ||
-      a.name.localeCompare(b.name, "bn"),
-  );
+  const ranked = rankPerformers(lines);
   const isActive = (line: PerformerLine) => line.score > 0 || line.completed > 0;
   const activeRanked = ranked.filter(isActive);
   const leaderCompletion = activeRanked[0]?.completionPercent ?? 0;
