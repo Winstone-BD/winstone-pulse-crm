@@ -68,7 +68,8 @@ export type AuditAction =
   | "follow_up_rescheduled"
   | "accountability_flagged"
   | "accountability_reviewed"
-  | "migration_export";
+  | "migration_export"
+  | "it_notice_published";
 
 
 export async function logAudit(input: {
