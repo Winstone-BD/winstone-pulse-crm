@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   performerInsight,
+  rankPerformers,
   scoreOf,
   topPerformerDate,
   type PerformerLine,
@@ -17,6 +18,12 @@ const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   talkMinutes: 20,
   connectRate: 50,
   score: 56,
+  quota: 50,
+  targetQuota: 50,
+  assigned: 50,
+  completed: 0,
+  completionPercent: 0,
+  fairScore: 56,
   ...overrides,
 });
 
