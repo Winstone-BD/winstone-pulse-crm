@@ -67,11 +67,11 @@ describe("Top 3 performer intelligence", () => {
     expect(ranked[1].agentId).toBe("a");
   });
 
-  it("breaks score ties by quota completion, then connections, then reports", () => {
-    const tieA = line({ agentId: "a", score: 30, completionPercent: 20, connected: 3 });
-    const tieB = line({ agentId: "b", score: 30, completionPercent: 40, connected: 5 });
-    const tieC = line({ agentId: "c", score: 30, completionPercent: 40, connected: 5, reports: 9 });
-    const ranked = rankPerformers([tieC, tieA, tieB]);
+  it("breaks score ties by calls, then reports, then talk minutes", () => {
+    const tieA = line({ agentId: "a", score: 30, called: 4, reports: 9, talkMinutes: 3 });
+    const tieB = line({ agentId: "b", score: 30, called: 6, reports: 1 });
+    const tieC = line({ agentId: "c", score: 30, called: 4, reports: 9, talkMinutes: 12 });
+    const ranked = rankPerformers([tieA, tieC, tieB]);
     expect(ranked.map((l) => l.agentId)).toEqual(["b", "c", "a"]);
   });
 
