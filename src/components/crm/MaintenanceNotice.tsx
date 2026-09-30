@@ -177,6 +177,10 @@ export function MaintenanceGate() {
             <Lock className="size-5" /> SYSTEM MAINTENANCE LOCKED
           </h1>
           <NoticeBody s={data} />
+          <LockSignInButton />
+          <p className="text-center text-xs text-muted-foreground">
+            IT Console বা System Architect হলে Google দিয়ে সাইন ইন করুন — সাইন ইনের পর IT Console খুলবে।
+          </p>
         </div>
       </div>
     );
