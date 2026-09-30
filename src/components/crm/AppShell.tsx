@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Lock, LockOpen, LogOut, Menu, Smartphone, Sparkles } from "lucide-react";
-import { NavSidebar } from "@/components/crm/NavSidebar";
+import { ChevronDown, Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
+import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -20,14 +20,6 @@ import { OfflineSyncBar } from "@/components/crm/OfflineSyncBar";
 
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCrmRealtime } from "@/hooks/use-crm-realtime";
 import { setAdminToken, useAdminToken } from "@/lib/local-session";
 import { useMyAccount, useSignOut } from "@/lib/session";
@@ -75,10 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
   const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
-  const primaryRoutes = PRIMARY_ROUTES[scope as Scope] ?? PRIMARY_ROUTES.none;
-  const primaryNav = nav.filter((item) => primaryRoutes.includes(item.to));
-  const moreNav = nav.filter((item) => !primaryRoutes.includes(item.to));
-  const moreIsActive = moreNav.some((item) => location.pathname === item.to);
+  const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
 
   return (
     <div className="min-h-screen grid-noise">
