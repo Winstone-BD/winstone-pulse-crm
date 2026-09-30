@@ -1,4 +1,4 @@
-import { clampBrief, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
+import { assignmentReasons, clampBrief, followUpScript, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -287,7 +287,7 @@ async function aiBrief(facts: BriefFacts, key: string): Promise<QuickBrief | nul
     const parsed = JSON.parse(text) as { line?: unknown; opener?: unknown };
     const line = clampBrief(parsed.line);
     const opener = clampBrief(parsed.opener, 200);
-    return line && opener ? { line, opener, source: "ai" } : null;
+    return line && opener ? { line, opener, source: "ai", why: assignmentReasons(facts), script: followUpScript(facts) } : null;
   } catch {
     return null;
   }

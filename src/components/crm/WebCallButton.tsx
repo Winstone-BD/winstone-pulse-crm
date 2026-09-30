@@ -190,6 +190,18 @@ export function WebCallButton({
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">শুরুর কথা</p>
                 <p className="mt-1">{brief.opener}</p>
               </div>
+              {brief.why?.length ? (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">এই লিড কেন আপনাকে দেওয়া হয়েছে</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4">{brief.why.map((w) => <li key={w}>{w}</li>)}</ul>
+                </div>
+              ) : null}
+              {brief.script?.length ? (
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">কথা বলার স্ক্রিপ্ট — ফলো-আপের জন্যই লিডটি দেওয়া হয়েছে</p>
+                  <ul className="mt-1 space-y-1">{brief.script.map((l) => <li key={l}>{l}</li>)}</ul>
+                </div>
+              ) : null}
               <p className="text-[11px] text-muted-foreground">
                 {brief.source === "ai" ? "AI ব্রিফ — শুধু CRM-এর তথ্য থেকে" : aiBrief.isFetching ? "AI ব্রিফ তৈরি হচ্ছে…" : "CRM তথ্য থেকে সারাংশ"}
               </p>

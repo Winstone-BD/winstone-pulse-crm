@@ -1,12 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { noticeDecision, type NoticeAction } from "@/lib/notice-board-access";
+
 const Base = z.object({ adminToken: z.string().nullable().optional() });
 
-async function callerFor(adminToken?: string | null) {
+async function callerFor(adminToken: string | null | undefined, action: NoticeAction = "reply") {
   const { resolveCaller } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
-  if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+  const decision = noticeDecision(caller, action);
+  if (decision.kind === "deny") throw new Error(decision.message);
   return caller;
 }
 
@@ -31,7 +34,7 @@ export const listNoticeBoard = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     // Signed-out, pending, or LeadHub-only sessions simply see no notices.
-    if (caller.scope === "none") return { canPublish: false, profileId: null, notices: [] };
+    if (noticeDecision(caller, "list").kind === "empty") return { canPublish: false, profileId: null, notices: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const noticeIds = await accessibleNoticeIds(caller);
     const now = new Date().toISOString();
@@ -72,9 +75,7 @@ export const listNoticeBoard = createServerFn({ method: "POST" })
 export const listNoticeRecipients = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.parse(input ?? {}))
   .handler(async ({ data }) => {
-    const caller = await callerFor(data.adminToken);
-    const { requireAuthority } = await import("@/lib/access.server");
-    requireAuthority(caller);
+    await callerFor(data.adminToken, "recipients");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
@@ -98,10 +99,7 @@ export const publishNotice = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data }) => {
-    const caller = await callerFor(data.adminToken);
-    const { requireAuthority, requireWrite } = await import("@/lib/access.server");
-    requireAuthority(caller);
-    requireWrite(caller);
+    const caller = await callerFor(data.adminToken, "publish");
     if (data.audienceType === "role" && !data.audienceRole) throw new Error("প্রাপক role বাছুন");
     if (data.audienceType === "accounts" && data.profileIds.length === 0) throw new Error("কমপক্ষে একটি অ্যাকাউন্ট বাছুন");
 
@@ -164,7 +162,7 @@ export const publishNotice = createServerFn({ method: "POST" })
 export const markNoticeRead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ noticeId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await callerFor(data.adminToken);
+    const caller = await callerFor(data.adminToken, "read");
     if (!caller.profile) return { ok: true };
     const ids = await accessibleNoticeIds(caller);
     if (!ids.includes(data.noticeId)) throw new Error("এই নোটিশ দেখার অনুমতি নেই");
@@ -181,9 +179,7 @@ export const markNoticeRead = createServerFn({ method: "POST" })
 export const replyToNotice = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ noticeId: z.string().uuid(), body: z.string().trim().min(1).max(2000) }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await callerFor(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
+    const caller = await callerFor(data.adminToken, "reply");
     const ids = await accessibleNoticeIds(caller);
     if (!ids.includes(data.noticeId)) throw new Error("এই নোটিশে উত্তর দেওয়ার অনুমতি নেই");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
