@@ -69,7 +69,7 @@ export function AnyNumberCallDialog() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-2.5 text-xs font-semibold"
+          className="h-8 w-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-0 text-xs font-semibold sm:w-auto sm:px-2.5"
           title="যেকোনো নম্বরের কল লগ করুন — রিপোর্ট বাধ্যতামূলক"
         >
           <PhoneCall className="size-3.5" />

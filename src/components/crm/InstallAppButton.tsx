@@ -45,7 +45,7 @@ export function InstallAppButton() {
         size="sm"
         variant="secondary"
         aria-label="ফোনে অ্যাপ ইনস্টল করুন"
-        className="h-9 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-semibold"
+        className="h-8 w-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-0 text-xs font-semibold sm:w-auto sm:px-3"
         onClick={async () => {
           if (prompt) {
             await prompt.prompt();
@@ -58,7 +58,6 @@ export function InstallAppButton() {
       >
         <Download className="size-3.5" />
         <span className="hidden sm:inline">অ্যাপ ইনস্টল</span>
-        <span className="sm:hidden">ইনস্টল</span>
       </Button>
       {hint ? (
         <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
