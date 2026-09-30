@@ -45,6 +45,6 @@ export const refreshDriveKnowledge = createServerFn({ method: "POST" })
     if (data.folders && data.folders.length > 0) await setApprovedFolders(data.folders);
     return refreshDriveDocuments({
       profileId: caller.profile?.id ?? null,
-      actorLabel: caller.profile?.full_name ?? null,
-    } as { profileId?: string | null; label?: string | null });
+      label: caller.label ?? null,
+    });
   });
