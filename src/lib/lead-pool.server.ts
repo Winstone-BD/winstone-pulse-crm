@@ -144,7 +144,7 @@ export async function assignedTodayByAgent(workDate: string): Promise<Map<string
       .from("leads")
       .select("assigned_to")
       .eq("work_date", workDate)
-      .eq("assignment_source", "lead_database")
+      .in("assignment_source", ["lead_database", "coordinator", "leadhub"])
       .not("assigned_to", "is", null)
       .range(from, from + 999);
     (data ?? []).forEach((row) => {

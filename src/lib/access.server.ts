@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
 
 import type { Database } from "@/integrations/supabase/types";
+import { adminTokenScope } from "@/lib/admin-gate.server";
 import { PROFILE_SAFE_COLUMNS, type SafeProfile } from "@/lib/profile-columns";
 
 export type Profile = SafeProfile;
@@ -62,9 +63,8 @@ async function userIdFromRequest(): Promise<string | null> {
  * signed-in agent or coordinator account. Everything else is anonymous.
  */
 export async function resolveCaller(adminToken?: string | null): Promise<Caller> {
-  const { adminTokenScope } = await import("@/lib/admin-gate.server");
   const pinScope = adminTokenScope(adminToken ?? null);
-  if (pinScope) {
+  if (pinScope === "full" || pinScope === "hq") {
     return {
       scope: "authority",
       profile: null,
@@ -72,7 +72,6 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
       approval: "approved",
       // Executive HQ unlock is a viewing session: reads pass, mutations do not.
       readOnly: pinScope === "hq",
-      label: pinScope === "leadhub" ? "LeadHub Nexus" : undefined,
     };
   }
 
@@ -164,9 +163,7 @@ export function requireAuthority(caller: Caller) {
 }
 
 /** LeadHub has its own PIN scope; ordinary HQ/IT/Coordinator sessions do not inherit it. */
-export function requireLeadHub(caller: Caller, token: string | null | undefined) {
-  if (caller.scope !== "authority") throw new Error("LeadHub PIN required");
-  const { adminTokenScope } = require("@/lib/admin-gate.server") as typeof import("@/lib/admin-gate.server");
+export function requireLeadHub(token: string | null | undefined) {
   if (adminTokenScope(token) !== "leadhub") throw new Error("LeadHub PIN required");
 }
 

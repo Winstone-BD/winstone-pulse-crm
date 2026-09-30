@@ -76,8 +76,6 @@ function LeadHubGate() {
 function LeadHubWorkspace() {
   const [section, setSection] = useState<Section>("overview");
   const [assignFor, setAssignFor] = useState<string>();
-  const allocation = useQuery({ queryKey: ["coord-allocation-visible"], queryFn: async () => null, enabled: false });
-  void allocation;
   const agentOptions: { id: string; name: string }[] = [];
 
   return (

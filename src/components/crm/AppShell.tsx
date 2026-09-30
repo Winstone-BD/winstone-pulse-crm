@@ -68,15 +68,11 @@ const PRIMARY_ROUTES: Record<Scope, readonly string[]> = {
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
-  const { scope, account } = useMyAccount();
+  const { scope } = useMyAccount();
   const location = useLocation();
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
-  const nav = NAV.filter(
-    (item) =>
-      (item.scopes as readonly Scope[]).includes(scope as Scope) ||
-      false,
-  );
+  const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
   const primaryRoutes = PRIMARY_ROUTES[scope as Scope] ?? PRIMARY_ROUTES.none;
   const primaryNav = nav.filter((item) => primaryRoutes.includes(item.to));
   const moreNav = nav.filter((item) => !primaryRoutes.includes(item.to));

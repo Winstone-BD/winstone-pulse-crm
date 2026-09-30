@@ -10,10 +10,9 @@ import { z } from "zod";
 const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
 
 async function dispatcher(adminToken: string | null | undefined) {
-  const { resolveCaller, requireLeadHub } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireLeadHub(caller, adminToken);
-  return caller;
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { profile: null, label: "LeadHub Nexus" };
 }
 
 export type LeadPoolAgent = {
@@ -26,10 +25,9 @@ export type LeadPoolAgent = {
 
 /** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
-  const { resolveCaller, requireLeadHub } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireLeadHub(caller, adminToken);
-  return caller;
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { profile: null, label: "LeadHub Nexus" };
 }
 
 const HeadLeadInput = z.object({
@@ -67,8 +65,6 @@ export const addHeadLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => HeadLeadInput.parse(input))
   .handler(async ({ data }): Promise<HeadLeadResult> => {
     const caller = await deckReader(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
     const { intakeLead, InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
     const { HEAD_DATABASE_SOURCE } = await import("@/lib/head-lead");
     const actorLabel = caller.profile

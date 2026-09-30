@@ -99,7 +99,11 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
   const byId = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
   const available = alloc.data?.available ?? 0;
   const valid = rows
-    .map((r) => ({ agentId: r.agentId, count: Number(r.count) || 0 }))
+    .map((r) => {
+      const agent = byId.get(r.agentId);
+      const capacity = agent && alloc.data ? Math.max(0, alloc.data.perAgent - agent.today) : 0;
+      return { agentId: r.agentId, count: Math.min(Number(r.count) || 0, capacity) };
+    })
     .filter((r) => r.agentId && r.count > 0);
   const requested = valid.reduce((s, r) => s + r.count, 0);
   const shortage = Math.max(0, requested - available);

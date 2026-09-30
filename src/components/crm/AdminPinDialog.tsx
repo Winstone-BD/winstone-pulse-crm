@@ -26,7 +26,7 @@ export function AdminPinDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUnlocked?: () => void;
-  /** "hq" mints a view-only session; "system" mints the full IT session. */
+  /** HQ is view-only; system and LeadHub mint isolated full-access sessions. */
   surface?: "hq" | "system" | "leadhub";
 }) {
   const [pin, setPin] = useState("");
@@ -122,7 +122,7 @@ export function AdminGate({
 }: {
   children: ReactNode;
   locked: (openPin: () => void) => ReactNode;
-  surface?: "hq" | "system";
+  surface?: "hq" | "system" | "leadhub";
 }) {
   const token = useAdminToken();
   const [open, setOpen] = useState(false);

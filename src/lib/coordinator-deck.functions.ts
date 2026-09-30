@@ -59,10 +59,9 @@ export const coordinatorDeckStatus = createServerFn({ method: "POST" })
   });
 
 async function fullDeck(adminToken: string | null | undefined) {
-  const { resolveCaller, requireLeadHub, requireWrite } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireLeadHub(caller, adminToken);
-  return { caller, requireWrite };
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { caller: { profile: null, label: "LeadHub Nexus" } };
 }
 
 /** Available pool + each active approved agent's allocation today. */
@@ -104,6 +103,9 @@ const BatchInput = z.object({
     .array(z.object({ agentId: z.string().uuid(), count: z.number().int().min(1).max(500) }))
     .min(1)
     .max(40),
+}).superRefine((value, ctx) => {
+  const ids = value.rows.map((row) => row.agentId);
+  if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "একই এজেন্ট একাধিকবার দেওয়া যাবে না", path: ["rows"] });
 });
 
 /**
@@ -114,8 +116,7 @@ const BatchInput = z.object({
 export const assignLeadCounts = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => BatchInput.parse(input))
   .handler(async ({ data }) => {
-    const { caller, requireWrite } = await fullDeck(data.adminToken);
-    requireWrite(caller);
+    const { caller } = await fullDeck(data.adminToken);
     const { assertDistributionDay } = await import("@/lib/business-day");
     assertDistributionDay();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
