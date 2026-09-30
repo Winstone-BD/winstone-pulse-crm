@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { FloorLockGate } from "@/components/crm/FloorLockGate";
+import { MaintenanceGate } from "@/components/crm/MaintenanceNotice";
 import { TemporaryClosureNotice } from "@/components/crm/TemporaryClosureNotice";
 import { supabase } from "@/integrations/supabase/client";
 import appCss from "../styles.css?url";
@@ -208,6 +209,8 @@ function RootComponent() {
       <Outlet />
       {/* The floor notice must cover every signed-in route, including the home page. */}
       <FloorLockGate />
+      {/* Monthly maintenance banner / lock screen — the server enforces the lock itself. */}
+      <MaintenanceGate />
       {/* Temporary IT closure covers home, agent, coordinator, HQ and IT surfaces. */}
       <TemporaryClosureNotice />
       <Toaster position="top-right" />

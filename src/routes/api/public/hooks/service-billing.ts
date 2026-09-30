@@ -37,17 +37,9 @@ export const Route = createFileRoute("/api/public/hooks/service-billing")({
           });
         }
 
-        try {
-          const { runServiceBillingAlerts } = await import("@/lib/service-billing-alerts.server");
-          const alerts = await runServiceBillingAlerts();
-          return Response.json({ ok: true, alerts });
-        } catch (error) {
-          console.error("service billing alert job failed", error);
-          return new Response(
-            JSON.stringify({ error: error instanceof Error ? error.message : "failed" }),
-            { status: 500, headers: { "Content-Type": "application/json" } },
-          );
-        }
+        // Retired: the monthly bill is now the $35.29 USD maintenance system,
+        // evaluated on every request by maintenance.server.ts.
+        return Response.json({ ok: true, retired: true });
       },
     },
   },
