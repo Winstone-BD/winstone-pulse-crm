@@ -239,6 +239,15 @@ export const logAnyNumberCall = createServerFn({ method: "POST" })
           .is("assigned_to", null)
           .is("assigned_agent_id", null);
       }
+      // Re-read ownership: a number that belongs to another agent cannot carry this call.
+      const { data: owned } = await supabaseAdmin
+        .from("leads")
+        .select("assigned_to, assigned_agent_id")
+        .eq("id", leadId)
+        .maybeSingle();
+      if (!owned || leadOwnerId(owned) !== me.id) {
+        throw new Error("এই নম্বরটি অন্য এজেন্টের লিড — কোঅর্ডিনেটরের সাথে যোগাযোগ করুন");
+      }
     } else {
       const intake = await intakeLead({
         name: data.name?.trim() || `${data.direction === "outgoing" ? "কল" : "ফিরতি কল"} ${phone}`,
