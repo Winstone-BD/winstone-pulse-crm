@@ -39,8 +39,15 @@ export type LicenseStatus = {
  * quantity records how many agents were paid for.
  */
 export const getLicenseStatus = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown) => z.object({ environment: EnvSchema }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({ environment: EnvSchema, adminToken: z.string().optional().nullable() })
+      .parse(input),
+  )
   .handler(async ({ data }): Promise<LicenseStatus> => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const who = await resolveCaller(data.adminToken ?? null);
+    if (who.scope === "none") throw new Error("Please sign in to view the plan status");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("subscriptions")
@@ -49,7 +56,10 @@ export const getLicenseStatus = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("license lookup failed", error);
+      throw new Error("Could not load the plan status");
+    }
 
     if (!row) {
       return {

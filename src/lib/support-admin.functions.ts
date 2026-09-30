@@ -18,6 +18,12 @@ async function lead(adminToken?: string | null) {
   return caller;
 }
 
+async function admin(adminToken?: string | null) {
+  const { resolveCaller } = await import("@/lib/access.server");
+  const { requireSupportAdmin } = await import("@/lib/support-access.server");
+  return requireSupportAdmin(await resolveCaller(adminToken ?? null));
+}
+
 async function reader(adminToken?: string | null) {
   const { resolveCaller } = await import("@/lib/access.server");
   const { requireSupportStaff } = await import("@/lib/support-access.server");
@@ -198,7 +204,7 @@ export const listCannedReplies = createServerFn({ method: "POST" })
 export const loadSupportSettings = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => adminInput.parse(input))
   .handler(async ({ data }) => {
-    const me = await reader(data.adminToken);
+    const me = await admin(data.adminToken);
     const { getSupportSettings } = await import("@/lib/support.server");
     return {
       settings: await getSupportSettings(),
@@ -250,7 +256,7 @@ export const supportAnalytics = createServerFn({ method: "POST" })
     adminInput.extend({ days: z.number().int().min(7).max(90).default(30) }).parse(input),
   )
   .handler(async ({ data }) => {
-    await reader(data.adminToken);
+    await admin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86400000).toISOString();
 

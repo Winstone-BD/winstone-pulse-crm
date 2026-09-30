@@ -138,6 +138,10 @@ export function SupportChat() {
 
   const attach = async (files: FileList | null) => {
     if (!files?.length) return;
+    if (!token) {
+      toast.error("Send your first message, then attach files to the conversation.");
+      return;
+    }
     setUploading(true);
     try {
       for (const file of Array.from(files).slice(0, 5 - attachments.length)) {
@@ -152,7 +156,7 @@ export function SupportChat() {
           binary += String.fromCharCode(bytes[index]!);
         }
         const saved = await uploadSupportAttachment({
-          data: { name: file.name, type: file.type, base64: btoa(binary) },
+          data: { token, name: file.name, type: file.type, base64: btoa(binary) },
         });
         setAttachments((current) => [...current, saved]);
       }
@@ -349,6 +353,8 @@ export function SupportChat() {
               type="file"
               className="sr-only"
               multiple
+              disabled={!token}
+              accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain"
               onChange={(event) => void attach(event.target.files)}
             />
             {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}

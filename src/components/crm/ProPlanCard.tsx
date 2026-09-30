@@ -16,9 +16,12 @@ import { getLicenseStatus, openBillingPortal } from "@/lib/payments.functions";
 import { useAdminToken } from "@/lib/local-session";
 
 export function useLicense() {
+  const adminToken = useAdminToken();
   return useQuery({
-    queryKey: ["license", getPaddleEnvironment()],
-    queryFn: () => getLicenseStatus({ data: { environment: getPaddleEnvironment() } }),
+    queryKey: ["license", getPaddleEnvironment(), Boolean(adminToken)],
+    queryFn: () =>
+      getLicenseStatus({ data: { environment: getPaddleEnvironment(), adminToken } }),
+    retry: false,
     refetchInterval: 60_000,
   });
 }
