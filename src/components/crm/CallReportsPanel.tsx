@@ -200,12 +200,12 @@ export function CallReportsPanel() {
               key={row.id}
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-3"
             >
-              <div className="min-w-0">
+              <div className="min-w-0 max-w-full flex-1">
                 <button
                   type="button"
                   disabled={!row.lead}
                   onClick={() => row.lead && setOpenLeadId(row.lead.id)}
-                  className="truncate text-sm font-semibold text-primary hover:underline disabled:text-foreground disabled:no-underline"
+                  className="block max-w-full truncate text-left text-sm font-semibold text-primary hover:underline disabled:text-foreground disabled:no-underline"
                 >
                   {row.lead?.name ?? row.phone_number ?? "অজানা নম্বর"}
                 </button>

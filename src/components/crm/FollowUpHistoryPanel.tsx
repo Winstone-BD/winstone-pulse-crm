@@ -233,8 +233,8 @@ ${rows.map((r) => `<tr>${toCells(r).map((v) => `<td>${esc(v)}</td>`).join("")}</
         </label>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-        <div className="rounded-lg border border-border p-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] [&>*]:min-w-0">
+        <div className="min-w-0 rounded-lg border border-border p-3">
           <div className="mb-2 flex items-center justify-between text-sm font-semibold">
             <Button size="icon" variant="ghost" className="size-7" onClick={() => moveMonth(-1)} aria-label="আগের মাস"><ChevronLeft className="size-4" /></Button>
             <span className="flex items-center gap-1"><CalendarDays className="size-4" />{month}</span>
