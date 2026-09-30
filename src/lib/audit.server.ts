@@ -81,7 +81,7 @@ export async function logAudit(input: {
 }): Promise<void> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("audit_logs").insert({
+    const { error } = await supabaseAdmin.from("audit_logs").insert({
       action: input.action,
       entity_type: input.entityType,
       entity_id: input.entityId ?? null,
@@ -89,6 +89,7 @@ export async function logAudit(input: {
       actor_label: input.actorLabel ?? null,
       metadata: (input.metadata ?? {}) as never,
     });
+    if (error) throw error;
   } catch (error) {
     console.error("[audit] insert failed", error);
   }

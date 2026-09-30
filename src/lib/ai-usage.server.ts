@@ -26,7 +26,7 @@ export async function logAiUsage(input: {
   detail?: string | null;
 }): Promise<void> {
   try {
-    await supabaseAdmin.from("ai_usage_events").insert({
+    const { error } = await supabaseAdmin.from("ai_usage_events").insert({
       category: input.category,
       model: input.model ?? null,
       units: input.units ?? 1,
@@ -34,6 +34,7 @@ export async function logAiUsage(input: {
       actor_profile_id: input.actorProfileId ?? null,
       detail: input.detail ?? null,
     });
+    if (error) throw error;
   } catch (err) {
     console.error("[ai-usage] log failed", err);
   }

@@ -45,6 +45,11 @@ export const EXPORT_TABLES = [
 ] as const;
 export type ExportTable = (typeof EXPORT_TABLES)[number];
 
+/** Most export tables use an id UUID; the distribution ledger is keyed by business date. */
+export function exportCursorColumn(table: ExportTable): "id" | "work_date" {
+  return table === "lead_distribution_runs" ? "work_date" : "id";
+}
+
 const SECRET_COLUMN = /(pin_hash|token|secret|cipher|password|api_key|private_key)/i;
 const PROFILE_IDENTITY =
   "id,user_id,name,phone,email,employee_id,role,requested_role,approval_status,is_active,status,sim_number,sim_bound_at,created_at";
@@ -97,24 +102,29 @@ export const getExportCounts = createServerFn({ method: "POST" })
 
 export const exportTableChunk = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { adminToken?: string | null; table: string; afterId?: string | null }) => {
+    (input: { adminToken?: string | null; table: string; afterCursor?: string | null }) => {
       if (!(EXPORT_TABLES as readonly string[]).includes(input.table)) throw new Error("Unknown table");
-      return input as { adminToken?: string | null; table: ExportTable; afterId?: string | null };
+      return input as { adminToken?: string | null; table: ExportTable; afterCursor?: string | null };
     },
   )
   .handler(async ({ data }) => {
     await gate(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const cursorColumn = exportCursorColumn(data.table);
     let q = supabaseAdmin
       .from(data.table as never)
       .select(data.table === "profiles" ? PROFILE_IDENTITY : "*")
-      .order("id", { ascending: true })
+      .order(cursorColumn, { ascending: true })
       .limit(CHUNK_SIZE);
-    if (data.afterId) q = q.gt("id", data.afterId);
+    if (data.afterCursor) q = q.gt(cursorColumn, data.afterCursor);
     const { data: rows, error } = await q;
     if (error) throw new Error(`${data.table}: ${error.message}`);
     const list = (rows ?? []) as unknown as Array<Record<string, unknown>>;
     const clean = list.map((r) => scrub(r) as Record<string, unknown>);
-    const last = list.length ? String(list[list.length - 1]!["id"]) : null;
-    return { rowsJson: JSON.stringify(clean), nextAfterId: list.length === CHUNK_SIZE ? last : null };
+    const lastRow = list.at(-1);
+    const last = lastRow ? String(lastRow[cursorColumn]) : null;
+    return {
+      rowsJson: JSON.stringify(clean),
+      nextAfterCursor: list.length === CHUNK_SIZE ? last : null,
+    };
   });
