@@ -141,7 +141,10 @@ export function FollowUpHistoryPanel() {
 
   function exportPdf() {
     const w = window.open("", "_blank");
-    if (!w) return toast.error("পপআপ বন্ধ আছে — ব্রাউজারে পপআপ চালু করুন");
+    if (!w) {
+      toast.error("পপআপ বন্ধ আছে — ব্রাউজারে পপআপ চালু করুন");
+      return;
+    }
     const filterText = [
       `তারিখ: ${f.from} — ${f.to}`,
       f.day && `দিন: ${f.day}`,
