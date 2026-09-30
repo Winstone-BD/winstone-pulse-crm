@@ -76,7 +76,7 @@ export function PinVaultPanel() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  if (!token) return null;
+  if (!token || (vault.isSuccess && vault.data === null)) return null;
 
   const entries = vault.data?.entries ?? [];
   const history = vault.data?.history ?? [];

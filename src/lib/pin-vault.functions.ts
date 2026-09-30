@@ -7,8 +7,9 @@ const Surface = z.enum(["master", "it_console", "leadhub"]);
 export const getPinVault = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ adminToken: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
-    const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    const { adminTokenScope } = await import("@/lib/admin-gate.server");
+    // HQ/LeadHub/expired tokens: no vault, and no page crash.
+    if (adminTokenScope(data.adminToken) !== "full") return null;
     const { vaultOverview } = await import("@/lib/pin-vault.server");
     return vaultOverview();
   });
