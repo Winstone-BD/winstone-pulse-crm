@@ -16,6 +16,7 @@ import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
+import { TopPerformerCard } from "@/components/crm/TopPerformerCard";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
 
@@ -83,6 +84,10 @@ function EntryHall() {
             Select the mode you are using — the same CRM opens on every device.
           </p>
         </header>
+
+        <div className="mt-10">
+          <TopPerformerCard />
+        </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-3 sm:gap-6">
           <ModeCard
