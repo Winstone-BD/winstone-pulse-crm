@@ -65,6 +65,14 @@ export function ExecutiveBrief() {
 
   const data = query.data;
 
+  if (query.isSuccess && data === null) {
+    return (
+      <section className="card-elevated p-6">
+        <p className="text-sm text-muted-foreground">এই প্রেজেন্টেশন দেখতে Executive HQ বা IT PIN দিয়ে আনলক করুন।</p>
+      </section>
+    );
+  }
+
   if (!data) {
     return (
       <section className="card-elevated p-6">
