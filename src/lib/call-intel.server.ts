@@ -292,6 +292,31 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
 }
 
 /** Stores an uploaded call, bumps the lead, and returns the new recording id. */
+const MAX_RECORDING_BYTES = 24 * 1024 * 1024;
+const AUDIO_EXTENSIONS = new Set(["m4a", "mp4", "3gp", "aac", "mp3", "wav", "ogg", "opus", "amr", "webm"]);
+
+/** Rejects oversized uploads and anything whose bytes are not a known audio container. */
+export function assertAudioUpload(base64: string, ext: string): Uint8Array {
+  const extension = ext.toLowerCase().replace(/^\./, "");
+  if (!AUDIO_EXTENSIONS.has(extension)) throw new Error("Unsupported audio file type");
+  if (base64.length > Math.ceil((MAX_RECORDING_BYTES * 4) / 3) + 8) {
+    throw new Error("Recording is larger than 24 MB");
+  }
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  if (bytes.byteLength > MAX_RECORDING_BYTES) throw new Error("Recording is larger than 24 MB");
+  const ascii = (from: number, to: number) => String.fromCharCode(...bytes.subarray(from, to));
+  const isAudio =
+    ascii(4, 8) === "ftyp" || // m4a / mp4 / 3gp
+    ascii(0, 3) === "ID3" ||
+    (bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0) || // mp3 / aac frame sync
+    (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WAVE") ||
+    ascii(0, 4) === "OggS" ||
+    ascii(0, 5) === "#!AMR" ||
+    (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3); // webm
+  if (!isAudio) throw new Error("The uploaded file is not a recognised audio recording");
+  return bytes;
+}
+
 export async function ingestRecording(input: {
   leadId: string;
   agentId: string | null;
@@ -313,9 +338,9 @@ export async function ingestRecording(input: {
     .single();
   if (leadError || !lead) throw new Error(leadError?.message ?? "Lead not found");
 
-  const bytes = Uint8Array.from(atob(input.audioBase64), (c) => c.charCodeAt(0));
+  const bytes = assertAudioUpload(input.audioBase64, input.fileExtension);
   const agentId = input.agentId ?? lead.assigned_to;
-  const fileName = `${Date.now()}.${input.fileExtension}`;
+  const fileName = `${Date.now()}.${input.fileExtension.toLowerCase().replace(/^\./, "")}`;
   // agent/lead/file keeps every object inside an ownership-shaped prefix.
   const path = `uploads/${agentId ?? "unassigned"}/${input.leadId}/${fileName}`;
   const checksum = await sha256Hex(bytes);

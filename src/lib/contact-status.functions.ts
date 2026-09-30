@@ -21,7 +21,7 @@ export const leadContactStatus = createServerFn({ method: "POST" })
 
     const assigned = lead.assigned_to ?? lead.assigned_agent_id;
     // Not the caller's lead: reveal nothing, but don't crash the page.
-    if (caller.scope === "agent" && assigned && assigned !== caller.profile.id) return null;
+    if (caller.scope === "agent" && assigned !== caller.profile.id) return null;
 
     const { findDoNotContact, latestConsent, recordingAllowed } =
       await import("@/lib/comms-guard.server");

@@ -26,6 +26,18 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     if (!data.leadId) return { ok: true as const, logged: false };
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("assigned_to, assigned_agent_id")
+      .eq("id", data.leadId)
+      .maybeSingle();
+    if (!lead) return { ok: true as const, logged: false };
+    const owner = lead.assigned_to ?? lead.assigned_agent_id;
+    if (caller.scope === "agent" && owner !== caller.profile?.id) {
+      return { ok: true as const, logged: false };
+    }
+
     const { logLeadEvent } = await import("@/lib/lead-events.server");
     await logLeadEvent({
       leadId: data.leadId,

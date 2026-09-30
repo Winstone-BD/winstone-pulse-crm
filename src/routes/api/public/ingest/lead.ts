@@ -126,7 +126,8 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
           const { InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
           if (err instanceof InvalidLeadPhoneError)
             return json({ error: err.message, code: "invalid_phone" }, 400);
-          return json({ error: err instanceof Error ? err.message : "Insert failed" }, 500);
+          console.error("lead intake failed", err);
+          return json({ error: "Lead could not be saved" }, 500);
         }
       },
     },

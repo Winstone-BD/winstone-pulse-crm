@@ -353,7 +353,7 @@ const ManualCallInput = z.object({
   adminToken: OptionalToken,
   leadId: z.string().uuid(),
   agentId: z.string().uuid().nullable(),
-  audioBase64: z.string().min(1),
+  audioBase64: z.string().min(1).max(33_000_000),
   fileExtension: z.string().min(1).max(5),
   durationSeconds: z.number().int().min(0),
   direction: z.enum(["outgoing", "incoming_callback"]),

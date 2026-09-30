@@ -42,7 +42,7 @@ export const Route = createFileRoute("/api/public/ingest/analyze")({
           storedSecret,
         ].filter((value): value is string => Boolean(value));
         const cronOk = Boolean(cronHeader) && accepted.includes(cronHeader);
-        if (caller.kind === "none" && !cronOk) return json({ error: "Unauthorized" }, 401);
+        if (!cronOk) return json({ error: "Unauthorized" }, 401);
 
         const url = new URL(request.url);
         const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 5), 1), 20);

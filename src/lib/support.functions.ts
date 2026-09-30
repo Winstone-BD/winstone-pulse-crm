@@ -198,6 +198,9 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     const { conversationByToken, appendMessage } = await import("@/lib/support.server");
     const conversation = await conversationByToken(data.token);
     if (!conversation) throw new Error("This conversation link is no longer valid");
+    if ((data.attachments ?? []).some((file) => !file.path.includes(`/${conversation.id}/`))) {
+      throw new Error("Attachments must be uploaded to this conversation");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: customer } = await supabaseAdmin
@@ -290,10 +293,19 @@ export const getSupportAttachmentUrl = createServerFn({ method: "POST" })
   });
 
 /** Uploads one attachment (base64) into the private support bucket. */
+const ALLOWED_ATTACHMENT_TYPES: Record<string, (b: Buffer) => boolean> = {
+  "image/png": (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  "image/gif": (b) => b.subarray(0, 4).toString("latin1") === "GIF8",
+  "image/webp": (b) => b.subarray(0, 4).toString("latin1") === "RIFF" && b.subarray(8, 12).toString("latin1") === "WEBP",
+  "application/pdf": (b) => b.subarray(0, 5).toString("latin1") === "%PDF-",
+  "text/plain": (b) => !b.subarray(0, 4096).includes(0),
+};
+
 export const uploadSupportAttachment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z
-      .object({
+    tokenInput
+      .extend({
         name: z.string().trim().min(1).max(180),
         type: z.string().trim().max(120),
         base64: z.string().min(4).max(9_000_000),
@@ -301,15 +313,24 @@ export const uploadSupportAttachment = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
+    const { conversationByToken } = await import("@/lib/support.server");
+    const conversation = await conversationByToken(data.token);
+    if (!conversation) throw new Error("This conversation link is no longer valid");
+
     const bytes = Buffer.from(data.base64, "base64");
     if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Files must be 5 MB or smaller");
+    const type = data.type.toLowerCase();
+    const check = ALLOWED_ATTACHMENT_TYPES[type];
+    if (!check || !check(bytes)) {
+      throw new Error("Only PNG, JPEG, GIF, WebP, PDF or plain-text files can be attached");
+    }
     const safe = data.name.replace(/[^\w.\-]+/g, "_").slice(-120);
-    const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${safe}`;
+    const path = `${new Date().toISOString().slice(0, 10)}/${conversation.id}/${crypto.randomUUID()}-${safe}`;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.storage
       .from("support-attachments")
-      .upload(path, bytes, { contentType: data.type || "application/octet-stream", upsert: false });
+      .upload(path, bytes, { contentType: type, upsert: false });
     if (error) throw new Error(error.message);
     return { path, name: data.name, size: bytes.byteLength, type: data.type };
   });

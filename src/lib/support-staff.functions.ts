@@ -29,6 +29,11 @@ async function writer(adminToken?: string | null) {
 }
 
 /** Agents see their own + unassigned work; leads and admins see everything. */
+/** Strips PostgREST filter syntax (commas, parens, dots, wildcards) from free-text search. */
+function safeSearch(value: string) {
+  return value.replace(/[,()*%\\.:"']/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function canTouch(
   scope: "authority" | "coordinator" | "agent" | "none",
   profileId: string | null,
@@ -363,6 +368,38 @@ export const addSupportNote = createServerFn({ method: "POST" })
     const me = await writer(data.adminToken);
     const { actorLabel } = await import("@/lib/support-access.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!data.conversationId && !data.ticketId && !data.customerId) {
+      throw new Error("A note must belong to a conversation, ticket or customer");
+    }
+    const profileId = me.profile?.id ?? null;
+    if (data.conversationId) {
+      const { data: row } = await supabaseAdmin
+        .from("support_conversations")
+        .select("assignee_profile_id")
+        .eq("id", data.conversationId)
+        .maybeSingle();
+      if (!row || !canTouch(me.scope, profileId, row.assignee_profile_id)) {
+        throw new Error("This conversation is not available to you");
+      }
+    }
+    if (data.ticketId) {
+      const { data: row } = await supabaseAdmin
+        .from("support_tickets")
+        .select("assignee_profile_id")
+        .eq("id", data.ticketId)
+        .maybeSingle();
+      if (!row || !canTouch(me.scope, profileId, row.assignee_profile_id)) {
+        throw new Error("This ticket is not available to you");
+      }
+    }
+    if (data.customerId) {
+      const { data: row } = await supabaseAdmin
+        .from("support_customers")
+        .select("id")
+        .eq("id", data.customerId)
+        .maybeSingle();
+      if (!row) throw new Error("Customer not found");
+    }
     const { error } = await supabaseAdmin.from("support_notes").insert({
       conversation_id: data.conversationId ?? null,
       ticket_id: data.ticketId ?? null,
@@ -437,7 +474,8 @@ export const listSupportTickets = createServerFn({ method: "POST" })
       .limit(300);
     if (data.status !== "all") query = query.eq("status", data.status);
     if (data.priority !== "all") query = query.eq("priority", data.priority);
-    if (data.search) query = query.or(`ref.ilike.%${data.search}%,title.ilike.%${data.search}%`);
+    const ticketSearch = data.search ? safeSearch(data.search) : "";
+    if (ticketSearch) query = query.or(`ref.ilike.%${ticketSearch}%,title.ilike.%${ticketSearch}%`);
 
     const { data: tickets, error } = await query;
     if (error) throw new Error(error.message);
@@ -473,9 +511,10 @@ export const listSupportCustomers = createServerFn({ method: "POST" })
       .select("id, name, email, phone, company, tags, notes, created_at, last_seen_at")
       .order("last_seen_at", { ascending: false })
       .limit(200);
-    if (data.search) {
+    const customerSearch = data.search ? safeSearch(data.search) : "";
+    if (customerSearch) {
       query = query.or(
-        `name.ilike.%${data.search}%,email.ilike.%${data.search}%,company.ilike.%${data.search}%`,
+        `name.ilike.%${customerSearch}%,email.ilike.%${customerSearch}%,company.ilike.%${customerSearch}%`,
       );
     }
     const { data: customers, error } = await query;
