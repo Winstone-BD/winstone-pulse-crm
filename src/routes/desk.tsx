@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { usePersistentTab } from "@/lib/use-persistent-tab";
 
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { AppShell } from "@/components/crm/AppShell";
