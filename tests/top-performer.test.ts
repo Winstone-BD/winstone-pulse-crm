@@ -42,6 +42,47 @@ describe("Top 3 performer intelligence", () => {
     ).toBe(55.5);
   });
 
+  it("ranks by the displayed score, highest first — not by quota completion", () => {
+    const lowScoreFinishedQuota = line({
+      agentId: "a",
+      name: "Debbroto",
+      score: 2,
+      completed: 1,
+      targetQuota: 50,
+      assigned: 50,
+      completionPercent: 2,
+    });
+    const highScoreEmptyQuota = line({
+      agentId: "b",
+      name: "Monisha",
+      score: 39,
+      completed: 0,
+      targetQuota: 50,
+      assigned: 0,
+      completionPercent: 0,
+    });
+    const ranked = rankPerformers([lowScoreFinishedQuota, highScoreEmptyQuota]);
+    expect(ranked[0].agentId).toBe("b");
+    expect(ranked[1].agentId).toBe("a");
+  });
+
+  it("breaks score ties by quota completion, then connections, then reports", () => {
+    const tieA = line({ agentId: "a", score: 30, completionPercent: 20, connected: 3 });
+    const tieB = line({ agentId: "b", score: 30, completionPercent: 40, connected: 5 });
+    const tieC = line({ agentId: "c", score: 30, completionPercent: 40, connected: 5, reports: 9 });
+    const ranked = rankPerformers([tieC, tieA, tieB]);
+    expect(ranked.map((l) => l.agentId)).toEqual(["b", "c", "a"]);
+  });
+
+  it("does not mutate the input list", () => {
+    const first = line({ agentId: "a", score: 10 });
+    const second = line({ agentId: "b", score: 20 });
+    const input = [first, second];
+    rankPerformers(input);
+    expect(input[0].agentId).toBe("a");
+  });
+
+
   it("prioritises unfinished reports as the clearest gap", () => {
     const insight = performerInsight(line({ reports: 7 }));
     expect(insight.gap).toContain("3টি কল রিপোর্ট বাকি");
