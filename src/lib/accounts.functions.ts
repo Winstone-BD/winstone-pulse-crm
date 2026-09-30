@@ -48,7 +48,7 @@ export const signInWithIdentifier = createServerFn({ method: "POST" })
         const byPhone = (rows ?? []).filter(
           (row) => wantPhone !== null && row.phone !== null && phoneKey(row.phone) === wantPhone,
         );
-        if (byPhone.length === 1 && byPhone[0].email) email = byPhone[0].email;
+        if (byPhone.length === 1 && byPhone[0]?.email) email = byPhone[0]?.email ?? null;
       }
     }
     if (!email) throw new Error(SIGN_IN_FAILED);
