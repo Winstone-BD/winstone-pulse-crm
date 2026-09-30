@@ -50,6 +50,46 @@ function EligBadge({ e }: { e: string }) {
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${map[e] ?? ""}`}>{label[e] ?? e}</span>;
 }
 
+type BL = { label: string; value: string; group: "fact" | "next_action"; sources: Array<{ kind: string; id: string }> };
+function BriefLines({ lines }: { lines: BL[] }) {
+  const block = (title: string, hint: string, rows: BL[]) => (
+    <div className="mt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title} <span className="font-normal normal-case">· {hint}</span></p>
+      <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+        {rows.map((l) => (
+          <div key={l.label} className="rounded-xl bg-muted/50 p-3">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{l.label}</dt>
+            <dd className="mt-0.5 break-words text-sm">{l.value}</dd>
+            <dd className="mt-1 text-[10px] text-muted-foreground">{l.sources.length ? `উৎস: ${[...new Set(l.sources.map((s) => s.kind))].join(", ")} (${l.sources.length})` : "উৎস: নেই"}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+  return (
+    <>
+      {block("Customer context (facts)", "সংরক্ষিত রেকর্ড", lines.filter((l) => l.group === "fact"))}
+      {block("Recommended next action", "নিয়ম-ভিত্তিক", lines.filter((l) => l.group === "next_action"))}
+      <p className="mt-3 text-xs text-muted-foreground">Generated suggestion নিচের Smart Pitchbook-এ আলাদাভাবে দেখানো হয় — এটি প্রস্তাব, তথ্য নয়।</p>
+    </>
+  );
+}
+
+/** Read-only AI Sales Brief card for Lead 360 (HQ sees any lead; agents only their own). */
+export function SalesBriefCard({ leadId }: { leadId: string }) {
+  const adminToken = useAdminToken();
+  const fn = useServerFn(siBrief);
+  const res = useQuery({ queryKey: ["si-brief", leadId, adminToken], queryFn: () => fn({ data: { adminToken, leadId } }) });
+  return (
+    <section className={card}>
+      <h3 className="text-base font-semibold">AI Sales Brief</h3>
+      {res.isLoading && <p className="mt-2 text-sm text-muted-foreground">লোড হচ্ছে…</p>}
+      {res.error && <p className="mt-2 text-sm text-destructive">{errMsg(res.error)}</p>}
+      {res.data && <BriefLines lines={res.data.lines} />}
+    </section>
+  );
+}
+
 // ---------------- Agent: Smart Pitchbook ----------------
 export function PitchbookWorkspace({ fixedLeadId }: { fixedLeadId?: string }) {
   const adminToken = useAdminToken();
@@ -123,15 +163,7 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
         {brief.data && (
           <>
             <p className="mt-1 text-sm font-medium">{brief.data.lead.name} · {brief.data.lead.phone}</p>
-            <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-              {brief.data.lines.map((l) => (
-                <div key={l.label} className="rounded-xl bg-muted/50 p-3">
-                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{l.label}</dt>
-                  <dd className="mt-0.5 break-words text-sm">{l.value}</dd>
-                  <dd className="mt-1 text-[10px] text-muted-foreground">{l.sources.length ? `উৎস: ${[...new Set(l.sources.map((s) => s.kind))].join(", ")} (${l.sources.length})` : "উৎস: নেই"}</dd>
-                </div>
-              ))}
-            </dl>
+            <BriefLines lines={brief.data.lines} />
           </>
         )}
       </section>
