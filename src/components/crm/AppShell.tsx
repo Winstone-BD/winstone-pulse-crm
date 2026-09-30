@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
+import { Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
 import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
