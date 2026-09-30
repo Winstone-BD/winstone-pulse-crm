@@ -313,6 +313,7 @@ export const submitMyReport = createServerFn({ method: "POST" })
       nextAction: z.string().trim().max(60).nullable().optional(),
       noFollowUpReason: z.string().trim().max(60).nullable().optional(),
       smartReasons: z.record(z.string(), z.string().max(300)).nullable().optional(),
+      evaluationAnswers: z.record(z.string(), z.boolean()).nullable().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -341,6 +342,7 @@ export const submitMyReport = createServerFn({ method: "POST" })
       nextAction: data.nextAction ?? null,
       noFollowUpReason: data.noFollowUpReason ?? null,
       smartReasons: data.smartReasons ?? null,
+      evaluationAnswers: data.evaluationAnswers ?? null,
     });
   });
 

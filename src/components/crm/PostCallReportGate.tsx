@@ -1,3 +1,4 @@
+import { EVALUATION_QUESTIONS, categoryForScore, type EvaluationKey } from "@/lib/lead-evaluation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
@@ -84,7 +85,7 @@ const NO_FU_REASONS: Opt[] = [
   { value: "no_contact", label: "Customer Requested No Further Contact" },
   { value: "other", label: "Other" },
 ];
-const TEMPERATURES: Opt[] = [
+export const _LEGACY_TEMPERATURES: Opt[] = [
   { value: "hot", label: "HOT" },
   { value: "warm", label: "WARM" },
   { value: "cold", label: "COLD" },
@@ -294,7 +295,10 @@ export function PostCallReportGate() {
   const [when, setWhen] = useState("");
   const [noFuReason, setNoFuReason] = useState("");
   const [noFuNote, setNoFuNote] = useState("");
-  const [temperature, setTemperature] = useState("");
+  const [answers, setAnswers] = useState<Partial<Record<EvaluationKey, boolean>>>({});
+  const answeredAll = EVALUATION_QUESTIONS.every((q) => typeof answers[q.key] === "boolean");
+  const liveScore = EVALUATION_QUESTIONS.reduce((n, q) => n + (answers[q.key] ? q.points : 0), 0);
+  const temperature = answeredAll ? categoryForScore(liveScore) : "";
   const [grade, setGrade] = useState("");
   const [voiceNote, setVoiceNote] = useState("");
   const [skipped, setSkipped] = useState<Record<string, boolean>>({});
@@ -326,7 +330,7 @@ export function PostCallReportGate() {
     setWhen("");
     setNoFuReason("");
     setNoFuNote("");
-    setTemperature("");
+    setAnswers({});
     setGrade("");
     setVoiceNote("");
     setSkipped({});
@@ -389,8 +393,8 @@ export function PostCallReportGate() {
                       ? "Next Action বাছাই করুন"
                       : connected && nextAction === "other" && nextActionNote.trim().length < 2
                         ? "Next Action-এ Other হলে ছোট নোট দিন"
-                        : connected && !temperature
-                          ? "Temperature (HOT / WARM / COLD) বাছাই করুন"
+                        : connected && !answeredAll
+                          ? "ছয়টি প্রশ্নের সবগুলোর হ্যাঁ / না দিন"
                           : connected && !grade
                             ? "Grade (A / B / C / D) বাছাই করুন"
                             : connected && followMode === "set" && !when
@@ -452,6 +456,7 @@ export function PostCallReportGate() {
       nextAction: connected ? nextAction : null,
       noFollowUpReason: followUpAt ? null : connected ? noFuReason || null : "not_connected",
       smartReasons: Object.keys(smartReasons).length ? smartReasons : null,
+      evaluationAnswers: connected && answeredAll ? (answers as Record<string, boolean>) : null,
     };
   };
 
@@ -610,7 +615,24 @@ export function PostCallReportGate() {
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <SmartRow id="sr-temp" label="Temperature" required options={TEMPERATURES} value={temperature} onChange={setTemperature} rec={recs.temperature} skipped={skipped["temperature"]} onSkip={skip("temperature")} />
+            <div className="space-y-1.5 rounded-lg border border-border p-2.5 sm:col-span-2">
+              <div className="flex items-center justify-between text-xs font-medium">
+                <span>লিড মূল্যায়ন (শুধু হ্যাঁ / না)</span>
+                <span aria-live="polite">স্কোর {liveScore}/90{temperature ? ` · ${temperature.toUpperCase()} (স্বয়ংক্রিয়)` : ""}</span>
+              </div>
+              {EVALUATION_QUESTIONS.map((q) => (
+                <div key={q.key} className="flex items-center justify-between gap-2 text-xs">
+                  <span>{q.label} <span className="text-muted-foreground">+{q.points}</span></span>
+                  <div className="flex gap-1">
+                    {[true, false].map((v) => (
+                      <Button key={String(v)} type="button" size="sm" variant={answers[q.key] === v ? "default" : "outline"} className="h-7 px-2" onClick={() => setAnswers((a) => ({ ...a, [q.key]: v }))}>
+                        {v ? "হ্যাঁ" : "না"}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
             <SmartRow id="sr-grade" label="Grade" required options={GRADES} value={grade} onChange={setGrade} rec={recs.grade} skipped={skipped["grade"]} onSkip={skip("grade")} />
           </div>
         </>

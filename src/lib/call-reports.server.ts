@@ -360,6 +360,8 @@ export async function submitCallReport(input: {
   nextAction?: string | null;
   noFollowUpReason?: string | null;
   smartReasons?: Record<string, string> | null;
+  /** V2: the six yes/no facts; score/category/priority are derived server-side. */
+  evaluationAnswers?: unknown;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const category = input.category as CallCategory;
@@ -385,10 +387,19 @@ export async function submitCallReport(input: {
   const received = input.callStatus
     ? input.callStatus === "connected"
     : report.connected !== false;
-  const invalid = validateReport({ ...input, connected: received, requireCallFacts: true });
+
+  // LOCKED V2 rule: when the six yes/no answers are sent, Hot/Warm/Cold is
+  // derived here and any client-picked temperature is ignored. Older phone
+  // builds without answers stay on the legacy path until they are updated.
+  const { parseAnswers, evaluate, EVALUATION_MODEL } = await import("@/lib/lead-evaluation");
+  const answers = received ? parseAnswers(input.evaluationAnswers) : null;
+  const evaluation = answers ? evaluate(answers, Boolean(input.followUpAt)) : null;
+  const effectiveTemperature = evaluation ? evaluation.category : (input.temperature ?? null);
+
+  const invalid = validateReport({ ...input, temperature: effectiveTemperature, connected: received, requireCallFacts: true });
   if (invalid) throw new Error(invalid.message);
 
-  const temperature = received ? ((input.temperature ?? null) as LeadTemperature | null) : null;
+  const temperature = received ? ((effectiveTemperature ?? null) as LeadTemperature | null) : null;
   const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
   const classified = Boolean(temperature && grade);
 
@@ -424,6 +435,11 @@ export async function submitCallReport(input: {
       next_action: input.nextAction ?? null,
       no_follow_up_reason: input.followUpAt ? null : (input.noFollowUpReason ?? null),
       smart_reasons: input.smartReasons ?? null,
+      evaluation_answers: answers,
+      evaluation_score: evaluation?.score ?? null,
+      evaluation_model: evaluation ? EVALUATION_MODEL : null,
+      follow_up_priority: evaluation?.priority ?? null,
+      next_best_action: evaluation?.nextAction ?? null,
       submitted_at: new Date().toISOString(),
     })
     .eq("id", input.reportId)
