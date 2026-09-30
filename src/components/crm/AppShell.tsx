@@ -100,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
             {adminToken && <AgentSelector />}
 
             {scope !== "none" && <ReminderBell />}
