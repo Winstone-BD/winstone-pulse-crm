@@ -45,7 +45,6 @@ export function InstallAppButton() {
         size="sm"
         variant="secondary"
         aria-label="ফোনে অ্যাপ ইনস্টল করুন"
-        aria-label="অ্যাপ ইনস্টল"
         className="h-8 w-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-0 text-xs font-semibold sm:w-auto sm:px-3"
         onClick={async () => {
           if (prompt) {
