@@ -13,7 +13,9 @@ export const listSiteVisits = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
   .handler(async ({ data }) => {
     const { siCaller } = await import("@/lib/sales-intel.server");
-    const c = await siCaller(data.adminToken);
+    // Signed-out / no-scope viewers simply see no visits instead of a crash.
+    const c = await siCaller(data.adminToken).catch(() => null);
+    if (!c) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null }> = [];
     for (let a = 0; ; a += 1000) {
