@@ -12,6 +12,7 @@ type Answer = {
   answer: string;
   covered: boolean;
   sources: { url: string; title: string; live: boolean }[];
+  documents?: { fileId: string; name: string }[];
 };
 
 const QUICK = ["প্রকল্পের দাম কত?", "অবস্থান কোথায়?", "কী কী সুবিধা আছে?"];
@@ -105,6 +106,11 @@ export function WebsiteAnswerBox({
                   {source.live ? " (এখনকার)" : ""}
                 </span>
               ))}
+            </p>
+          ) : null}
+          {answer.documents && answer.documents.length > 0 ? (
+            <p className="text-[11px] text-muted-foreground">
+              অনুমোদিত ডকুমেন্ট: {answer.documents.map((doc) => doc.name).join(", ")}
             </p>
           ) : null}
           {!answer.covered ? (
