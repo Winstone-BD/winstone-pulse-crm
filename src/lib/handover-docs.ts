@@ -3,7 +3,7 @@
  * Client Handover & Feature Report. The /audit-report and /handover pages and
  * their PDFs (printed from those pages) are generated from this file only.
  */
-export const DOC_VERSION = "1.0.0";
+export const DOC_VERSION = "1.1.0";
 export const AUDIT_DATE = "2026-09-30 13:40 UTC (19:40 Asia/Dhaka)";
 export const AUDIT_COMMIT = "c9a5020 + final audit changes";
 export const AUDIT_PDF_PATH = "/winstone-audit-report.pdf";
@@ -22,7 +22,8 @@ export const AUDIT_ITEMS: Array<{ item: string; result: string; evidence: string
   { item: "8. Canonical manual", result: "PASS", evidence: "system-manual.ts v1.1.0 → /manual page and /winstone-system-manual.pdf, card in Executive HQ and IT Console." },
   { item: "9. Home daily performance", result: "PASS (code/test)", evidence: "Top 3 computed from that day's real reports/follow-ups; score breakdown shown; ties broken by calls → reports → talk minutes → id." },
   { item: "10. Responsive QA", result: "PASS (public pages)", evidence: "/, /manual, /desk, /audit-report, /handover at 390/768/1280/1920 px: no horizontal overflow, no page errors. PIN/sign-in-only screens were not rendered in the automated check." },
-  { item: "11. Tests", result: "PASS", evidence: "tsgo --noEmit: 0 errors. bunx vitest run: 33 files, 205 tests passed." },
+  { item: "12. Sales Intelligence", result: "PASS (code/test)", evidence: "Migration 0066: market_facts, pitch_templates, knowledge_versions, pitch_events (FK to canonical leads/profiles, unique correlation_key, UPDATE/DELETE blocked by trigger, server-only RLS). Actor from session; agent limited to own assigned lead; 9:05 gate on pitch writes; AI grounding validator rejects uncited facts/invented numbers; wa.me recorded as opened only; deterministic attribution; keyset pagination; full-page export. tests/sales-intel.test.ts: 26 tests. Not verified: signed-in screens end-to-end, live AI replies with real published facts (no facts entered yet)." },
+  { item: "11. Tests", result: "PASS", evidence: "tsgo --noEmit: 0 errors. bunx vitest run: 38 files, 269 tests passed (2026-09-30, incl. 26 Sales Intelligence tests)." },
 ];
 
 export const AUDIT_SECTIONS: DocSection[] = [
@@ -59,6 +60,7 @@ export const HANDOVER_SECTIONS: DocSection[] = [
     "IT Console — accounts and approvals, health check, releases, notices, manual and audit documents.",
     "Reports — follow-up history, project reports by requirement, shift summaries at 12:50 and 5:30 PM.",
     "Winstone AI — suggests answers and actions; nothing runs until a person confirms.",
+    "Sales Intelligence — AI Sales Brief from the lead's saved records; Smart Pitchbook with 11 objections, a recommended reply grounded only in published facts, Copy / WhatsApp (recorded as 'opened / message prepared', not sent) / Save; permanent Pitch History shown in Lead 360; Pitch Effectiveness by fixed rule (association, not causation); HQ/IT Knowledge Admin to verify, publish, expire and version facts and pitches. Market facts start empty — HQ must enter real, sourced facts.",
   ] },
   { id: "daily", title: "4. Daily operating checklist", body: ["Morning: LeadHub assigns today's quantity → agents open the app and confirm the 09:05 briefing.", "During the day: call → submit the report straight away → set follow-up or close with reason.", "12:50 and 5:30 PM: shift summaries generate automatically.", "5:30 PM: Top 3 appears on Home. HQ reviews accountability for agents above the pending threshold."] },
   { id: "trouble", title: "5. Troubleshooting", body: ["\"Submit the previous report first\" — finish the pending report; the next call unlocks.", "\"Acknowledge the 09:05 briefing\" — tap the confirm button on the briefing card.", "\"Add your photo\" — upload a clear staff photo on the web desk.", "\"This lead is not in your list\" — only LeadHub can assign leads.", "Numbers look wrong — open the lead in Lead 360; every event is listed with time and person."] },
