@@ -46,7 +46,7 @@ function LeadHubPage() {
 
 function LeadHubGate() {
   const token = useAdminToken();
-  const { scope, isPending } = useMyAccount();
+  const { isPending } = useMyAccount();
   const check = useServerFn(checkLeadHubAccess);
   const [pinOpen, setPinOpen] = useState(false);
   const access = useQuery({
