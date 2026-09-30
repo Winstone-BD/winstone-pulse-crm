@@ -711,6 +711,7 @@ export type Database = {
           lead_id: string
           next_action: string | null
           next_best_action: string | null
+          no_follow_up_note: string | null
           no_follow_up_reason: string | null
           note: string | null
           phone_number: string | null
@@ -748,6 +749,7 @@ export type Database = {
           lead_id: string
           next_action?: string | null
           next_best_action?: string | null
+          no_follow_up_note?: string | null
           no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
@@ -785,6 +787,7 @@ export type Database = {
           lead_id?: string
           next_action?: string | null
           next_best_action?: string | null
+          no_follow_up_note?: string | null
           no_follow_up_reason?: string | null
           note?: string | null
           phone_number?: string | null
@@ -1107,6 +1110,8 @@ export type Database = {
           new_scheduled_at: string | null
           new_status: string | null
           note: string | null
+          old_note: string | null
+          old_reason_code: string | null
           old_scheduled_at: string | null
           old_status: string | null
           reason_code: string | null
@@ -1121,6 +1126,8 @@ export type Database = {
           new_scheduled_at?: string | null
           new_status?: string | null
           note?: string | null
+          old_note?: string | null
+          old_reason_code?: string | null
           old_scheduled_at?: string | null
           old_status?: string | null
           reason_code?: string | null
@@ -1135,6 +1142,8 @@ export type Database = {
           new_scheduled_at?: string | null
           new_status?: string | null
           note?: string | null
+          old_note?: string | null
+          old_reason_code?: string | null
           old_scheduled_at?: string | null
           old_status?: string | null
           reason_code?: string | null

@@ -442,6 +442,13 @@
       "when": 1790772281402,
       "tag": "0062_staff_photo",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790772826073,
+      "tag": "0063_canonical_close_reason_history",
+      "breakpoints": true
     }
   ]
 }
