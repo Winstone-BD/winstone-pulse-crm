@@ -6,7 +6,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 /** Server-controlled CRM closure, cached so an offline phone cannot bypass an active lock. */
@@ -14,7 +13,6 @@ object MaintenanceControl {
     private const val PREFS = "winstone_maintenance"
     private const val KEY_ACTIVE = "active"
     private const val KEY_KNOWN = "known"
-    private val startsAt = Instant.parse("2026-09-30T05:30:00Z")
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
@@ -23,7 +21,7 @@ object MaintenanceControl {
     data class State(val active: Boolean, val title: String, val detail: String)
 
     private val defaultState = State(
-        active = Instant.now() >= startsAt,
+        active = false,
         title = "জরুরি নোটিশ — CRM সাময়িকভাবে বন্ধ",
         detail = "CRM-এর ongoing development ও system update চলছে। প্রতিটি Agent-এর individual report আলাদাভাবে PDF download করার সুবিধা যোগ করা হচ্ছে। System পুনরায় active করার confirmation না পাওয়া পর্যন্ত CRM ব্যবহার করবেন না।",
     )
