@@ -61,7 +61,22 @@ async function userIdFromRequest(): Promise<string | null> {
  * Single resolver for both ways in: the master/IT PIN token (authority) and a
  * signed-in agent or coordinator account. Everything else is anonymous.
  */
-export async function resolveCaller(adminToken?: string | null): Promise<Caller> {
+export async function resolveCaller(
+  adminToken?: string | null,
+  options: { skipMaintenance?: boolean } = {},
+): Promise<Caller> {
+  const caller = await resolveCallerInner(adminToken);
+  if (options.skipMaintenance) return caller;
+  // Maintenance lock: only writing authority (IT Console / admin) passes while locked.
+  const exempt = caller.scope === "authority" && !caller.readOnly;
+  if (!exempt && caller.scope !== "none") {
+    const m = await import("@/lib/maintenance.server");
+    if (await m.isLockedForOrdinaryUsers()) throw new Error(m.LOCKED_MESSAGE);
+  }
+  return caller;
+}
+
+async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
   // Loaded on demand so a hot reload of the PIN module never leaves a stale binding.
   const gate = await import("@/lib/admin-gate.server");
   const pinScope = gate.adminTokenScope(adminToken ?? null);

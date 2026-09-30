@@ -44,9 +44,27 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/** Phone/device API paths that stay open while locked (sign-in and version checks). */
+const DEVICE_OPEN = ["/api/public/agent/login", "/api/public/agent/version", "/api/public/config/"];
+
+async function deviceLockResponse(request: Request): Promise<Response | null> {
+  if (!request.headers.get("x-device-token")) return null;
+  const path = new URL(request.url).pathname;
+  if (!path.startsWith("/api/public/agent/") && !path.startsWith("/api/public/ingest/")) return null;
+  if (DEVICE_OPEN.some((open) => path.startsWith(open))) return null;
+  const m = await import("./lib/maintenance.server");
+  if (!(await m.isLockedForOrdinaryUsers())) return null;
+  return new Response(JSON.stringify({ error: m.LOCKED_MESSAGE, code: "maintenance_locked" }), {
+    status: 423,
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const locked = await deviceLockResponse(request);
+      if (locked) return locked;
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

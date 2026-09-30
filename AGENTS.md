@@ -26,3 +26,4 @@
 - follow_up_events rows cannot be deleted; every change logs old/new values to follow_up_changes — why: history must be append-only.
 - Agent self-claim (`claimLead`) is retired; only LeadHub assignment moves pool leads — why: single canonical assignment path.
 - Agent mutations call `assertAgentBriefing`/`assertBriefingForCaller` from agent-briefing.server — why: 9:05 gate must be server-side on every protected action.
+- Monthly maintenance lock ($35.29 USD, 14th 00:00 Dhaka) is decided only in `maintenance.server.ts`; `resolveCaller` and `src/server.ts` (device 423) enforce it, IT full PIN + /architect exempt — why: one server-authoritative state, no UI-only lock.

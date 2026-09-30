@@ -16,7 +16,7 @@ import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
 import { Leaderboard } from "@/components/crm/Leaderboard";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { RoleGate } from "@/components/crm/RoleGate";
-import { ServiceBillPanel } from "@/components/crm/ServiceBillPanel";
+import { MaintenanceProfileNotice } from "@/components/crm/MaintenanceNotice";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
@@ -199,6 +199,7 @@ function ControlBoard() {
 
           {/* White content surface */}
           <div className="min-w-0 flex-1 rounded-2xl border border-border bg-white p-4 text-slate-900 shadow-sm sm:p-6 dark:bg-card dark:text-card-foreground">
+            <MaintenanceProfileNotice />
             {tab === "overview" && (
               <div className="space-y-8">
                 <SystemManualCard />
@@ -259,7 +260,6 @@ function ControlBoard() {
                 <SystemManualCard />
                 <AccountabilityReviewPanel surface="hq" />
                 <FloorLockAdminPanel />
-                <ServiceBillPanel mode="hq" />
                 <ShiftSummaryPanel scope="hq" />
                 <CommandAgentPanel surface="hq" />
                 <AskHqPanel />

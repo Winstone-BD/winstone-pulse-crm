@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { PhotoUpload } from "@/components/crm/PhotoUpload";
 import { StaffAvatar } from "@/components/crm/StaffAvatar";
+import { MaintenanceProfileNotice } from "@/components/crm/MaintenanceNotice";
 import { updateMyProfile } from "@/lib/accounts.functions";
 import { useMyAccount, useSignOut } from "@/lib/session";
 
@@ -100,6 +101,8 @@ export function MyProfileCard() {
           </Button>
         </div>
       </div>
+
+      <MaintenanceProfileNotice />
 
       {open && (
         <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">

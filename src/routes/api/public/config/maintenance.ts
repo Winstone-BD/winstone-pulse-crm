@@ -23,6 +23,15 @@ export const Route = createFileRoute("/api/public/config/maintenance")({
         const maintenance = saved && typeof saved === "object"
           ? (saved as Record<string, unknown>)
           : {};
+        const { isLockedForOrdinaryUsers } = await import("@/lib/maintenance.server");
+        if (await isLockedForOrdinaryUsers()) {
+          return json({
+            active: true,
+            title: "🔒 SYSTEM MAINTENANCE LOCKED",
+            detail:
+              "Winstone CRM is temporarily unavailable because the monthly system maintenance payment ($35.29 USD) is pending. Please contact IT Console to complete payment verification and request system restoration.",
+          });
+        }
         return json({
           active: typeof maintenance["active"] === "boolean" ? maintenance["active"] : false,
           title:

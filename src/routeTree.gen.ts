@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArchitectRouteImport } from './routes/architect'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CoachRouteImport } from './routes/coach'
@@ -89,6 +90,11 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchitectRoute = ArchitectRouteImport.update({
+  id: '/architect',
+  path: '/architect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditReportRoute = AuditReportRouteImport.update({
@@ -484,6 +490,7 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
@@ -562,6 +569,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
@@ -641,6 +649,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/coach': typeof CoachRoute
@@ -721,6 +730,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/coach'
@@ -799,6 +809,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/coach'
@@ -877,6 +888,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/coach'
@@ -956,6 +968,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchitectRoute: typeof ArchitectRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
   CoachRoute: typeof CoachRoute
@@ -1040,6 +1053,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/architect': {
+      id: '/architect'
+      path: '/architect'
+      fullPath: '/architect'
+      preLoaderRoute: typeof ArchitectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-report': {
@@ -1572,6 +1592,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchitectRoute: ArchitectRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
   CoachRoute: CoachRoute,

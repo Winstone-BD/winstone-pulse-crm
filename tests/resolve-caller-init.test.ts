@@ -3,6 +3,11 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 
 // No live request in tests: resolveCaller must still initialise and answer.
 vi.mock("@tanstack/react-start/server", () => ({ getRequest: () => undefined }));
+const lock = vi.hoisted(() => ({ locked: false }));
+vi.mock("@/lib/maintenance.server", () => ({
+  isLockedForOrdinaryUsers: async () => lock.locked,
+  LOCKED_MESSAGE: "SYSTEM MAINTENANCE LOCKED",
+}));
 
 beforeAll(() => {
   process.env["ADMIN_TOKEN_SECRET"] = "test-secret";
@@ -42,5 +47,17 @@ describe("resolveCaller module initialisation (regression)", () => {
     const { resolveCaller } = await import("@/lib/access.server");
     const results = await Promise.all(Array.from({ length: 10 }, () => resolveCaller(null)));
     expect(results.every((r) => r.scope === "none")).toBe(true);
+  });
+
+  it("maintenance lock blocks HQ read-only but not the IT Console PIN", async () => {
+    const [{ resolveCaller }, gate] = await Promise.all([
+      import("@/lib/access.server"),
+      import("@/lib/admin-gate.server"),
+    ]);
+    lock.locked = true;
+    await expect(resolveCaller(gate.mintAdminToken("hq"))).rejects.toThrow(/MAINTENANCE LOCKED/);
+    await expect(resolveCaller(gate.mintAdminToken("full"))).resolves.toMatchObject({ scope: "authority" });
+    await expect(resolveCaller(gate.mintAdminToken("hq"), { skipMaintenance: true })).resolves.toMatchObject({ readOnly: true });
+    lock.locked = false;
   });
 });
