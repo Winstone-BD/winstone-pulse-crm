@@ -20,3 +20,5 @@
 - Project reporting uses Inventory requirement labels as the current project dimension; site visits and bookings count only explicit saved report signals — why: no separate projects, site-visits, or bookings model exists yet, so free-text inference would invent facts.
 - Agent calls require a daily 9:05 Asia/Dhaka briefing acknowledgement for the current policy version, enforced on the server across web and Android — why: UI-only notices are bypassable.
 - Android nearby-lead distance uses foreground device location plus on-device geocoding of the assigned lead's saved address; the agent's GPS is never uploaded or persisted — why: proximity must not become staff tracking.
+
+- Staff display names are cleaned in the database (profiles trigger strips MD/MSD/Mohammad/মোঃ); the original entry is kept only in profiles.legal_name, never selected for UI — why: one rule for web, Android and reports.

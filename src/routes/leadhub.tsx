@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
 import { CsvImportDialog } from "@/components/crm/CsvImportDialog";
+import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AllocationTable, AssignLeadsWorkspace } from "@/components/crm/deck/AssignLeadsWorkspace";
@@ -96,7 +97,7 @@ function LeadHubWorkspace() {
       {section === "overview" && <><DeckKpis /><AllocationTable onAssign={(id) => { setAssignFor(id); setSection("assign"); }} /></>}
       {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
       {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title="Canonical Lead Database" />}
-      {section === "assign" && <AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} />}
+      {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
       {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title="Duplicate / parked records" /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title="Data quality review" /></div>}
     </div>
   );

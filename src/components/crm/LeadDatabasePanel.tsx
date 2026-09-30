@@ -35,7 +35,8 @@ export function LeadDatabasePanel() {
   const willSend = Math.min(quantity * agentCount || 0, poolCount);
 
   const send = useMutation({
-    mutationFn: () => distributeFn({ data: { adminToken, perAgent: quantity, saveAsDaily: true } }),
+    mutationFn: (saveAsDaily: boolean) =>
+      distributeFn({ data: { adminToken, perAgent: quantity, saveAsDaily } }),
     onSuccess: (result) => {
       toast.success(
         `${result.agents} জন এজেন্টকে মোট ${result.moved}টি লিড দেওয়া হয়েছে — ডেটাবেজে বাকি ${result.remaining}টি${
@@ -63,8 +64,9 @@ export function LeadDatabasePanel() {
       </header>
 
       <p className="text-xs text-muted-foreground">
-        হেড অফিসের লিড এখানে জমা থাকে। প্রতিদিন প্রতি এজেন্টের জন্য সংখ্যা লিখে দিন — ঠিক ততটি লিড
-        সব চালু এজেন্টের কাছে চলে যাবে, বাকিগুলো ডেটাবেজেই থাকবে। একই নম্বর দুইজনের কাছে বা একজনের
+        কিছু না দিলে প্রতিদিন সকালে প্রতি এজেন্ট স্বয়ংক্রিয়ভাবে নির্ধারিত সংখ্যক লিড পাবে (এখন{" "}
+        {status.data?.dailyPerAgent ?? 50}টি)। অন্য সংখ্যা (যেমন ৩০) লিখে "শুধু আজ" দিলে আজ সবাই ততটি পাবে;
+        একজন একজন করে দিতে নিচের "Agent + Quantity" অংশ ব্যবহার করুন। একই নম্বর দুইজনের কাছে বা একজনের
         কাছে দুইবার কখনো যাবে না।
       </p>
 
@@ -105,7 +107,7 @@ export function LeadDatabasePanel() {
           <Input
             value={perAgent}
             inputMode="numeric"
-            placeholder="যেমন ৩০"
+            placeholder={`খালি = ${status.data?.dailyPerAgent ?? 50}`}
             onChange={(event) => setPerAgent(event.target.value.replace(/\D/g, "").slice(0, 3))}
             className="h-9 w-28"
           />
@@ -113,14 +115,18 @@ export function LeadDatabasePanel() {
         <Button
           size="sm"
           disabled={send.isPending || !quantity || agentCount === 0 || poolCount === 0}
-          onClick={() => send.mutate()}
+          onClick={() => send.mutate(false)}
         >
-          {send.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Share2 className="size-4" />
-          )}
-          এজেন্টদের দিয়ে দিন
+          {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+          শুধু আজ সবাইকে দিন
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={send.isPending || !quantity || agentCount === 0 || poolCount === 0}
+          onClick={() => send.mutate(true)}
+        >
+          দিন ও প্রতিদিনের সংখ্যা করুন
         </Button>
         {quantity && agentCount ? (
           <p className="text-xs text-muted-foreground">

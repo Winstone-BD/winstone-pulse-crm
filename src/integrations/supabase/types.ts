@@ -1848,6 +1848,7 @@ export type Database = {
           id: string
           is_active: boolean
           last_active_at: string | null
+          legal_name: string | null
           name: string
           phone: string | null
           pin_hash: string | null
@@ -1869,6 +1870,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_active_at?: string | null
+          legal_name?: string | null
           name: string
           phone?: string | null
           pin_hash?: string | null
@@ -1890,6 +1892,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_active_at?: string | null
+          legal_name?: string | null
           name?: string
           phone?: string | null
           pin_hash?: string | null
@@ -3364,6 +3367,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clean_person_name: { Args: { _raw: string }; Returns: string }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {
         Args: { _lead_ids: string[] }
