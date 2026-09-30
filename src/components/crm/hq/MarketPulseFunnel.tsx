@@ -113,7 +113,7 @@ export function MarketPulseFunnel({ leads, reports, filters, onDrill }: { leads:
         ) : (
           <ul className="space-y-2">
             {funnel.map((s, i) => {
-              const prev = i > 0 ? funnel[i - 1].ids.length : 0;
+              const prev = i > 0 ? funnel[i - 1]!.ids.length : 0;
               const conv = i > 0 && prev > 0 ? Math.round((s.ids.length / prev) * 100) : null;
               return (
                 <li key={s.label}>
@@ -126,7 +126,7 @@ export function MarketPulseFunnel({ leads, reports, filters, onDrill }: { leads:
             })}
           </ul>
         )}
-        {!loading && funnel[1].ids.length === 0 && <p className="mt-2 text-[11px] text-muted-foreground">এখনো কোনো পিচ রেকর্ড হয়নি — Sales Intelligence থেকে পিচ ব্যবহার করলে এই ধাপ পূরণ হবে।</p>}
+        {!loading && funnel[1]!.ids.length === 0 && <p className="mt-2 text-[11px] text-muted-foreground">এখনো কোনো পিচ রেকর্ড হয়নি — Sales Intelligence থেকে পিচ ব্যবহার করলে এই ধাপ পূরণ হবে।</p>}
       </section>
     </div>
   );
