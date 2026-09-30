@@ -36,7 +36,6 @@ class ReminderWorker(context: Context, params: WorkerParameters) :
 
         val body = runCatching { WinstoneApi.reminders() }.getOrNull() ?: return Result.retry()
         val items = body.optJSONArray("reminders") ?: return Result.success()
-        if (items.length() == 0) return Result.success()
 
         ensureChannel(applicationContext)
         val manager = NotificationManagerCompat.from(applicationContext)
@@ -64,9 +63,11 @@ class ReminderWorker(context: Context, params: WorkerParameters) :
             runCatching { manager.notify("$kind:$id".hashCode(), notification) }
         }
         val notices = runCatching { WinstoneApi.notices().optJSONArray("notices") }.getOrNull()
+        val noticePrefs = applicationContext.getSharedPreferences("it_notice_delivery", Context.MODE_PRIVATE)
         if (notices != null) for (index in 0 until notices.length()) {
             val item = notices.optJSONObject(index) ?: continue
             val id = item.optString("id")
+            if (id.isBlank() || noticePrefs.getBoolean(id, false)) continue
             val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle("IT Council · ${item.optString("title")}")
@@ -77,6 +78,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) :
                 .setContentIntent(open)
                 .build()
             runCatching { manager.notify("it_notice:$id".hashCode(), notification) }
+                .onSuccess { noticePrefs.edit().putBoolean(id, true).apply() }
         }
         return Result.success()
     }
