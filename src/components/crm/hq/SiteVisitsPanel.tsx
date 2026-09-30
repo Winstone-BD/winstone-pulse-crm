@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { BellRing } from "lucide-react";
 
 import type { Lead } from "@/lib/crm-data";
 import { useAdminToken } from "@/lib/local-session";
@@ -12,13 +13,45 @@ const TONE: Record<string, string> = { scheduled: "text-primary", completed: "te
 const when = (iso: string) => new Date(iso).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dhakaDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600_000).toISOString().slice(0, 10);
 
-export function SiteVisitsPanel({ leads, fromDay, toDay, agentId }: { leads: Lead[]; fromDay: string; toDay: string; agentId: string | null }) {
+export function useSiteVisits() {
+  const adminToken = useAdminToken();
+  const list = useServerFn(listSiteVisits);
+  return useQuery({ queryKey: ["site-visits", adminToken], queryFn: () => list({ data: { adminToken } }), refetchInterval: 60_000 });
+}
+
+/** Reminder for scheduled visits in the next 24h or already past their time but not updated. */
+export function SiteVisitReminder({ leads }: { leads: Lead[] }) {
+  const visits = useSiteVisits();
+  const now = Date.now();
+  const leadName = new Map(leads.map((l) => [l.id, l.name]));
+  const due = (visits.data ?? [])
+    .filter((v) => v.status === "scheduled" && new Date(v.visit_at).getTime() <= now + 24 * 3600_000)
+    .sort((a, b) => a.visit_at.localeCompare(b.visit_at));
+  if (!due.length) return null;
+  return (
+    <div role="status" className="rounded-2xl border border-primary/40 bg-primary/5 p-3 text-xs">
+      <p className="mb-1.5 flex items-center gap-1.5 font-semibold text-primary"><BellRing className="size-3.5" />সাইট ভিজিট অনুস্মারক — {due.length}টি</p>
+      <ul className="space-y-1">
+        {due.slice(0, 5).map((v) => {
+          const late = new Date(v.visit_at).getTime() < now;
+          return (
+            <li key={v.id} className="flex flex-wrap justify-between gap-2">
+              <span className="min-w-0 truncate font-medium">{leadName.get(v.lead_id) ?? "লিড"}{v.project ? ` · ${v.project}` : ""}</span>
+              <span className={late ? "text-destructive" : "text-muted-foreground"}>{when(v.visit_at)}{late ? " · সময় পেরিয়েছে, অবস্থা আপডেট করুন" : ""}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { leads: Lead[]; fromDay?: string; toDay?: string; agentId?: string | null }) {
   const adminToken = useAdminToken();
   const qc = useQueryClient();
-  const list = useServerFn(listSiteVisits);
   const create = useServerFn(createSiteVisit);
   const setStatus = useServerFn(setSiteVisitStatus);
-  const visits = useQuery({ queryKey: ["site-visits", adminToken], queryFn: () => list({ data: { adminToken } }), refetchInterval: 60_000 });
+  const visits = useSiteVisits();
   const refresh = () => qc.invalidateQueries({ queryKey: ["site-visits"] });
 
   const [open, setOpen] = useState(false);
@@ -36,7 +69,7 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId }: { leads: Lea
 
   const rows = (visits.data ?? []).filter((v) => {
     const d = dhakaDay(v.visit_at);
-    return d >= fromDay && d <= toDay && (!agentId || v.agent_id === agentId);
+    return (!fromDay || d >= fromDay) && (!toDay || d <= toDay) && (!agentId || v.agent_id === agentId);
   });
   const counts = Object.fromEntries(SITE_VISIT_STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length]));
   const done = counts["completed"] ?? 0;
@@ -60,12 +93,14 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId }: { leads: Lea
       <header className="mb-3 flex items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold tracking-tight">সাইট ভিজিট রেকর্ড</h3>
-          <p className="text-[11px] text-muted-foreground">লিডের সাথে যুক্ত আসল ভিজিট — তারিখ ও অবস্থাসহ (নির্বাচিত সময়, ঢাকা)</p>
+          <p className="text-[11px] text-muted-foreground">লিডের সাথে যুক্ত আসল ভিজিট — তারিখ ও অবস্থাসহ (ঢাকা সময়)</p>
         </div>
         <button type="button" onClick={() => setOpen((o) => !o)} className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
           {open ? "বন্ধ" : "+ ভিজিট"}
         </button>
       </header>
+
+      <div className="mb-3"><SiteVisitReminder leads={leads} /></div>
 
       {open && (
         <form className="mb-4 grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (leadId && at) add.mutate(); }}>
