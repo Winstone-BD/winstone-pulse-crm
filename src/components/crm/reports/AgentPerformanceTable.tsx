@@ -79,7 +79,19 @@ export function AgentPerformanceTable({
           onReset={onReset}
         />
       ) : (
-        <div className="mt-3 overflow-x-auto">
+        <>
+        <ul className="mt-3 space-y-2 md:hidden">
+          {report.rows.map((r) => (
+            <li key={r.agentId} className="rounded-lg border border-border p-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><div className="min-w-0"><p className="truncate font-semibold">{r.agent}</p><p className="text-xs text-muted-foreground">{r.employeeId}</p></div><p className="tabular text-lg font-bold">{r.conversionRate.toFixed(1)}%</p></div>
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                <Metric label="Dials" value={r.dials} /><Metric label="Connected" value={r.connected} /><Metric label="Connect %" value={`${r.connectRate.toFixed(1)}%`} />
+                <Metric label="Talk time" value={formatMinutes(r.talkMinutes)} /><Metric label="Assigned" value={r.assigned} /><Metric label="Won" value={r.dealsWon} />
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="table-scroll mt-3 hidden md:block">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -128,6 +140,7 @@ export function AgentPerformanceTable({
             </tbody>
           </table>
         </div>
+        </>
       )}
     </section>
   );
@@ -139,4 +152,8 @@ function Th({ children }: { children: ReactNode }) {
 
 function Td({ children }: { children: ReactNode }) {
   return <td className="tabular py-2 pr-3 text-right">{children}</td>;
+}
+
+function Metric({ label, value }: { label: string; value: ReactNode }) {
+  return <div className="rounded-md bg-muted p-2"><dt className="text-muted-foreground">{label}</dt><dd className="tabular mt-0.5 font-semibold">{value}</dd></div>;
 }
