@@ -59,10 +59,9 @@ export const coordinatorDeckStatus = createServerFn({ method: "POST" })
   });
 
 async function fullDeck(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDispatch, requireWrite } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireDispatch(caller);
-  return { caller, requireWrite };
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { caller: { profile: null, label: "LeadHub Nexus" } };
 }
 
 /** Available pool + each active approved agent's allocation today. */
@@ -104,18 +103,20 @@ const BatchInput = z.object({
     .array(z.object({ agentId: z.string().uuid(), count: z.number().int().min(1).max(500) }))
     .min(1)
     .max(40),
+}).superRefine((value, ctx) => {
+  const ids = value.rows.map((row) => row.agentId);
+  if (new Set(ids).size !== ids.length) ctx.addIssue({ code: "custom", message: "একই এজেন্ট একাধিকবার দেওয়া যাবে না", path: ["rows"] });
 });
 
 /**
- * Assigns an exact number of the oldest eligible unassigned leads to each
+ * Assigns up to the requested number of oldest eligible unassigned leads to each
  * agent. Idempotent per requestId, guarded so a lead can reach only one agent,
- * never touches leads already assigned (today's allocations stay as they are).
+ * never touches leads already assigned, and never exceeds the 50/day plan.
  */
 export const assignLeadCounts = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => BatchInput.parse(input))
   .handler(async ({ data }) => {
-    const { caller, requireWrite } = await fullDeck(data.adminToken);
-    requireWrite(caller);
+    const { caller } = await fullDeck(data.adminToken);
     const { assertDistributionDay } = await import("@/lib/business-day");
     assertDistributionDay();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -139,7 +140,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
 
     const agents = new Map((await pool.activeAgents()).map((a) => [a.id, a]));
     const today = pool.dhakaToday();
-    const BD_MOBILE = /^(?:\+?88)?01[3-9]\d{8}$/;
+    const held = await pool.assignedTodayByAgent(today);
+    const plan = await pool.dailyPlan();
     const results: { agentId: string; requested: number; assigned: number }[] = [];
 
     for (const row of data.rows) {
@@ -148,9 +150,11 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
         results.push({ agentId: row.agentId, requested: row.count, assigned: 0 });
         continue;
       }
+      const capacity = Math.max(0, plan.perAgent - (held.get(agent.id) ?? 0));
+      const targetCount = Math.min(row.count, capacity);
       let moved: string[] = [];
-      for (let attempt = 0; attempt < 4 && moved.length < row.count; attempt++) {
-        const need = row.count - moved.length;
+      for (let attempt = 0; attempt < 4 && moved.length < targetCount; attempt++) {
+        const need = targetCount - moved.length;
         const { data: candidates, error } = await supabaseAdmin
           .from("leads")
           .select("id, phone_number")
@@ -161,9 +165,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
           .order("created_at", { ascending: true })
           .limit(Math.min(1000, need * 3 + 20));
         if (error) throw new Error(error.message);
-        const valid = (candidates ?? []).filter((l) =>
-          BD_MOBILE.test((l.phone_number ?? "").replace(/[\s-]/g, "")),
-        );
+        const { extractBangladeshPhones } = await import("@/lib/lead-phone");
+        const valid = (candidates ?? []).filter((l) => extractBangladeshPhones(l.phone_number ?? "").length > 0);
         if (!valid.length) break;
         const eligible = new Set(await eligibleLeadIds(valid.map((l) => l.id)));
         const ids = valid.filter((l) => eligible.has(l.id)).slice(0, need).map((l) => l.id);
@@ -173,7 +176,7 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
           .update({
             assigned_to: agent.id,
             assigned_agent_id: agent.id,
-            assignment_source: "coordinator",
+            assignment_source: "leadhub",
             work_date: today,
           })
           .in("id", ids)
@@ -186,7 +189,7 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
       }
       if (moved.length) {
         await supabaseAdmin.from("lead_assignments").insert(
-          moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "coordinator_count" })),
+          moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "leadhub_count" })),
         );
       }
       await logAudit({
@@ -194,13 +197,13 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
         entityType: "lead",
         entityId: null,
         actorProfileId: caller.profile?.id ?? null,
-        actorLabel: caller.label ?? caller.profile?.name ?? "Coordinator",
+          actorLabel: caller.label ?? caller.profile?.name ?? "LeadHub Nexus",
         metadata: {
           requestId: data.requestId,
           agentId: agent.id,
           requested: row.count,
           count: moved.length,
-          source: "coordinator_count",
+          source: "leadhub_count",
           leadIds: moved,
         },
       });

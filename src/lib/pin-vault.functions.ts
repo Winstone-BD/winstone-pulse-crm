@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const Surface = z.enum(["master", "it_console"]);
+const Surface = z.enum(["master", "it_console", "leadhub"]);
 
 /** Vault status + rotation history. Full IT Console session required. */
 export const getPinVault = createServerFn({ method: "GET" })

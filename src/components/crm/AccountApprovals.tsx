@@ -13,7 +13,7 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "বাতিল",
 };
 
-/** IT Console / HQ approval list for new agent and coordinator accounts. */
+/** IT Console / HQ approval list for new agent accounts. */
 export function AccountApprovals() {
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
@@ -29,7 +29,7 @@ export function AccountApprovals() {
   const act = useMutation({
     mutationFn: (input: {
       profileId: string;
-      decision: "approve_agent" | "approve_coordinator" | "reject";
+      decision: "approve_agent" | "reject";
     }) => decide({ data: { adminToken: getAdminToken() ?? "", ...input } }),
     onSuccess: () => {
       toast.success("অ্যাকাউন্ট হালনাগাদ হয়েছে");
@@ -56,7 +56,7 @@ export function AccountApprovals() {
 
       {!list.isPending && accounts.length === 0 && (
         <p className="mt-3 text-sm text-muted-foreground">
-          এখনো কোনো অনুরোধ নেই। এজেন্ট আর কোঅর্ডিনেটর সাইন আপ করলে এখানে দেখা যাবে।
+          এখনো কোনো অনুরোধ নেই। এজেন্ট সাইন আপ করলে এখানে দেখা যাবে।
         </p>
       )}
 
@@ -67,13 +67,13 @@ export function AccountApprovals() {
               <p className="truncate text-sm font-medium">{account.name}</p>
               <p className="truncate text-xs text-muted-foreground">
                 {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-                {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"} ·{" "}
+                এজেন্ট ·{" "}
                 {STATUS_LABELS[account.approval_status] ?? account.approval_status}
               </p>
             </div>
             {account.approval_status === "approved" ? (
               <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                {account.role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
+                এজেন্ট
               </span>
             ) : (
               <div className="flex gap-1.5">
@@ -88,16 +88,6 @@ export function AccountApprovals() {
                     <Check className="size-3.5" />
                   )}
                   এজেন্ট
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={act.isPending}
-                  onClick={() =>
-                    act.mutate({ profileId: account.id, decision: "approve_coordinator" })
-                  }
-                >
-                  কোঅর্ডিনেটর
                 </Button>
                 <Button
                   size="sm"

@@ -14,16 +14,16 @@ export type LeadIntakeResult = {
   assignedTo: string | null;
 };
 
-/** Thrown when the number is not a Bangladeshi mobile; callers map it to 4xx. */
+/** Thrown when the number cannot be resolved to a canonical phone identity. */
 export class InvalidLeadPhoneError extends Error {
   readonly code = "invalid_phone";
   constructor() {
-    super("সঠিক বাংলাদেশি মোবাইল নম্বর দিন");
+    super("সঠিক মোবাইল নম্বর দিন; বিদেশি নম্বরে country code (+...) দিন");
     this.name = "InvalidLeadPhoneError";
   }
 }
 
-/** Bangladesh-first: 01XXXXXXXXX / +8801XXXXXXXXX / 8801XXXXXXXXX -> 8801XXXXXXXXX. */
+/** Bangladesh local formats and explicit international country-code formats become canonical digits. */
 export function normalizeLeadPhone(raw: string): string {
   return primaryBangladeshPhone(raw) ?? (raw.replace(/[^\d+]/g, "") || raw.trim());
 }

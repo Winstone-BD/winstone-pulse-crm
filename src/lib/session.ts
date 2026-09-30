@@ -6,7 +6,7 @@ import { useAdminToken } from "@/lib/local-session";
 
 export const SIGNUP_DRAFT_KEY = "winstone.signup.draft";
 
-export type SignupDraft = { name: string; phone: string; requestedRole: "agent" | "coordinator" };
+export type SignupDraft = { name: string; phone: string; requestedRole: "agent" };
 
 export function saveSignupDraft(draft: SignupDraft) {
   try {
@@ -38,7 +38,7 @@ export async function ensureRegistered(fallbackName?: string) {
     data: {
       name,
       phone: draft?.phone || null,
-      requestedRole: draft?.requestedRole ?? "agent",
+      requestedRole: "agent",
     },
   });
   try {

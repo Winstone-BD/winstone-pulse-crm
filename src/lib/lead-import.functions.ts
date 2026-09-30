@@ -58,9 +58,8 @@ function stripFence(text: string): string {
 export const parseLeadFile = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ParseInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
-    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    const { requireLeadHub } = await import("@/lib/access.server");
+    requireLeadHub(data.adminToken);
 
     const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength > MAX_BYTES) {

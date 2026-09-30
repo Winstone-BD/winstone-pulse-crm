@@ -18,19 +18,19 @@ export type RoleSurface = {
 export const ROLE_SURFACES: Record<RoleKey, RoleSurface> = {
   authority: {
     label: "কর্তৃপক্ষ (HQ / আইটি)",
-    routes: ["/", "/hq", "/reports", "/system"],
+    routes: ["/", "/leadhub", "/hq", "/reports", "/system"],
     powers: [
       "পুরো ফ্লোরের ডেটা দেখা",
-      "লিড বিতরণ ও পুনঃবিতরণ",
+      "LeadHub PIN দিয়ে লিড বিতরণ",
       "কোটা ও সিস্টেম সেটিং",
       "অ্যাকাউন্ট অনুমোদন",
       "সার্ভিস বিল যাচাই ও পেআউট",
     ],
   },
   coordinator: {
-    label: "কোঅর্ডিনেটর",
-    routes: ["/", "/desk", "/dispatch", "/reports"],
-    powers: ["পুরো ফ্লোরের ডেটা দেখা", "লিড বিতরণ", "সাপোর্ট ইনবক্স"],
+    label: "পুরোনো টিম লিডার (এজেন্ট অ্যাক্সেস)",
+    routes: ["/", "/desk", "/reports"],
+    powers: ["নিজের লিড ও কল", "নিজের রিপোর্ট"],
   },
   agent: {
     label: "এজেন্ট",
@@ -39,10 +39,9 @@ export const ROLE_SURFACES: Record<RoleKey, RoleSurface> = {
   },
   sales_team_admin: {
     label: "সেল টিম অ্যাডমিন",
-    routes: ["/", "/desk", "/coach", "/dispatch", "/reports"],
+    routes: ["/", "/desk", "/coach", "/reports"],
     powers: [
       "এজেন্টের সব কাজ (দৈনিক কোটা সবার মতো)",
-      "কোঅর্ডিনেটর ডেক — শুধু হেড ডেটাবেজে লিড যোগ (বণ্টন/IT নয়)",
       "টিম সাপোর্ট ইনবক্স — পড়া, উত্তর, গুরুত্ব বদল",
     ],
   },
@@ -57,4 +56,4 @@ export const ROLE_SURFACES: Record<RoleKey, RoleSurface> = {
 export const INBOX_ROLES: RoleKey[] = ["authority", "coordinator", "sales_team_admin"];
 
 /** Roles that may dispatch leads. Support-inbox access never implies this. */
-export const DISPATCH_ROLES: RoleKey[] = ["authority", "coordinator"];
+export const DISPATCH_ROLES: RoleKey[] = ["authority"];

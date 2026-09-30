@@ -5,7 +5,7 @@ import { deckKpis } from "@/lib/lead-pool.functions";
 import { useDeckToken as useAdminToken } from "@/lib/local-session";
 import { GroupState, MetricGroup } from "@/components/crm/groups";
 
-/** Live Coordinator Deck KPIs — every number comes from the Lead Store. */
+/** Live LeadHub KPIs — every number comes from the canonical database. */
 export function DeckKpis() {
   const adminToken = useAdminToken();
   const fetchKpis = useServerFn(deckKpis);
@@ -24,7 +24,7 @@ export function DeckKpis() {
           loading={q.isLoading}
           error={q.isError}
           metrics={[
-            { label: "Total Head Leads", value: k?.totalStore },
+            { label: "Canonical Leads", value: k?.totalStore },
             { label: "Unassigned", value: k?.unassigned, tone: "warn" },
             { label: "Assigned", value: k?.assigned },
             { label: "Available Agents", value: k?.availableAgents },

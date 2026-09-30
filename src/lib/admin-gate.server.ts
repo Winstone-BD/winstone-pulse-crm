@@ -12,11 +12,12 @@ function sha(input: string) {
  * The surface the browser unlocked from decides which token is minted, so an HQ
  * session cannot be replayed against a mutating endpoint.
  */
-export type AdminScope = "full" | "hq";
+export type AdminScope = "full" | "hq" | "leadhub";
 
 const SCOPE_MESSAGE: Record<AdminScope, string> = {
   full: "winstone-admin:v1",
   hq: "winstone-hq:v1",
+  leadhub: "winstone-leadhub:v1",
 };
 
 /**
@@ -52,6 +53,15 @@ export async function pinMatchesLive(input: string): Promise<boolean> {
     if (timingSafeEqual(candidate, sha(stored))) ok = true;
   }
   return ok;
+}
+
+/** Dedicated LeadHub PIN, kept server-side and never shared with other boards. */
+export async function leadHubPinMatches(input: string): Promise<boolean> {
+  const expected = process.env["LEADHUB_PIN"] ?? process.env["COORDINATOR_DECK_PIN"];
+  const { vaultPinFor } = await import("@/lib/pin-vault.server");
+  const stored = await vaultPinFor("leadhub");
+  if (!expected && !stored) throw new Error("LEADHUB_PIN is not configured");
+  return [expected, stored].some((value) => Boolean(value) && timingSafeEqual(sha(input), sha(value as string)));
 }
 
 /** Opaque token handed to the browser after a successful PIN unlock. */

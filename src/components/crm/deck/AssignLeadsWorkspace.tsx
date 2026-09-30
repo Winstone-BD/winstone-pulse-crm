@@ -99,9 +99,15 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
   const byId = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
   const available = alloc.data?.available ?? 0;
   const valid = rows
-    .map((r) => ({ agentId: r.agentId, count: Number(r.count) || 0 }))
+    .map((r) => {
+      const agent = byId.get(r.agentId);
+      const capacity = agent && alloc.data ? Math.max(0, alloc.data.perAgent - agent.today) : 0;
+      return { agentId: r.agentId, count: Math.min(Number(r.count) || 0, capacity) };
+    })
     .filter((r) => r.agentId && r.count > 0);
+  const rawRequested = rows.reduce((sum, row) => sum + (Number(row.count) || 0), 0);
   const requested = valid.reduce((s, r) => s + r.count, 0);
+  const quotaExceeded = Math.max(0, rawRequested - requested);
   const shortage = Math.max(0, requested - available);
   const dupAgents = new Set(valid.map((r) => r.agentId)).size !== valid.length;
 
@@ -115,7 +121,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
     onSuccess: (res) => {
       const total = res.results.reduce((s, r) => s + r.assigned, 0);
       setLast(res.results);
-      toast.success(`${total} লিড অ্যাসাইন হয়েছে · Head Lead Data-তে বাকি ${res.available}`);
+      toast.success(`${total} লিড অ্যাসাইন হয়েছে · Canonical database-এ বাকি ${res.available}`);
       setRows([newRow()]);
       setRequestId(crypto.randomUUID());
       setConfirming(false);
@@ -137,7 +143,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       )}
       <header className="flex flex-wrap items-end gap-3">
         <div>
-          <h2 className="text-base font-semibold">Assign Leads</h2>
+          <h2 className="text-base font-semibold">Assign by Agent + Quantity</h2>
           <p className="text-xs text-muted-foreground">
             এজেন্ট বাছুন, সংখ্যা লিখুন — সবচেয়ে পুরোনো যোগ্য unassigned লিড আগে যাবে। ডুপ্লিকেট/ভুল নম্বর কখনো যাবে না।
           </p>
@@ -194,6 +200,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       </div>
 
       {dupAgents && <p className="text-xs text-destructive">একই এজেন্ট দুইবার বাছা হয়েছে — একটি সারিতে মোট সংখ্যা লিখুন।</p>}
+      {quotaExceeded > 0 && <p className="text-xs font-medium text-destructive">দৈনিক ৫০ quota-এর বাইরে {quotaExceeded}টি অনুরোধ বাদ যাবে।</p>}
       {shortage > 0 && (
         <p className="text-xs font-medium text-destructive">
           Shortage: {shortage} লিড কম আছে। যতগুলো যোগ্য আছে ততগুলোই যাবে, সারির ক্রমে।

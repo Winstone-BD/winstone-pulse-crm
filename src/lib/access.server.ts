@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
 
 import type { Database } from "@/integrations/supabase/types";
+import { adminTokenScope } from "@/lib/admin-gate.server";
 import { PROFILE_SAFE_COLUMNS, type SafeProfile } from "@/lib/profile-columns";
 
 export type Profile = SafeProfile;
@@ -62,9 +63,8 @@ async function userIdFromRequest(): Promise<string | null> {
  * signed-in agent or coordinator account. Everything else is anonymous.
  */
 export async function resolveCaller(adminToken?: string | null): Promise<Caller> {
-  const { adminTokenScope } = await import("@/lib/admin-gate.server");
   const pinScope = adminTokenScope(adminToken ?? null);
-  if (pinScope) {
+  if (pinScope === "full" || pinScope === "hq") {
     return {
       scope: "authority",
       profile: null,
@@ -88,25 +88,6 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
   const approval = (profile?.approval_status ?? "pending") as Caller["approval"];
   const approved = Boolean(profile) && approval === "approved" && Boolean(profile?.is_active);
 
-  // Coordinator Deck only: Gmail sign-in + Coordinator PIN token, bound to this
-  // user. Approved accounts keep their normal scope; nothing else is widened.
-  if (!approved && adminToken) {
-    const gate = await import("@/lib/coordinator-gate.server");
-    if (gate.isCoordinatorToken(adminToken) && gate.coordinatorTokenValid(adminToken, userId)) {
-      const email = await gate.googleEmailFor(userId);
-      if (email) {
-        return {
-          scope: "coordinator",
-          profile: null,
-          userId,
-          approval: "approved",
-          readOnly: false,
-          label: `Coordinator (${email})`,
-        };
-      }
-    }
-  }
-
   if (!profile) return { ...ANON, userId };
   if (!approved) {
     return { scope: "none", profile, userId, approval, readOnly: true };
@@ -114,11 +95,7 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
 
   return {
     scope:
-      profile.role === "admin"
-        ? "authority"
-        : profile.role === "team_leader"
-          ? "coordinator"
-          : "agent",
+      profile.role === "admin" ? "authority" : "agent",
     profile,
     userId,
     approval,
@@ -128,7 +105,7 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
 
 /** Authority or coordinator may dispatch leads. */
 export function canDispatch(caller: Caller) {
-  return caller.scope === "authority" || caller.scope === "coordinator";
+  return caller.scope === "authority";
 }
 
 /** Sell Team Admin desks (Abu Haidar). Agent scope + Coordinator Deck intake only. */
@@ -145,8 +122,6 @@ export function isSellTeamAdmin(caller: Pick<Caller, "scope" | "profile" | "read
  * distribute, change quotas, or touch IT/account/device settings.
  */
 export function deckAccess(caller: Caller): "full" | "intake" | "none" {
-  if (canDispatch(caller)) return "full";
-  if (isSellTeamAdmin(caller)) return "intake";
   return "none";
 }
 
@@ -160,6 +135,11 @@ export function requireDispatch(caller: Caller) {
 
 export function requireAuthority(caller: Caller) {
   if (caller.scope !== "authority") throw new Error("Master PIN required");
+}
+
+/** LeadHub has its own PIN scope; ordinary HQ/IT/Coordinator sessions do not inherit it. */
+export function requireLeadHub(token: string | null | undefined) {
+  if (adminTokenScope(token) !== "leadhub") throw new Error("LeadHub PIN required");
 }
 
 export const HQ_READ_ONLY =

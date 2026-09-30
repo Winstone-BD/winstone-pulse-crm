@@ -56,7 +56,7 @@ function PendingAccountActions() {
   const act = useMutation({
     mutationFn: (input: {
       profileId: string;
-      decision: "approve_agent" | "approve_coordinator" | "reject";
+      decision: "approve_agent" | "reject";
     }) => decide({ data: { adminToken: getAdminToken() ?? "", ...input } }),
     onMutate: (input) => setBusyId(input.profileId),
     onSuccess: async (_result, input) => {
@@ -103,7 +103,7 @@ function PendingAccountActions() {
             <p className="truncate text-xs font-semibold">{account.name}</p>
             <p className="truncate text-[11px] text-muted-foreground">
               {account.email ?? "ইমেইল নেই"} · চেয়েছেন{" "}
-              {account.requested_role === "team_leader" ? "কোঅর্ডিনেটর" : "এজেন্ট"}
+              এজেন্ট
             </p>
           </div>
           {done[account.id] ? (
@@ -138,17 +138,6 @@ function PendingAccountActions() {
                   <Check className="size-3.5" />
                 )}
                 এজেন্ট
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-9 text-xs"
-                disabled={busyId !== null}
-                onClick={() =>
-                  act.mutate({ profileId: account.id, decision: "approve_coordinator" })
-                }
-              >
-                কোঅর্ডিনেটর
               </Button>
               <Button
                 size="sm"

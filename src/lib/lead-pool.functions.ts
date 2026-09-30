@@ -2,18 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
- * The head lead database, reachable from both the IT Console and the Coordinator
- * Deck. The real work (duplicate protection, batched hand-out, shortage alert)
+ * The canonical lead database, reachable only through LeadHub Nexus.
+ * The real work (duplicate protection, batched hand-out, shortage alert)
  * lives in lead-pool.server.ts.
  */
 
 const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
 
 async function dispatcher(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireDispatch(caller);
-  return caller;
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { profile: null, label: "LeadHub Nexus" };
 }
 
 export type LeadPoolAgent = {
@@ -24,12 +23,11 @@ export type LeadPoolAgent = {
   today: number;
 };
 
-/** Deck read access: coordinators/authority, plus the Sell Team Admin (intake only). */
+/** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDeck } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  requireDeck(caller);
-  return caller;
+  const { requireLeadHub } = await import("@/lib/access.server");
+  requireLeadHub(adminToken);
+  return { profile: null, label: "LeadHub Nexus" };
 }
 
 const HeadLeadInput = z.object({
@@ -67,8 +65,6 @@ export const addHeadLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => HeadLeadInput.parse(input))
   .handler(async ({ data }): Promise<HeadLeadResult> => {
     const caller = await deckReader(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
     const { intakeLead, InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
     const { HEAD_DATABASE_SOURCE } = await import("@/lib/head-lead");
     const actorLabel = caller.profile
@@ -143,9 +139,7 @@ export const searchDeckLeads = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => SearchInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await deckReader(data.adminToken);
-    const { deckAccess } = await import("@/lib/access.server");
-    // The Sell Team Admin sees the head pool only — never other agents' queues.
-    const scope = deckAccess(caller) === "full" ? data.scope : "pool";
+    const scope = data.scope;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin
       .from("leads")
@@ -291,8 +285,6 @@ export const distributeLeadPool = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => DistributeInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await dispatcher(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
 
     const { distributeDailyLeads, saveDailyPlan, dhakaToday } = await import(
       "@/lib/lead-pool.server"
@@ -570,7 +562,7 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
       .update({
         assigned_to: agent.id,
         assigned_agent_id: agent.id,
-        assignment_source: "coordinator",
+        assignment_source: "leadhub",
         work_date: dhakaToday(),
       })
       .in("id", ids)
@@ -581,7 +573,7 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
     const moved = (updated ?? []).map((r) => r.id);
     if (moved.length) {
       await supabaseAdmin.from("lead_assignments").insert(
-        moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "coordinator_manual" })),
+        moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "leadhub_manual" })),
       );
       const { logAudit } = await import("@/lib/audit.server");
       await logAudit({
@@ -589,8 +581,8 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
         entityType: "lead",
         entityId: null,
         actorProfileId: caller.profile?.id ?? null,
-        actorLabel: caller.profile?.name ?? "IT Console",
-        metadata: { agentId: agent.id, count: moved.length, source: "coordinator_manual", leadIds: moved },
+        actorLabel: caller.label ?? "LeadHub Nexus",
+        metadata: { agentId: agent.id, count: moved.length, source: "leadhub_manual", leadIds: moved },
       });
     }
     return { assigned: moved.length, skipped: data.leadIds.length - moved.length };

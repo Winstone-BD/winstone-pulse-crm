@@ -25,7 +25,7 @@ type Draft = {
   employeeId: string;
   phone: string;
   password: string;
-  role: "agent" | "coordinator";
+  role: "agent";
 };
 
 const EMPTY: Draft = { name: "", employeeId: "", phone: "", password: "", role: "agent" };
@@ -136,18 +136,6 @@ export function StaffAccountsTable() {
           onChange={(e) => setDraft({ ...draft, password: e.target.value })}
         />
         <div className="flex gap-2">
-          <Select
-            value={draft.role}
-            onValueChange={(value) => setDraft({ ...draft, role: value as Draft["role"] })}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="agent">এজেন্ট</SelectItem>
-              <SelectItem value="coordinator">কোঅর্ডিনেটর</SelectItem>
-            </SelectContent>
-          </Select>
           <Button
             className="flex-1"
             disabled={

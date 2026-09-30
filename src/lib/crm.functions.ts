@@ -108,16 +108,17 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .object({
         pin: z.string().min(1).max(32),
         // Which board is being unlocked. HQ gets a read-only token.
-        surface: z.enum(["hq", "system"]).default("system"),
+        surface: z.enum(["hq", "system", "leadhub"]).default("system"),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatchesLive, mintAdminToken } = await import("@/lib/admin-gate.server");
-    if (!(await pinMatchesLive(data.pin))) return { ok: false as const };
+    const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
+    const matches = data.surface === "leadhub" ? await leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
+    if (!matches) return { ok: false as const };
     return {
       ok: true as const,
-      token: mintAdminToken(data.surface === "hq" ? "hq" : "full"),
+      token: mintAdminToken(data.surface === "hq" ? "hq" : data.surface === "leadhub" ? "leadhub" : "full"),
       readOnly: data.surface === "hq",
     };
   });
@@ -202,17 +203,16 @@ export const importLeads = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
-    const importer = await resolveCaller(data.adminToken ?? null);
-    requireDispatch(importer);
-    (await import("@/lib/access.server")).requireWrite(importer);
+    const { requireLeadHub } = await import("@/lib/access.server");
+    requireLeadHub(data.adminToken);
+    const importer = { profile: null as null, label: "LeadHub Nexus" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getLeadPhoneStatus } = await import("@/lib/lead-eligibility.server");
     const { appendCompanyLeadMetadata, extractBangladeshPhones } = await import(
       "@/lib/lead-phone"
     );
 
-    // Canonical flow: imports land in the HEAD LEAD STORE as UNASSIGNED. The
+    // Canonical flow: imports land in LeadHub as UNASSIGNED. The
     // legacy autoAssign flag is accepted for old clients but ignored.
     let agents: { id: string }[] = [];
     if (false as boolean) {
@@ -302,14 +302,14 @@ export const importLeads = createServerFn({ method: "POST" })
       action: "lead_imported",
       entityType: "lead",
       actorProfileId: importer.profile?.id ?? null,
-      actorLabel: importer.profile?.name ?? "Authority PIN",
+        actorLabel: importer.label,
       metadata: {
         incoming,
         excludedAlreadyWorkedOrAssigned,
         excludedDuplicate,
         eligibleNew,
         autoAssign: false,
-        destination: "head_lead_store",
+        destination: "canonical_lead_database",
         source: "Winstone Company",
         leadType: "Company Lead",
       },

@@ -17,7 +17,7 @@
  *
  *   scope         leads read   dispatch   quota edit   IT console   support inbox
  *   authority     whole floor  yes        yes          yes          yes
- *   coordinator   whole floor  yes        no           no           yes
+ *   coordinator   own only     no         no           no           yes
  *   agent         own only     no         no           no           own tickets
  *   sales_team_admin (agent + inbox owner)             no           yes
  *   none          nothing      no         no           no           no

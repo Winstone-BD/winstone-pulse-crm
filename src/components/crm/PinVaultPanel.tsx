@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { getPinVault, revealPinValue, rotatePinValue } from "@/lib/pin-vault.functions";
 import { useAdminToken } from "@/lib/local-session";
 
-type Surface = "master" | "it_console";
+type Surface = "master" | "it_console" | "leadhub";
 
 const SURFACE_LABEL: Record<string, string> = {
   master: "মাস্টার পিন",
   it_console: "আইটি কনসোল পিন",
+  leadhub: "LeadHub Nexus পিন",
 };
 
 function when(value: string | null) {
@@ -153,6 +154,7 @@ export function PinVaultPanel() {
           >
             <option value="master">মাস্টার পিন</option>
             <option value="it_console">আইটি কনসোল পিন</option>
+            <option value="leadhub">LeadHub Nexus পিন</option>
           </select>
           <Input
             type="password"
