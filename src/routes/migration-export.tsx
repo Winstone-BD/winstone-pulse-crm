@@ -50,7 +50,9 @@ function toCsv(rows: Array<Record<string, unknown>>) {
   const cols = Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
   const cell = (v: unknown) => {
     if (v === null || v === undefined) return "";
-    const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+    const raw = typeof v === "object" ? JSON.stringify(v) : String(v);
+    // Neutralize spreadsheet formulas planted in user-entered text.
+    const s = /^[=+\-@\t\r]/.test(raw) && !/^-?\d+(\.\d+)?$/.test(raw) ? `'${raw}` : raw;
     return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [cols.join(","), ...rows.map((r) => cols.map((c) => cell(r[c])).join(","))].join("\n");
