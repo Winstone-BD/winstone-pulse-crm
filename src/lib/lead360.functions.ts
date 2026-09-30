@@ -29,6 +29,11 @@ const SearchInput = z.object({
   followUpStatus: z.enum(["any", "upcoming", "overdue", "none"]).default("any"),
   from: z.string().date().nullable().optional(),
   to: z.string().date().nullable().optional(),
+  requirement: z.string().trim().max(120).nullable().optional(),
+  reason: z.string().trim().max(60).nullable().optional(),
+  eventKind: z.string().trim().max(60).nullable().optional(),
+  cursor: z.number().int().min(0).default(0),
+  pageSize: z.number().int().min(10).max(200).default(40),
 });
 
 export const searchLead360 = createServerFn({ method: "POST" })
@@ -38,14 +43,35 @@ export const searchLead360 = createServerFn({ method: "POST" })
     try {
       db = await authority(data.adminToken);
     } catch {
-      return { locked: true as const, rows: [] };
+      return { locked: true as const, rows: [], total: 0, nextCursor: null };
     }
     const { normalizeBangladeshPhone } = await import("@/lib/lead-phone");
     let q = db
       .from("leads")
-      .select("id, name, phone_number, source, reference_by, assigned_to, status, created_at, serial_no")
+      .select("id, name, phone_number, source, reference_by, assigned_to, status, created_at, serial_no", { count: "exact" })
       .order("updated_at", { ascending: false })
-      .limit(40);
+      .order("id")
+      .range(data.cursor, data.cursor + data.pageSize - 1);
+    // Filters answered by other history tables narrow to a lead-id set first.
+    const idSets: string[][] = [];
+    if (data.requirement) {
+      idSets.push((await all<{ lead_id: string }>((a, b) => db.from("call_reports").select("lead_id").ilike("requirement", `%${data.requirement!.replace(/[%,()]/g, " ")}%`).range(a, b))).map((r) => r.lead_id));
+    }
+    if (data.reason) {
+      const [a1, a2] = await Promise.all([
+        all<{ lead_id: string }>((a, b) => db.from("call_reports").select("lead_id").eq("no_follow_up_reason", data.reason!).range(a, b)),
+        all<{ lead_id: string | null }>((a, b) => db.from("follow_up_events").select("lead_id").eq("reason_code", data.reason!).range(a, b)),
+      ]);
+      idSets.push([...a1.map((r) => r.lead_id), ...a2.map((r) => r.lead_id).filter(Boolean) as string[]]);
+    }
+    if (data.eventKind) {
+      idSets.push((await all<{ lead_id: string | null }>((a, b) => db.from("lead_events").select("lead_id").eq("kind", data.eventKind!).range(a, b))).map((r) => r.lead_id).filter(Boolean) as string[]);
+    }
+    if (idSets.length) {
+      const inter = idSets.reduce((acc, set) => { const s2 = new Set(set); return acc.filter((x) => s2.has(x)); }, [...new Set(idSets[0])]);
+      if (!inter.length) return { locked: false as const, rows: [], total: 0, nextCursor: null };
+      q = q.in("id", inter.slice(0, 1000));
+    }
     const term = data.q.replace(/[%,()]/g, " ").trim();
     if (term) {
       const phone = normalizeBangladeshPhone(term);
@@ -59,13 +85,15 @@ export const searchLead360 = createServerFn({ method: "POST" })
     if (data.source) q = q.eq("source", data.source);
     if (data.from) q = q.gte("created_at", new Date(`${data.from}T00:00:00+06:00`).toISOString());
     if (data.to) q = q.lte("created_at", new Date(`${data.to}T23:59:59+06:00`).toISOString());
-    const { data: leads, error } = await q;
+    const { data: leads, error, count } = await q;
     if (error) throw new Error(error.message);
     const ids = (leads ?? []).map((l) => l.id);
-    if (!ids.length) return { locked: false as const, rows: [] };
-    const [{ data: reps }, { data: fus }] = await Promise.all([
-      db.from("call_reports").select("lead_id, connected").in("lead_id", ids).limit(5000),
-      db.from("follow_up_events").select("lead_id, status, scheduled_at").in("lead_id", ids).limit(5000),
+    const total = count ?? 0;
+    const nextCursor = data.cursor + ids.length < total ? data.cursor + ids.length : null;
+    if (!ids.length) return { locked: false as const, rows: [], total, nextCursor: null };
+    const [reps, fus] = await Promise.all([
+      all<{ lead_id: string; connected: boolean | null }>((a, b) => db.from("call_reports").select("lead_id, connected").in("lead_id", ids).order("id").range(a, b)),
+      all<{ lead_id: string | null; status: string; scheduled_at: string }>((a, b) => db.from("follow_up_events").select("lead_id, status, scheduled_at").in("lead_id", ids).order("id").range(a, b)),
     ]);
     const now = Date.now();
     const rows = (leads ?? []).map((l) => {
@@ -90,6 +118,8 @@ export const searchLead360 = createServerFn({ method: "POST" })
     return {
       locked: false as const,
       rows: data.followUpStatus === "any" ? rows : rows.filter((r) => r.fuState === data.followUpStatus),
+      total,
+      nextCursor,
     };
   });
 
