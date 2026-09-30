@@ -147,6 +147,17 @@ export const Route = createFileRoute("/api/public/agent/report")({
             return json({ error: "এই লিড আপনার তালিকায় নেই" }, 403);
           }
 
+          if (body.recording_id) {
+            const { data: rec } = await supabaseAdmin
+              .from("call_recordings")
+              .select("agent_id, lead_id")
+              .eq("id", body.recording_id)
+              .maybeSingle();
+            if (!rec || rec.agent_id !== caller.profile.id || (rec.lead_id && rec.lead_id !== body.lead_id)) {
+              return json({ error: "এই রেকর্ডিং আপনার কলের নয়" }, 403);
+            }
+          }
+
           const report = await openCallReport({
             leadId: body.lead_id,
             agentId: caller.profile.id,
