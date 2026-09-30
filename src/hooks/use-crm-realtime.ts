@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 
-const TABLES = ["leads", "call_recordings", "whatsapp_interactions", "profiles"] as const;
+const TABLES = ["leads", "call_recordings", "whatsapp_interactions", "profiles", "it_notices", "it_notice_recipients", "it_notice_replies"] as const;
 
 /** Keeps every open screen in sync with the backend as calls and chats land. */
 export function useCrmRealtime() {
@@ -17,6 +17,7 @@ export function useCrmRealtime() {
     for (const table of TABLES) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, () => {
         void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
+        if (table.startsWith("it_notice")) void queryClient.invalidateQueries({ queryKey: ["it-notice-board"] });
       });
     }
 

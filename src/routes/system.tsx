@@ -26,6 +26,8 @@ import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { SystemCustomizer } from "@/components/crm/SystemCustomizer";
 import { SystemNoticeBar } from "@/components/crm/SystemNoticeBar";
+import { NoticeBoardPanel } from "@/components/crm/NoticeBoardPanel";
+import { SystemUpdateReport } from "@/components/crm/SystemUpdateReport";
 import { CallOpsPanel } from "@/components/crm/CallOpsPanel";
 import { SyncedCallsPanel } from "@/components/crm/SyncedCallsPanel";
 import { DayCallExportPanel } from "@/components/crm/DayCallExportPanel";
@@ -120,6 +122,10 @@ function SystemBoard() {
       </div>
 
       <SystemNoticeBar surface="it" />
+
+      <NoticeBoardPanel composer />
+
+      <SystemUpdateReport />
 
       <CommandAgentPanel surface="system" />
 
