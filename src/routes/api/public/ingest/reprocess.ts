@@ -34,14 +34,30 @@ export const Route = createFileRoute("/api/public/ingest/reprocess")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { processRecording } = await import("@/lib/call-intel.server");
 
+        // Devices act as their agent: only that agent's own recordings. Admin
+        // devices and the server secret keep full access.
+        const ownerOnly =
+          caller.kind === "device" && caller.profile.role !== "admin" ? caller.profile.id : null;
+
         let ids: string[];
         if (parsed.data.recording_id) {
+          if (ownerOnly) {
+            const { data: own } = await supabaseAdmin
+              .from("call_recordings")
+              .select("id")
+              .eq("id", parsed.data.recording_id)
+              .eq("agent_id", ownerOnly)
+              .maybeSingle();
+            if (!own) return json({ error: "Forbidden" }, 403);
+          }
           ids = [parsed.data.recording_id];
         } else {
-          const { data, error } = await supabaseAdmin
+          let query = supabaseAdmin
             .from("call_recordings")
             .select("id")
-            .not("audio_url", "is", null)
+            .not("audio_url", "is", null);
+          if (ownerOnly) query = query.eq("agent_id", ownerOnly);
+          const { data, error } = await query
             .or("sync_status.eq.failed,transcription_text.is.null")
             .order("created_at", { ascending: false })
             .limit(parsed.data.limit);

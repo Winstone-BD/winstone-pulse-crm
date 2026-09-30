@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveSignInEmail } from "@/lib/accounts.functions";
+import { signInWithIdentifier } from "@/lib/accounts.functions";
 import { ensureRegistered, saveSignupDraft } from "@/lib/session";
 
 const SearchSchema = z.object({
@@ -60,11 +60,10 @@ function AuthPage() {
 
   const signIn = useMutation({
     mutationFn: async () => {
-      const loginId = email.trim();
-      const resolved = loginId.includes("@")
-        ? loginId
-        : (await resolveSignInEmail({ data: { identifier: loginId } })).email;
-      const { error } = await supabase.auth.signInWithPassword({ email: resolved, password });
+      const tokens = await signInWithIdentifier({
+        data: { identifier: email.trim(), password },
+      });
+      const { error } = await supabase.auth.setSession(tokens);
       if (error) throw new Error(error.message);
       await ensureRegistered(name);
     },

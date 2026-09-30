@@ -6,7 +6,8 @@ export const Route = createFileRoute("/api/public/tmp-bulk-import")({
     handlers: {
       POST: async ({ request }) => {
         const secret = request.headers.get("x-import-secret") ?? "";
-        if (secret !== "tmp-import-27sep-2026") {
+        const expected = process.env["TMP_BULK_IMPORT_SECRET"];
+        if (!expected || secret.length !== expected.length || secret !== expected) {
           return Response.json({ error: "unauthorized" }, { status: 401 });
         }
         const body = (await request.json()) as {

@@ -318,11 +318,14 @@ export async function searchArticles(query: string, limit = 5) {
     if (data?.length) return data;
   }
 
+  // Strip PostgREST filter syntax and LIKE wildcards before building the filter.
+  const safeLike = trimmed.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 100);
+  if (!safeLike) return [];
   const { data } = await supabaseAdmin
     .from("support_articles")
     .select("id, slug, title, summary, body_markdown, tags, updated_at")
     .eq("status", "published")
-    .or(`title.ilike.%${trimmed}%,body_markdown.ilike.%${trimmed}%`)
+    .or(`title.ilike.%${safeLike}%,body_markdown.ilike.%${safeLike}%`)
     .limit(limit);
   return data ?? [];
 }

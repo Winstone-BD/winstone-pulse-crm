@@ -142,7 +142,7 @@ async function emailRecipients(
       else skipped += 1;
     } catch (error) {
       failed += 1;
-      console.error("service bill alert email failed", email, error);
+      console.error("service bill alert email failed", error instanceof Error ? error.message : "unknown error");
     }
   }
   return { sent, skipped, failed };

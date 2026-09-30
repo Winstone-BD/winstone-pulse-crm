@@ -69,7 +69,10 @@ function CreditsBoard() {
       ...report.daily.map((d) => `${d.day},${d.calls},${d.credits}`),
       "",
       "এজেন্ট,কাজের সংখ্যা,অনুমানিত ক্রেডিট",
-      ...report.agents.map((a) => `"${a.name}",${a.calls},${a.credits}`),
+      ...report.agents.map((a) => {
+        const safe = /^[=+\-@\t\r]/.test(a.name) ? `'${a.name}` : a.name;
+        return `"${safe.replace(/"/g, '""')}",${a.calls},${a.credits}`;
+      }),
     ].join("\r\n");
     const blob = new Blob([`\uFEFF${lines}`], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);

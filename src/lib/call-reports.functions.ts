@@ -524,10 +524,12 @@ export const syncOfflineCallEvent = createServerFn({ method: "POST" })
 
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, call_attempts, last_call_at, notes")
+      .select("id, call_attempts, last_call_at, notes, assigned_to, assigned_agent_id")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
+    const owner = lead.assigned_to ?? lead.assigned_agent_id;
+    if (me.role !== "admin" && owner !== me.id) throw new Error("এই লিড আপনার নয়");
 
     const trimmed = data.notes?.trim();
     await supabaseAdmin
