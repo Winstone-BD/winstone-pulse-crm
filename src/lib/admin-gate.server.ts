@@ -56,10 +56,12 @@ export async function pinMatchesLive(input: string): Promise<boolean> {
 }
 
 /** Dedicated LeadHub PIN, kept server-side and never shared with other boards. */
-export function leadHubPinMatches(input: string): boolean {
+export async function leadHubPinMatches(input: string): Promise<boolean> {
   const expected = process.env["LEADHUB_PIN"] ?? process.env["COORDINATOR_DECK_PIN"];
-  if (!expected) throw new Error("LEADHUB_PIN is not configured");
-  return timingSafeEqual(sha(input), sha(expected));
+  const { vaultPinFor } = await import("@/lib/pin-vault.server");
+  const stored = await vaultPinFor("leadhub");
+  if (!expected && !stored) throw new Error("LEADHUB_PIN is not configured");
+  return [expected, stored].some((value) => Boolean(value) && timingSafeEqual(sha(input), sha(value as string)));
 }
 
 /** Opaque token handed to the browser after a successful PIN unlock. */

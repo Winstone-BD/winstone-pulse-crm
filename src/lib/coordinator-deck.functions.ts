@@ -140,6 +140,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
 
     const agents = new Map((await pool.activeAgents()).map((a) => [a.id, a]));
     const today = pool.dhakaToday();
+    const held = await pool.assignedTodayByAgent(today);
+    const plan = await pool.dailyPlan();
     const results: { agentId: string; requested: number; assigned: number }[] = [];
 
     for (const row of data.rows) {
@@ -148,9 +150,11 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
         results.push({ agentId: row.agentId, requested: row.count, assigned: 0 });
         continue;
       }
+      const capacity = Math.max(0, plan.perAgent - (held.get(agent.id) ?? 0));
+      const targetCount = Math.min(row.count, capacity);
       let moved: string[] = [];
-      for (let attempt = 0; attempt < 4 && moved.length < row.count; attempt++) {
-        const need = row.count - moved.length;
+      for (let attempt = 0; attempt < 4 && moved.length < targetCount; attempt++) {
+        const need = targetCount - moved.length;
         const { data: candidates, error } = await supabaseAdmin
           .from("leads")
           .select("id, phone_number")
@@ -185,7 +189,7 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
       }
       if (moved.length) {
         await supabaseAdmin.from("lead_assignments").insert(
-          moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "coordinator_count" })),
+          moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "leadhub_count" })),
         );
       }
       await logAudit({

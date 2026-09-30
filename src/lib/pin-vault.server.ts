@@ -10,7 +10,7 @@
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
-export type PinSurface = "master" | "it_console";
+export type PinSurface = "master" | "it_console" | "leadhub";
 
 export const PIN_SURFACES: { surface: PinSurface; label: string; used: string }[] = [
   {
@@ -19,6 +19,7 @@ export const PIN_SURFACES: { surface: PinSurface; label: string; used: string }[
     used: "Executive HQ (শুধু দেখা) এবং আইটি কনসোল আনলক",
   },
   { surface: "it_console", label: "আইটি কনসোল পিন", used: "শুধু আইটি কনসোলের পরিবর্তন" },
+  { surface: "leadhub", label: "LeadHub Nexus পিন", used: "শুধু Canonical Lead Database ও assignment" },
 ];
 
 function key() {
@@ -67,6 +68,16 @@ export async function vaultPins(): Promise<string[]> {
       .filter((value): value is string => Boolean(value));
   } catch {
     return [];
+  }
+}
+
+export async function vaultPinFor(surface: PinSurface): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.from("pin_vault").select("secret_cipher").eq("surface", surface).maybeSingle();
+    return data?.secret_cipher ? decrypt(data.secret_cipher) : null;
+  } catch {
+    return null;
   }
 }
 

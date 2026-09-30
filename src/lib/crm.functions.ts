@@ -114,7 +114,7 @@ export const unlockAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
-    const matches = data.surface === "leadhub" ? leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
+    const matches = data.surface === "leadhub" ? await leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
     if (!matches) return { ok: false as const };
     return {
       ok: true as const,
@@ -212,7 +212,7 @@ export const importLeads = createServerFn({ method: "POST" })
       "@/lib/lead-phone"
     );
 
-    // Canonical flow: imports land in the HEAD LEAD STORE as UNASSIGNED. The
+    // Canonical flow: imports land in LeadHub as UNASSIGNED. The
     // legacy autoAssign flag is accepted for old clients but ignored.
     let agents: { id: string }[] = [];
     if (false as boolean) {
@@ -302,14 +302,14 @@ export const importLeads = createServerFn({ method: "POST" })
       action: "lead_imported",
       entityType: "lead",
       actorProfileId: importer.profile?.id ?? null,
-      actorLabel: importer.profile?.name ?? "Authority PIN",
+        actorLabel: importer.label,
       metadata: {
         incoming,
         excludedAlreadyWorkedOrAssigned,
         excludedDuplicate,
         eligibleNew,
         autoAssign: false,
-        destination: "head_lead_store",
+        destination: "canonical_lead_database",
         source: "Winstone Company",
         leadType: "Company Lead",
       },

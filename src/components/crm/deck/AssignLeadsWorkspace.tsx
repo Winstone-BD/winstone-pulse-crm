@@ -105,7 +105,9 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       return { agentId: r.agentId, count: Math.min(Number(r.count) || 0, capacity) };
     })
     .filter((r) => r.agentId && r.count > 0);
+  const rawRequested = rows.reduce((sum, row) => sum + (Number(row.count) || 0), 0);
   const requested = valid.reduce((s, r) => s + r.count, 0);
+  const quotaExceeded = Math.max(0, rawRequested - requested);
   const shortage = Math.max(0, requested - available);
   const dupAgents = new Set(valid.map((r) => r.agentId)).size !== valid.length;
 
@@ -198,6 +200,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       </div>
 
       {dupAgents && <p className="text-xs text-destructive">একই এজেন্ট দুইবার বাছা হয়েছে — একটি সারিতে মোট সংখ্যা লিখুন।</p>}
+      {quotaExceeded > 0 && <p className="text-xs font-medium text-destructive">দৈনিক ৫০ quota-এর বাইরে {quotaExceeded}টি অনুরোধ বাদ যাবে।</p>}
       {shortage > 0 && (
         <p className="text-xs font-medium text-destructive">
           Shortage: {shortage} লিড কম আছে। যতগুলো যোগ্য আছে ততগুলোই যাবে, সারির ক্রমে।

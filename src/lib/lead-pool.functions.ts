@@ -285,8 +285,6 @@ export const distributeLeadPool = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => DistributeInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await dispatcher(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
 
     const { distributeDailyLeads, saveDailyPlan, dhakaToday } = await import(
       "@/lib/lead-pool.server"
@@ -564,7 +562,7 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
       .update({
         assigned_to: agent.id,
         assigned_agent_id: agent.id,
-        assignment_source: "coordinator",
+        assignment_source: "leadhub",
         work_date: dhakaToday(),
       })
       .in("id", ids)
@@ -575,7 +573,7 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
     const moved = (updated ?? []).map((r) => r.id);
     if (moved.length) {
       await supabaseAdmin.from("lead_assignments").insert(
-        moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "coordinator_manual" })),
+        moved.map((id) => ({ lead_id: id, from_agent_id: null, to_agent_id: agent.id, source: "leadhub_manual" })),
       );
       const { logAudit } = await import("@/lib/audit.server");
       await logAudit({
@@ -583,8 +581,8 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
         entityType: "lead",
         entityId: null,
         actorProfileId: caller.profile?.id ?? null,
-        actorLabel: caller.profile?.name ?? "IT Console",
-        metadata: { agentId: agent.id, count: moved.length, source: "coordinator_manual", leadIds: moved },
+        actorLabel: caller.label ?? "LeadHub Nexus",
+        metadata: { agentId: agent.id, count: moved.length, source: "leadhub_manual", leadIds: moved },
       });
     }
     return { assigned: moved.length, skipped: data.leadIds.length - moved.length };
