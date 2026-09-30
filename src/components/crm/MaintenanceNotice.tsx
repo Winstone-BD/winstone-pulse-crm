@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { Lock, ShieldAlert } from "lucide-react";
+import { Lock, LogIn, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
 import { MAINTENANCE_FEE_LABEL, dhakaTime } from "@/lib/maintenance-rules";
