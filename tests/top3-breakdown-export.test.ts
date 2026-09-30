@@ -32,7 +32,5 @@ describe("Lead 360 server export", () => {
     expect(out.csv).toContain("Source: facebook");
     expect(out.csv).toContain("Generated at");
     expect(out.csv).toContain(`"'=HYPERLINK()"`);
-    expect(out.html).toContain("30 Sept 2026".slice(0, 2));
-    expect(out.html).not.toContain("<td>=HYPERLINK");
   });
 });

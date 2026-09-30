@@ -131,7 +131,7 @@ const FILTER_LABELS: Record<string, string> = { q: "Search", agentId: "Agent", s
 export const exportLead360Search = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => SearchInput.parse(i))
   .handler(async ({ data }) => {
-    const rows: Awaited<ReturnType<typeof runLead360Search>>["rows"] = [];
+    const rows: import("@/lib/lead360-export").ExportRow[] = [];
     for (let c: number | null = 0; c !== null; ) {
       const page = await runLead360Search({ ...data, cursor: c, pageSize: 200 });
       if (page.locked) return { locked: true as const };
