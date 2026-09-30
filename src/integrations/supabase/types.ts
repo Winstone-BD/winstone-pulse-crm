@@ -476,6 +476,69 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          agent_id: string | null
+          amount_usd: number | null
+          area: string | null
+          booked_at: string
+          created_at: string
+          created_by: string
+          id: string
+          lead_id: string
+          notes: string | null
+          project: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          amount_usd?: number | null
+          area?: string | null
+          booked_at?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          project?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          amount_usd?: number | null
+          area?: string | null
+          booked_at?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          project?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_processing_jobs: {
         Row: {
           attempts: number
@@ -1864,6 +1927,7 @@ export type Database = {
       leads: {
         Row: {
           address: string | null
+          area: string | null
           assigned_agent_id: string | null
           assigned_to: string | null
           assignment_source: string | null
@@ -1896,6 +1960,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          area?: string | null
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null
@@ -1928,6 +1993,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          area?: string | null
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null

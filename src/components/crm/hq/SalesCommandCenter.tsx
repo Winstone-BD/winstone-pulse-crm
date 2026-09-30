@@ -18,6 +18,7 @@ import type { DrillSpec } from "@/components/crm/HqDrillSheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiteVisitsPanel } from "@/components/crm/hq/SiteVisitsPanel";
 import { ObjectionDemandPanel } from "@/components/crm/hq/ObjectionDemandPanel";
+import { BookingsPanel } from "@/components/crm/hq/BookingsPanel";
 import { getCommandCenterFeed } from "@/lib/command-center.functions";
 import { computeCommandCenter, presetRange, type CcFilters } from "@/lib/command-center";
 import type { CallRecording, Lead, Profile } from "@/lib/crm-data";
@@ -351,6 +352,8 @@ export function SalesCommandCenter({
       <ObjectionDemandPanel reports={feed.data?.reports ?? []} filters={{ ...range, agentId, project }} onDrill={drill} />
 
       <SiteVisitsPanel leads={leads} fromDay={range.fromDay} toDay={range.toDay} agentId={agentId} />
+
+      <BookingsPanel leads={leads} fromDay={range.fromDay} toDay={range.toDay} agentId={agentId} />
     </div>
   );
 }
