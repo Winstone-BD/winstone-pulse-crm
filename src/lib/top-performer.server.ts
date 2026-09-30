@@ -8,6 +8,21 @@
  */
 import { dhakaInstant, dhakaParts } from "@/lib/shift.server";
 
+/** Pure ranking used by the daily board: highest displayed score ranks first. */
+export function rankPerformers(lines: PerformerLine[]): PerformerLine[] {
+  return [...lines].sort(
+    (a, b) =>
+      // The board sorts by the score everyone sees on the card — biggest first.
+      b.score - a.score ||
+      b.completionPercent - a.completionPercent ||
+      b.connected - a.connected ||
+      b.reports - a.reports ||
+      b.talkMinutes - a.talkMinutes ||
+      a.name.localeCompare(b.name, "bn"),
+  );
+}
+
+
 /** Dhaka minute-of-day when the homepage reveals the winner (5:30 pm). */
 export const REVEAL_MINUTES = 17 * 60 + 30;
 
@@ -134,7 +149,7 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
     return {
       reason,
       gap: `কোটার ${line.completionPercent}% শেষ — বাকি ${Math.max(0, line.targetQuota - line.completed)}টি`,
-      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় নিজের কোটার শতাংশে",
+      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় দেখানো স্কোরে, বেশি স্কোর আগে",
     };
   }
   if (reportGap > 0) {
@@ -285,25 +300,15 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     };
   });
 
-  const ranked = [...lines].sort(
-    (a, b) =>
-      // Quota-normalised completion first: finishing your own list is the job.
-      b.completionPercent - a.completionPercent ||
-      b.fairScore - a.fairScore ||
-      b.score - a.score ||
-      b.connected - a.connected ||
-      b.reports - a.reports ||
-      b.talkMinutes - a.talkMinutes ||
-      a.name.localeCompare(b.name, "bn"),
-  );
+  const ranked = rankPerformers(lines);
   const isActive = (line: PerformerLine) => line.score > 0 || line.completed > 0;
   const activeRanked = ranked.filter(isActive);
-  const leaderCompletion = activeRanked[0]?.completionPercent ?? 0;
+  const leaderScore = activeRanked[0]?.score ?? 0;
   const detailed = ranked.map((line, index): RankedPerformer => ({
     ...line,
     rank: index + 1,
-    // Gap is expressed in the same normalised percentage everyone is ranked on.
-    gapFromLeader: Math.max(0, leaderCompletion - line.completionPercent),
+    // Gap is expressed in the same score everyone is ranked on.
+    gapFromLeader: Math.max(0, leaderScore - line.score),
     ...performerInsight(line),
   }));
   const topThree = detailed.filter(isActive).slice(0, 3);
