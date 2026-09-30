@@ -13,7 +13,7 @@ export const newsFeed = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const m = await s();
     const c = await m.newsCaller(data.adminToken);
-    return { scope: c.scope, ...(await m.listNews(c, { category: data.category ?? null, includeHidden: data.includeHidden, cursor: data.cursor ?? null, limit: 20 })) };
+    return { scope: c.scope, ...(await m.listNews(c, { category: data.category ?? null, includeHidden: data.includeHidden === true, cursor: data.cursor ?? null, limit: 20 })) };
   });
 
 export const newsPublishManual = createServerFn({ method: "POST" })
