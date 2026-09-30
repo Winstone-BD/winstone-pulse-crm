@@ -435,6 +435,11 @@ export async function submitCallReport(input: {
       next_action: input.nextAction ?? null,
       no_follow_up_reason: input.followUpAt ? null : (input.noFollowUpReason ?? null),
       smart_reasons: input.smartReasons ?? null,
+      evaluation_answers: answers,
+      evaluation_score: evaluation?.score ?? null,
+      evaluation_model: evaluation ? EVALUATION_MODEL : null,
+      follow_up_priority: evaluation?.priority ?? null,
+      next_best_action: evaluation?.nextAction ?? null,
       submitted_at: new Date().toISOString(),
     })
     .eq("id", input.reportId)
