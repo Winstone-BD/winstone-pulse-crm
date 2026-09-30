@@ -21,6 +21,7 @@ import {
   PanelLeftOpen,
   Network,
   Newspaper,
+  MapPin,
   PhoneCall,
   Server,
   ShieldCheck,
