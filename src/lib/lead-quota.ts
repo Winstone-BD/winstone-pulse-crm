@@ -1,7 +1,7 @@
 /**
  * Per-person daily lead quota.
  *
- * Everybody on the floor gets the standard daily round (25 by default, set in
+ * Everybody on the floor gets the standard daily round (50 by default, set in
  * the IT Console). A few desks are deliberately lighter — the Sell Team Admin
  * carries admin duties alongside calling — so they receive a smaller quota.
  *
@@ -11,7 +11,7 @@
  */
 
 /** Fallback round size when no plan is stored. */
-export const DEFAULT_DAILY_QUOTA = 25;
+export const DEFAULT_DAILY_QUOTA = 50;
 
 /** Agent ID → fixed daily quota, regardless of the floor-wide round size. */
 // Empty since 2026-09-28: every approved active agent, including Haidar

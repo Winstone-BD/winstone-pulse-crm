@@ -458,7 +458,7 @@ export async function dailyPlan(): Promise<{ perAgent: number; lastRunDate: stri
     .eq("id", "lead_pool_daily")
     .maybeSingle();
   const state = (data?.data ?? {}) as { perAgent?: number; lastRunDate?: string };
-  return { perAgent: state.perAgent ?? 25, lastRunDate: state.lastRunDate ?? null };
+  return { perAgent: state.perAgent ?? (await import("@/lib/lead-quota")).DEFAULT_DAILY_QUOTA, lastRunDate: state.lastRunDate ?? null };
 }
 
 export async function saveDailyPlan(input: { perAgent: number; lastRunDate?: string | null }) {
