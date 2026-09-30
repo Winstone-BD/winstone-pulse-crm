@@ -7,22 +7,52 @@ import { MarkdownView } from "@/components/crm/MarkdownView";
 import { listPublishedDocs, readPublishedDoc } from "@/lib/docs.functions";
 
 export const Route = createFileRoute("/docs_/$slug")({
-  head: () => ({
-    meta: [
-      { title: "নির্দেশিকা — Winstone CRM ডকুমেন্টেশন" },
-      {
-        name: "description",
-        content: "Winstone Connect CRM-এর একটি নির্দেশিকা পাতা: ধাপে ধাপে ব্যবহারের নিয়ম।",
-      },
-      { property: "og:title", content: "নির্দেশিকা — Winstone CRM ডকুমেন্টেশন" },
-      {
-        property: "og:description",
-        content: "কল, রিপোর্ট, ফলো-আপ ও এইচকিউ ব্যবহারের নিয়ম।",
-      },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  loader: async ({ params }) => {
+    try {
+      const doc = await readPublishedDoc({ data: { slug: params.slug } });
+      return { title: doc?.title ?? null, summary: doc?.summary ?? null };
+    } catch {
+      return { title: null, summary: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const title = loaderData?.title
+      ? `${loaderData.title} — Winstone CRM ডকুমেন্টেশন`
+      : "নির্দেশিকা — Winstone CRM ডকুমেন্টেশন";
+    const description =
+      loaderData?.summary ||
+      (loaderData?.title
+        ? `${loaderData.title}: Winstone CRM ব্যবহারের ধাপে ধাপে নির্দেশিকা।`
+        : "Winstone Connect CRM-এর একটি নির্দেশিকা পাতা: ধাপে ধাপে ব্যবহারের নিয়ম।");
+    const url = `https://crm1.winstonebd.com/docs/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: loaderData?.title
+        ? [
+            {
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Article",
+                headline: loaderData.title,
+                name: loaderData.title,
+                description,
+                url,
+              }),
+            },
+          ]
+        : [],
+    };
+  },
   errorComponent: () => (
     <AppShell>
       <p className="text-sm text-destructive">পাতাটি খোলা যায়নি। আবার চেষ্টা করুন।</p>
