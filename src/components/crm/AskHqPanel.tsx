@@ -94,7 +94,18 @@ export function AskHqPanel() {
 
       {result && (
         <div className="mt-4 space-y-4 border-t border-border pt-4">
+          {!result.sufficient && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+              <p className="font-semibold">পর্যাপ্ত তথ্য নেই — এই উত্তর নিশ্চিত নয়</p>
+              {result.missing && <p className="mt-1">যা নেই: {result.missing}</p>}
+            </div>
+          )}
           <p className="whitespace-pre-wrap text-sm">{result.answer}</p>
+          {result.sources.length > 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              উৎস: {result.sources.join(", ")} · শুধু অনুমোদিত CRM রেকর্ড ও যাচাই করা মার্কেট তথ্য
+            </p>
+          )}
           {hasChart && (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
