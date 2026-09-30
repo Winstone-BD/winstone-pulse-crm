@@ -196,8 +196,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
         action: "lead_assigned",
         entityType: "lead",
         entityId: null,
-        actorProfileId: caller.profile?.id ?? null,
-          actorLabel: caller.label ?? caller.profile?.name ?? "LeadHub Nexus",
+        actorProfileId: null,
+        actorLabel: caller.label,
         metadata: {
           requestId: data.requestId,
           agentId: agent.id,

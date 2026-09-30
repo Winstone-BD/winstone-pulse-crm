@@ -124,7 +124,7 @@ export function LeadStorePanel({
             className="pl-8"
           />
         </div>
-        {store.data?.full !== false && (
+        {store.data?.full && (
           <Select value={assignment} onValueChange={(v) => setAssignment(v as Assignment)}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>

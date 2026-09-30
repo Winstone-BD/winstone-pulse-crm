@@ -12,7 +12,7 @@ const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
 async function dispatcher(adminToken: string | null | undefined) {
   const { requireLeadHub } = await import("@/lib/access.server");
   requireLeadHub(adminToken);
-  return { profile: null, label: "LeadHub Nexus" };
+  return { label: "LeadHub Nexus" };
 }
 
 export type LeadPoolAgent = {
@@ -27,7 +27,7 @@ export type LeadPoolAgent = {
 async function deckReader(adminToken: string | null | undefined) {
   const { requireLeadHub } = await import("@/lib/access.server");
   requireLeadHub(adminToken);
-  return { profile: null, label: "LeadHub Nexus" };
+  return { label: "LeadHub Nexus" };
 }
 
 const HeadLeadInput = z.object({
@@ -67,9 +67,7 @@ export const addHeadLead = createServerFn({ method: "POST" })
     const caller = await deckReader(data.adminToken);
     const { intakeLead, InvalidLeadPhoneError } = await import("@/lib/lead-intake.server");
     const { HEAD_DATABASE_SOURCE } = await import("@/lib/head-lead");
-    const actorLabel = caller.profile
-      ? `${caller.profile.name}${caller.profile.employee_id ? ` (${caller.profile.employee_id})` : ""}`
-      : "IT Console";
+    const actorLabel = caller.label;
     try {
       const result = await intakeLead({
         name: data.name,
@@ -81,7 +79,7 @@ export const addHeadLead = createServerFn({ method: "POST" })
         notes: data.notes ?? null,
         ownerId: null,
         source: HEAD_DATABASE_SOURCE,
-        actorProfileId: caller.profile?.id ?? null,
+        actorProfileId: null,
         actorLabel,
       });
       if (result.duplicate) {
@@ -291,8 +289,8 @@ export const distributeLeadPool = createServerFn({ method: "POST" })
     );
     const result = await distributeDailyLeads({
       perAgent: data.perAgent,
-      actorProfileId: caller.profile?.id ?? null,
-      actorLabel: caller.profile?.name ?? "IT Console",
+      actorProfileId: null,
+      actorLabel: caller.label,
       trigger: "manual",
       excludeEmployeeIds: data.excludeEmployeeIds,
       ignoreFixedQuota: data.ignoreFixedQuota,
@@ -309,8 +307,6 @@ export const setDailyLeadPlan = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const caller = await dispatcher(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
     const { saveDailyPlan } = await import("@/lib/lead-pool.server");
     await saveDailyPlan({ perAgent: data.perAgent });
     return { perAgent: data.perAgent };
@@ -331,15 +327,13 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ExtraInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await dispatcher(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
     const { grantExtraLeads } = await import("@/lib/lead-pool.server");
     return grantExtraLeads({
       agentProfileId: data.agentProfileId,
       quantity: data.quantity,
       reason: data.reason ?? null,
-      actorProfileId: caller.profile?.id ?? null,
-      actorLabel: caller.profile?.name ?? "IT Console",
+      actorProfileId: null,
+      actorLabel: caller.label,
     });
   });
 
@@ -394,10 +388,8 @@ const BD_MOBILE = /^(?:\+?88)?01[3-9]\d{8}$/;
 export const listLeadStore = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => StoreInput.parse(input))
   .handler(async ({ data }) => {
-    const caller = await deckReader(data.adminToken);
-    const { deckAccess } = await import("@/lib/access.server");
-    const full = deckAccess(caller) === "full";
-    const assignment = full ? data.assignment : "unassigned";
+    await deckReader(data.adminToken);
+    const assignment = data.assignment;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin
       .from("leads")
@@ -416,7 +408,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
     } else if (assignment === "duplicate") {
       query = query.eq("assignment_source", "duplicate_skipped");
     }
-    if (full && data.agentId) query = query.eq("assigned_to", data.agentId);
+    if (data.agentId) query = query.eq("assigned_to", data.agentId);
     if (data.status) query = query.eq("status", data.status);
     if (data.source) query = query.eq("source", data.source);
     if (data.temperature) query = query.ilike("temperature", data.temperature);
@@ -459,7 +451,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
       if (f.status !== "done" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_at);
     }
     return {
-      full,
+      full: true,
       total: count ?? list.length,
       rows: list.map((r) => ({
         ...r,
@@ -536,8 +528,6 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ManualAssignInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await dispatcher(data.adminToken);
-    const { requireWrite } = await import("@/lib/access.server");
-    requireWrite(caller);
     const { assertDistributionDay } = await import("@/lib/business-day");
     assertDistributionDay();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -580,7 +570,7 @@ export const assignSelectedLeads = createServerFn({ method: "POST" })
         action: "lead_assigned",
         entityType: "lead",
         entityId: null,
-        actorProfileId: caller.profile?.id ?? null,
+        actorProfileId: null,
         actorLabel: caller.label ?? "LeadHub Nexus",
         metadata: { agentId: agent.id, count: moved.length, source: "leadhub_manual", leadIds: moved },
       });
