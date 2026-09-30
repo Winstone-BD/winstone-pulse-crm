@@ -278,11 +278,12 @@ object WinstoneApi {
         followUpNote: String? = null,
         temperature: String? = null,
         grade: String? = null,
+        evaluationAnswers: Map<String, Boolean>? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
         post("/api/public/agent/report", reportPayload(
             reportId, category, summary, note, reason, followUpAtIso, aiDecision,
             direction, callStatus, durationSeconds, followUpNeeded, followUpNote,
-            temperature, grade,
+            temperature, grade, evaluationAnswers,
         ))
     }
 
@@ -305,6 +306,7 @@ object WinstoneApi {
         followUpNote: String?,
         temperature: String?,
         grade: String?,
+        evaluationAnswers: Map<String, Boolean>? = null,
     ): JSONObject = JSONObject().apply {
         put("action", "submit")
         put("report_id", reportId)
@@ -326,6 +328,11 @@ object WinstoneApi {
         followUpNote?.let { if (it.isNotBlank()) put("follow_up_note", it) }
         temperature?.let { put("temperature", it) }
         grade?.let { put("grade", it) }
+        evaluationAnswers?.let { answers ->
+            put("evaluation_answers", JSONObject().apply {
+                answers.forEach { (key, value) -> put(key, value) }
+            })
+        }
     }
 
     /** Replays a queued submit payload verbatim. */
