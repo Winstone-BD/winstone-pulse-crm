@@ -3,9 +3,9 @@
 ## Active
 1. **Correct agent performance analysis** — Use actual call duration/connected status/outcomes from `call_reports`/`calls`/`recordings`, not report submission counts. Identify who is actually wasting leads (short/no-answer/fake reports) vs genuinely working them.
 2. **Google Sheets reconnection** — Pending; user paused to fix report logic first.
-3. **Follow-up priority** — Derive Hot/Warm/Cold priority automatically and rank open follow-ups by overdue/due state, then category priority.
-4. **System update report** — Add a factual update-history report for IT, based on recorded releases and system changes.
-5. **IT Council notice board** — IT-only notice publishing to all, a role, or selected accounts; recipient inbox, read state, and replies across web and Android.
+3. **Follow-up priority** — Completed: Hot/Warm/Cold-derived priority and overdue/due/category ordering across server reminders and web views.
+4. **System update report** — Completed: factual IT update history from persisted app release notes.
+5. **IT Council notice board** — Completed: IT publishing to all/role/accounts, recipient inbox, read state, replies, web realtime, push and Android notification feed.
 
 ## Backlog
 3. Revisit Google Sheets connection after report is accepted.
