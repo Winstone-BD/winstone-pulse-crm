@@ -151,6 +151,13 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="bn">
       <head>
         <HeadContent />
+        {/* Recover from stale/failed script downloads (new build, flaky mobile network):
+            reload once instead of leaving a blank screen. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var K="chunk-reload-at";function r(){try{var t=+sessionStorage.getItem(K)||0;if(Date.now()-t<15000)return;sessionStorage.setItem(K,String(Date.now()))}catch(e){}location.reload()}function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(String(m||""))}window.addEventListener("vite:preloadError",function(e){e.preventDefault();r()});window.addEventListener("error",function(e){if(bad(e.message))r()});window.addEventListener("unhandledrejection",function(e){if(bad(e.reason&&e.reason.message||e.reason))r()})})();`,
+          }}
+        />
       </head>
       <body>
         {developmentCacheReset ? (
