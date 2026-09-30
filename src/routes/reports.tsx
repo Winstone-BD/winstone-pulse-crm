@@ -16,6 +16,7 @@ import { DailyActivityChart } from "@/components/crm/reports/DailyActivityChart"
 import { IntelligenceCards, AiPerformanceBrief } from "@/components/crm/reports/IntelligenceCards";
 import { AgentPerformanceTable } from "@/components/crm/reports/AgentPerformanceTable";
 import { ProjectReportPanel } from "@/components/crm/reports/ProjectReportPanel";
+import { FollowUpHistoryPanel } from "@/components/crm/FollowUpHistoryPanel";
 import { useSnapshot } from "@/lib/crm-data";
 import {
   buildReport,
@@ -123,6 +124,7 @@ export function ReportsBoard() {
       />
 
       <ProjectReportPanel />
+      <FollowUpHistoryPanel />
 
       <CallReportsPanel />
 
