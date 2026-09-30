@@ -91,6 +91,41 @@ export type Database = {
           },
         ]
       }
+      agent_briefing_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          agent_id: string
+          business_date: string
+          id: string
+          policy_version: string
+          source: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          agent_id: string
+          business_date: string
+          id?: string
+          policy_version: string
+          source: string
+        }
+        Update: {
+          acknowledged_at?: string
+          agent_id?: string
+          business_date?: string
+          id?: string
+          policy_version?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_briefing_acknowledgements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_devices: {
         Row: {
           android_version: string | null

@@ -379,6 +379,13 @@
       "when": 1790743428134,
       "tag": "0053_call_report_v2_evaluation",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790748303352,
+      "tag": "0054_create_agent_daily_briefing_acknowledgements",
+      "breakpoints": true
     }
   ]
 }

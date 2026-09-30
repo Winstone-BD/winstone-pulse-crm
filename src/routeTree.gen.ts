@@ -43,6 +43,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
 import { Route as ApiPublicTmpBulkImportRouteImport } from './routes/api/public/tmp-bulk-import'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
+import { Route as ApiPublicAgentBriefingRouteImport } from './routes/api/public/agent/briefing'
 import { Route as ApiPublicAgentCallStartRouteImport } from './routes/api/public/agent/call-start'
 import { Route as ApiPublicAgentCallStateRouteImport } from './routes/api/public/agent/call-state'
 import { Route as ApiPublicAgentCoachRouteImport } from './routes/api/public/agent/coach'
@@ -248,6 +249,11 @@ const ApiPublicTmpBulkImportRoute = ApiPublicTmpBulkImportRouteImport.update({
 const DocsAdminEditorSlugRoute = DocsAdminEditorSlugRouteImport.update({
   id: '/docs-admin_/editor/$slug',
   path: '/docs-admin/editor/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAgentBriefingRoute = ApiPublicAgentBriefingRouteImport.update({
+  id: '/api/public/agent/briefing',
+  path: '/api/public/agent/briefing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAgentCallStartRoute = ApiPublicAgentCallStartRouteImport.update({
@@ -474,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
+  '/api/public/agent/briefing': typeof ApiPublicAgentBriefingRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
@@ -545,6 +552,7 @@ export interface FileRoutesByTo {
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
+  '/api/public/agent/briefing': typeof ApiPublicAgentBriefingRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
@@ -617,6 +625,7 @@ export interface FileRoutesById {
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
+  '/api/public/agent/briefing': typeof ApiPublicAgentBriefingRoute
   '/api/public/agent/call-start': typeof ApiPublicAgentCallStartRoute
   '/api/public/agent/call-state': typeof ApiPublicAgentCallStateRoute
   '/api/public/agent/coach': typeof ApiPublicAgentCoachRoute
@@ -690,6 +699,7 @@ export interface FileRouteTypes {
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
+    | '/api/public/agent/briefing'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
@@ -761,6 +771,7 @@ export interface FileRouteTypes {
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
+    | '/api/public/agent/briefing'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
@@ -832,6 +843,7 @@ export interface FileRouteTypes {
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin_/editor/$slug'
+    | '/api/public/agent/briefing'
     | '/api/public/agent/call-start'
     | '/api/public/agent/call-state'
     | '/api/public/agent/coach'
@@ -904,6 +916,7 @@ export interface RootRouteChildren {
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
   ApiPublicTmpBulkImportRoute: typeof ApiPublicTmpBulkImportRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
+  ApiPublicAgentBriefingRoute: typeof ApiPublicAgentBriefingRoute
   ApiPublicAgentCallStartRoute: typeof ApiPublicAgentCallStartRoute
   ApiPublicAgentCallStateRoute: typeof ApiPublicAgentCallStateRoute
   ApiPublicAgentCoachRoute: typeof ApiPublicAgentCoachRoute
@@ -1179,6 +1192,13 @@ declare module '@tanstack/react-router' {
       path: '/docs-admin/editor/$slug'
       fullPath: '/docs-admin/editor/$slug'
       preLoaderRoute: typeof DocsAdminEditorSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/agent/briefing': {
+      id: '/api/public/agent/briefing'
+      path: '/api/public/agent/briefing'
+      fullPath: '/api/public/agent/briefing'
+      preLoaderRoute: typeof ApiPublicAgentBriefingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/agent/call-start': {
@@ -1465,6 +1485,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
   ApiPublicTmpBulkImportRoute: ApiPublicTmpBulkImportRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,
+  ApiPublicAgentBriefingRoute: ApiPublicAgentBriefingRoute,
   ApiPublicAgentCallStartRoute: ApiPublicAgentCallStartRoute,
   ApiPublicAgentCallStateRoute: ApiPublicAgentCallStateRoute,
   ApiPublicAgentCoachRoute: ApiPublicAgentCoachRoute,

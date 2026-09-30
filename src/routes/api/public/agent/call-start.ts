@@ -33,7 +33,11 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { leadHeldByOther, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+        const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
         const { pendingReportFor } = await import("@/lib/call-reports.server");
+
+        const briefingBlock = await requireAgentBriefing(caller.profile.id);
+        if (briefingBlock) return json(briefingBlock, 409);
 
         const pending = await pendingReportFor(caller.profile.id);
         if (pending) {

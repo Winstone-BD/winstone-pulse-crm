@@ -50,11 +50,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.winstone.connect.data.AgentSession
 import com.winstone.connect.data.DashboardMetrics
 import com.winstone.connect.data.Lead
 import com.winstone.connect.data.remote.WinstoneApi
-import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.ui.theme.WinAmber
 import com.winstone.connect.ui.theme.WinBorder
 import com.winstone.connect.ui.theme.WinCreamDeep
@@ -78,12 +76,11 @@ fun AgentDashboardScreen(
     agentName: String,
     employeeId: String,
     leads: List<Lead>,
+    onStartCall: (Lead) -> Unit,
     onLeadDetail: (Lead) -> Unit = {},
     onViewAllLeads: () -> Unit = {},
     onViewAllFollowUps: () -> Unit = {},
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var metrics by remember { mutableStateOf<DashboardMetrics?>(null) }
     var loading by remember { mutableStateOf(false) }
 
@@ -127,16 +124,7 @@ fun AgentDashboardScreen(
             StartCallingCard(
                 onStart = {
                     val next = leads.firstOrNull { it.status == "pending" || it.status == "follow_up" }
-                    next?.let { lead ->
-                        scope.launch {
-                            val gate = runCatching { WinstoneApi.startCall(lead.id) }.getOrNull()
-                            if (gate?.optBoolean("blocked", false) == true) {
-                                // blocked — handled by caller via pending report gate
-                            } else {
-                                LiveCallLauncher.call(activity, lead.id, lead.phone, AgentSession.agentId, lead.name)
-                            }
-                        }
-                    }
+                    next?.let(onStartCall)
                 },
                 enabled = leads.isNotEmpty(),
             )
