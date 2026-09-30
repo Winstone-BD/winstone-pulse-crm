@@ -6,23 +6,52 @@ import { MarkdownView } from "@/components/crm/MarkdownView";
 import { getPublishedArticle } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/help_/$slug")({
-  head: () => ({
-    meta: [
-      { title: "Support article — Winstone Help Centre" },
-      {
-        name: "description",
-        content:
-          "A step-by-step Winstone support article. Read the guide, or chat with the support assistant if you still need help.",
-      },
-      { property: "og:title", content: "Support article — Winstone Help Centre" },
-      {
-        property: "og:description",
-        content: "Verified answers from the Winstone support knowledge base.",
-      },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  loader: async ({ params }) => {
+    try {
+      const a = await getPublishedArticle({ data: { slug: params.slug } });
+      return { title: a?.title ?? null, summary: a?.summary ?? null };
+    } catch {
+      return { title: null, summary: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const title = loaderData?.title
+      ? `${loaderData.title} — Winstone Help Centre`
+      : "Support article — Winstone Help Centre";
+    const description =
+      loaderData?.summary ||
+      (loaderData?.title
+        ? `${loaderData.title}: a step-by-step guide from the Winstone Help Centre.`
+        : "A step-by-step Winstone support article from the Winstone Help Centre.");
+    const url = `https://crm1.winstonebd.com/help/${params.slug}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: loaderData?.title
+        ? [
+            {
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Article",
+                headline: loaderData.title,
+                name: loaderData.title,
+                description,
+                url,
+              }),
+            },
+          ]
+        : [],
+    };
+  },
   errorComponent: () => (
     <p className="p-8 text-sm text-destructive">This article could not be loaded.</p>
   ),
