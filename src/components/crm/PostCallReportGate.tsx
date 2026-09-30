@@ -330,7 +330,7 @@ export function PostCallReportGate() {
     setWhen("");
     setNoFuReason("");
     setNoFuNote("");
-    setTemperature("");
+    setAnswers({});
     setGrade("");
     setVoiceNote("");
     setSkipped({});
