@@ -408,7 +408,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
     } else if (assignment === "duplicate") {
       query = query.eq("assignment_source", "duplicate_skipped");
     }
-    if (full && data.agentId) query = query.eq("assigned_to", data.agentId);
+    if (data.agentId) query = query.eq("assigned_to", data.agentId);
     if (data.status) query = query.eq("status", data.status);
     if (data.source) query = query.eq("source", data.source);
     if (data.temperature) query = query.ilike("temperature", data.temperature);
@@ -451,7 +451,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
       if (f.status !== "done" && !nextFollow.has(f.lead_id)) nextFollow.set(f.lead_id, f.scheduled_at);
     }
     return {
-      full,
+      full: true,
       total: count ?? list.length,
       rows: list.map((r) => ({
         ...r,
