@@ -112,7 +112,7 @@ function SystemBoard() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [leads]);
 
-  const [sec] = useSection("/system");
+  const [sec, setSec] = useSection("/system");
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
@@ -128,6 +128,19 @@ function SystemBoard() {
       </div>
 
       <SystemNoticeBar surface="it" />
+
+      <nav aria-label="IT Console sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
+        {PAGE_SECTIONS["/system"].map((x) => (
+          <button
+            key={x.key}
+            type="button"
+            onClick={() => setSec(x.key)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${sec === x.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </nav>
 
       {sec === "health" && (
         <div className="space-y-6">
