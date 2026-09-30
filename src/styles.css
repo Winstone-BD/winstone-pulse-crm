@@ -189,6 +189,44 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Consistent controls on every page and screen. */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted-foreground);
+  }
+  /* Touch screens (phones, iPhone, tablets): 16px fields stop iOS zoom-on-focus,
+     and form controls get a comfortable 40px tap height. */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+      min-height: 40px;
+    }
+    button,
+    [role="button"],
+    a {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  }
+  /* Notch / Dynamic Island / home-bar safe areas on iPhone and Android. */
+  header.sticky,
+  header[class*="sticky"] {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+
   /* Wide data tables scroll inside their own box instead of pushing the page. */
   .table-scroll {
     overflow-x: auto;
