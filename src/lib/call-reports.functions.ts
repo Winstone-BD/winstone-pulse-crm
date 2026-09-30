@@ -380,18 +380,23 @@ export const myFollowUps = createServerFn({ method: "POST" })
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let query = supabaseAdmin
-      .from("follow_up_events")
-      .select("*")
-      .order("scheduled_at", { ascending: true })
-      .limit(500);
-
-    if (caller.scope === "agent" && caller.profile) query = query.eq("agent_id", caller.profile.id);
-    if (data.fromIso) query = query.gte("scheduled_at", data.fromIso);
-    if (data.toIso) query = query.lte("scheduled_at", data.toIso);
-
-    const { data: events, error } = await query;
-    if (error) throw new Error(error.message);
+    // Paged through every matching row — no silent truncation. Agents only get their own.
+    const events: Array<Record<string, any>> = [];
+    for (let from = 0; ; from += 1000) {
+      let query = supabaseAdmin
+        .from("follow_up_events")
+        .select("*")
+        .order("scheduled_at", { ascending: true })
+        .order("id")
+        .range(from, from + 999);
+      if (caller.scope === "agent" && caller.profile) query = query.eq("agent_id", caller.profile.id);
+      if (data.fromIso) query = query.gte("scheduled_at", data.fromIso);
+      if (data.toIso) query = query.lte("scheduled_at", data.toIso);
+      const { data: page, error } = await query;
+      if (error) throw new Error(error.message);
+      events.push(...(page ?? []));
+      if (!page || page.length < 1000) break;
+    }
 
     const now = Date.now();
     const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");

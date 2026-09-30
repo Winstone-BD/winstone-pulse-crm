@@ -34,7 +34,6 @@ import { LeadDeadlineBanner } from "@/components/crm/LeadDeadlineBanner";
 import { AccountabilityBanner, useMyAccountability } from "@/components/crm/AccountabilityBanner";
 import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
-import { OpenLeadsCard } from "@/components/crm/OpenLeadsCard";
 import { QueueBoard } from "@/components/crm/QueueBoard";
 import { SmartInsightStrip } from "@/components/crm/SmartInsightStrip";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
