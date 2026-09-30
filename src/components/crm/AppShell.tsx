@@ -57,16 +57,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
   const { scope } = useMyAccount();
-  const location = useLocation();
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
-  const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
   const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
 
   return (
     <div className="min-h-screen grid-noise">
       <header className="glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+          <div className="lg:hidden">
+            <MobileNavDrawer items={nav} />
+          </div>
           <Link to="/" className="flex min-w-0 shrink items-center gap-2.5">
             <img
               src={logoAsset.url}
