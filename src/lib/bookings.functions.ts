@@ -95,3 +95,22 @@ export const setLeadArea = createServerFn({ method: "POST" })
     if (error) throw new Error("এলাকা সংরক্ষণ হয়নি");
     return { ok: true };
   });
+
+/** Read-only: pitch events (lead + day) for the pitch → booking funnel. Scope-filtered. */
+export const listPitchLeads = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
+  .handler(async ({ data }) => {
+    const { siCaller } = await import("@/lib/sales-intel.server");
+    const c = await siCaller(data.adminToken).catch(() => null);
+    if (!c) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const out: Array<{ lead_id: string; agent_id: string | null; created_at: string }> = [];
+    for (let a = 0; ; a += 1000) {
+      let q = supabaseAdmin.from("pitch_events").select("lead_id, agent_id, created_at");
+      if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
+      const { data: rows, error } = await q.order("created_at", { ascending: false }).order("id").range(a, a + 999);
+      if (error) throw new Error("পিচ তথ্য পড়া যায়নি");
+      out.push(...(rows ?? []));
+      if (!rows || rows.length < 1000) return out;
+    }
+  });
