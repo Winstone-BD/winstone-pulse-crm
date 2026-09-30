@@ -149,7 +149,7 @@ export function performerInsight(line: PerformerLine): Pick<RankedPerformer, "re
     return {
       reason,
       gap: `কোটার ${line.completionPercent}% শেষ — বাকি ${Math.max(0, line.targetQuota - line.completed)}টি`,
-      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় নিজের কোটার শতাংশে",
+      advice: "নিজের তালিকার বাকি লিডগুলো শেষ করুন — র‍্যাঙ্কিং হয় দেখানো স্কোরে, বেশি স্কোর আগে",
     };
   }
   if (reportGap > 0) {
