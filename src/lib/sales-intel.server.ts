@@ -50,7 +50,7 @@ async function all<T>(page: (a: number, b: number) => PromiseLike<{ data: T[] | 
 
 /** Agents may only touch leads assigned to them; HQ may read any lead. */
 export async function leadForCaller(db: Db, c: SiCaller, leadId: string) {
-  const { leadOwnerId, LEAD_NOT_YOURS } = await import("@/lib/lead-owner");
+  const { leadOwnerId, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
   const { data: lead, error } = await db
     .from("leads")
     .select("id, name, phone_number, address, source, reference_by, temperature, grade, status, work_state, notes, assigned_to, assigned_agent_id")
@@ -371,8 +371,7 @@ export async function setFactStatus(c: SiCaller, id: string, to: string) {
   const { data: cur } = await db.from("market_facts").select("*").eq("id", id).maybeSingle();
   if (!cur) throw new Error("তথ্য পাওয়া যায়নি");
   if (!canTransition(cur.status, to)) throw new Error(`${cur.status} থেকে ${to} করা যাবে না`);
-  const patch: Record<string, unknown> = { status: to, version: cur.version + 1 };
-  if (to === "verified") { patch["verified_by"] = c.actor; patch["verified_at"] = new Date().toISOString(); }
+  const patch = { status: to, version: cur.version + 1, ...(to === "verified" ? { verified_by: c.actor, verified_at: new Date().toISOString() } : {}) };
   const { data, error } = await db.from("market_facts").update(patch).eq("id", id).select("*").single();
   if (error) throw new Error("স্ট্যাটাস বদল হয়নি");
   await snapshot(db, "market_fact", data, to, c.actor);

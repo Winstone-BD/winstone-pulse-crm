@@ -166,7 +166,7 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
               <Button size="sm" onClick={async () => { await navigator.clipboard.writeText(text); const r = await record(edited ? "edited" : "copied"); if (r) toast.success("কপি হয়েছে ও ইতিহাসে লেখা হয়েছে"); }}><Copy className="size-4" /> Copy Pitch</Button>
               <Button size="sm" variant="outline" onClick={async () => {
                 const url = whatsappUrl(rec.data!.lead.phone, text);
-                if (!url) return toast.error("ফোন নম্বর WhatsApp-এর জন্য বৈধ নয়");
+                if (!url) { toast.error("ফোন নম্বর WhatsApp-এর জন্য বৈধ নয়"); return; }
                 window.open(url, "_blank", "noopener");
                 const r = await record("whatsapp_opened");
                 if (r) toast.success("WhatsApp খোলা হয়েছে / বার্তা প্রস্তুত — পাঠানো নিশ্চিত নয়");
