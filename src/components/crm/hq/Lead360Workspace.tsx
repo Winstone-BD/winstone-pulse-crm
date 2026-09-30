@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
 import { buildLeadTimeline, lead360Csv, summarize, type TimelineItem } from "@/lib/lead360";
 import { getLead360, searchLead360 } from "@/lib/lead360.functions";
+import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS } from "@/lib/contact-close-reasons";
 import { useAdminToken } from "@/lib/local-session";
 
 const fmt = (iso: string | null, withTime = true) =>
@@ -37,10 +38,30 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
   const [fu, setFu] = useState<"any" | "upcoming" | "overdue" | "none">("any");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [source, setSource] = useState("");
+  const [requirement, setRequirement] = useState("");
+  const [reason, setReason] = useState("");
+  const [eventKind, setEventKind] = useState("");
+  const [cursor, setCursor] = useState(0);
+  const filters = { q, followUpStatus: fu, from: from || null, to: to || null, source: source || null, requirement: requirement || null, reason: reason || null, eventKind: eventKind || null };
   const res = useQuery({
-    queryKey: ["lead360-search", q, fu, from, to, adminToken],
-    queryFn: () => search({ data: { adminToken, q, followUpStatus: fu, from: from || null, to: to || null } }),
+    queryKey: ["lead360-search", filters, cursor, adminToken],
+    queryFn: () => search({ data: { adminToken, ...filters, cursor } }),
   });
+  const exportCsv = async () => {
+    const out: Array<Record<string, unknown>> = [];
+    for (let c: number | null = 0; c !== null; ) {
+      const page = await search({ data: { adminToken, ...filters, cursor: c, pageSize: 200 } });
+      if (page.locked) return;
+      out.push(...page.rows);
+      c = page.nextCursor;
+    }
+    const cols = ["id", "name", "phone", "source", "referenceBy", "calls", "connected", "followUps", "nextFollowUpAt", "fuState"];
+    const cell = (v: unknown) => { let t = v == null ? "" : String(v); if (/^[=+\-@]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; };
+    const csv = [cols.join(","), ...out.map((r) => cols.map((k) => cell(r[k])).join(","))].join("\n");
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
+    const a = document.createElement("a"); a.href = url; a.download = "lead360-filtered.csv"; a.click(); URL.revokeObjectURL(url);
+  };
   return (
     <div className="space-y-4">
       <div>
@@ -52,6 +73,7 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
         onSubmit={(e) => {
           e.preventDefault();
           setQ(draft);
+          setCursor(0);
         }}
       >
         <div className="relative min-w-0 flex-1">
@@ -66,8 +88,31 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
         </select>
         <Input type="date" className="sm:w-40" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="শুরুর তারিখ" />
         <Input type="date" className="sm:w-40" value={to} onChange={(e) => setTo(e.target.value)} aria-label="শেষ তারিখ" />
+        <Input className="sm:w-36" value={source} onChange={(e) => setSource(e.target.value)} placeholder="Source" aria-label="Source" />
+        <Input className="sm:w-40" value={requirement} onChange={(e) => setRequirement(e.target.value)} placeholder="Requirement / প্রকল্প" aria-label="Requirement" />
+        <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={reason} onChange={(e) => setReason(e.target.value)} aria-label="কারণ">
+          <option value="">সব কারণ</option>
+          {[...CONTACT_CLOSE_REASONS, ...SYSTEM_CLOSE_REASONS].map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
+        </select>
+        <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={eventKind} onChange={(e) => setEventKind(e.target.value)} aria-label="ইভেন্টের ধরন">
+          <option value="">সব ইভেন্ট</option>
+          <option value="contact_closed">Contact closed</option>
+          <option value="assigned">Assigned</option>
+          <option value="call">Call</option>
+          <option value="report_submitted">Report submitted</option>
+        </select>
         <Button type="submit">খুঁজুন</Button>
+        <Button type="button" variant="outline" onClick={exportCsv}>CSV</Button>
       </form>
+      {!res.data?.locked && res.data ? (
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>মোট {res.data.total} লিড · {cursor + 1}–{cursor + res.data.rows.length}</span>
+          <span className="flex gap-2">
+            <Button size="sm" variant="outline" disabled={cursor === 0} onClick={() => setCursor(Math.max(0, cursor - 40))}>আগে</Button>
+            <Button size="sm" variant="outline" disabled={res.data.nextCursor === null} onClick={() => setCursor(res.data!.nextCursor ?? cursor)}>পরে</Button>
+          </span>
+        </div>
+      ) : null}
       {res.data?.locked ? (
         <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">HQ/IT পিন দিয়ে আনলক করুন।</p>
       ) : res.isPending ? (
