@@ -195,7 +195,6 @@
   html {
     -webkit-text-size-adjust: 100%;
     overflow-x: clip;
-    touch-action: pan-y pinch-zoom;
     text-size-adjust: 100%;
   }
   button,
