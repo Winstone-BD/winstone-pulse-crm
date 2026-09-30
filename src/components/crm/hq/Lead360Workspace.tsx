@@ -310,6 +310,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
           </div>
         </>
       )}
+      <SalesBriefCard leadId={leadId} />
     </div>
   );
 }
