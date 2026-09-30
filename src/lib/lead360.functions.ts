@@ -10,6 +10,17 @@ async function authority(adminToken: string | null | undefined) {
   return supabaseAdmin;
 }
 
+/** Reads every row in 1000-row pages so no history is silently cut off. */
+async function all<T>(page: (a: number, b: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+  const out: T[] = [];
+  for (let a = 0; ; a += 1000) {
+    const { data, error } = await page(a, a + 999);
+    if (error) throw new Error(error.message);
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) return out;
+  }
+}
+
 const SearchInput = z.object({
   adminToken: z.string().nullable().optional(),
   q: z.string().trim().max(120).default(""),
@@ -95,21 +106,33 @@ export const getLead360 = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
-    const [reports, recs, fus, changes, events] = await Promise.all([
-      db.from("call_reports")
-        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status")
-        .eq("lead_id", lead.id).order("created_at").limit(1000),
-      db.from("call_recordings")
+    const [rp, rc, fu, ch, ev, sc] = await Promise.all([
+      all((a, b) => db.from("call_reports")
+        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, reason")
+        .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
+      all((a, b) => db.from("call_recordings")
         .select("id, agent_id, started_at, created_at, duration_seconds, call_status")
-        .eq("lead_id", lead.id).limit(1000),
-      db.from("follow_up_events")
+        .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
+      all((a, b) => db.from("follow_up_events")
         .select("id, agent_id, scheduled_at, status, reason_code, note, created_at, completed_at, reschedule_count")
-        .eq("lead_id", lead.id).limit(1000),
-      db.from("follow_up_changes")
+        .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
+      all((a, b) => db.from("follow_up_changes")
         .select("id, follow_up_id, action, old_scheduled_at, new_scheduled_at, reason_code, note, changed_by, changed_at")
-        .eq("lead_id", lead.id).limit(2000),
-      db.from("lead_events").select("id, kind, detail, agent_id, created_at").eq("lead_id", lead.id).limit(2000),
+        .eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
+      all((a, b) => db.from("lead_events").select("id, kind, detail, agent_id, created_at").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
+      all((a, b) => db.from("lead_state_changes").select("id, field, old_value, new_value, changed_by, source, changed_at").eq("lead_id", lead.id).order("changed_at").order("id").range(a, b)),
     ]);
+    const reports = { data: rp }, recs = { data: rc }, fus = { data: fu }, changes = { data: ch }, events = { data: ev };
+    // Other leads sharing a normalized phone: linked for context, never merged.
+    const { data: phoneStatus } = await db.rpc("lead_phone_status", { _raw: lead.phone_number });
+    const phones = (phoneStatus?.[0]?.canonical_phones ?? []) as string[];
+    const { data: keyRows } = phones.length
+      ? await db.from("lead_phone_keys").select("lead_id, canonical_phone").in("canonical_phone", phones)
+      : { data: [] as { lead_id: string; canonical_phone: string }[] };
+    const linkedIds = [...new Set((keyRows ?? []).map((k) => k.lead_id).filter((id) => id !== lead.id))];
+    const { data: linked } = linkedIds.length
+      ? await db.from("leads").select("id, name, phone_number").in("id", linkedIds)
+      : { data: [] as { id: string; name: string | null; phone_number: string }[] };
     const reported = new Set((reports.data ?? []).map((r) => r.recording_id).filter(Boolean));
     const calls = [
       ...(reports.data ?? []).map((r) => ({
@@ -123,6 +146,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         nextAction: r.next_action,
         summary: r.summary,
         requirement: r.requirement,
+        closeReason: r.no_follow_up_reason,
       })),
       ...(recs.data ?? [])
         .filter((r) => !reported.has(r.id))
@@ -137,10 +161,11 @@ export const getLead360 = createServerFn({ method: "POST" })
           nextAction: null,
           summary: null,
           requirement: null,
+          closeReason: null,
         })),
     ].sort((a, b) => a.at.localeCompare(b.at));
     const agentIds = [
-      ...new Set([lead.assigned_to, ...calls.map((c) => c.agentId), ...(fus.data ?? []).map((f) => f.agent_id), ...(changes.data ?? []).map((c) => c.changed_by)].filter(Boolean) as string[]),
+      ...new Set([lead.assigned_to, ...calls.map((c) => c.agentId), ...(fus.data ?? []).map((f) => f.agent_id), ...(changes.data ?? []).map((c) => c.changed_by), ...sc.map((c) => c.changed_by), ...sc.filter((c) => c.field === "assigned_to").flatMap((c) => [c.old_value, c.new_value])].filter(Boolean) as string[]),
     ];
     const { data: people } = agentIds.length
       ? await db.from("profiles").select("id, user_id, name, employee_id").or(`id.in.(${agentIds.join(",")}),user_id.in.(${agentIds.join(",")})`)
@@ -190,6 +215,9 @@ export const getLead360 = createServerFn({ method: "POST" })
         changedAt: c.changed_at,
       })),
       events: (events.data ?? []).map((e) => ({ id: e.id, kind: e.kind, detail: e.detail, agentId: e.agent_id, at: e.created_at })),
+      stateChanges: sc.map((c) => ({ id: c.id, field: c.field, oldValue: c.old_value, newValue: c.new_value, changedBy: c.changed_by, source: c.source, at: c.changed_at })),
+      linkedLeads: (linked ?? []).map((l) => ({ id: l.id, name: l.name, phone: l.phone_number })),
+      canonicalPhones: phones,
       agents,
     };
   });

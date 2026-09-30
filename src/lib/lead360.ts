@@ -1,5 +1,6 @@
 /** Pure Lead 360 assembly: one lead = one permanent, ordered history. */
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
+import { contactCloseReasonLabel } from "@/lib/contact-close-reasons";
 
 export type L360Call = {
   id: string;
@@ -12,7 +13,9 @@ export type L360Call = {
   nextAction: string | null;
   summary: string | null;
   requirement: string | null;
+  closeReason?: string | null;
 };
+export type L360StateChange = { id: string; field: string; oldValue: string | null; newValue: string | null; changedBy: string | null; source: string; at: string };
 export type L360FollowUp = {
   id: string;
   agentId: string | null;
@@ -109,6 +112,7 @@ export function buildLeadTimeline(input: {
   followUps: L360FollowUp[];
   changes: L360Change[];
   events: L360Event[];
+  stateChanges?: L360StateChange[];
   agentName: (id: string | null) => string;
 }): TimelineItem[] {
   const items: TimelineItem[] = [];
@@ -133,6 +137,7 @@ export function buildLeadTimeline(input: {
             c.customerResponse ? `Customer response: ${c.customerResponse}` : "",
             c.summary ? c.summary : "",
             c.nextAction ? `Next Action: ${c.nextAction}` : "",
+            c.closeReason ? `যোগাযোগ বন্ধের কারণ: ${contactCloseReasonLabel(c.closeReason)}` : "",
             `Agent: ${agentName(c.agentId)}`,
           ].filter(Boolean)
         : [c.category ? `ফলাফল: ${c.category}` : "No Answer", "System Action: Retry Queue-তে পাঠানো হয়েছে", `Agent: ${agentName(c.agentId)}`],
@@ -191,5 +196,38 @@ export function buildLeadTimeline(input: {
         agentId: e.agentId,
       }),
     );
-  return items.sort((a, b) => b.at.localeCompare(a.at));
+  const FIELD: Record<string, string> = { assigned_to: "ASSIGNMENT CHANGED", status: "STATUS CHANGED", work_state: "WORK STATE CHANGED", temperature: "CATEGORY CHANGED" };
+  (input.stateChanges ?? []).forEach((c) => {
+    const val = (v: string | null) => (c.field === "assigned_to" ? agentName(v) : v ?? "—");
+    items.push({
+      id: `sc:${c.id}`,
+      at: c.at,
+      kind: "status_changed",
+      title: FIELD[c.field] ?? "CHANGED",
+      lines: [`${val(c.oldValue)} → ${val(c.newValue)}`, `Changed By: ${c.changedBy ? agentName(c.changedBy) : "System"}`, `Source: ${c.source}`],
+      agentId: c.changedBy,
+    });
+  });
+  // De-duplicate by id so a retried event can never render twice.
+  const seen = new Set<string>();
+  return items
+    .filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)))
+    .sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
+}
+
+/** CSV for the full Lead 360 history (every event, Dhaka time + UTC). */
+export function lead360Csv(meta: { lead: string; phone: string; generatedAt: Date }, items: TimelineItem[]) {
+  const esc = (v: string) => {
+    const t = /^[=+\-@]/.test(v) ? `'${v}` : v;
+    return `"${t.replace(/"/g, '""')}"`;
+  };
+  const dhaka = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+  const rows = [
+    ["Lead 360 history", meta.lead, meta.phone],
+    ["Generated at (Asia/Dhaka)", dhaka(meta.generatedAt.toISOString()), `Total events: ${items.length}`],
+    [],
+    ["Event ID", "Type", "Time (Asia/Dhaka)", "Time (UTC)", "Details"],
+    ...items.map((i) => [i.id, i.title, dhaka(i.at), i.at, i.lines.join(" | ")]),
+  ];
+  return rows.map((r) => r.map((c) => esc(String(c))).join(",")).join("\n");
 }

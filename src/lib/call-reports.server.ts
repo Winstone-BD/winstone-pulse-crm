@@ -1,3 +1,4 @@
+import { isContactCloseReason } from "@/lib/contact-close-reasons";
 /**
  * The mandatory post-call workflow.
  *
@@ -157,7 +158,11 @@ export function validateReport(input: {
     }
     const followUpNote = (input.followUpNote ?? "").trim();
     const code = (input.noFollowUpReason ?? "").trim();
-    const reasonGiven = code ? code !== "other" || followUpNote.length > 1 : followUpNote.length > 1;
+    if (!input.followUpAt && code && !isContactCloseReason(code)) {
+      return { field: "noFollowUpReason", message: "যোগাযোগ বন্ধের কারণ তালিকা থেকে বাছাই করুন" };
+    }
+    // A structured reason is mandatory whenever contact is closed.
+    const reasonGiven = code ? code !== "other" || followUpNote.length > 1 : false;
     if (!input.followUpAt && !(input.followUpNeeded === false && reasonGiven)) {
       return {
         field: "followUpAt",
@@ -553,6 +558,7 @@ export async function submitCallReport(input: {
           priority: followUpPriority,
           note: input.note?.trim() || null,
           reason_code: input.followUpReason ?? null,
+          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
           customer_response: input.customerResponse ?? null,
           next_action: input.nextAction ?? null,
           previous_call_id: report.recording_id ?? null,
@@ -579,6 +585,7 @@ export async function submitCallReport(input: {
         priority: followUpPriority,
         note: input.note?.trim() || null,
         reason_code: input.followUpReason ?? null,
+          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
         customer_response: input.customerResponse ?? null,
         next_action: input.nextAction ?? null,
         previous_call_id: report.recording_id ?? null,

@@ -1,3 +1,4 @@
+import { SystemManualCard } from "@/components/crm/SystemManualCard";
 import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
@@ -144,6 +145,7 @@ function SystemBoard() {
 
       {sec === "health" && (
         <div className="space-y-6">
+          <SystemManualCard />
           <SystemUpdateReport />
           <BackendHealthPanel />
           <SheetSyncHealthPanel />

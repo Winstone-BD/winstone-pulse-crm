@@ -1,3 +1,4 @@
+import { SystemManualCard } from "@/components/crm/SystemManualCard";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -200,6 +201,7 @@ function ControlBoard() {
           <div className="min-w-0 flex-1 rounded-2xl border border-border bg-white p-4 text-slate-900 shadow-sm sm:p-6 dark:bg-card dark:text-card-foreground">
             {tab === "overview" && (
               <div className="space-y-8">
+                <SystemManualCard />
                 <ExecutiveKpiBoard
                   profiles={profiles}
                   leads={leads}
@@ -254,6 +256,7 @@ function ControlBoard() {
 
             {tab === "tools" && (
               <div className="space-y-8">
+                <SystemManualCard />
                 <AccountabilityReviewPanel surface="hq" />
                 <FloorLockAdminPanel />
                 <ServiceBillPanel mode="hq" />

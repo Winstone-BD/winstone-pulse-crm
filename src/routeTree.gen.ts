@@ -25,6 +25,7 @@ import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LeadhubRouteImport } from './routes/leadhub'
+import { Route as ManualRouteImport } from './routes/manual'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
@@ -161,6 +162,11 @@ const InventoryRoute = InventoryRouteImport.update({
 const LeadhubRoute = LeadhubRouteImport.update({
   id: '/leadhub',
   path: '/leadhub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManualRoute = ManualRouteImport.update({
+  id: '/manual',
+  path: '/manual',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -481,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByTo {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -632,6 +640,7 @@ export interface FileRoutesById {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -709,6 +718,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/manual'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -784,6 +794,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/manual'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -859,6 +870,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/manual'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -935,6 +947,7 @@ export interface RootRouteChildren {
   IngestRoute: typeof IngestRoute
   InventoryRoute: typeof InventoryRoute
   LeadhubRoute: typeof LeadhubRoute
+  ManualRoute: typeof ManualRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
   MigrationExportRoute: typeof MigrationExportRoute
@@ -1106,6 +1119,13 @@ declare module '@tanstack/react-router' {
       path: '/leadhub'
       fullPath: '/leadhub'
       preLoaderRoute: typeof LeadhubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manual': {
+      id: '/manual'
+      path: '/manual'
+      fullPath: '/manual'
+      preLoaderRoute: typeof ManualRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -1527,6 +1547,7 @@ const rootRouteChildren: RootRouteChildren = {
   IngestRoute: IngestRoute,
   InventoryRoute: InventoryRoute,
   LeadhubRoute: LeadhubRoute,
+  ManualRoute: ManualRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
   MigrationExportRoute: MigrationExportRoute,

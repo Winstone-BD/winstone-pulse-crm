@@ -1,3 +1,4 @@
+import { contactCloseReasonLabel } from "@/lib/contact-close-reasons";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -135,7 +136,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
         Boolean(last) &&
         (STOP_CATEGORIES.has(last!.category ?? "") || Boolean(last!.no_follow_up_reason) || !last!.follow_up_priority);
       const stopReason = stopped
-        ? last!.no_follow_up_reason || last!.reason || last!.customer_response || last!.category || "আর ফলো-আপ দেওয়া হয়নি"
+        ? contactCloseReasonLabel(last!.no_follow_up_reason) || last!.reason || last!.customer_response || last!.category || "আর ফলো-আপ দেওয়া হয়নি"
         : null;
 
       const events: Event[] = [
@@ -155,7 +156,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
           at: r.call_ended_at,
           kind: "call" as const,
           label: r.connected ? "কল — সংযুক্ত" : "কল — সংযোগ হয়নি",
-          detail: [r.category, r.reason, r.no_follow_up_reason].filter(Boolean).join(" · ") || null,
+          detail: [r.category, r.reason, contactCloseReasonLabel(r.no_follow_up_reason)].filter(Boolean).join(" · ") || null,
         })),
       ].sort((a, b) => a.at.localeCompare(b.at));
 

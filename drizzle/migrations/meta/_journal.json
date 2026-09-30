@@ -428,6 +428,13 @@
       "when": 1790770994612,
       "tag": "0060_follow_up_intelligence",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790771849419,
+      "tag": "0061_append_only_lead_history",
+      "breakpoints": true
     }
   ]
 }
