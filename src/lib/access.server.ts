@@ -88,25 +88,6 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
   const approval = (profile?.approval_status ?? "pending") as Caller["approval"];
   const approved = Boolean(profile) && approval === "approved" && Boolean(profile?.is_active);
 
-  // Coordinator Deck only: Gmail sign-in + Coordinator PIN token, bound to this
-  // user. Approved accounts keep their normal scope; nothing else is widened.
-  if (!approved && adminToken) {
-    const gate = await import("@/lib/coordinator-gate.server");
-    if (gate.isCoordinatorToken(adminToken) && gate.coordinatorTokenValid(adminToken, userId)) {
-      const email = await gate.googleEmailFor(userId);
-      if (email) {
-        return {
-          scope: "coordinator",
-          profile: null,
-          userId,
-          approval: "approved",
-          readOnly: false,
-          label: `Coordinator (${email})`,
-        };
-      }
-    }
-  }
-
   if (!profile) return { ...ANON, userId };
   if (!approved) {
     return { scope: "none", profile, userId, approval, readOnly: true };
@@ -114,11 +95,7 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
 
   return {
     scope:
-      profile.role === "admin"
-        ? "authority"
-        : profile.role === "team_leader"
-          ? "coordinator"
-          : "agent",
+      profile.role === "admin" ? "authority" : "agent",
     profile,
     userId,
     approval,
@@ -128,7 +105,7 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
 
 /** Authority or coordinator may dispatch leads. */
 export function canDispatch(caller: Caller) {
-  return caller.scope === "authority" || caller.scope === "coordinator";
+  return caller.scope === "authority";
 }
 
 /** Sell Team Admin desks (Abu Haidar). Agent scope + Coordinator Deck intake only. */
@@ -145,8 +122,6 @@ export function isSellTeamAdmin(caller: Pick<Caller, "scope" | "profile" | "read
  * distribute, change quotas, or touch IT/account/device settings.
  */
 export function deckAccess(caller: Caller): "full" | "intake" | "none" {
-  if (canDispatch(caller)) return "full";
-  if (isSellTeamAdmin(caller)) return "intake";
   return "none";
 }
 

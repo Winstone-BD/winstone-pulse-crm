@@ -109,9 +109,9 @@ const BatchInput = z.object({
 });
 
 /**
- * Assigns an exact number of the oldest eligible unassigned leads to each
+ * Assigns up to the requested number of oldest eligible unassigned leads to each
  * agent. Idempotent per requestId, guarded so a lead can reach only one agent,
- * never touches leads already assigned (today's allocations stay as they are).
+ * never touches leads already assigned, and never exceeds the 50/day plan.
  */
 export const assignLeadCounts = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => BatchInput.parse(input))

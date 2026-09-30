@@ -38,7 +38,7 @@ export async function ensureRegistered(fallbackName?: string) {
     data: {
       name,
       phone: draft?.phone || null,
-      requestedRole: draft?.requestedRole ?? "agent",
+      requestedRole: "agent",
     },
   });
   try {

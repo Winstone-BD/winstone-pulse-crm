@@ -40,7 +40,7 @@ const NAV = [
   { to: "/", label: "Home", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/desk", label: "My Desk", scopes: ["coordinator", "agent"] },
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
-  { to: "/leadhub", label: "LeadHub Nexus", scopes: ["authority", "none"] },
+  { to: "/leadhub", label: "LeadHub Nexus", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
   { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
