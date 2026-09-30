@@ -343,6 +343,8 @@ export async function submitCallReport(input: {
   note?: string | null;
   reason?: string | null;
   followUpAt?: string | null;
+  followUpReason?: string | null;
+  followUpReasonNote?: string | null;
   reminderMinutes?: number;
   temperature?: string | null;
   grade?: string | null;
@@ -550,6 +552,10 @@ export async function submitCallReport(input: {
           category,
           priority: followUpPriority,
           note: input.note?.trim() || null,
+          reason_code: input.followUpReason ?? null,
+          customer_response: input.customerResponse ?? null,
+          next_action: input.nextAction ?? null,
+          previous_call_id: report.recording_id ?? null,
           scheduled_at: input.followUpAt,
           reminder_minutes: input.reminderMinutes ?? 30,
           notified_at: null,
@@ -572,6 +578,10 @@ export async function submitCallReport(input: {
         category,
         priority: followUpPriority,
         note: input.note?.trim() || null,
+        reason_code: input.followUpReason ?? null,
+        customer_response: input.customerResponse ?? null,
+        next_action: input.nextAction ?? null,
+        previous_call_id: report.recording_id ?? null,
         scheduled_at: input.followUpAt,
         reminder_minutes: input.reminderMinutes ?? 30,
         status: "upcoming",

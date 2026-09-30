@@ -1,3 +1,4 @@
+import { FOLLOW_UP_REASON_CODES } from "@/lib/follow-up-reasons";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -303,6 +304,8 @@ export const submitMyReport = createServerFn({ method: "POST" })
       note: z.string().trim().max(4000).nullable().optional(),
       reason: z.string().trim().max(2000).nullable().optional(),
       followUpAt: z.string().nullable().optional(),
+      followUpReason: z.enum(FOLLOW_UP_REASON_CODES).nullable().optional(),
+      followUpReasonNote: z.string().trim().max(120).nullable().optional(),
       reminderMinutes: z.number().int().min(0).max(1440).default(30),
       temperature: z.enum(["hot", "warm", "cold"]).nullable().optional(),
       grade: z.enum(["A", "B", "C", "D"]).nullable().optional(),
@@ -332,6 +335,8 @@ export const submitMyReport = createServerFn({ method: "POST" })
       note: data.note ?? null,
       reason: data.reason ?? null,
       followUpAt: data.followUpAt ? new Date(data.followUpAt).toISOString() : null,
+      followUpReason: data.followUpReason ?? null,
+      followUpReasonNote: data.followUpReasonNote ?? null,
       reminderMinutes: data.reminderMinutes,
       temperature: data.temperature ?? null,
       grade: data.grade ?? null,
