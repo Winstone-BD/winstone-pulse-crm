@@ -90,3 +90,13 @@ export async function acknowledgeAgentBriefing(
   if (error && error.code !== "23505") throw new Error(`Briefing acknowledgement failed: ${error.message}`);
   return { ...status, acknowledged: true };
 }
+/** Throws for agents who have not acknowledged today's briefing (after 9:05 Dhaka). */
+export async function assertAgentBriefing(agentId: string, now: Date | number = Date.now()) {
+  const block = await requireAgentBriefing(agentId, now);
+  if (block) throw new Error(block.reason);
+}
+
+/** Only agent sessions are gated; HQ/IT/authority callers are not agents. */
+export async function assertBriefingForCaller(caller: { scope: string; profile?: { id: string } | null }) {
+  if (caller.scope === "agent" && caller.profile) await assertAgentBriefing(caller.profile.id);
+}

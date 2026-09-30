@@ -297,11 +297,12 @@ object WinstoneApi {
         temperature: String? = null,
         grade: String? = null,
         evaluationAnswers: Map<String, Boolean>? = null,
+        noFollowUpReason: String? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
         post("/api/public/agent/report", reportPayload(
             reportId, category, summary, note, reason, followUpAtIso, aiDecision,
             direction, callStatus, durationSeconds, followUpNeeded, followUpNote,
-            temperature, grade, evaluationAnswers,
+            temperature, grade, evaluationAnswers, noFollowUpReason,
         ))
     }
 
@@ -325,6 +326,7 @@ object WinstoneApi {
         temperature: String?,
         grade: String?,
         evaluationAnswers: Map<String, Boolean>? = null,
+        noFollowUpReason: String? = null,
     ): JSONObject = JSONObject().apply {
         put("action", "submit")
         put("report_id", reportId)
@@ -344,6 +346,8 @@ object WinstoneApi {
         durationSeconds?.let { put("duration_seconds", it) }
         put("follow_up_needed", followUpNeeded)
         followUpNote?.let { if (it.isNotBlank()) put("follow_up_note", it) }
+        // Canonical contact-close reason code (same list as web: src/lib/contact-close-reasons.ts)
+        noFollowUpReason?.let { if (it.isNotBlank()) put("no_follow_up_reason", it) }
         temperature?.let { put("temperature", it) }
         grade?.let { put("grade", it) }
         evaluationAnswers?.let { answers ->

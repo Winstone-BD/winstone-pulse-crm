@@ -3,7 +3,7 @@
  * page, the HQ and IT Console reference cards and the downloadable PDF are
  * all generated from this content — never keep a second copy.
  */
-export const MANUAL_VERSION = "1.0.0";
+export const MANUAL_VERSION = "1.1.0";
 export const MANUAL_UPDATED = "2026-09-30";
 export const MANUAL_PDF_PATH = "/winstone-system-manual.pdf";
 
@@ -43,6 +43,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     body: [
       "Default daily quota is 50 leads per agent. LeadHub can set a different equal quantity for today only, a persistent daily quota, or a per-agent quantity.",
       "Assignment takes the oldest eligible unassigned leads first. A phone number that was ever assigned or worked is never re-assigned as a fresh lead. Every assignment change is recorded permanently in lead history.",
+      "LeadHub is the only way a pool lead reaches an agent. Agent self-claim of unassigned leads is retired and rejected by the server; imports always land unassigned. The only exception is a new number an agent adds themself (e.g. an incoming caller), which is logged as agent-added.",
     ],
   },
   {
@@ -58,7 +59,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     body: [
       "After every call a report popup opens and the next call is blocked until it is submitted. Connected calls answer six yes/no questions; the server calculates score (max 90) and category: 0–20 Cold, 21–50 Warm, 51–90 Hot.",
       "Not-connected calls need no category; the lead returns to the retry queue.",
-      "A follow-up needs a date/time and one structured reason. Rescheduling keeps the original time; every create, reschedule and completion is stored permanently with who and when.",
+      "A follow-up needs a date/time and one structured reason. Rescheduling keeps the original time; every create, reschedule, completion, cancellation and status change is stored permanently with who, when and the old and new values. Follow-ups can never be deleted.",
     ],
   },
   {
@@ -66,14 +67,14 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     title: "7. Mandatory reasons",
     body: [
       "Follow-up reasons: callback requested, price, project details, brochure, payment details, location, family discussion, more time, site visit interest, call later, agent to send information, other (short note).",
-      "Contact-close reasons (when no further follow-up): Customer Not Interested, Information Completed, Converted / Closed, Wrong Number, Duplicate, Customer Requested No Further Contact, Other (note required). The server rejects a report without a valid reason. The same labels appear in Lead 360, follow-up history, reports and exports.",
+      "Contact-close reasons (when no further follow-up): Customer Not Interested, Information Completed, Converted / Closed, Wrong Number, Duplicate, Customer Requested No Further Contact, Other (note required). The server and the database both reject a report without a valid reason; the reason code and the Other note are stored on the report and written as a permanent 'contact_closed' event in the lead's history. Android v2.15+ uses the same reason list; older Android builds that send only a note are stored as Other with that note. The same labels appear in Lead 360, follow-up history, reports and exports.",
     ],
   },
   {
     id: "briefing",
     title: "8. 9:05 AM briefing gate",
     body: [
-      "From 09:05 Asia/Dhaka each business day, an agent must acknowledge the current briefing/policy version before starting calls or submitting reports. The server checks this on every call start and report submission from web and Android; refreshing or opening another tab cannot bypass it. Acknowledgements are stored permanently and cannot be edited. HQ and IT are not affected.",
+      "From 09:05 Asia/Dhaka each business day, an agent must acknowledge the current briefing/policy version before starting calls, submitting reports, completing/rescheduling follow-ups, triaging leads or logging WhatsApp messages. The server checks this on each of those actions from web and Android; refreshing or opening another tab cannot bypass it. Acknowledgements are stored permanently and cannot be edited. HQ and IT are not affected.",
     ],
   },
   {
@@ -152,6 +153,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     id: "changelog",
     title: "18. Version and changelog",
     body: [
+      "1.1.0 (2026-09-30): Contact-close reason enforced in the database and written to permanent lead history; Other note stored and shown; follow-up cancel/old-new values logged and deletes blocked; agent self-claim retired; 9:05 gate on all agent actions; Lead 360 filters (source, requirement, reason, event type) with totals, paging and filtered CSV.",
       "1.0.0 (2026-09-30): Handover release — sidebar sub-pages for HQ/Desk/IT, Lead 360 with full permanent history, structured follow-up and contact-close reasons, append-only history tables, briefing gate on report submission, home-page daily Top 3.",
     ],
   },

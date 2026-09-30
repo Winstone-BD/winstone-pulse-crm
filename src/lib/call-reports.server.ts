@@ -445,6 +445,7 @@ export async function submitCallReport(input: {
       customer_response: input.customerResponse ?? null,
       next_action: input.nextAction ?? null,
       no_follow_up_reason: input.followUpAt ? null : (input.noFollowUpReason ?? null),
+      no_follow_up_note: input.followUpAt ? null : noFollowUpNote || null,
       smart_reasons: input.smartReasons ?? null,
       evaluation_answers: answers,
       evaluation_score: evaluation?.score ?? null,

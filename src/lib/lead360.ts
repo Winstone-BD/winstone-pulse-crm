@@ -14,6 +14,7 @@ export type L360Call = {
   summary: string | null;
   requirement: string | null;
   closeReason?: string | null;
+  closeNote?: string | null;
 };
 export type L360StateChange = { id: string; field: string; oldValue: string | null; newValue: string | null; changedBy: string | null; source: string; at: string };
 export type L360FollowUp = {
@@ -137,7 +138,7 @@ export function buildLeadTimeline(input: {
             c.customerResponse ? `Customer response: ${c.customerResponse}` : "",
             c.summary ? c.summary : "",
             c.nextAction ? `Next Action: ${c.nextAction}` : "",
-            c.closeReason ? `যোগাযোগ বন্ধের কারণ: ${contactCloseReasonLabel(c.closeReason)}` : "",
+            c.closeReason ? `যোগাযোগ বন্ধের কারণ: ${contactCloseReasonLabel(c.closeReason, c.closeNote)}` : "",
             `Agent: ${agentName(c.agentId)}`,
           ].filter(Boolean)
         : [c.category ? `ফলাফল: ${c.category}` : "No Answer", "System Action: Retry Queue-তে পাঠানো হয়েছে", `Agent: ${agentName(c.agentId)}`],

@@ -213,6 +213,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
     var duration by remember { mutableStateOf("") }
     var noFollowUp by remember { mutableStateOf(false) }
     var noFollowUpNote by remember { mutableStateOf("") }
+    var noFollowUpReason by remember { mutableStateOf("") }
     var evaluationAnswers by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
     var grade by remember { mutableStateOf<String?>(null) }
 
@@ -261,7 +262,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
         seconds >= 0 && (!received || seconds >= 1) &&
         summary.trim().length > 1 &&
         note.trim().length > 1 &&
-        (if (noFollowUp) noFollowUpNote.trim().length > 1 else (date.length == 10 && time.length == 5)) &&
+        (if (noFollowUp) (if (received) ContactCloseReasons.isValid(noFollowUpReason, noFollowUpNote) else true) else (date.length == 10 && time.length == 5)) &&
         (!received || (evaluationComplete && grade != null)) &&
         (!needsReason || reason.trim().length > 1)
 
@@ -415,10 +416,17 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
             ) { Text(if (noFollowUp) "✓ ফলো-আপ দরকার নেই" else "ফলো-আপ দরকার নেই") }
             if (noFollowUp) {
+                Text("যোগাযোগ বন্ধের কারণ (বাধ্যতামূলক)", fontSize = 12.sp)
+                ContactCloseReasons.all.forEach { (code, label) ->
+                    OutlinedButton(
+                        onClick = { noFollowUpReason = code },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+                    ) { Text(if (noFollowUpReason == code) "✓ $label" else label) }
+                }
                 OutlinedTextField(
                     value = noFollowUpNote,
                     onValueChange = { noFollowUpNote = it },
-                    label = { Text("কেন দরকার নেই (বাধ্যতামূলক)") },
+                    label = { Text(if (noFollowUpReason == "other") "\"Other\" কারণের বিবরণ (বাধ্যতামূলক)" else "অতিরিক্ত নোট (ঐচ্ছিক)") },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -469,6 +477,7 @@ fun ReportSheet(notes: String, onSubmitted: () -> Unit = {}) {
                             temperature = temperature,
                             grade = grade,
                             evaluationAnswers = if (received) evaluationAnswers else null,
+                            noFollowUpReason = if (!noFollowUp) null else if (received) noFollowUpReason else "not_connected",
                         )
                         val result = runCatching { WinstoneApi.submitReportRaw(payload) }
                         busy = false

@@ -206,6 +206,7 @@ export const logAnyNumberCall = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertAgentBriefing(me.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { normalizeLeadPhone, intakeLead } = await import("@/lib/lead-intake.server");
     const { resolveLeadIdByPhone } = await import("@/lib/lead-eligibility.server");
@@ -380,18 +381,23 @@ export const myFollowUps = createServerFn({ method: "POST" })
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let query = supabaseAdmin
-      .from("follow_up_events")
-      .select("*")
-      .order("scheduled_at", { ascending: true })
-      .limit(500);
-
-    if (caller.scope === "agent" && caller.profile) query = query.eq("agent_id", caller.profile.id);
-    if (data.fromIso) query = query.gte("scheduled_at", data.fromIso);
-    if (data.toIso) query = query.lte("scheduled_at", data.toIso);
-
-    const { data: events, error } = await query;
-    if (error) throw new Error(error.message);
+    // Paged through every matching row — no silent truncation. Agents only get their own.
+    const events: import("@/integrations/supabase/types").Database["public"]["Tables"]["follow_up_events"]["Row"][] = [];
+    for (let from = 0; ; from += 1000) {
+      let query = supabaseAdmin
+        .from("follow_up_events")
+        .select("*")
+        .order("scheduled_at", { ascending: true })
+        .order("id")
+        .range(from, from + 999);
+      if (caller.scope === "agent" && caller.profile) query = query.eq("agent_id", caller.profile.id);
+      if (data.fromIso) query = query.gte("scheduled_at", data.fromIso);
+      if (data.toIso) query = query.lte("scheduled_at", data.toIso);
+      const { data: page, error } = await query;
+      if (error) throw new Error(error.message);
+      events.push(...(page ?? []));
+      if (!page || page.length < 1000) break;
+    }
 
     const now = Date.now();
     const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
@@ -410,6 +416,7 @@ export const completeFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ eventId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertAgentBriefing(me.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("follow_up_events")
@@ -742,6 +749,7 @@ export const rescheduleFollowUp = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const { canReschedule } = await import("@/lib/lead-groups");
     const caller = await resolveCaller(data.adminToken ?? null);
+    await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: event } = await supabaseAdmin
       .from("follow_up_events")

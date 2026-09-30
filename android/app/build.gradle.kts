@@ -19,8 +19,8 @@ android {
         applicationId = "com.winstone.connect"
         minSdk = 24
         targetSdk = 35
-        versionCode = 25
-        versionName = "2.14"
+        versionCode = 26
+        versionName = "2.15"
     }
 
     buildFeatures {

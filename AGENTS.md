@@ -22,3 +22,7 @@
 - Android nearby-lead distance uses foreground device location plus on-device geocoding of the assigned lead's saved address; the agent's GPS is never uploaded or persisted — why: proximity must not become staff tracking.
 
 - Staff display names are cleaned in the database (profiles trigger strips MD/MSD/Mohammad/মোঃ); the original entry is kept only in profiles.legal_name, never selected for UI — why: one rule for web, Android and reports.
+- Contact-close reasons are enforced by a call_reports DB trigger and logged as immutable `lead_events` kind `contact_closed` — why: server/UI checks alone can be bypassed.
+- follow_up_events rows cannot be deleted; every change logs old/new values to follow_up_changes — why: history must be append-only.
+- Agent self-claim (`claimLead`) is retired; only LeadHub assignment moves pool leads — why: single canonical assignment path.
+- Agent mutations call `assertAgentBriefing`/`assertBriefingForCaller` from agent-briefing.server — why: 9:05 gate must be server-side on every protected action.
