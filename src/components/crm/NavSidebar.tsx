@@ -20,6 +20,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Network,
+  Newspaper,
   PhoneCall,
   Server,
   ShieldCheck,
@@ -42,6 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/hq": LayoutDashboard,
   "/inventory": Building2,
   "/sales-intel": Lightbulb,
+  "/news": Newspaper,
   "/reports": BarChart3,
   "/system": Server,
   "/ingest": DatabaseZap,
@@ -59,7 +61,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 const GROUPS: { title: string; routes: string[] }[] = [
   { title: "প্রধান", routes: ["/", "/desk", "/coach"] },
-  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/inventory", "/reports"] },
+  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/news", "/inventory", "/reports"] },
   { title: "ম্যানেজমেন্ট", routes: ["/hq"] },
   { title: "সাপোর্ট", routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {

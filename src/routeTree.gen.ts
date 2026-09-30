@@ -32,6 +32,7 @@ import { Route as ManualRouteImport } from './routes/manual'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
@@ -71,6 +72,7 @@ import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
+import { Route as ApiPublicHooksMarketNewsRouteImport } from './routes/api/public/hooks/market-news'
 import { Route as ApiPublicHooksRemindersRouteImport } from './routes/api/public/hooks/reminders'
 import { Route as ApiPublicHooksServiceBillingRouteImport } from './routes/api/public/hooks/service-billing'
 import { Route as ApiPublicHooksShiftSummaryRouteImport } from './routes/api/public/hooks/shift-summary'
@@ -201,6 +203,11 @@ const MigrationRoute = MigrationRouteImport.update({
 const MigrationExportRoute = MigrationExportRouteImport.update({
   id: '/migration-export',
   path: '/migration-export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -406,6 +413,12 @@ const ApiPublicHooksLeadDistributionRoute =
     path: '/api/public/hooks/lead-distribution',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMarketNewsRoute =
+  ApiPublicHooksMarketNewsRouteImport.update({
+    id: '/api/public/hooks/market-news',
+    path: '/api/public/hooks/market-news',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRemindersRoute = ApiPublicHooksRemindersRouteImport.update({
   id: '/api/public/hooks/reminders',
   path: '/api/public/hooks/reminders',
@@ -518,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
@@ -557,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
@@ -598,6 +613,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
@@ -637,6 +653,7 @@ export interface FileRoutesByTo {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
@@ -679,6 +696,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
+  '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
@@ -718,6 +736,7 @@ export interface FileRoutesById {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
   '/api/public/hooks/shift-summary': typeof ApiPublicHooksShiftSummaryRoute
@@ -761,6 +780,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/migration'
     | '/migration-export'
+    | '/news'
     | '/privacy'
     | '/reports'
     | '/sales-intel'
@@ -800,6 +820,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/market-news'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
@@ -841,6 +862,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/migration'
     | '/migration-export'
+    | '/news'
     | '/privacy'
     | '/reports'
     | '/sales-intel'
@@ -880,6 +902,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/market-news'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
@@ -921,6 +944,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/migration'
     | '/migration-export'
+    | '/news'
     | '/privacy'
     | '/reports'
     | '/sales-intel'
@@ -960,6 +984,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/market-news'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
     | '/api/public/hooks/shift-summary'
@@ -1002,6 +1027,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
   MigrationExportRoute: typeof MigrationExportRoute
+  NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
   SalesIntelRoute: typeof SalesIntelRoute
@@ -1041,6 +1067,7 @@ export interface RootRouteChildren {
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
+  ApiPublicHooksMarketNewsRoute: typeof ApiPublicHooksMarketNewsRoute
   ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
   ApiPublicHooksServiceBillingRoute: typeof ApiPublicHooksServiceBillingRoute
   ApiPublicHooksShiftSummaryRoute: typeof ApiPublicHooksShiftSummaryRoute
@@ -1220,6 +1247,13 @@ declare module '@tanstack/react-router' {
       path: '/migration-export'
       fullPath: '/migration-export'
       preLoaderRoute: typeof MigrationExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1495,6 +1529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLeadDistributionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/market-news': {
+      id: '/api/public/hooks/market-news'
+      path: '/api/public/hooks/market-news'
+      fullPath: '/api/public/hooks/market-news'
+      preLoaderRoute: typeof ApiPublicHooksMarketNewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/reminders': {
       id: '/api/public/hooks/reminders'
       path: '/api/public/hooks/reminders'
@@ -1634,6 +1675,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
   MigrationExportRoute: MigrationExportRoute,
+  NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
   SalesIntelRoute: SalesIntelRoute,
@@ -1674,6 +1716,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
+  ApiPublicHooksMarketNewsRoute: ApiPublicHooksMarketNewsRoute,
   ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
   ApiPublicHooksServiceBillingRoute: ApiPublicHooksServiceBillingRoute,
   ApiPublicHooksShiftSummaryRoute: ApiPublicHooksShiftSummaryRoute,
