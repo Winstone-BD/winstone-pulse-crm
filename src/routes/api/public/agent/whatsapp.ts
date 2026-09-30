@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/public/agent/whatsapp")({
               created_at: m.sent_at ?? new Date().toISOString(),
             })),
           );
-          if (error) return json({ error: error.message }, 500);
+          if (error) { console.error("whatsapp log failed", error); return json({ error: "Message could not be saved" }, 500); }
 
           const { logLeadEvent } = await import("@/lib/lead-events.server");
           await logLeadEvent({
