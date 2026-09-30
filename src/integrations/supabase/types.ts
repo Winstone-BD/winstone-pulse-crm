@@ -1175,6 +1175,137 @@ export type Database = {
           },
         ]
       }
+      it_notice_recipients: {
+        Row: {
+          created_at: string
+          id: string
+          notice_id: string
+          profile_id: string
+          read_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notice_id: string
+          profile_id: string
+          read_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notice_id?: string
+          profile_id?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_notice_recipients_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "it_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_notice_recipients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      it_notice_replies: {
+        Row: {
+          author_label: string
+          body: string
+          created_at: string
+          id: string
+          notice_id: string
+          profile_id: string | null
+        }
+        Insert: {
+          author_label: string
+          body: string
+          created_at?: string
+          id?: string
+          notice_id: string
+          profile_id?: string | null
+        }
+        Update: {
+          author_label?: string
+          body?: string
+          created_at?: string
+          id?: string
+          notice_id?: string
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_notice_replies_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "it_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_notice_replies_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      it_notices: {
+        Row: {
+          audience_role: Database["public"]["Enums"]["app_role"] | null
+          audience_type: string
+          author_label: string
+          author_profile_id: string | null
+          body: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          published_at: string
+          severity: string
+          title: string
+        }
+        Insert: {
+          audience_role?: Database["public"]["Enums"]["app_role"] | null
+          audience_type?: string
+          author_label?: string
+          author_profile_id?: string | null
+          body: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          published_at?: string
+          severity?: string
+          title: string
+        }
+        Update: {
+          audience_role?: Database["public"]["Enums"]["app_role"] | null
+          audience_type?: string
+          author_label?: string
+          author_profile_id?: string | null
+          body?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          published_at?: string
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_notices_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_assignments: {
         Row: {
           changed_by: string | null
