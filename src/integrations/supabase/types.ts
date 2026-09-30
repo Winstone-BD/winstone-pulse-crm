@@ -1048,6 +1048,54 @@ export type Database = {
           },
         ]
       }
+      drive_documents: {
+        Row: {
+          content: string
+          created_at: string
+          file_id: string
+          folder_id: string | null
+          folder_name: string | null
+          id: string
+          indexed_at: string
+          mime_type: string
+          modified_time: string | null
+          name: string
+          updated_at: string
+          web_view_link: string | null
+          word_count: number
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          file_id: string
+          folder_id?: string | null
+          folder_name?: string | null
+          id?: string
+          indexed_at?: string
+          mime_type?: string
+          modified_time?: string | null
+          name: string
+          updated_at?: string
+          web_view_link?: string | null
+          word_count?: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_id?: string
+          folder_id?: string | null
+          folder_name?: string | null
+          id?: string
+          indexed_at?: string
+          mime_type?: string
+          modified_time?: string | null
+          name?: string
+          updated_at?: string
+          web_view_link?: string | null
+          word_count?: number
+        }
+        Relationships: []
+      }
       follow_up_events: {
         Row: {
           agent_id: string | null
