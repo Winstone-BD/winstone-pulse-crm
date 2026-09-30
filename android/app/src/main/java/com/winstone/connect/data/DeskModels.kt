@@ -8,9 +8,11 @@ data class Lead(
     val name: String,
     val phone: String,
     val company: String?,
+    val address: String?,
     val status: String,
     val attempts: Int,
     val notes: String?,
+    val distanceKm: Double? = null,
 )
 
 data class CallRow(
@@ -81,6 +83,7 @@ fun parseLeads(arr: JSONArray): List<Lead> = (0 until arr.length()).map { i ->
         name = o.optString("name"),
         phone = o.optString("phone_number"),
         company = o.str("company"),
+        address = o.str("address"),
         status = o.optString("status", "pending"),
         attempts = o.optInt("call_attempts"),
         notes = o.str("notes"),
