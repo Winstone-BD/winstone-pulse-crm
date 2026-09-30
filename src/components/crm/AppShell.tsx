@@ -1,6 +1,6 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Lock, LockOpen, LogOut, Menu, Smartphone, Sparkles } from "lucide-react";
-import { NavSidebar } from "@/components/crm/NavSidebar";
+import { Link } from "@tanstack/react-router";
+import { Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
+import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -20,14 +20,6 @@ import { OfflineSyncBar } from "@/components/crm/OfflineSyncBar";
 
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCrmRealtime } from "@/hooks/use-crm-realtime";
 import { setAdminToken, useAdminToken } from "@/lib/local-session";
 import { useMyAccount, useSignOut } from "@/lib/session";
@@ -60,30 +52,22 @@ export const NAV = [
   { to: "/help", label: "Help Centre", scopes: ["authority", "coordinator", "agent", "none"] },
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
-const PRIMARY_ROUTES: Record<Scope, readonly string[]> = {
-  authority: ["/", "/leadhub", "/hq", "/system"],
-  coordinator: ["/", "/desk", "/reports"],
-  agent: ["/", "/desk", "/coach", "/reports"],
-  none: ["/", "/docs", "/help"],
-};
 
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
   const { scope } = useMyAccount();
-  const location = useLocation();
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
   const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
-  const primaryRoutes = PRIMARY_ROUTES[scope as Scope] ?? PRIMARY_ROUTES.none;
-  const primaryNav = nav.filter((item) => primaryRoutes.includes(item.to));
-  const moreNav = nav.filter((item) => !primaryRoutes.includes(item.to));
-  const moreIsActive = moreNav.some((item) => location.pathname === item.to);
 
   return (
     <div className="min-h-screen grid-noise">
       <header className="glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+          <div className="lg:hidden">
+            <MobileNavDrawer items={nav} />
+          </div>
           <Link to="/" className="flex min-w-0 shrink items-center gap-2.5">
             <img
               src={logoAsset.url}
@@ -177,50 +161,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex items-center gap-1 px-3 pb-2 lg:hidden">
-          <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.to === "/" }}
-              className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground data-[status=active]:border-primary/30 data-[status=active]:bg-accent data-[status=active]:text-primary"
-            >
-              {item.label}
-            </Link>
-          ))}
-          </div>
-          {moreNav.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label="Open more navigation links"
-                  className={`size-7 shrink-0 rounded-full ${moreIsActive ? "border-primary/30 bg-accent text-primary" : ""}`}
-                >
-                  <Menu className="size-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>More tools</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {moreNav.map((item) => (
-                  <DropdownMenuItem key={item.to} asChild>
-                    <Link
-                      to={item.to}
-                      activeOptions={{ exact: item.to === "/" }}
-                      className="w-full cursor-pointer data-[status=active]:bg-accent data-[status=active]:text-primary"
-                    >
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </nav>
       </header>
 
       <div className="mx-auto flex w-full max-w-[1600px]">
