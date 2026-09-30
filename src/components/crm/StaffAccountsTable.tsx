@@ -157,7 +157,34 @@ export function StaffAccountsTable() {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto">
+      <ul className="mt-4 space-y-2 md:hidden">
+        {staff.map((row) => {
+          const isEditing = editing === row.id;
+          return (
+            <li key={row.id} className="space-y-3 rounded-lg border border-border p-3">
+              {isEditing ? (
+                <div className="grid gap-2">
+                  <Input defaultValue={row.name} aria-label="এজেন্টের নাম" onChange={(e) => setEdit((s) => ({ ...s, name: e.target.value }))} />
+                  <Input defaultValue={row.employee_id ?? ""} aria-label="Agent ID" onChange={(e) => setEdit((s) => ({ ...s, employeeId: e.target.value }))} />
+                  <Input defaultValue={row.phone ?? ""} aria-label="ফোন নম্বর" onChange={(e) => setEdit((s) => ({ ...s, phone: e.target.value }))} />
+                  <Input placeholder="নতুন পাসওয়ার্ড" aria-label="নতুন পাসওয়ার্ড" onChange={(e) => setEdit((s) => ({ ...s, password: e.target.value }))} />
+                </div>
+              ) : (
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                  <div className="min-w-0"><p className="truncate font-semibold">{row.name}</p><p className="tabular truncate text-xs text-muted-foreground">{row.employee_id ?? "—"} · {row.phone ?? "—"}</p></div>
+                  <span className="text-xs text-muted-foreground">{row.is_active ? "সক্রিয়" : "বন্ধ"}</span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">অ্যাসাইন করা লিড: <span className="tabular font-semibold text-foreground">{row.assignedLeads}</span></p>
+              <div className="grid grid-cols-2 gap-2">
+                {isEditing ? <><Button size="sm" disabled={save.isPending} onClick={() => save.mutate(row.id)}>সেভ</Button><Button size="sm" variant="ghost" onClick={() => setEditing(null)}>বাতিল</Button></> : <><Button size="sm" variant="secondary" onClick={() => { setEditing(row.id); setEdit({ name: "", employeeId: "", phone: "", password: "" }); }}><Pencil className="size-3.5" /> এডিট</Button><Button size="sm" variant="ghost" disabled={toggle.isPending} onClick={() => toggle.mutate({ profileId: row.id, isActive: !row.is_active })}>{row.is_active ? "বন্ধ করুন" : "চালু করুন"}</Button></>}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="table-scroll mt-4 hidden md:block">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr className="border-b border-border">

@@ -120,7 +120,7 @@ export function DeckLeadSearch({ agents, full }: { agents: Agent[]; full: boolea
         </Select>
       </div>
 
-      <div className="mt-3 overflow-x-auto rounded-md border border-border">
+      <div className="table-scroll mt-3 rounded-md border border-border">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-surface-2 text-xs text-muted-foreground">
             <tr>

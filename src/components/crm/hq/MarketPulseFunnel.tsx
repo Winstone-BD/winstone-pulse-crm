@@ -81,7 +81,7 @@ export function MarketPulseFunnel({ leads, reports, filters, onDrill }: { leads:
             এখনো কোনো এলাকার তথ্য সংরক্ষিত হয়নি। বুকিং যোগ করার সময় এলাকা লিখলে এখানে চাহিদা ও দাম দেখা যাবে।
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll">
             <table className="w-full text-xs">
               <thead className="text-muted-foreground">
                 <tr className="text-left"><th className="py-1 pr-2">এলাকা</th><th className="py-1 pr-2 text-right">লিড</th><th className="py-1 pr-2 text-right">বুকিং</th><th className="py-1 text-right">গড় বুকিং মূল্য</th></tr>
