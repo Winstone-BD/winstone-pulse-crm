@@ -13,9 +13,15 @@ async function agent(adminToken?: string | null) {
 export const getMyBriefingStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }) => {
-    const me = await agent(data.adminToken);
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
     const { agentBriefingStatus } = await import("@/lib/agent-briefing.server");
-    return agentBriefingStatus(me.id);
+    // HQ/IT and signed-out sessions never face the agent briefing gate.
+    if (caller.scope !== "agent" || !caller.profile) {
+      const base = await agentBriefingStatus("00000000-0000-0000-0000-000000000000", 0);
+      return { ...base, required: false, acknowledged: true };
+    }
+    return agentBriefingStatus(caller.profile.id);
   });
 
 export const acknowledgeMyBriefing = createServerFn({ method: "POST" })
