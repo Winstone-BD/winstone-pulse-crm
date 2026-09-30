@@ -6,3 +6,11 @@
 
 ## Backlog
 3. Revisit Google Sheets connection after report is accepted.
+
+## 2026-09-30 request (pending answers)
+- [ ] Lead brief per assigned lead: why given, value, call script, conversion tips, callback date
+- [ ] Per-project daily/monthly report: leads, calls, site visits, bookings
+- [ ] APK nearby-lead cards (blocked: sign-in cannot be removed — security)
+- [ ] Locked V2 scoring (6 questions, auto category/priority, no manual Hot/Warm/Cold)
+- [ ] 9:05 daily briefing acknowledgement gate (server-side)
+- [ ] Smarter distribution: project expertise, site visits, prior follow-ups
