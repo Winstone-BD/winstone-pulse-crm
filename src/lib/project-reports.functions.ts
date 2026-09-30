@@ -56,10 +56,36 @@ export const getProjectReport = createServerFn({ method: "POST" })
     if (reportsResult.error) throw new Error(reportsResult.error.message);
     if (leadsResult.error) throw new Error(leadsResult.error.message);
 
+    const createdLeadIds = (leadsResult.data ?? []).map((lead) => lead.id);
+    const createdLeadRequirements = new Map<string, string>();
+    for (let offset = 0; offset < createdLeadIds.length; offset += 200) {
+      const ids = createdLeadIds.slice(offset, offset + 200);
+      if (!ids.length) continue;
+      let requirementQuery = supabaseAdmin
+        .from("call_reports")
+        .select("lead_id, requirement, submitted_at")
+        .in("lead_id", ids)
+        .eq("status", "submitted")
+        .not("requirement", "is", null)
+        .order("submitted_at", { ascending: false });
+      if (caller.scope === "agent") {
+        const profileId = caller.profile?.id;
+        if (!profileId) throw new Error("Agent profile পাওয়া যায়নি");
+        requirementQuery = requirementQuery.eq("agent_id", profileId);
+      }
+      const requirementResult = await requirementQuery;
+      if (requirementResult.error) throw new Error(requirementResult.error.message);
+      for (const row of requirementResult.data ?? []) {
+        if (row.requirement && !createdLeadRequirements.has(row.lead_id)) {
+          createdLeadRequirements.set(row.lead_id, row.requirement);
+        }
+      }
+    }
+
     const rows = buildProjectReport(
       inventoryResult.data ?? [],
       reportsResult.data ?? [],
-      new Set((leadsResult.data ?? []).map((lead) => lead.id)),
+      createdLeadRequirements,
     );
     return {
       period: data.period,

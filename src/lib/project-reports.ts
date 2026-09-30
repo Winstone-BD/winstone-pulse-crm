@@ -48,7 +48,7 @@ function normalized(value: string | null) {
 export function buildProjectReport(
   projects: InventoryProject[],
   facts: ProjectReportFact[],
-  leadIdsCreatedInPeriod: ReadonlySet<string>,
+  createdLeadRequirements: ReadonlyMap<string, string>,
 ): ProjectReportRow[] {
   const byLabel = new Map(projects.map((project) => [normalized(project.label), project]));
   const totals = new Map<string, { leads: Set<string>; calls: number; siteVisits: number; bookings: number }>();
@@ -63,11 +63,16 @@ export function buildProjectReport(
     const row = totals.get(project.id);
     if (!row) continue;
     row.calls += 1;
-    if (leadIdsCreatedInPeriod.has(fact.lead_id)) row.leads.add(fact.lead_id);
     if (fact.customer_response === "site_visit" || fact.next_action === "site_visit") {
       row.siteVisits += 1;
     }
     if (fact.category === "closed_converted") row.bookings += 1;
+  }
+
+  for (const [leadId, requirement] of createdLeadRequirements) {
+    const project = byLabel.get(normalized(requirement));
+    const row = project ? totals.get(project.id) : undefined;
+    if (row) row.leads.add(leadId);
   }
 
   return projects
