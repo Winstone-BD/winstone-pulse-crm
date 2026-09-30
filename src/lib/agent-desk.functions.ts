@@ -76,6 +76,8 @@ const ClaimInput = z.object({
   leadId: z.string().uuid(),
 });
 
+export const SELF_CLAIM_RETIRED = true;
+
 /** The agent takes an untaken lead into their own account. No app needed. */
 export const claimLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ClaimInput.parse(input))
@@ -85,6 +87,8 @@ export const claimLead = createServerFn({ method: "POST" })
     if (caller.scope === "none" || !caller.profile) {
       throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     }
+    // Retired: only LeadHub Nexus quantity assignment may move a pool lead to an agent.
+    if (SELF_CLAIM_RETIRED) throw new Error("লিড শুধু LeadHub Nexus থেকে বরাদ্দ হয় — নিজে নেওয়া বন্ধ");
     const me = caller.profile.id;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
