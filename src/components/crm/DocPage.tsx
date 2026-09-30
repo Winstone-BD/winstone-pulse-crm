@@ -21,7 +21,7 @@ export function DocPage({ kicker, title, meta, pdf, children, sections }: {
           {s.table ? (
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[480px] border-collapse text-sm">
-                <thead><tr>{s.table[0].map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
+                <thead><tr>{(s.table[0] ?? []).map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
                 <tbody>{s.table.slice(1).map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="border border-border p-2 align-top">{c}</td>)}</tr>)}</tbody>
               </table>
             </div>

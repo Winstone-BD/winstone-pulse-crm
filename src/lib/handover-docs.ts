@@ -11,7 +11,7 @@ export const HANDOVER_PDF_PATH = "/winstone-client-handover.pdf";
 
 export type DocSection = { id: string; title: string; body: string[]; table?: string[][] };
 
-export const AUDIT_ITEMS: Array<{ item: string; result: "PASS" | "PASS (code/test)"; evidence: string }> = [
+export const AUDIT_ITEMS: Array<{ item: string; result: string; evidence: string }> = [
   { item: "1. Call readiness", result: "PASS (code/test)", evidence: "Web startMyCall and Android /api/public/agent/call-start derive the agent from the signed-in session or device token only. Order: 9:05 briefing → staff photo → one-pending-report lock (unique DB index) → lead must be assigned to this agent. Fixed during the audit: unassigned pool leads could be dialled; now refused." },
   { item: "2. Agent scope", result: "PASS (code/test)", evidence: "Agent snapshot queries filter by the caller's profile id on the server; HQ/IT PIN scope reads the whole floor; RLS on every public table (0 tables without RLS)." },
   { item: "3. Data integrity", result: "PASS (code/test)", evidence: "Dashboard snapshot pages through all rows (no latest-500 cap). 3,980 leads, 2,935 reports read from real records. One staff-created row named \"IT Test\" (source agent_app) exists and is kept — leads are never deleted." },
