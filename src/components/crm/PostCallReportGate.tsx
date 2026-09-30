@@ -1,4 +1,5 @@
 import { EVALUATION_QUESTIONS, categoryForScore, type EvaluationKey } from "@/lib/lead-evaluation";
+import { FOLLOW_UP_REASONS, type FollowUpReasonCode } from "@/lib/follow-up-reasons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
