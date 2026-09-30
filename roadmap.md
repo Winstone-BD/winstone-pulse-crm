@@ -9,7 +9,7 @@
 
 ## 2026-09-30 request (pending answers)
 - [ ] Lead brief per assigned lead: why given, value, call script, conversion tips, callback date
-- [ ] Per-project daily/monthly report: leads, calls, site visits, bookings
+- [x] Inventory-based per-project daily/monthly report: leads, calls, explicit site-visit signals, closed/converted bookings
 - [ ] APK nearby-lead cards (blocked: sign-in cannot be removed — security)
 - [x] Locked V2 scoring (6 questions, auto category/priority, no manual Hot/Warm/Cold) — web/server/Android
 - [ ] 9:05 daily briefing acknowledgement gate (server-side)

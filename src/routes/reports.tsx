@@ -15,6 +15,7 @@ import { ReportsKpiStrip } from "@/components/crm/reports/ReportsKpiStrip";
 import { DailyActivityChart } from "@/components/crm/reports/DailyActivityChart";
 import { IntelligenceCards, AiPerformanceBrief } from "@/components/crm/reports/IntelligenceCards";
 import { AgentPerformanceTable } from "@/components/crm/reports/AgentPerformanceTable";
+import { ProjectReportPanel } from "@/components/crm/reports/ProjectReportPanel";
 import { useSnapshot } from "@/lib/crm-data";
 import {
   buildReport,
@@ -120,6 +121,8 @@ export function ReportsBoard() {
         stamp={stamp}
         onReset={() => setFilters(defaultFilters(30))}
       />
+
+      <ProjectReportPanel />
 
       <CallReportsPanel />
 

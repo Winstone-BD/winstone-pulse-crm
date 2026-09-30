@@ -17,3 +17,4 @@
 - The temporary 2026-09-30 11:30 Asia/Dhaka maintenance closure is a global non-dismissible gate — why: home and every CRM role must stop using CRM until IT confirms reopening.
 
 - Android V2 reports send six raw yes/no evaluation answers; the server derives score/category/priority and legacy reports are never rescored — why: one locked rule across web, phone and offline replay.
+- Project reporting uses Inventory requirement labels as the current project dimension; site visits and bookings count only explicit saved report signals — why: no separate projects, site-visits, or bookings model exists yet, so free-text inference would invent facts.
