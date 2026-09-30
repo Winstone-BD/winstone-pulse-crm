@@ -146,7 +146,7 @@ function ImportScreen() {
           </div>
         </div>
 
-        <p className="rounded-md border border-border bg-surface-2 px-3 py-2 text-xs text-muted-foreground">সব ইমপোর্ট হেড লিড স্টোরে UNASSIGNED হিসেবে যায় — বণ্টন হয় Coordinator Deck-এর Distribution থেকে।</p>
+        <p className="rounded-md border border-border bg-surface-2 px-3 py-2 text-xs text-muted-foreground">সব ইমপোর্ট Canonical Lead Database-এ UNASSIGNED থাকে — LeadHub Nexus থেকে assignment হয়।</p>
       </section>
 
       <section className="card-elevated space-y-3 p-4">

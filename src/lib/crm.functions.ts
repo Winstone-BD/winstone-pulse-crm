@@ -108,16 +108,17 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .object({
         pin: z.string().min(1).max(32),
         // Which board is being unlocked. HQ gets a read-only token.
-        surface: z.enum(["hq", "system"]).default("system"),
+        surface: z.enum(["hq", "system", "leadhub"]).default("system"),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatchesLive, mintAdminToken } = await import("@/lib/admin-gate.server");
-    if (!(await pinMatchesLive(data.pin))) return { ok: false as const };
+    const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
+    const matches = data.surface === "leadhub" ? leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
+    if (!matches) return { ok: false as const };
     return {
       ok: true as const,
-      token: mintAdminToken(data.surface === "hq" ? "hq" : "full"),
+      token: mintAdminToken(data.surface === "hq" ? "hq" : data.surface === "leadhub" ? "leadhub" : "full"),
       readOnly: data.surface === "hq",
     };
   });

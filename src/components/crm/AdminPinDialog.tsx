@@ -27,7 +27,7 @@ export function AdminPinDialog({
   onOpenChange: (open: boolean) => void;
   onUnlocked?: () => void;
   /** "hq" mints a view-only session; "system" mints the full IT session. */
-  surface?: "hq" | "system";
+  surface?: "hq" | "system" | "leadhub";
 }) {
   const [pin, setPin] = useState("");
   const [attemptNo, setAttemptNo] = useState(0);
@@ -39,7 +39,7 @@ export function AdminPinDialog({
       if (result.ok) {
         setAdminToken(result.token);
         toast.success(
-          surface === "hq" ? "Executive HQ unlocked (view-only)" : "Control board unlocked",
+          surface === "hq" ? "Executive HQ unlocked (view-only)" : surface === "leadhub" ? "LeadHub Nexus unlocked" : "Control board unlocked",
         );
         setPin("");
         onOpenChange(false);
@@ -70,9 +70,9 @@ export function AdminPinDialog({
           <span className="grid size-11 place-items-center rounded-full bg-primary/15 text-primary">
             <Lock className="size-5" />
           </span>
-          <DialogTitle>Control board PIN</DialogTitle>
+          <DialogTitle>{surface === "leadhub" ? "LeadHub Nexus PIN" : "Control board PIN"}</DialogTitle>
           <DialogDescription>
-            Enter the master PIN to unlock lead balancing and manual logs on this device.
+            {surface === "leadhub" ? "LeadHub-এর আলাদা PIN দিন।" : "Enter the master PIN to unlock this board on this device."}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
@@ -82,7 +82,7 @@ export function AdminPinDialog({
             inputMode="text"
             autoComplete="off"
             autoFocus
-            placeholder="Master PIN"
+            placeholder={surface === "leadhub" ? "LeadHub PIN" : "Master PIN"}
             value={pin}
             onChange={(event) => setPin(event.target.value)}
             onKeyDown={(event) => {

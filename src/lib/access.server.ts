@@ -72,6 +72,7 @@ export async function resolveCaller(adminToken?: string | null): Promise<Caller>
       approval: "approved",
       // Executive HQ unlock is a viewing session: reads pass, mutations do not.
       readOnly: pinScope === "hq",
+      label: pinScope === "leadhub" ? "LeadHub Nexus" : undefined,
     };
   }
 
@@ -160,6 +161,13 @@ export function requireDispatch(caller: Caller) {
 
 export function requireAuthority(caller: Caller) {
   if (caller.scope !== "authority") throw new Error("Master PIN required");
+}
+
+/** LeadHub has its own PIN scope; ordinary HQ/IT/Coordinator sessions do not inherit it. */
+export function requireLeadHub(caller: Caller, token: string | null | undefined) {
+  if (caller.scope !== "authority") throw new Error("LeadHub PIN required");
+  const { adminTokenScope } = require("@/lib/admin-gate.server") as typeof import("@/lib/admin-gate.server");
+  if (adminTokenScope(token) !== "leadhub") throw new Error("LeadHub PIN required");
 }
 
 export const HQ_READ_ONLY =

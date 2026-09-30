@@ -59,9 +59,9 @@ export const coordinatorDeckStatus = createServerFn({ method: "POST" })
   });
 
 async function fullDeck(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDispatch, requireWrite } = await import("@/lib/access.server");
+  const { resolveCaller, requireLeadHub, requireWrite } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
-  requireDispatch(caller);
+  requireLeadHub(caller, adminToken);
   return { caller, requireWrite };
 }
 
@@ -139,7 +139,6 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
 
     const agents = new Map((await pool.activeAgents()).map((a) => [a.id, a]));
     const today = pool.dhakaToday();
-    const BD_MOBILE = /^(?:\+?88)?01[3-9]\d{8}$/;
     const results: { agentId: string; requested: number; assigned: number }[] = [];
 
     for (const row of data.rows) {
@@ -161,9 +160,8 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
           .order("created_at", { ascending: true })
           .limit(Math.min(1000, need * 3 + 20));
         if (error) throw new Error(error.message);
-        const valid = (candidates ?? []).filter((l) =>
-          BD_MOBILE.test((l.phone_number ?? "").replace(/[\s-]/g, "")),
-        );
+        const { extractBangladeshPhones } = await import("@/lib/lead-phone");
+        const valid = (candidates ?? []).filter((l) => extractBangladeshPhones(l.phone_number ?? "").length > 0);
         if (!valid.length) break;
         const eligible = new Set(await eligibleLeadIds(valid.map((l) => l.id)));
         const ids = valid.filter((l) => eligible.has(l.id)).slice(0, need).map((l) => l.id);
@@ -173,7 +171,7 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
           .update({
             assigned_to: agent.id,
             assigned_agent_id: agent.id,
-            assignment_source: "coordinator",
+            assignment_source: "leadhub",
             work_date: today,
           })
           .in("id", ids)
@@ -194,13 +192,13 @@ export const assignLeadCounts = createServerFn({ method: "POST" })
         entityType: "lead",
         entityId: null,
         actorProfileId: caller.profile?.id ?? null,
-        actorLabel: caller.label ?? caller.profile?.name ?? "Coordinator",
+          actorLabel: caller.label ?? caller.profile?.name ?? "LeadHub Nexus",
         metadata: {
           requestId: data.requestId,
           agentId: agent.id,
           requested: row.count,
           count: moved.length,
-          source: "coordinator_count",
+          source: "leadhub_count",
           leadIds: moved,
         },
       });

@@ -21,7 +21,7 @@ const EMPTY = {
   notes: "",
 };
 
-const BD_MOBILE = /^(?:\+?88)?01[3-9]\d{8}$/;
+const VALID_PHONE = /^(?:(?:\+?88)?01[3-9]\d{8}|\+[1-9][\d() .-]{7,20}|00[1-9][\d() .-]{7,20})$/;
 
 /**
  * Head-database intake. The lead goes to the unassigned pool (never the
@@ -53,7 +53,7 @@ export function HeadLeadIntakePanel() {
       }),
     onSuccess: (result) => {
       if (result.ok) {
-        toast.success("লিড হেড ডেটাবেজে যোগ হয়েছে — পরের বণ্টনে যাবে");
+        toast.success("লিড Canonical Lead Database-এ যোগ হয়েছে — পরের assignment-এ যাবে");
         setForm(EMPTY);
         setDuplicate(null);
         void queryClient.invalidateQueries({ queryKey: ["lead-pool"] });
@@ -71,8 +71,8 @@ export function HeadLeadIntakePanel() {
     event.preventDefault();
     setDuplicate(null);
     if (!form.name.trim()) return setError("নাম লিখুন");
-    if (!BD_MOBILE.test(form.phoneNumber.replace(/[\s-]/g, "")))
-      return setError("সঠিক বাংলাদেশি মোবাইল নম্বর দিন (01XXXXXXXXX)");
+    if (!VALID_PHONE.test(form.phoneNumber.trim()))
+      return setError("সঠিক মোবাইল দিন; বিদেশি নম্বরে country code (+...) আবশ্যক");
     if (!form.referenceBy.trim()) return setError("রেফারেন্স (কে দিয়েছেন) লিখুন");
     setError(null);
     save.mutate();
@@ -86,10 +86,10 @@ export function HeadLeadIntakePanel() {
         </span>
         <div>
           <h2 id="head-intake-title" className="text-sm font-semibold">
-            হেড ডেটাবেজে লিড যোগ / Add to head database
+            Canonical Lead Database-এ যোগ
           </h2>
           <p className="text-xs text-muted-foreground">
-            লিডটি কারও কিউতে যাবে না — হেড পুলে থাকবে এবং পরের দৈনিক বণ্টনে যাবে।
+            লিডটি কারও কিউতে যাবে না — master pool-এ UNASSIGNED থাকবে।
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function HeadLeadIntakePanel() {
           value={form.phoneNumber}
           onChange={set("phoneNumber")}
           inputMode="tel"
-          placeholder="01XXXXXXXXX"
+          placeholder="01XXXXXXXXX বা +country code"
         />
         <Field id="hl-address" label="ঠিকানা / এলাকা" value={form.address} onChange={set("address")} />
         <Field id="hl-company" label="প্রতিষ্ঠান" value={form.company} onChange={set("company")} />
@@ -141,7 +141,7 @@ export function HeadLeadIntakePanel() {
         <div className="sm:col-span-2">
           <Button type="submit" disabled={save.isPending}>
             {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-            হেড ডেটাবেজে যোগ করুন
+            Canonical database-এ যোগ করুন
           </Button>
         </div>
       </form>

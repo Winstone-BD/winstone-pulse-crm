@@ -10,7 +10,7 @@ import {
   Monitor,
   Server,
   Smartphone,
-  Users,
+  Database,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -44,9 +44,9 @@ function EntryHall() {
   const navigate = useNavigate();
   const { scope } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
-  const [pinTarget, setPinTarget] = useState<"/hq" | "/system">("/hq");
+  const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
 
-  const openPin = (target: "/hq" | "/system") => {
+  const openPin = (target: "/hq" | "/system" | "/leadhub") => {
     setPinTarget(target);
     setPinOpen(true);
   };
@@ -137,21 +137,12 @@ function EntryHall() {
           />
 
           <EntryCard
-            icon={<Users className="size-6" />}
-            title="Coordinator Deck"
-            description="Assign and balance leads, import lists and watch the whole floor queue."
+            icon={<Database className="size-6" />}
+            title="LeadHub Nexus"
+            description="Canonical lead database, imports, data quality and quantity assignment."
             primary={
-              <Button asChild className="flex-1">
-                <Link to="/auth" search={{ role: "coordinator", mode: "signin" }}>
-                  Sign in
-                </Link>
-              </Button>
-            }
-            secondary={
-              <Button asChild variant="secondary" className="flex-1">
-                <Link to="/auth" search={{ role: "coordinator", mode: "signup" }}>
-                  Create account
-                </Link>
+              <Button className="flex-1" onClick={() => openPin("/leadhub")}>
+                <Lock className="size-4" /> Unlock PIN
               </Button>
             }
           />
@@ -219,7 +210,7 @@ function EntryHall() {
       <AdminPinDialog
         open={pinOpen}
         onOpenChange={setPinOpen}
-        surface={pinTarget === "/hq" ? "hq" : "system"}
+        surface={pinTarget === "/hq" ? "hq" : pinTarget === "/leadhub" ? "leadhub" : "system"}
         onUnlocked={() => void navigate({ to: pinTarget })}
       />
     </div>

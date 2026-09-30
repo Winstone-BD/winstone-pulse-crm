@@ -115,7 +115,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
     onSuccess: (res) => {
       const total = res.results.reduce((s, r) => s + r.assigned, 0);
       setLast(res.results);
-      toast.success(`${total} লিড অ্যাসাইন হয়েছে · Head Lead Data-তে বাকি ${res.available}`);
+      toast.success(`${total} লিড অ্যাসাইন হয়েছে · Canonical database-এ বাকি ${res.available}`);
       setRows([newRow()]);
       setRequestId(crypto.randomUUID());
       setConfirming(false);
@@ -137,7 +137,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       )}
       <header className="flex flex-wrap items-end gap-3">
         <div>
-          <h2 className="text-base font-semibold">Assign Leads</h2>
+          <h2 className="text-base font-semibold">Assign by Agent + Quantity</h2>
           <p className="text-xs text-muted-foreground">
             এজেন্ট বাছুন, সংখ্যা লিখুন — সবচেয়ে পুরোনো যোগ্য unassigned লিড আগে যাবে। ডুপ্লিকেট/ভুল নম্বর কখনো যাবে না।
           </p>

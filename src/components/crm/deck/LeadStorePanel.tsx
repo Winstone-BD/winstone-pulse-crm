@@ -32,15 +32,15 @@ type Quality = "any" | "missing_reference" | "invalid_phone";
 const ANY = "__any";
 
 /**
- * Head Lead Store — every lead, permanently. Coordinators can select rows and
- * assign them manually; the server re-checks role, eligibility and ownership.
+ * Canonical Lead Database — every lead, permanently. LeadHub access and
+ * eligibility are re-checked on the server.
  */
 export function LeadStorePanel({
   agents,
   canAssign,
   defaultAssignment = "all",
   defaultQuality = "any",
-  title = "Head Lead Store",
+  title = "Canonical Lead Database",
 }: {
   agents: { id: string; name: string }[];
   canAssign: boolean;

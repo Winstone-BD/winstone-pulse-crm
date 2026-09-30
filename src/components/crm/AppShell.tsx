@@ -40,7 +40,7 @@ const NAV = [
   { to: "/", label: "Home", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/desk", label: "My Desk", scopes: ["coordinator", "agent"] },
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
-  { to: "/dispatch", label: "Coordinator Deck", scopes: ["authority", "coordinator"] },
+  { to: "/leadhub", label: "LeadHub Nexus", scopes: ["authority", "none"] },
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
   { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
@@ -59,8 +59,8 @@ const NAV = [
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
 const PRIMARY_ROUTES: Record<Scope, readonly string[]> = {
-  authority: ["/", "/hq", "/reports", "/system"],
-  coordinator: ["/", "/desk", "/dispatch", "/reports"],
+  authority: ["/", "/leadhub", "/hq", "/system"],
+  coordinator: ["/", "/desk", "/reports"],
   agent: ["/", "/desk", "/coach", "/reports"],
   none: ["/", "/docs", "/help"],
 };
@@ -75,8 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = NAV.filter(
     (item) =>
       (item.scopes as readonly Scope[]).includes(scope as Scope) ||
-      // Sell Team Admin gets the intake-only Coordinator Deck.
-      (item.to === "/dispatch" && account?.deck === "intake"),
+      false,
   );
   const primaryRoutes = PRIMARY_ROUTES[scope as Scope] ?? PRIMARY_ROUTES.none;
   const primaryNav = nav.filter((item) => primaryRoutes.includes(item.to));

@@ -2,17 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
- * The head lead database, reachable from both the IT Console and the Coordinator
- * Deck. The real work (duplicate protection, batched hand-out, shortage alert)
+ * The canonical lead database, reachable only through LeadHub Nexus.
+ * The real work (duplicate protection, batched hand-out, shortage alert)
  * lives in lead-pool.server.ts.
  */
 
 const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
 
 async function dispatcher(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
+  const { resolveCaller, requireLeadHub } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
-  requireDispatch(caller);
+  requireLeadHub(caller, adminToken);
   return caller;
 }
 
@@ -24,11 +24,11 @@ export type LeadPoolAgent = {
   today: number;
 };
 
-/** Deck read access: coordinators/authority, plus the Sell Team Admin (intake only). */
+/** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
-  const { resolveCaller, requireDeck } = await import("@/lib/access.server");
+  const { resolveCaller, requireLeadHub } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
-  requireDeck(caller);
+  requireLeadHub(caller, adminToken);
   return caller;
 }
 
@@ -143,9 +143,7 @@ export const searchDeckLeads = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => SearchInput.parse(input))
   .handler(async ({ data }) => {
     const caller = await deckReader(data.adminToken);
-    const { deckAccess } = await import("@/lib/access.server");
-    // The Sell Team Admin sees the head pool only — never other agents' queues.
-    const scope = deckAccess(caller) === "full" ? data.scope : "pool";
+    const scope = data.scope;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin
       .from("leads")

@@ -14,7 +14,7 @@ export function ImportHistoryPanel() {
   return (
     <section className="card-elevated p-4">
       <h2 className="text-sm font-semibold">Import history</h2>
-      <p className="text-xs text-muted-foreground">প্রতিটি ব্যাচ হেড লিড স্টোরে UNASSIGNED হিসেবে ঢোকে।</p>
+      <p className="text-xs text-muted-foreground">প্রতিটি ব্যাচ Canonical Lead Database-এ UNASSIGNED হিসেবে ঢোকে।</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="text-xs uppercase text-muted-foreground">
