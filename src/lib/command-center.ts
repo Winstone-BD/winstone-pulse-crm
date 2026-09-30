@@ -125,7 +125,7 @@ export function computeCommandCenter(input: {
     key: k,
     count: stage[k].length,
     leadIds: stage[k],
-    fromPrev: i === 0 ? null : pct(stage[k].length, stage[order[i - 1]].length),
+    fromPrev: i === 0 ? null : pct(stage[k].length, stage[order[i - 1]!].length),
   }));
 
   // ---- agent execution today ----
@@ -212,11 +212,12 @@ export function computeCommandCenter(input: {
   }
   const bigSources = sources.filter((s) => s.leads >= 30);
   if (bigSources.length >= 2) {
-    const best = [...bigSources].sort((a, b) => b.qualified / b.leads - a.qualified / a.leads)[0];
+    const best = [...bigSources].sort((a, b) => b.qualified / b.leads - a.qualified / a.leads)[0]!;
     insights.push(`৩০+ লিডের সোর্সগুলোর মধ্যে "${best.name}"-এ আগ্রহী লিডের হার সর্বোচ্চ (${pct(best.qualified, best.leads)}%)।`);
   }
-  const stuck = funnel[1].count - funnel[2].count;
-  if (funnel[1].count >= 30 && stuck > 0) insights.push(`যোগাযোগ হওয়া ${funnel[1].count} লিডের মধ্যে ${stuck}টি এখনো আগ্রহী ধাপে পৌঁছায়নি।`);
+  const contacted = funnel[1]!.count;
+  const stuck = contacted - funnel[2]!.count;
+  if (contacted >= 30 && stuck > 0) insights.push(`যোগাযোগ হওয়া ${contacted} লিডের মধ্যে ${stuck}টি এখনো আগ্রহী ধাপে পৌঁছায়নি।`);
 
   return { kpi, funnel, agentRows, execution, trend, sources, followUpHealth, insights, today };
 }

@@ -118,16 +118,16 @@ export function SalesCommandCenter({
   }
 
   const funnelLabels: Record<string, string> = { leads: "লিড", contacted: "যোগাযোগ", interested: "আগ্রহী", siteVisit: "সাইট ভিজিট", booking: "বুকিং" };
-  const funnelMax = Math.max(1, cc.funnel[0].count);
+  const funnelMax = Math.max(1, cc.funnel[0]!.count);
   const sortedSources = [...cc.sources].sort((a, b) => b[sortBy] - a[sortBy]).slice(0, 8);
   const agentName = (id: string | null) => agents.find((a) => a.id === id)?.name;
 
   const kpis = [
-    { icon: Users, label: "মোট লিড", value: cc.kpi.totalLeads, hint: `এই সময়ে নতুন ${cc.kpi.newLeadsInRange}`, onClick: () => drill("মোট লিড", cc.funnel[0].leadIds) },
+    { icon: Users, label: "মোট লিড", value: cc.kpi.totalLeads, hint: `এই সময়ে নতুন ${cc.kpi.newLeadsInRange}`, onClick: () => drill("মোট লিড", cc.funnel[0]!.leadIds) },
     { icon: PhoneCall, label: "আজকের কল", value: cc.kpi.callsToday, hint: `${cc.kpi.connectedToday}টি সংযুক্ত`, onClick: undefined },
     { icon: CalendarCheck, label: "খোলা ফলো-আপ", value: cc.kpi.openFollowUps, hint: `${cc.followUpHealth.overdue.count} মেয়াদোত্তীর্ণ`, onClick: () => drill("মেয়াদোত্তীর্ণ ফলো-আপ", cc.followUpHealth.overdue.leadIds) },
-    { icon: MapPin, label: "সাইট ভিজিট", value: cc.kpi.siteVisits, hint: "রিপোর্টে সংরক্ষিত সিগন্যাল", onClick: () => drill("সাইট ভিজিট লিড", cc.funnel[3].leadIds) },
-    { icon: Handshake, label: "বুকিং", value: cc.kpi.bookings, hint: "closed-converted রিপোর্ট", onClick: () => drill("বুকিং লিড", cc.funnel[4].leadIds) },
+    { icon: MapPin, label: "সাইট ভিজিট", value: cc.kpi.siteVisits, hint: "রিপোর্টে সংরক্ষিত সিগন্যাল", onClick: () => drill("সাইট ভিজিট লিড", cc.funnel[3]!.leadIds) },
+    { icon: Handshake, label: "বুকিং", value: cc.kpi.bookings, hint: "closed-converted রিপোর্ট", onClick: () => drill("বুকিং লিড", cc.funnel[4]!.leadIds) },
     { icon: Wallet, label: "রেভিনিউ", value: null, hint: "CRM-এ ডিল মূল্য রেকর্ড হয় না", onClick: undefined },
   ];
 
