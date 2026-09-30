@@ -1,6 +1,10 @@
 package com.winstone.connect.ui
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +31,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -64,10 +69,13 @@ import com.winstone.connect.data.shortTime
 import com.winstone.connect.data.statusLabel
 import com.winstone.connect.data.remote.WinstoneApi
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.winstone.connect.data.AgentSession
 import com.winstone.connect.telephony.LiveCallLauncher
 import com.winstone.connect.data.remote.UpdateChecker
 import com.winstone.connect.data.remote.VersionHandoff
+import com.winstone.connect.location.NearbyLeadLocator
+import com.winstone.connect.location.asDistanceLabel
 import com.winstone.connect.telephony.RecordingCapabilityCheck
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.delay
@@ -120,6 +128,19 @@ fun DeskScreen(
     val context = LocalContext.current
     var update by remember { mutableStateOf<UpdateChecker.Available?>(null) }
     var updateDismissed by remember { mutableStateOf(false) }
+    var nearbyLeads by remember { mutableStateOf<List<Lead>?>(null) }
+    var locatingLeads by remember { mutableStateOf(false) }
+    val locationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            locatingLeads = true
+            callScope.launch {
+                nearbyLeads = NearbyLeadLocator.locate(context, state.data?.leads.orEmpty())
+                locatingLeads = false
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         val installed = runCatching {
@@ -191,6 +212,7 @@ fun DeskScreen(
 
     val data = state.data
     val leads = data?.leads.orEmpty()
+    val displayedLeads = nearbyLeads ?: leads
     val calls = data?.calls.orEmpty()
     val pendingLeads = leads.count { it.status == "pending" }
     val followUpLeads = leads.filter { it.status == "follow_up" }
@@ -297,7 +319,7 @@ fun DeskScreen(
                                     activity = activity,
                                     agentName = data?.agentName ?: "…",
                                     employeeId = state.employeeId.orEmpty(),
-                                    leads = leads,
+                                    leads = displayedLeads,
                                     onStartCall = { startCall(it) },
                                     onLeadDetail = { leadDetail = it },
                                     onViewAllLeads = { tab = TAB_LEADS },
@@ -307,7 +329,42 @@ fun DeskScreen(
                         }
                         TAB_LEADS -> {
                             if (leads.isEmpty()) item { EmptyNote("এখনও কোনো লিড অ্যাসাইন হয়নি।") }
-                            items(leads) { lead ->
+                            if (leads.isNotEmpty()) {
+                                item {
+                                    OutlinedButton(
+                                        enabled = !locatingLeads,
+                                        onClick = {
+                                            val granted = ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                                                context,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                            if (granted) {
+                                                locatingLeads = true
+                                                callScope.launch {
+                                                    nearbyLeads = NearbyLeadLocator.locate(context, leads)
+                                                    locatingLeads = false
+                                                }
+                                            } else {
+                                                locationPermission.launch(
+                                                    arrayOf(
+                                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                    ),
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Icon(Icons.Filled.Place, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(if (locatingLeads) "দূরত্ব বের হচ্ছে…" else "কাছের লিড আগে দেখান")
+                                    }
+                                }
+                            }
+                            items(displayedLeads, key = { it.id }) { lead ->
                                 LeadCard(
                                     lead = lead,
                                     recordingMode = state.recordingMode,
@@ -391,6 +448,8 @@ fun DeskScreen(
                 Column {
                     Text(lead.phone, fontSize = 14.sp)
                     lead.company?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 13.sp) }
+                    lead.address?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 12.sp, color = WinInkMuted) }
+                    lead.distanceKm?.let { Text(it.asDistanceLabel(), fontSize = 12.sp, color = WinGreen) }
                     lead.notes?.takeIf { it.isNotBlank() }?.let {
                         Spacer(Modifier.height(6.dp))
                         Text(it, fontSize = 12.sp)
@@ -856,6 +915,8 @@ private fun LeadCard(
             color = WinInkMuted,
             fontSize = 13.sp,
         )
+        lead.address?.takeIf { it.isNotBlank() }?.let { Text(it, fontSize = 12.sp, color = WinInkMuted) }
+        lead.distanceKm?.let { Text(it.asDistanceLabel(), fontSize = 12.sp, color = WinGreen, fontWeight = FontWeight.SemiBold) }
         Text(
             "${statusLabel(lead.status)} · চেষ্টা ${lead.attempts}",
             color = if (lead.status == "pending") WinAmber else WinGreen,
