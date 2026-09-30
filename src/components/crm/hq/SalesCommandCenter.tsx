@@ -192,8 +192,8 @@ export function SalesCommandCenter({
           <ul className="space-y-2">
             {cc.funnel.map((s) => (
               <li key={s.key}>
-                <button type="button" onClick={() => drill(funnelLabels[s.key], s.leadIds)} className="group flex w-full items-center gap-3 text-left">
-                  <span className="w-20 shrink-0 text-xs font-medium">{funnelLabels[s.key]}</span>
+                <button type="button" onClick={() => drill(funnelLabels[s.key] ?? s.key, s.leadIds)} className="group flex w-full items-center gap-3 text-left">
+                  <span className="w-20 shrink-0 text-xs font-medium">{funnelLabels[s.key] ?? s.key}</span>
                   <span className="relative h-7 min-w-0 flex-1 overflow-hidden rounded-md bg-muted">
                     <span className="absolute inset-y-0 left-0 rounded-md bg-primary/85 transition-all group-hover:bg-primary" style={{ width: `${Math.max(1.5, (s.count / funnelMax) * 100)}%` }} />
                   </span>
