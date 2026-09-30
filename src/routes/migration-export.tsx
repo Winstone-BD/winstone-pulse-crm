@@ -83,15 +83,15 @@ function ExportCenter() {
           setDone((d) => d + 1);
           continue;
         }
-        let afterId: string | null = null;
+        let afterCursor: string | null = null;
         let part = 0;
         let total = 0;
         const chunks: Array<Record<string, unknown>> = [];
         do {
-          const raw = await exportTableChunk({ data: { adminToken, table, afterId } });
+          const raw = await exportTableChunk({ data: { adminToken, table, afterCursor } });
           const res = {
             rows: JSON.parse(raw.rowsJson) as Array<Record<string, unknown>>,
-            nextAfterId: raw.nextAfterId,
+            nextAfterCursor: raw.nextAfterCursor,
           };
           part += 1;
           total += res.rows.length;
@@ -108,8 +108,8 @@ function ExportCenter() {
             csv: `${base}.csv`,
             csv_sha256: await sha256(csv),
           });
-          afterId = res.nextAfterId;
-        } while (afterId);
+          afterCursor = res.nextAfterCursor;
+        } while (afterCursor);
         manifest.push({ table, status: "ok", source_count: c[table], exported_rows: total, chunks });
         setDone((d) => d + 1);
       }
@@ -126,7 +126,7 @@ function ExportCenter() {
               "UUIDs, timestamps and enum values are exported verbatim.",
               "Credential-like fields (pin_hash, tokens, secrets, ciphers) are redacted or omitted.",
               "Audio files are not included; storage_path / audio_url metadata is preserved.",
-              "Rows ordered by id; checksums are SHA-256 of each chunk file.",
+              "Rows are ordered by primary key; checksums are SHA-256 of each chunk file.",
             ],
             tables: manifest,
           },
