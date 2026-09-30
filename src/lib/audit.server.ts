@@ -69,7 +69,9 @@ export type AuditAction =
   | "accountability_flagged"
   | "accountability_reviewed"
   | "migration_export"
-  | "it_notice_published";
+  | "it_notice_published"
+  | "drive_knowledge_indexed"
+  | "drive_knowledge_read";
 
 
 export async function logAudit(input: {
