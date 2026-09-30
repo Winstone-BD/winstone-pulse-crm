@@ -387,7 +387,7 @@ function DeskPage() {
               <QueueLockedNote />
             ) : (
               <>
-                <OpenLeadsCard />
+                {/* Self-claim retired: LeadHub Nexus is the only assignment path. */}
                 <QueueBoard
                   title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
                   canSeeAllAgents={scope !== "agent"}
