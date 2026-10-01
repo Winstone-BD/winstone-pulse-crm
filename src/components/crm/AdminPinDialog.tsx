@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { unlockAdmin } from "@/lib/crm.functions";
-import { setAdminToken, useAdminToken } from "@/lib/local-session";
+import { setAdminToken, setLeadHubToken, useAdminToken } from "@/lib/local-session";
 
 /** Controlled PIN modal. Once unlocked the token is kept in localStorage. */
 export function AdminPinDialog({
@@ -37,7 +37,8 @@ export function AdminPinDialog({
     mutationFn: (value: string) => unlock({ data: { pin: value, surface } }),
     onSuccess: (result) => {
       if (result.ok) {
-        setAdminToken(result.token);
+        if (surface === "leadhub") setLeadHubToken(result.token);
+        else setAdminToken(result.token);
         toast.success(
           surface === "hq" ? "Executive HQ unlocked (view-only)" : surface === "leadhub" ? "LeadHub Nexus unlocked" : "Control board unlocked",
         );
