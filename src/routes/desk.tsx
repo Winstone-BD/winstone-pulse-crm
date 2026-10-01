@@ -219,8 +219,9 @@ function Tile({
 
 function QueueLockedNote() {
   return (
-    <div role="status" className="rounded-2xl border border-warning/50 bg-warning/10 p-4 text-sm text-foreground">
-      আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় আছে। Executive HQ অনুমোদন দিলে এখানে লিড দেখা যাবে। ফলো-আপ ও রিপোর্ট ট্যাব খোলা আছে।
+    <div role="status" className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full border border-warning/40 bg-gradient-to-r from-warning/20 to-destructive/20 px-4 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur-md sm:text-sm">
+      <span className="size-2 shrink-0 animate-pulse rounded-full bg-warning" aria-hidden />
+      আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে
     </div>
   );
 }
@@ -305,7 +306,7 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="grid gap-4">
+      <div className="hq-luxe grid gap-4 rounded-3xl p-3 sm:p-5">
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <AccountabilityBanner />
@@ -333,13 +334,24 @@ function DeskPage() {
 
         <SmartInsightStrip scope="desk" />
 
-        {!queueLocked && <MobileLeadQueue />}
-
         <FollowUpAlarm />
 
-        {!queueLocked && <CarryOverLeads />}
-
-        {!queueLocked && <LeadDayBoard />}
+        {!queueLocked && (
+          <details className="group card-elevated overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold tracking-wide [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-primary" aria-hidden />
+                আমার লিড কিউ
+              </span>
+              <ChevronDown className="size-4 text-primary transition-transform duration-300 group-open:rotate-180" />
+            </summary>
+            <div className="space-y-4 border-t border-border p-3 animate-in fade-in slide-in-from-top-2 duration-300 sm:p-4">
+              <MobileLeadQueue />
+              <CarryOverLeads />
+              <LeadDayBoard />
+            </div>
+          </details>
+        )}
 
         <CommandAgentPanel surface="desk" />
 
