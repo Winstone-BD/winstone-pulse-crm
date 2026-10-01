@@ -32,7 +32,7 @@ export const getCommandCenterFeed = createServerFn({ method: "POST" })
       pageAll((a, b) => {
         let q = supabaseAdmin
           .from("call_reports")
-          .select("id, lead_id, agent_id, category, customer_response, next_action, requirement, submitted_at, created_at")
+          .select("id, lead_id, agent_id, category, customer_response, next_action, requirement, submitted_at, created_at, connected, recording_id")
           .eq("status", "submitted");
         if (me) q = q.eq("agent_id", me);
         return q.order("created_at", { ascending: true }).order("id").range(a, b);

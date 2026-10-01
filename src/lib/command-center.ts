@@ -27,6 +27,8 @@ export type CcReport = {
   requirement: string | null;
   submitted_at: string | null;
   created_at: string;
+  connected?: boolean | null;
+  recording_id?: string | null;
 };
 export type CcFollowUp = {
   id: string;
@@ -86,7 +88,15 @@ export function computeCommandCenter(input: {
   const leadIds = new Set(leads.map((l) => l.id));
   const scoped = !!(f.source || f.project);
   reports = reports.filter((r) => (!f.agentId || r.agent_id === f.agentId) && (!scoped || (r.lead_id && leadIds.has(r.lead_id))));
-  const calls = input.calls.filter((c) => (!f.agentId || c.agent_id === f.agentId) && (!scoped || (c.lead_id && leadIds.has(c.lead_id))));
+  // A call = every submitted post-call report (web or Android) plus any synced
+  // phone recording that has no report yet. Connected comes from the agent's
+  // saved answer, or for unreported recordings from verified talk time.
+  const reportedRecordings = new Set(input.reports.map((r) => r.recording_id).filter(Boolean) as string[]);
+  const merged: (CcCall & { connected: boolean })[] = [
+    ...input.reports.map((r) => ({ id: r.id, lead_id: r.lead_id, agent_id: r.agent_id, created_at: r.submitted_at ?? r.created_at, duration_seconds: 0, connected: Boolean(r.connected) })),
+    ...input.calls.filter((c) => !reportedRecordings.has(c.id)).map((c) => ({ ...c, connected: c.duration_seconds > CONNECTED_SECONDS })),
+  ];
+  const calls = merged.filter((c) => (!f.agentId || c.agent_id === f.agentId) && (!scoped || (c.lead_id && leadIds.has(c.lead_id))));
   const followUps = input.followUps.filter((x) => (!f.agentId || x.agent_id === f.agentId) && (!scoped || (x.lead_id && leadIds.has(x.lead_id))));
 
   const rangeReports = reports.filter((r) => inRange(reportDay(r), f));
@@ -101,7 +111,7 @@ export function computeCommandCenter(input: {
     totalLeads: leads.length,
     newLeadsInRange: leads.filter((l) => inRange(dhakaDay(l.created_at), f)).length,
     callsToday: callsToday.length,
-    connectedToday: callsToday.filter((c) => c.duration_seconds > CONNECTED_SECONDS).length,
+    connectedToday: callsToday.filter((c) => c.connected).length,
     openFollowUps: openFu.length,
     siteVisits: distinct(rangeReports, isSiteVisit).size,
     bookings: distinct(rangeReports, isBooking).size,
@@ -139,7 +149,7 @@ export function computeCommandCenter(input: {
         id: a.id,
         name: a.name,
         calls: mine.length,
-        connected: mine.filter((c) => c.duration_seconds > CONNECTED_SECONDS).length,
+        connected: mine.filter((c) => c.connected).length,
         leadsWorked: worked,
         target: input.dailyLeadQuota,
         progress: pct(worked, input.dailyLeadQuota),
@@ -163,7 +173,7 @@ export function computeCommandCenter(input: {
     return {
       day: d,
       calls: dc.length,
-      connected: dc.filter((c) => c.duration_seconds > CONNECTED_SECONDS).length,
+      connected: dc.filter((c) => c.connected).length,
       bookings: distinct(dr, isBooking).size,
       siteVisits: distinct(dr, isSiteVisit).size,
     };
@@ -207,7 +217,7 @@ export function computeCommandCenter(input: {
   if (overdue.length > 0) insights.push(`${overdue.length}টি ফলো-আপ নির্ধারিত সময় পেরিয়ে গেছে — আগে এগুলো শেষ করুন।`);
   const rc = rangeCalls.length;
   if (rc >= 20) {
-    const conn = rangeCalls.filter((c) => c.duration_seconds > CONNECTED_SECONDS).length;
+    const conn = rangeCalls.filter((c) => c.connected).length;
     insights.push(`এই সময়ে ${rc}টি কলের ${pct(conn, rc)}% সংযুক্ত হয়েছে (>${CONNECTED_SECONDS} সেকেন্ড)।`);
   }
   const bigSources = sources.filter((s) => s.leads >= 30);
