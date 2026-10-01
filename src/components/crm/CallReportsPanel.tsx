@@ -35,6 +35,7 @@ export function CallReportsPanel() {
   const [toDate, setToDate] = useState("");
   const [agentId, setAgentId] = useState("");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
+  const [onlyMissing, setOnlyMissing] = useState(false);
 
   // A calendar day is a Dhaka day — the whole floor works on that clock.
   const fromIso = fromDate ? `${fromDate}T00:00:00+06:00` : null;
@@ -72,7 +73,17 @@ export function CallReportsPanel() {
     refetchInterval: 60_000,
   });
 
-  const reports = data?.reports ?? [];
+  const allReports = data?.reports ?? [];
+  // Submitted reports where the agent never picked an outcome (ফলাফল).
+  const missing = allReports.filter((r) => r.status !== "pending" && !r.category);
+  const missingByAgent = Object.entries(
+    missing.reduce<Record<string, number>>((acc, r) => {
+      const k = r.agent?.name ?? "অজানা এজেন্ট";
+      acc[k] = (acc[k] ?? 0) + 1;
+      return acc;
+    }, {}),
+  ).sort((a, b) => b[1] - a[1]);
+  const reports = onlyMissing ? missing : allReports;
   // Agents only ever see their own reports, so they get no agent picker.
   const canFilterAgent = data ? data.scope !== "agent" && data.scope !== "none" : false;
 
@@ -183,6 +194,32 @@ export function CallReportsPanel() {
         </div>
       </div>
 
+      {!isPending ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-semibold">
+              ফলাফল বাছাই হয়নি: {missing.length}টি রিপোর্ট
+            </p>
+            {missing.length > 0 ? (
+              <Button size="sm" variant={onlyMissing ? "default" : "outline"} onClick={() => setOnlyMissing((v) => !v)}>
+                {onlyMissing ? "সব রিপোর্ট দেখুন" : "শুধু এগুলো দেখুন"}
+              </Button>
+            ) : null}
+          </div>
+          {missing.length === 0 ? (
+            <p className="mt-1 text-xs text-muted-foreground">এই ফিল্টারে সব রিপোর্টে ফলাফল দেওয়া আছে।</p>
+          ) : (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {missingByAgent.map(([name, n]) => (
+                <li key={name}>
+                  <Badge variant="destructive" className="text-[11px]">{name}: {n}টি অসম্পূর্ণ</Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+
       {!isPending ? <CallReportSummary reports={reports} /> : null}
 
       {isPending ? (
@@ -235,6 +272,9 @@ export function CallReportsPanel() {
                   <Badge variant="outline" className="text-[11px]">
                     {CATEGORY_LABEL_CLIENT[row.category] ?? row.category}
                   </Badge>
+                ) : null}
+                {row.status !== "pending" && !row.category ? (
+                  <Badge variant="destructive" className="text-[11px]">ফলাফল নেই</Badge>
                 ) : null}
                 {row.status === "pending" ? (
                   <Badge variant="destructive" className="text-[11px]">
