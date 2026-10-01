@@ -374,19 +374,6 @@ export function SalesCommandCenter({
   );
 }
 
-function Meter({ label, actual, target }: { label: string; actual: number; target: number | null }) {
-  const p = target ? Math.min(100, Math.round((actual / target) * 100)) : null;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <dt className="text-muted-foreground">{label}</dt>
-        <dd className="tabular font-semibold">{actual}{target ? <span className="font-normal text-muted-foreground"> / {target}</span> : <span className="font-normal text-muted-foreground"> · আজ কিছু নির্ধারিত নেই</span>}</dd>
-      </div>
-      {p !== null && <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${p}%` }} /></div>}
-    </div>
-  );
-}
-
 function Empty({ text }: { text: string }) {
   return <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</p>;
 }
