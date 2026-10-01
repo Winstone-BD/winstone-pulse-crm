@@ -384,3 +384,34 @@
   background: var(--background);
   color: var(--foreground);
 }
+
+/* HQ-only luxury executive theme (#0B0B0B bg, #171717 surfaces, champagne gold) */
+.hq-luxe {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.95 0.01 85);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.95 0.01 85);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.95 0.01 85);
+  --primary: oklch(0.74 0.09 80);
+  --primary-foreground: oklch(0.16 0.01 80);
+  --secondary: oklch(0.26 0.01 80);
+  --secondary-foreground: oklch(0.92 0.02 85);
+  --muted: oklch(0.24 0.005 80);
+  --muted-foreground: oklch(0.7 0.015 85);
+  --accent: oklch(0.28 0.03 80);
+  --accent-foreground: oklch(0.92 0.04 85);
+  --border: oklch(0.3 0.015 80);
+  --input: oklch(0.32 0.015 80);
+  --ring: oklch(0.74 0.09 80);
+  --surface: oklch(0.18 0 0);
+  --surface-2: oklch(0.22 0.004 80);
+  --chart-1: oklch(0.74 0.09 80);
+  background: radial-gradient(120% 60% at 50% 0%, oklch(0.2 0.02 80) 0%, oklch(0.135 0 0) 60%);
+  color: var(--foreground);
+  color-scheme: dark;
+}
+.hq-luxe .bg-card {
+  background: color-mix(in oklab, var(--card) 85%, transparent);
+  backdrop-filter: blur(14px);
+}
