@@ -128,7 +128,7 @@ export function SalesCommandCenter({
 
   const kpis = [
     { icon: Users, label: "মোট লিড", value: cc.kpi.totalLeads, hint: `এই সময়ে নতুন ${cc.kpi.newLeadsInRange}`, onClick: () => drill("মোট লিড", cc.funnel[0]!.leadIds) },
-    { icon: PhoneCall, label: "আজকের কল", value: cc.kpi.callsToday, hint: `${cc.kpi.connectedToday}টি সংযুক্ত`, onClick: undefined },
+    { icon: PhoneCall, label: "যোগাযোগ", value: cc.funnel[1]!.count, hint: `${fmt(cc.funnel[1]!.fromPrev)} · আজ ${cc.kpi.callsToday} কল, ${cc.kpi.connectedToday} সংযুক্ত`, onClick: () => drill("যোগাযোগ হওয়া লিড", cc.funnel[1]!.leadIds) },
     { icon: CalendarCheck, label: "খোলা ফলো-আপ", value: cc.kpi.openFollowUps, hint: `${cc.followUpHealth.overdue.count} মেয়াদোত্তীর্ণ`, onClick: () => drill("মেয়াদোত্তীর্ণ ফলো-আপ", cc.followUpHealth.overdue.leadIds) },
     { icon: MapPin, label: "সাইট ভিজিট", value: cc.kpi.siteVisits, hint: "রিপোর্টে সংরক্ষিত সিগন্যাল", onClick: () => drill("সাইট ভিজিট লিড", cc.funnel[3]!.leadIds) },
     { icon: Handshake, label: "বুকিং", value: cc.kpi.bookings, hint: "closed-converted রিপোর্ট", onClick: () => drill("বুকিং লিড", cc.funnel[4]!.leadIds) },
@@ -177,52 +177,82 @@ export function SalesCommandCenter({
           const Icon = k.icon;
           const body = (
             <>
-              <span className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground"><Icon className="size-3.5 text-primary" />{k.label}</span>
-              <span className="tabular mt-1.5 block text-2xl font-bold tracking-tight">{k.value === null ? "—" : k.value.toLocaleString("bn-BD")}</span>
-              <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">{k.hint}</span>
+              <span className="flex items-start justify-between gap-2">
+                <span className="text-xs font-semibold text-muted-foreground">{k.label}</span>
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><Icon className="size-4" /></span>
+              </span>
+              <span className="tabular mt-1 block text-3xl font-bold tracking-tight">{k.value === null ? "—" : k.value.toLocaleString("bn-BD")}</span>
+              <span className={`mt-1 block truncate text-[11px] ${k.label === "খোলা ফলো-আপ" ? "text-destructive" : "text-muted-foreground"}`}>{k.hint}</span>
             </>
           );
           return k.onClick ? (
-            <button key={k.label} type="button" onClick={k.onClick} className="card-elevated p-3.5 text-left transition-colors hover:border-primary/40">{body}</button>
+            <button key={k.label} type="button" onClick={k.onClick} className="card-elevated p-4 text-left transition-colors hover:border-primary/50">{body}</button>
           ) : (
-            <div key={k.label} className="card-elevated p-3.5">{body}</div>
+            <div key={k.label} className="card-elevated p-4">{body}</div>
           );
         })}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        {/* Funnel */}
-        <Panel title="সেলস ফানেল" question="লিড কোন ধাপে আটকে যাচ্ছে? (বর্তমান ফিল্টার, সব সময়ের)" className="lg:col-span-3">
-          <ul className="space-y-2">
-            {cc.funnel.map((s) => (
-              <li key={s.key}>
-                <button type="button" onClick={() => drill(funnelLabels[s.key] ?? s.key, s.leadIds)} className="group flex w-full items-center gap-3 text-left">
-                  <span className="w-20 shrink-0 text-xs font-medium">{funnelLabels[s.key] ?? s.key}</span>
-                  <span className="relative h-7 min-w-0 flex-1 overflow-hidden rounded-md bg-muted">
-                    <span className="absolute inset-y-0 left-0 rounded-md bg-primary/85 transition-all group-hover:bg-primary" style={{ width: `${Math.max(1.5, (s.count / funnelMax) * 100)}%` }} />
-                  </span>
-                  <span className="tabular w-14 shrink-0 text-right text-sm font-semibold">{s.count.toLocaleString("bn-BD")}</span>
-                  <span className="tabular w-14 shrink-0 text-right text-[11px] text-muted-foreground">{s.fromPrev === null ? "" : fmt(s.fromPrev)}</span>
+      <div className="grid gap-4 lg:grid-cols-12">
+        {/* Arrow-style funnel */}
+        <Panel title="সেলস ফানেল" question="লিড কোন ধাপে আটকে যাচ্ছে? (বর্তমান ফিল্টার, সব সময়ের)" className="lg:col-span-5">
+          <ol className="flex items-stretch gap-1 overflow-x-auto pb-1">
+            {cc.funnel.map((s, i) => {
+              const tone = ["bg-primary text-primary-foreground", "bg-primary/45", "bg-chart-2/70", "bg-chart-3/60", "bg-chart-3/85"][i] ?? "bg-muted";
+              return (
+                <li key={s.key} className="flex min-w-0 flex-1 items-center gap-1">
+                  {i > 0 && <span aria-hidden className="shrink-0 text-muted-foreground">→</span>}
+                  <button type="button" onClick={() => drill(funnelLabels[s.key] ?? s.key, s.leadIds)}
+                    className={`flex min-h-24 min-w-[64px] flex-1 flex-col items-center justify-center rounded-xl px-1.5 py-2 text-center transition-transform hover:-translate-y-0.5 ${tone}`}
+                    style={{ opacity: 0.55 + 0.45 * Math.max(0.15, s.count / funnelMax) }}>
+                    <span className="tabular text-lg font-bold leading-tight">{s.count.toLocaleString("bn-BD")}</span>
+                    <span className="text-[11px] font-medium">{funnelLabels[s.key] ?? s.key}</span>
+                    {s.fromPrev !== null && <span className="tabular mt-1 rounded-full bg-background/40 px-1.5 text-[10px] font-semibold">{fmt(s.fromPrev)}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="mt-3 text-[10px] text-muted-foreground">% = আগের ধাপ থেকে রূপান্তর। সাইট ভিজিট ও বুকিং শুধু সংরক্ষিত রিপোর্ট সিগন্যাল থেকে।</p>
+        </Panel>
+
+        {/* Command Zone */}
+        <Panel title="আজকের কাজ — কমান্ড জোন" question="আজ দল কতটা এগোল?" className="lg:col-span-4">
+          <div className="grid grid-cols-3 gap-2">
+            <Ring label="কাজ করা লিড (কোটা)" actual={cc.execution.leadsWorked} target={cc.execution.target} />
+            <Ring label="ফলো-আপ সম্পন্ন" actual={cc.execution.followUpsDoneToday} target={cc.execution.followUpsDueToday || null} />
+            <Ring label="সাইট ভিজিট সিগন্যাল" actual={cc.execution.siteVisitsToday} target={null} />
+          </div>
+          <p className="mt-3 text-[10px] text-muted-foreground">কোটা = প্রতি এজেন্ট {DEFAULT_DAILY_QUOTA} লিড/দিন (LeadHub ডিফল্ট)। কলের আলাদা টার্গেট CRM-এ নেই।</p>
+        </Panel>
+
+        {/* Follow-up health */}
+        <Panel title="ফলো-আপ হেলথ" question="কোন ফলো-আপ এখনই ধরতে হবে?" className="lg:col-span-3">
+          <ul className="space-y-1.5">
+            {([
+              ["overdue", "মেয়াদোত্তীর্ণ", "bg-destructive", "text-destructive"],
+              ["dueToday", "আজ নির্ধারিত", "bg-warning", "text-warning"],
+              ["upcoming", "আসন্ন", "bg-chart-2", "text-chart-2"],
+              ["completed", "সম্পন্ন (সময়সীমায়)", "bg-success", "text-success"],
+            ] as const).map(([k, l, dot, tone]) => (
+              <li key={k}>
+                <button type="button" onClick={() => drill(`ফলো-আপ: ${l}`, cc.followUpHealth[k].leadIds)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-accent">
+                  <span className={`size-2.5 rounded-full ${dot}`} /><span className="flex-1">{l}</span>
+                  <span className={`tabular text-lg font-bold ${tone}`}>{cc.followUpHealth[k].count}</span>
                 </button>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[10px] text-muted-foreground">% = আগের ধাপ থেকে রূপান্তর। সাইট ভিজিট ও বুকিং শুধু সংরক্ষিত রিপোর্ট সিগন্যাল থেকে।</p>
-        </Panel>
-
-        {/* Today's execution */}
-        <Panel title="আজকের কাজ — টার্গেট বনাম বাস্তব" question="আজ দল কতটা এগোল?" className="lg:col-span-2">
-          <dl className="space-y-3">
-            <Meter label="কাজ করা লিড (কোটা)" actual={cc.execution.leadsWorked} target={cc.execution.target} />
-            <Meter label="ফলো-আপ সম্পন্ন (আজ নির্ধারিত)" actual={cc.execution.followUpsDoneToday} target={cc.execution.followUpsDueToday || null} />
-            <div className="flex items-center justify-between text-xs">
-              <dt className="text-muted-foreground">সাইট ভিজিট সিগন্যাল</dt>
-              <dd className="tabular font-semibold">{cc.execution.siteVisitsToday} <span className="font-normal text-muted-foreground">· টার্গেট সেট নেই</span></dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-[10px] text-muted-foreground">কোটা = প্রতি এজেন্ট {DEFAULT_DAILY_QUOTA} লিড/দিন (LeadHub ডিফল্ট)। কলের আলাদা টার্গেট CRM-এ নেই।</p>
+          {cc.followUpHealth.overdue.count > 0 && (
+            <button type="button" onClick={() => drill("মেয়াদোত্তীর্ণ ফলো-আপ", cc.followUpHealth.overdue.leadIds)}
+              className="mt-3 w-full rounded-lg bg-destructive px-3 py-2 text-xs font-semibold text-destructive-foreground hover:opacity-90">
+              {cc.followUpHealth.overdue.count}টি ফলো-আপ রিভিউ করুন →
+            </button>
+          )}
         </Panel>
       </div>
+
+      <HourlyActivity reports={feed.data?.reports ?? []} fromDay={range.fromDay} toDay={range.toDay} agentId={agentId} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Agent performance */}
@@ -265,9 +295,9 @@ export function SalesCommandCenter({
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-4">
         {/* Source performance */}
-        <Panel title="লিড সোর্স পারফরম্যান্স" question="কোন সোর্স থেকে আসল ফল আসছে?" className="lg:col-span-3">
+        <Panel title="লিড সোর্স পারফরম্যান্স" question="কোন সোর্স থেকে আসল ফল আসছে?">
           <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="সাজান">
             {([["leads", "লিড"], ["qualified", "আগ্রহী"], ["siteVisits", "সাইট ভিজিট"], ["bookings", "বুকিং"]] as const).map(([k, l]) => (
               <button key={k} type="button" onClick={() => setSortBy(k)} aria-pressed={sortBy === k}
@@ -294,23 +324,6 @@ export function SalesCommandCenter({
               </table>
             </div>
           )}
-        </Panel>
-
-        {/* Follow-up health */}
-        <Panel title="ফলো-আপ হেলথ" question="কোন ফলো-আপ এখনই ধরতে হবে?" className="lg:col-span-2">
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              ["dueToday", "আজ নির্ধারিত", "text-primary"],
-              ["overdue", "মেয়াদোত্তীর্ণ", "text-destructive"],
-              ["completed", "সম্পন্ন (সময়সীমায়)", "text-foreground"],
-              ["upcoming", "আসন্ন", "text-muted-foreground"],
-            ] as const).map(([k, l, tone]) => (
-              <button key={k} type="button" onClick={() => drill(`ফলো-আপ: ${l}`, cc.followUpHealth[k].leadIds)} className="rounded-xl border border-border p-3 text-left transition-colors hover:border-primary/40">
-                <span className="block text-[11px] text-muted-foreground">{l}</span>
-                <span className={`tabular block text-xl font-bold ${tone}`}>{cc.followUpHealth[k].count}</span>
-              </button>
-            ))}
-          </div>
         </Panel>
       </div>
 
@@ -361,19 +374,73 @@ export function SalesCommandCenter({
   );
 }
 
-function Meter({ label, actual, target }: { label: string; actual: number; target: number | null }) {
-  const p = target ? Math.min(100, Math.round((actual / target) * 100)) : null;
+function Empty({ text }: { text: string }) {
+  return <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</p>;
+}
+
+function Ring({ label, actual, target }: { label: string; actual: number; target: number | null }) {
+  const p = target ? Math.min(100, Math.round((actual / target) * 100)) : 0;
+  const r = 30, c = 2 * Math.PI * r;
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <dt className="text-muted-foreground">{label}</dt>
-        <dd className="tabular font-semibold">{actual}{target ? <span className="font-normal text-muted-foreground"> / {target}</span> : <span className="font-normal text-muted-foreground"> · আজ কিছু নির্ধারিত নেই</span>}</dd>
-      </div>
-      {p !== null && <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${p}%` }} /></div>}
+    <div className="flex flex-col items-center text-center">
+      <span className="mb-1 min-h-8 text-[11px] font-medium text-muted-foreground">{label}</span>
+      <svg viewBox="0 0 80 80" className="size-20 sm:size-24" role="img" aria-label={`${label}: ${actual}${target ? ` / ${target}` : ""}`}>
+        <circle cx="40" cy="40" r={r} fill="none" stroke="var(--muted)" strokeWidth="7" />
+        {target ? <circle cx="40" cy="40" r={r} fill="none" stroke="var(--primary)" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - p / 100)} transform="rotate(-90 40 40)" /> : null}
+        <text x="40" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--foreground)">{target ? `${actual}/${target}` : actual}</text>
+        <text x="40" y="54" textAnchor="middle" fontSize="8" fill="var(--muted-foreground)">{target ? `${p}%` : "টার্গেট নেই"}</text>
+      </svg>
     </div>
   );
 }
 
-function Empty({ text }: { text: string }) {
-  return <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</p>;
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 9); // 9 AM – 8 PM Dhaka
+function HourlyActivity({ reports, fromDay, toDay, agentId }: { reports: { agent_id: string | null; submitted_at: string | null; created_at: string }[]; fromDay: string; toDay: string; agentId: string | null }) {
+  const { grid, days, max } = useMemo(() => {
+    const g = new Map<string, number>();
+    const ds = new Set<string>();
+    let m = 0;
+    for (const r of reports) {
+      if (agentId && r.agent_id !== agentId) continue;
+      const t = new Date(r.submitted_at ?? r.created_at).getTime() + 6 * 3600_000; // Dhaka
+      const d = new Date(t);
+      const day = d.toISOString().slice(0, 10);
+      if (day < fromDay || day > toDay) continue;
+      const h = d.getUTCHours();
+      ds.add(day);
+      const k = `${day}|${h}`;
+      const v = (g.get(k) ?? 0) + 1;
+      g.set(k, v);
+      if (HOURS.includes(h)) m = Math.max(m, v);
+    }
+    return { grid: g, days: [...ds].sort().slice(-14), max: m };
+  }, [reports, fromDay, toDay, agentId]);
+  return (
+    <Panel title="ঘণ্টাভিত্তিক কাজের চিত্র" question="দিনের কোন সময়ে দল সবচেয়ে বেশি কল রিপোর্ট জমা দিচ্ছে? (Asia/Dhaka)">
+      {max === 0 ? <Empty text="এই সময়ে কোনো কল রিপোর্ট নেই।" /> : (
+        <div className="table-scroll">
+          <table className="w-full min-w-[560px] border-separate border-spacing-1 text-[10px]">
+            <thead><tr><th />{HOURS.map((h) => <th key={h} className="font-medium text-muted-foreground">{h > 12 ? `${h - 12}PM` : h === 12 ? "12PM" : `${h}AM`}</th>)}</tr></thead>
+            <tbody>
+              {days.map((d) => (
+                <tr key={d}>
+                  <th className="whitespace-nowrap pr-1 text-left font-medium text-muted-foreground">{dayLabel(d)}</th>
+                  {HOURS.map((h) => {
+                    const v = grid.get(`${d}|${h}`) ?? 0;
+                    return (
+                      <td key={h} title={`${dayLabel(d)} ${h}:00 — ${v}টি রিপোর্ট`} className="h-6 rounded text-center tabular"
+                        style={{ background: v ? `color-mix(in oklab, var(--primary) ${Math.round(15 + (v / max) * 85)}%, transparent)` : "var(--muted)", color: v / max > 0.55 ? "var(--primary-foreground)" : "var(--muted-foreground)" }}>
+                        {v || ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  );
 }
