@@ -390,3 +390,70 @@ function Meter({ label, actual, target }: { label: string; actual: number; targe
 function Empty({ text }: { text: string }) {
   return <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</p>;
 }
+
+function Ring({ label, actual, target }: { label: string; actual: number; target: number | null }) {
+  const p = target ? Math.min(100, Math.round((actual / target) * 100)) : 0;
+  const r = 30, c = 2 * Math.PI * r;
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span className="mb-1 min-h-8 text-[11px] font-medium text-muted-foreground">{label}</span>
+      <svg viewBox="0 0 80 80" className="size-20 sm:size-24" role="img" aria-label={`${label}: ${actual}${target ? ` / ${target}` : ""}`}>
+        <circle cx="40" cy="40" r={r} fill="none" stroke="var(--muted)" strokeWidth="7" />
+        {target ? <circle cx="40" cy="40" r={r} fill="none" stroke="var(--primary)" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - p / 100)} transform="rotate(-90 40 40)" /> : null}
+        <text x="40" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--foreground)">{target ? `${actual}/${target}` : actual}</text>
+        <text x="40" y="54" textAnchor="middle" fontSize="8" fill="var(--muted-foreground)">{target ? `${p}%` : "টার্গেট নেই"}</text>
+      </svg>
+    </div>
+  );
+}
+
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 9); // 9 AM – 8 PM Dhaka
+function HourlyActivity({ reports, fromDay, toDay, agentId }: { reports: { agent_id: string | null; submitted_at: string | null; created_at: string }[]; fromDay: string; toDay: string; agentId: string | null }) {
+  const { grid, days, max } = useMemo(() => {
+    const g = new Map<string, number>();
+    const ds = new Set<string>();
+    let m = 0;
+    for (const r of reports) {
+      if (agentId && r.agent_id !== agentId) continue;
+      const t = new Date(r.submitted_at ?? r.created_at).getTime() + 6 * 3600_000; // Dhaka
+      const d = new Date(t);
+      const day = d.toISOString().slice(0, 10);
+      if (day < fromDay || day > toDay) continue;
+      const h = d.getUTCHours();
+      ds.add(day);
+      const k = `${day}|${h}`;
+      const v = (g.get(k) ?? 0) + 1;
+      g.set(k, v);
+      if (HOURS.includes(h)) m = Math.max(m, v);
+    }
+    return { grid: g, days: [...ds].sort().slice(-14), max: m };
+  }, [reports, fromDay, toDay, agentId]);
+  return (
+    <Panel title="ঘণ্টাভিত্তিক কাজের চিত্র" question="দিনের কোন সময়ে দল সবচেয়ে বেশি কল রিপোর্ট জমা দিচ্ছে? (Asia/Dhaka)">
+      {max === 0 ? <Empty text="এই সময়ে কোনো কল রিপোর্ট নেই।" /> : (
+        <div className="table-scroll">
+          <table className="w-full min-w-[560px] border-separate border-spacing-1 text-[10px]">
+            <thead><tr><th />{HOURS.map((h) => <th key={h} className="font-medium text-muted-foreground">{h > 12 ? `${h - 12}PM` : h === 12 ? "12PM" : `${h}AM`}</th>)}</tr></thead>
+            <tbody>
+              {days.map((d) => (
+                <tr key={d}>
+                  <th className="whitespace-nowrap pr-1 text-left font-medium text-muted-foreground">{dayLabel(d)}</th>
+                  {HOURS.map((h) => {
+                    const v = grid.get(`${d}|${h}`) ?? 0;
+                    return (
+                      <td key={h} title={`${dayLabel(d)} ${h}:00 — ${v}টি রিপোর্ট`} className="h-6 rounded text-center tabular"
+                        style={{ background: v ? `color-mix(in oklab, var(--primary) ${Math.round(15 + (v / max) * 85)}%, transparent)` : "var(--muted)", color: v / max > 0.55 ? "var(--primary-foreground)" : "var(--muted-foreground)" }}>
+                        {v || ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  );
+}
