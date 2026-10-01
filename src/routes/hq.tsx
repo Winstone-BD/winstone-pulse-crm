@@ -166,7 +166,7 @@ function ControlBoard() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="hq-luxe space-y-6 rounded-3xl p-3 sm:p-5">
         <HqHeader />
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
