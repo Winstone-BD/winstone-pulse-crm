@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { createContext, createElement, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 
 /**
  * Tiny localStorage-backed stores for the admin unlock token and the
@@ -52,7 +52,9 @@ function useStoredValue(key: string): string | null {
 }
 
 export function useAdminToken() {
-  return useStoredValue(ADMIN_TOKEN_KEY);
+  const override = useContext(AdminTokenOverride);
+  const stored = useStoredValue(ADMIN_TOKEN_KEY);
+  return override !== undefined ? override : stored;
 }
 
 export function setAdminToken(token: string | null) {
@@ -60,6 +62,7 @@ export function setAdminToken(token: string | null) {
 }
 
 export function getAdminToken() {
+  if (activeOverride !== undefined) return activeOverride;
   return read(ADMIN_TOKEN_KEY);
 }
 
@@ -87,4 +90,32 @@ export function useDeckToken() {
 
 export function getDeckToken() {
   return read(ADMIN_TOKEN_KEY) ?? read(COORD_TOKEN_KEY);
+}
+
+/**
+ * LeadHub Nexus has its own PIN session, stored separately so unlocking it
+ * never overwrites the master/IT/HQ token (and vice versa).
+ */
+export const LEADHUB_TOKEN_KEY = "winstone.leadhub.token";
+
+export function setLeadHubToken(token: string | null) {
+  write(LEADHUB_TOKEN_KEY, token);
+}
+
+export function useLeadHubToken() {
+  return useStoredValue(LEADHUB_TOKEN_KEY);
+}
+
+/** Inside LeadHub, admin-token readers transparently receive the LeadHub token. */
+const AdminTokenOverride = createContext<string | null | undefined>(undefined);
+let activeOverride: string | null | undefined;
+
+export function LeadHubTokenScope({ token, children }: { token: string | null; children: ReactNode }) {
+  useEffect(() => {
+    activeOverride = token;
+    return () => {
+      activeOverride = undefined;
+    };
+  }, [token]);
+  return createElement(AdminTokenOverride.Provider, { value: token }, children);
 }

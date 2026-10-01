@@ -15,7 +15,7 @@ import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
 import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
 import { Button } from "@/components/ui/button";
 import { checkLeadHubAccess } from "@/lib/leadhub.functions";
-import { useAdminToken } from "@/lib/local-session";
+import { LeadHubTokenScope, useLeadHubToken } from "@/lib/local-session";
 import { useMyAccount } from "@/lib/session";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 
@@ -46,7 +46,7 @@ function LeadHubPage() {
 }
 
 function LeadHubGate() {
-  const token = useAdminToken();
+  const token = useLeadHubToken();
   const { isPending } = useMyAccount();
   const check = useServerFn(checkLeadHubAccess);
   const [pinOpen, setPinOpen] = useState(false);
@@ -58,7 +58,7 @@ function LeadHubGate() {
   });
 
   if (isPending || (token && access.isPending)) return <SnapshotSkeleton />;
-  if (access.data?.allowed) return <LeadHubWorkspace />;
+  if (access.data?.allowed) return <LeadHubTokenScope token={token}><LeadHubWorkspace /></LeadHubTokenScope>;
 
   return (
     <section className="card-elevated mx-auto max-w-md space-y-4 p-6 text-center">
