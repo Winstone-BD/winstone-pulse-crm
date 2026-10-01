@@ -295,9 +295,9 @@ export function SalesCommandCenter({
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-4">
         {/* Source performance */}
-        <Panel title="লিড সোর্স পারফরম্যান্স" question="কোন সোর্স থেকে আসল ফল আসছে?" className="lg:col-span-3">
+        <Panel title="লিড সোর্স পারফরম্যান্স" question="কোন সোর্স থেকে আসল ফল আসছে?">
           <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="সাজান">
             {([["leads", "লিড"], ["qualified", "আগ্রহী"], ["siteVisits", "সাইট ভিজিট"], ["bookings", "বুকিং"]] as const).map(([k, l]) => (
               <button key={k} type="button" onClick={() => setSortBy(k)} aria-pressed={sortBy === k}
@@ -324,23 +324,6 @@ export function SalesCommandCenter({
               </table>
             </div>
           )}
-        </Panel>
-
-        {/* Follow-up health */}
-        <Panel title="ফলো-আপ হেলথ" question="কোন ফলো-আপ এখনই ধরতে হবে?" className="lg:col-span-2">
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              ["dueToday", "আজ নির্ধারিত", "text-primary"],
-              ["overdue", "মেয়াদোত্তীর্ণ", "text-destructive"],
-              ["completed", "সম্পন্ন (সময়সীমায়)", "text-foreground"],
-              ["upcoming", "আসন্ন", "text-muted-foreground"],
-            ] as const).map(([k, l, tone]) => (
-              <button key={k} type="button" onClick={() => drill(`ফলো-আপ: ${l}`, cc.followUpHealth[k].leadIds)} className="rounded-xl border border-border p-3 text-left transition-colors hover:border-primary/40">
-                <span className="block text-[11px] text-muted-foreground">{l}</span>
-                <span className={`tabular block text-xl font-bold ${tone}`}>{cc.followUpHealth[k].count}</span>
-              </button>
-            ))}
-          </div>
         </Panel>
       </div>
 
