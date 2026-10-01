@@ -196,14 +196,14 @@ export function SalesCommandCenter({
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Arrow-style funnel */}
         <Panel title="সেলস ফানেল" question="লিড কোন ধাপে আটকে যাচ্ছে? (বর্তমান ফিল্টার, সব সময়ের)" className="lg:col-span-5">
-          <ol className="flex items-stretch gap-1 overflow-x-auto pb-1">
+          <ol className="flex flex-col gap-1.5 pb-1 sm:flex-row sm:items-stretch sm:gap-1">
             {cc.funnel.map((s, i) => {
               const tone = ["bg-primary text-primary-foreground", "bg-primary/45", "bg-chart-2/70", "bg-chart-3/60", "bg-chart-3/85"][i] ?? "bg-muted";
               return (
-                <li key={s.key} className="flex min-w-0 flex-1 items-center gap-1">
-                  {i > 0 && <span aria-hidden className="shrink-0 text-muted-foreground">→</span>}
+                <li key={s.key} className="flex min-w-0 flex-1 flex-col items-stretch gap-1 sm:flex-row sm:items-center">
+                  {i > 0 && <span aria-hidden className="shrink-0 self-center text-muted-foreground"><span className="sm:hidden">↓</span><span className="hidden sm:inline">→</span></span>}
                   <button type="button" onClick={() => drill(funnelLabels[s.key] ?? s.key, s.leadIds)}
-                    className={`flex min-h-24 min-w-[64px] flex-1 flex-col items-center justify-center rounded-xl px-1.5 py-2 text-center transition-transform hover:-translate-y-0.5 ${tone}`}
+                    className={`flex min-h-12 min-w-0 flex-1 flex-row items-center justify-between gap-2 rounded-xl px-3 py-2 text-left transition-transform hover:-translate-y-0.5 sm:min-h-24 sm:flex-col sm:justify-center sm:px-1.5 sm:text-center ${tone}`}
                     style={{ opacity: 0.55 + 0.45 * Math.max(0.15, s.count / funnelMax) }}>
                     <span className="tabular text-lg font-bold leading-tight">{s.count.toLocaleString("bn-BD")}</span>
                     <span className="text-[11px] font-medium">{funnelLabels[s.key] ?? s.key}</span>
@@ -420,7 +420,7 @@ function HourlyActivity({ reports, fromDay, toDay, agentId }: { reports: { agent
     <Panel title="ঘণ্টাভিত্তিক কাজের চিত্র" question="দিনের কোন সময়ে দল সবচেয়ে বেশি কল রিপোর্ট জমা দিচ্ছে? (Asia/Dhaka)">
       {max === 0 ? <Empty text="এই সময়ে কোনো কল রিপোর্ট নেই।" /> : (
         <div className="table-scroll">
-          <table className="w-full min-w-[560px] border-separate border-spacing-1 text-[10px]">
+          <table className="w-full min-w-[460px] border-separate border-spacing-0.5 text-[9px] sm:min-w-[560px] sm:border-spacing-1 sm:text-[10px]">
             <thead><tr><th />{HOURS.map((h) => <th key={h} className="font-medium text-muted-foreground">{h > 12 ? `${h - 12}PM` : h === 12 ? "12PM" : `${h}AM`}</th>)}</tr></thead>
             <tbody>
               {days.map((d) => (
