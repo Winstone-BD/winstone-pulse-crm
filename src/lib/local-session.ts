@@ -83,12 +83,14 @@ export function setCoordToken(token: string | null) {
 
 /** Token for Coordinator Deck calls: master/IT PIN token first, else the coordinator unlock. */
 export function useDeckToken() {
+  const override = useContext(AdminTokenOverride);
   const admin = useStoredValue(ADMIN_TOKEN_KEY);
   const coord = useStoredValue(COORD_TOKEN_KEY);
-  return admin ?? coord;
+  return override !== undefined ? override : admin ?? coord;
 }
 
 export function getDeckToken() {
+  if (activeOverride !== undefined) return activeOverride;
   return read(ADMIN_TOKEN_KEY) ?? read(COORD_TOKEN_KEY);
 }
 
@@ -111,6 +113,8 @@ const AdminTokenOverride = createContext<string | null | undefined>(undefined);
 let activeOverride: string | null | undefined;
 
 export function LeadHubTokenScope({ token, children }: { token: string | null; children: ReactNode }) {
+  // Set during render so child mount effects already see the LeadHub token.
+  if (typeof window !== "undefined") activeOverride = token;
   useEffect(() => {
     activeOverride = token;
     return () => {
