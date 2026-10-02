@@ -129,26 +129,32 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
   const recordFn = useServerFn(siRecordPitch);
   const brief = useQuery({ queryKey: ["si-brief", leadId], queryFn: () => briefFn({ data: { adminToken, leadId } }) });
   const [objection, setObjection] = useState<ObjectionCode | null>(null);
+  const [language, setLanguage] = useState<CopilotLanguage>("bn");
   const [note, setNote] = useState("");
   const [project, setProject] = useState("");
   const [edited, setEdited] = useState<string | null>(null);
   const [actionIds] = useState(() => new Map<string, string>());
-  const rec = useMutation({ mutationFn: (o: ObjectionCode) => recFn({ data: { adminToken, leadId, objection: o, note: note || null } }), onSuccess: () => setEdited(null) });
-  const text = edited ?? rec.data?.text ?? "";
+  const rec = useMutation({ mutationFn: (o: ObjectionCode) => recFn({ data: { adminToken, leadId, objection: o, language, note: note || null } }), onSuccess: () => setEdited(null) });
+  const text = edited ?? rec.data?.response?.text ?? "";
 
   const record = async (action: PitchAction) => {
     if (!objection || !rec.data) return;
     // One client action id per (recommendation, action): retries reuse it, so no duplicates.
-    const k = `${rec.data.text.length}:${rec.submittedAt}:${action}:${edited ?? ""}`;
+    const k = `${text.length}:${rec.submittedAt}:${action}:${edited ?? ""}`;
     if (!actionIds.has(k)) actionIds.set(k, newId());
     try {
-      const r = await recordFn({ data: { adminToken, leadId, objection, action, clientActionId: actionIds.get(k)!, templateId: rec.data.templateId, generatedText: rec.data.text, finalText: edited, project: project.trim() || null, factIds: rec.data.factIds, grounded: rec.data.grounded, callId: rec.data.lastReportId, followUpId: rec.data.openFollowUpId } });
+      const r = await recordFn({ data: { adminToken, leadId, objection, action, clientActionId: actionIds.get(k)!, templateId: rec.data.response.templateId, generatedText: rec.data.response.text, finalText: edited, project: project.trim() || null, factIds: rec.data.factIds, grounded: rec.data.response.grounded, callId: rec.data.lastReportId, followUpId: rec.data.openFollowUpId } });
       qc.invalidateQueries({ queryKey: ["si-history"] });
       return r;
     } catch (e) {
       toast.error(errMsg(e));
       return null;
     }
+  };
+
+  const pickLanguage = (code: CopilotLanguage) => {
+    setLanguage(code);
+    if (objection) rec.mutate(objection);
   };
 
   return (
@@ -169,9 +175,17 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
       </section>
 
       <section className={card}>
-        <h3 className="text-base font-semibold">Smart Pitchbook</h3>
-        <p className="mt-1 text-xs text-muted-foreground">গ্রাহকের আপত্তি বেছে নিন</p>
+        <h3 className="text-base font-semibold">Sales Copilot</h3>
+        <p className="mt-1 text-xs text-muted-foreground">ভাষা বেছে নিন, তারপর গ্রাহকের আপত্তি</p>
         <div className="mt-3 flex flex-wrap gap-2">
+          {COPILOT_LANGUAGES.map((l) => (
+            <button key={l.code} onClick={() => pickLanguage(l.code)} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${language === l.code ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">গ্রাহকের আপত্তি বেছে নিন</p>
+        <div className="mt-2 flex flex-wrap gap-2">
           {OBJECTIONS.map((o) => (
             <button key={o.code} onClick={() => { setObjection(o.code); rec.mutate(o.code); }} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${objection === o.code ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>
               {o.label}
@@ -186,13 +200,22 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
         {rec.error && <p className="mt-3 text-sm text-destructive">{errMsg(rec.error)}</p>}
         {rec.data && objection && (
           <div className="mt-4 space-y-4">
+            <div className="rounded-xl bg-muted/50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Interpretation — গ্রাহকের অভিপ্রায় (নিয়ম-ভিত্তিক)</p>
+              <p className="mt-1 text-sm">{rec.data.intent}</p>
+              {rec.data.response.aiNote && <p className="mt-2 text-xs text-warning">{rec.data.response.aiNote}</p>}
+            </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-semibold">Recommended Response</p>
-                <Badge variant={rec.data.grounded ? "default" : "secondary"}>{rec.data.grounded ? "AI · verified facts" : "Approved template"}</Badge>
+                <Badge variant={rec.data.response.grounded ? "default" : "secondary"}>{rec.data.response.grounded ? "AI · verified facts" : "Approved template"}</Badge>
               </div>
-              {rec.data.aiNote && <p className="mt-1 text-xs text-warning">{rec.data.aiNote}</p>}
               <Textarea className="mt-2 min-h-32" value={text} onChange={(e) => setEdited(e.target.value)} />
+              <div className="mt-2 rounded-xl border border-primary/30 bg-surface-2 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">পরের প্রশ্ন (একটি)</p>
+                <p className="mt-0.5 break-words text-sm">{rec.data.nextQuestion}</p>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">পরের কাজ: {rec.data.nextAction}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={async () => { await navigator.clipboard.writeText(text); const r = await record(edited ? "edited" : "copied"); if (r) toast.success("কপি হয়েছে ও ইতিহাসে লেখা হয়েছে"); }}><Copy className="size-4" /> Copy Pitch</Button>
@@ -205,10 +228,6 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
               }}><MessageCircle className="size-4" /> WhatsApp</Button>
               <Button size="sm" variant="outline" onClick={async () => { const r = await record("saved"); if (r) toast.success(r.duplicate ? "আগেই সংরক্ষিত" : "লিড ইতিহাসে সংরক্ষিত"); }}><Save className="size-4" /> Save to Lead History</Button>
               <Button size="sm" variant="ghost" onClick={() => rec.mutate(objection)}><RefreshCw className="size-4" /> Edit / Regenerate</Button>
-            </div>
-            <div className="rounded-xl bg-muted/50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Why this response</p>
-              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">{rec.data.why.map((w) => <li key={w} className="break-words">{w}</li>)}</ul>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Supporting Facts</p>
@@ -223,6 +242,25 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
                   </div>
                 ))}
               </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Property Match</p>
+              {rec.data.propertyMatches.length === 0 ? (
+                <p className="mt-1 rounded-xl border border-dashed border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                  যাচাইকৃত কোনো প্রপার্টি তথ্য নেই — মিল দেখানো হয়নি। মেকানিক্যাল অনুমান করা হয় না।
+                </p>
+              ) : (
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  {rec.data.propertyMatches.map((m) => (
+                    <div key={m.fact.id} className="rounded-xl border border-border p-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-1"><span className="font-medium">{m.fact.metric}</span><EligBadge e={m.fact.eligibility} /></div>
+                      <p className="mt-1">{m.fact.value} {m.fact.unit ?? ""} {m.fact.geography ? `· ${m.fact.geography}` : ""}</p>
+                      <ul className="mt-1 list-disc pl-4 text-xs text-muted-foreground">{m.why.map((w) => <li key={w}>{w}</li>)}</ul>
+                      <p className="mt-1 text-xs text-muted-foreground">উৎস: {m.fact.sourceUrl ? <a className="underline" href={m.fact.sourceUrl} target="_blank" rel="noreferrer">{m.fact.sourceName}</a> : m.fact.sourceName} · কার্যকর {m.fact.effectiveDate} · v{m.fact.version}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
