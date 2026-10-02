@@ -27,3 +27,8 @@
 - [ ] Capped weighted KPI performance %, separate compliance state
 - [ ] Deterministic 5:30 PM Top 3 from stored snapshot
 - [ ] 6:00 PM Dhaka finalization lock + admin correction with reason/audit
+
+## 2026-10-02 — Winstone Sales Success build (in progress)
+- [x] Reconnect Google Drive in new workspace (linked; gateway-backed)
+- [ ] Reconnect Google Search Console — BLOCKED: no workspace connection exists; user must create it in Connectors settings, then agent links it
+- [x] Sales Success operating loop: Sales Copilot (FACT/INTERPRETATION/RECOMMENDATION, bn/bnlish/en, one next question) in sales-intel.server.ts + rules; Property Match from verified project_property facts with honest empty state; Objection Library (agent section + trust/ready_property codes); HQ overview daily market brief + property/project updates; NRB/expat news category + query; 288/288 tests, typecheck clean, build OK. Not published; AI answers and property match not exercised against live facts (market_facts empty).

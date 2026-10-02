@@ -23,6 +23,7 @@ export const PAGE_SECTIONS = {
   ],
   "/sales-intel": [
     { key: "pitchbook", label: "AI Sales Brief ও Pitchbook" },
+    { key: "objections", label: "Objection Library" },
     { key: "history", label: "Pitch History" },
     { key: "market", label: "Market Intelligence" },
     { key: "effectiveness", label: "Pitch Effectiveness" },

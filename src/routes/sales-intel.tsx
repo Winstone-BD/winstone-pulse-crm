@@ -9,6 +9,7 @@ import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
 import {
   EffectivenessPanel,
   FactsBoard,
+  ObjectionLibrary,
   PitchHistoryPanel,
   PitchLibraryAdmin,
   PitchbookWorkspace,
@@ -65,6 +66,7 @@ function SalesIntelPage() {
         {scope !== "none" && section === "pitchbook" && (isHq
           ? <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Smart Pitchbook নির্ধারিত এজেন্টের জন্য — HQ প্রতিটি লিডের পিচ ইতিহাস Lead 360 ও Pitch History-তে দেখতে পারে।</p>
           : <PitchbookWorkspace />)}
+        {scope !== "none" && section === "objections" && <ObjectionLibrary />}
         {scope !== "none" && section === "history" && <PitchHistoryPanel />}
         {scope !== "none" && section === "market" && (
           <>

@@ -6,6 +6,7 @@ export const NEWS_CATEGORIES = [
   { code: "infrastructure", label: "মেট্রো / অবকাঠামো" },
   { code: "finance", label: "সুদের হার / লোন" },
   { code: "housing", label: "হাউজিং / প্রকল্প" },
+  { code: "nrb", label: "NRB / প্রবাসী" },
   { code: "announcement", label: "HQ ঘোষণা" },
 ] as const;
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number]["code"];
@@ -20,6 +21,7 @@ export const NEWS_QUERIES = [
   "Uttara Dhaka",
   "Dhaka metro rail",
   "Bangladesh home loan interest rate",
+  "NRB expat property investment remittance Bangladesh",
   "ঢাকা ফ্ল্যাট আবাসন",
   "রাজউক",
 ];
@@ -28,7 +30,8 @@ const KEYWORDS = [
   "real estate", "property", "apartment", "flat", "housing", "land", "plot", "rajuk", "rehab", "developer",
   "metro", "expressway", "infrastructure", "uttara", "purbachal", "dhaka", "home loan", "mortgage", "interest rate",
   "bangladesh bank", "construction", "building code", "dap",
-  "আবাসন", "ফ্ল্যাট", "জমি", "প্লট", "রাজউক", "রিহ্যাব", "মেট্রো", "উত্তরা", "পূর্বাচল", "গৃহঋণ", "সুদের হার", "নির্মাণ",
+  "nrb", "expat", "remittance", "diaspora",
+  "আবাসন", "ফ্ল্যাট", "জমি", "প্লট", "রাজউক", "রিহ্যাব", "মেট্রো", "উত্তরা", "পূর্বাচল", "গৃহঋণ", "সুদের হার", "নির্মাণ", "প্রবাসী",
 ];
 
 export const MAX_AGE_DAYS = 14;

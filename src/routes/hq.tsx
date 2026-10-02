@@ -1,5 +1,5 @@
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -32,6 +32,8 @@ import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
 import { FloorLockAdminPanel } from "@/components/crm/hq/FloorLockAdminPanel";
 
 import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
+import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
+import { FactsBoard } from "@/components/crm/sales-intel/SalesIntelPanels";
 import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReviewPanel";
 import { ReportsBoard } from "@/routes/reports";
 
@@ -211,6 +213,20 @@ function ControlBoard() {
                   onDrill={setDrill}
                   onSelectAgent={setOpenAgentId}
                 />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <section className="rounded-2xl border border-border bg-background p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="font-semibold">আজকের মার্কেট ব্রিফ</h2>
+                      <Link to="/news" className="text-xs font-medium text-primary hover:underline">সব খবর →</Link>
+                    </div>
+                    <MarketNewsFeed compact />
+                  </section>
+                  <section className="rounded-2xl border border-border bg-background p-4">
+                    <h2 className="font-semibold">প্রপার্টি ও প্রজেক্ট আপডেট</h2>
+                    <p className="mb-2 text-xs text-muted-foreground">শুধু যাচাই-কৃত ও প্রকাশিত তথ্য — না থাকলে খালি।</p>
+                    <FactsBoard category="project_property" admin={false} />
+                  </section>
+                </div>
                 <SystemManualCard />
                 <ExecutiveKpiBoard
                   profiles={profiles}
