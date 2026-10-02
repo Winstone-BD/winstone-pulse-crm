@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Copy, Download, FileText, MessageCircle, Printer, RefreshCw, Save, ShieldCheck } from "lucide-react";
+import { Copy, Download, FileText, HelpCircle, MessageCircle, Printer, RefreshCw, Save, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import {
   siTemplates,
   siVersions,
 } from "@/lib/sales-intel.functions";
+import { COPILOT_LANGUAGES, OBJECTION_LIBRARY, type CopilotLanguage } from "@/lib/sales-copilot.rules";
 import {
   FACT_CATEGORIES,
   OBJECTIONS,
