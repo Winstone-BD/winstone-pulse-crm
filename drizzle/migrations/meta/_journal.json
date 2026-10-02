@@ -505,6 +505,13 @@
       "when": 1790900874875,
       "tag": "0071_snapshot_paging_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1790959430914,
+      "tag": "0072_restrict_releases_and_categories",
+      "breakpoints": true
     }
   ]
 }
