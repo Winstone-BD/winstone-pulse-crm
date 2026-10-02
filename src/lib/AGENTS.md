@@ -2,3 +2,4 @@
 - Sales Intelligence writes only via sales-intel.server.ts (session actor, append-only pitch_events + correlation_key, validateGrounding) — why: grounded, auditable path.
 - Market News writes only via market-news.server.ts; auto items keep source_url + retrieved_excerpt and pass groundedAgainst; rows unpublished, never deleted — why: AI must never invent news.
 - site_visits is server-only (site-visits.functions.ts via siCaller); never deleted, lead link immutable, cancel via status — why: visit history must stay trustworthy.
+- Sales Copilot reads/builds in sales-intel.server.ts (copilotResponse); pure rules live in sales-copilot.rules.ts; AI numbers must come from cited facts or lead context (parseCopilotAi) — why: no invented prices, one grounded path.
