@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { COPILOT_LANGUAGE_CODES } from "@/lib/sales-copilot.rules";
 import { FACT_CATEGORY_CODES, KNOWLEDGE_STATUSES, OBJECTION_CODES, PITCH_ACTIONS } from "@/lib/sales-intel-rules";
 
 const Tok = { adminToken: z.string().nullable().optional() };
@@ -47,10 +48,17 @@ export const siBrief = createServerFn({ method: "POST" })
   });
 
 export const siRecommend = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ ...Tok, leadId: uuid, objection: z.enum(OBJECTION_CODES), note: z.string().max(500).nullable().optional() }).parse(d))
+  .inputValidator((d) =>
+    z.object({ ...Tok, leadId: uuid, objection: z.enum(OBJECTION_CODES), language: z.enum(COPILOT_LANGUAGE_CODES).default("bn"), note: z.string().max(500).nullable().optional() }).parse(d),
+  )
   .handler(async ({ data }) => {
     const m = await s();
-    return m.recommendPitch(await m.siCaller(data.adminToken), data.leadId, data.objection, data.note ?? null);
+    const c = await m.siCaller(data.adminToken);
+    if (data.language === "bn" && !("language" in data)) {
+      // Legacy callers without a language stay on the original shape.
+      return m.recommendPitch(c, data.leadId, data.objection, data.note ?? null);
+    }
+    return m.copilotResponse(c, data.leadId, data.objection, data.language, data.note ?? null);
   });
 
 export const siRecordPitch = createServerFn({ method: "POST" })
