@@ -290,6 +290,7 @@ export async function copilotResponse(
     nextQuestion,
     nextAction,
     propertyMatches,
+    supportingFacts: facts.filter((f) => factIds.includes(f.id) || !grounded).slice(0, 6).map((f) => ({ id: f.id, category: f.category, metric: f.metric, value: f.value, unit: f.unit, geography: f.geography, source: f.source_name, sourceUrl: f.source_url, effectiveDate: f.effective_date, status: f.status, eligibility: factEligibility(f), reviewDate: f.review_date, expiryDate: f.expiry_date, version: f.version })),
     lead: brief.lead,
     lastReportId: brief.lastReportId,
     openFollowUpId: brief.openFollowUpId,
