@@ -98,9 +98,10 @@ describe("buildPropertyMatch", () => {
 
   it("ranks by area and requirement overlap and explains why", () => {
     const m = buildPropertyMatch({ leadArea: "Uttara", leadAddress: "Sector 7, Uttara, Dhaka", requirement: "ready 2 bedroom flat", candidates });
+    expect(m).toHaveLength(1);
     expect(m[0]!.fact.id).toBe("p-uttara");
     expect(m[0]!.why.some((w) => w.toLowerCase().includes("uttara"))).toBe(true);
-    expect(m[0]!.score).toBeGreaterThan(m[1]!.score);
+    expect(m[0]!.score).toBeGreaterThanOrEqual(2);
   });
 
   it("returns empty when nothing matches — no invented match", () => {
