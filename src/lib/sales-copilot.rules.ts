@@ -250,9 +250,10 @@ const tokens = (s: string | null | undefined) =>
     .split(" ")
     .filter((w) => w.length >= 3 && !STOP.has(w));
 
-function overlap(a: string[] | null | undefined, b: string | null | undefined): string[] {
+function overlap(a: string | string[] | null | undefined, b: string | null | undefined): string[] {
+  const joined = Array.isArray(a) ? a.filter(Boolean).join(" ") : a;
   const bs = new Set(tokens(b));
-  return [...new Set(tokens(a))].filter((t) => bs.has(t));
+  return [...new Set(tokens(joined))].filter((t) => bs.has(t));
 }
 
 export type PropertyCandidateInput = Pick<
