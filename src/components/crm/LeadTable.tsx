@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, ChevronDown, Search, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin, Search, X } from "lucide-react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -403,6 +403,16 @@ function LeadRows({
                 </dd>
               </dl>
             </button>
+            {lead.address && (
+              <details className="group/addr mt-2 text-xs">
+                <summary className="flex cursor-pointer list-none items-center gap-1 text-muted-foreground [&::-webkit-details-marker]:hidden">
+                  <MapPin className="size-3 shrink-0" />
+                  <span className="truncate">{lead.address}</span>
+                  <ChevronDown className="size-3 shrink-0 transition-transform group-open/addr:rotate-180" />
+                </summary>
+                <p className="mt-1 rounded-lg bg-surface-2 p-2 leading-relaxed">{lead.address}</p>
+              </details>
+            )}
             <div className="mt-3 flex items-center gap-2">
               <WebCallButton
                 leadId={lead.id}
