@@ -176,6 +176,126 @@ export async function recommendPitch(c: SiCaller, leadId: string, objection: Obj
   };
 }
 
+/**
+ * Sales Copilot — FACT / INTERPRETATION / RECOMMENDATION as separate layers.
+ * FACT = saved records + verified facts only. INTERPRETATION = rule-based
+ * objection reading. RECOMMENDATION = grounded AI reply (or approved template
+ * fallback), one next question, next action, and verified property matches.
+ * The AI never invents prices, rates, availability, legal claims or specs.
+ */
+export async function copilotResponse(
+  c: SiCaller,
+  leadId: string,
+  objection: ObjectionCode,
+  language: CopilotLanguage,
+  note: string | null,
+) {
+  const db = await admin();
+  const brief = await buildSalesBrief(c, leadId);
+  const lib = OBJECTION_LIBRARY[objection];
+  const facts = await listFacts(db, { onlyAuthoritative: true, categories: OBJECTION_FACT_CATEGORIES[objection] });
+  const { data: tpl } = await db
+    .from("pitch_templates")
+    .select("id, title, body, version")
+    .eq("objection_code", objection)
+    .eq("status", "published")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const base = tpl?.body ?? fallbackPitch(objection, brief.lead.name);
+  const pool = `${brief.contextText}\n${base}\n${note ?? ""}\n${facts.map((f) => `${f.metric} ${f.value} ${f.unit ?? ""}`).join("\n")}`;
+
+  let responseText = base;
+  let factIds: string[] = [];
+  let grounded = false;
+  let aiNote: string | null = facts.length ? null : "এই আপত্তির জন্য কোনো যাচাই-কৃত তথ্য প্রকাশিত নেই — অনুমোদিত টেমপ্লেট দেখানো হচ্ছে।";
+  let nextQuestion: string = lib.questions[0]!;
+  let nextAction: string = lib.nextAction;
+
+  const key = process.env["LOVABLE_API_KEY"];
+  if (key && facts.length) {
+    try {
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash",
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: copilotPromptInstruction(language) },
+            {
+              role: "user",
+              content: JSON.stringify({
+                objection: objectionLabel(objection),
+                language,
+                agent_note: note,
+                approved_template: base,
+                lead_context: brief.contextText,
+                verified_facts: facts.map((f) => ({ id: f.id, metric: f.metric, value: f.value, unit: f.unit, geography: f.geography, source: f.source_name, effective_date: f.effective_date })),
+              }),
+            },
+          ],
+        }),
+      });
+      if (r.ok) {
+        const raw = ((await r.json()) as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content ?? "";
+        const parsed = parseCopilotAi(raw, facts.map((f) => f.id), pool);
+        if (parsed) {
+          responseText = parsed.response;
+          factIds = parsed.factIds;
+          grounded = true;
+          if (parsed.nextQuestion) nextQuestion = parsed.nextQuestion;
+          if (parsed.nextAction) nextAction = parsed.nextAction;
+        } else {
+          aiNote = "AI উত্তর বাতিল (অগ্রাউন্ডেড সংখ্যা) — অনুমোদিত টেমপ্লেট দেখানো হচ্ছে";
+        }
+      } else {
+        aiNote = r.status === 402 ? "AI ক্রেডিট শেষ — টেমপ্লেট দেখানো হচ্ছে" : "AI এখন ব্যস্ত — টেমপ্লেট দেখানো হচ্ছে";
+      }
+    } catch {
+      aiNote = "AI উত্তর পাওয়া যায়নি — টেমপ্লেট দেখানো হচ্ছে";
+    }
+  }
+
+  const reqLine = brief.lines.find((l) => l.label === "Requirement");
+  const requirement = reqLine && reqLine.value !== "রেকর্ড করা নেই" ? reqLine.value : null;
+  const candidates: PropertyCandidateInput[] = facts
+    .filter((f) => f.category === "project_property")
+    .map((f) => ({
+      id: f.id,
+      category: f.category,
+      geography: f.geography,
+      metric: f.metric,
+      value: f.value,
+      unit: f.unit,
+      sourceName: f.source_name,
+      sourceUrl: f.source_url,
+      effectiveDate: f.effective_date,
+      eligibility: factEligibility(f),
+      version: f.version,
+      notes: f.notes,
+    }));
+  const propertyMatches: CopilotMatch[] = buildPropertyMatch({
+    leadArea: (brief.lead as unknown as { area?: string | null }).area ?? null,
+    leadAddress: brief.lines.find((l) => l.label === "Location")?.value ?? null,
+    requirement,
+    candidates,
+  });
+
+  return {
+    language,
+    intent: lib.intent,
+    factIds,
+    response: { text: responseText, grounded, aiNote, templateId: tpl?.id ?? null },
+    nextQuestion,
+    nextAction,
+    propertyMatches,
+    lead: brief.lead,
+    lastReportId: brief.lastReportId,
+    openFollowUpId: brief.openFollowUpId,
+  };
+}
+
 /** Append-only pitch event. Idempotent on (agent, lead, action, clientActionId). */
 export async function recordPitchEvent(
   c: SiCaller,
