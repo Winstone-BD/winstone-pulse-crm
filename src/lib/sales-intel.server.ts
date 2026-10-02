@@ -16,6 +16,16 @@ import {
   type ObjectionCode,
   type PitchAction,
 } from "@/lib/sales-intel-rules";
+import {
+  OBJECTION_LIBRARY,
+  copilotPromptInstruction,
+  buildPropertyMatch,
+  normalizeLanguage,
+  parseCopilotAi,
+  type CopilotLanguage,
+  type CopilotMatch,
+  type PropertyCandidateInput,
+} from "@/lib/sales-copilot.rules";
 
 type Db = Awaited<ReturnType<typeof admin>>;
 async function admin() {
@@ -53,7 +63,7 @@ export async function leadForCaller(db: Db, c: SiCaller, leadId: string) {
   const { leadOwnerId, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
   const { data: lead, error } = await db
     .from("leads")
-    .select("id, name, phone_number, address, source, reference_by, temperature, grade, status, work_state, notes, assigned_to, assigned_agent_id")
+    .select("id, name, phone_number, address, area, source, reference_by, temperature, grade, status, work_state, notes, assigned_to, assigned_agent_id")
     .eq("id", leadId)
     .maybeSingle();
   if (error) throw new Error("লিড পড়া যায়নি");
