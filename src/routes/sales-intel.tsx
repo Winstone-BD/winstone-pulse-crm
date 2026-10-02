@@ -9,6 +9,7 @@ import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
 import {
   EffectivenessPanel,
   FactsBoard,
+  ObjectionLibrary,
   PitchHistoryPanel,
   PitchLibraryAdmin,
   PitchbookWorkspace,
