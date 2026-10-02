@@ -16,6 +16,8 @@ export const OBJECTIONS = [
   { code: "lower_budget", label: "Wants lower budget", bn: "কম বাজেট চান" },
   { code: "location", label: "Location concern", bn: "লোকেশন নিয়ে চিন্তা" },
   { code: "payment", label: "Payment concern", bn: "পেমেন্ট নিয়ে চিন্তা" },
+  { code: "trust", label: "Trust / developer concern", bn: "ডেভেলপারে বিশ্বাস" },
+  { code: "ready_property", label: "Wants ready property", bn: "রেডি প্রপার্টি চান" },
   { code: "other", label: "Other", bn: "অন্যান্য" },
 ] as const;
 export type ObjectionCode = (typeof OBJECTIONS)[number]["code"];
@@ -34,6 +36,8 @@ export const OBJECTION_FACT_CATEGORIES: Record<ObjectionCode, FactCategory[]> = 
   lower_budget: ["project_property", "finance_loan"],
   location: ["project_property", "area_price"],
   payment: ["finance_loan", "project_property"],
+  trust: ["project_property"],
+  ready_property: ["project_property", "area_price"],
   other: ["project_property"],
 };
 
