@@ -35,8 +35,10 @@ export const snapshotQueryFor = (scope: { token: string | null }) =>
     queryKey: ["crm-snapshot", scope.token ? "authority" : "session"],
     queryFn: () => getCrmSnapshot({ data: { token: scope.token } }),
     // Live changes arrive through realtime below; the poll is only a safety net.
-    refetchInterval: 45_000,
-    staleTime: 20_000,
+    // Each poll re-reads the whole floor, so keep it rare (was 45s — the top DB cost).
+    refetchInterval: 180_000,
+    refetchIntervalInBackground: false,
+    staleTime: 60_000,
   });
 
 const EMPTY_SNAPSHOT = {
