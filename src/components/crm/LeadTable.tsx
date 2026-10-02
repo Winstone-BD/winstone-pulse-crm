@@ -433,7 +433,7 @@ function LeadRows({
       </ul>
 
       <div className="card-elevated hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[860px] text-sm">
+        <table className="w-full min-w-[960px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
               <th className="px-3 py-2.5 font-medium">ক্রমিক</th>
@@ -517,7 +517,7 @@ function LeadRows({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
                   এই তালিকায় এখন কোনো লিড নেই
                 </td>
               </tr>
