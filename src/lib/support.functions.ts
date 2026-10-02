@@ -229,7 +229,7 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     }
     if (signedIn) {
       await runAiTurn(conversation.id, customer?.name ?? null);
-    } else if (conversation.status !== "escalated") {
+    } else if (!conversation.escalated_at) {
       const { escalateConversation } = await import("@/lib/support.server");
       await escalateConversation({
         conversationId: conversation.id,
