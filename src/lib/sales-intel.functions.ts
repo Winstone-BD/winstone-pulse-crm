@@ -53,12 +53,7 @@ export const siRecommend = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const m = await s();
-    const c = await m.siCaller(data.adminToken);
-    if (data.language === "bn" && !("language" in data)) {
-      // Legacy callers without a language stay on the original shape.
-      return m.recommendPitch(c, data.leadId, data.objection, data.note ?? null);
-    }
-    return m.copilotResponse(c, data.leadId, data.objection, data.language, data.note ?? null);
+    return m.copilotResponse(await m.siCaller(data.adminToken), data.leadId, data.objection, data.language, data.note ?? null);
   });
 
 export const siRecordPitch = createServerFn({ method: "POST" })
