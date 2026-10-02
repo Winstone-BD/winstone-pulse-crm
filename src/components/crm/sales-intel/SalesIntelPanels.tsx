@@ -553,3 +553,41 @@ export function VersionHistoryPanel() {
     </section>
   );
 }
+
+// ---------------- Objection Library ----------------
+/** Read-only objection playbook: intent, questions to ask, next action and the
+ * approved template status per objection. No numbers, no invented facts. */
+export function ObjectionLibrary() {
+  const adminToken = useAdminToken();
+  const fn = useServerFn(siTemplates);
+  const res = useQuery({ queryKey: ["si-templates", "library"], queryFn: () => fn({ data: { adminToken } }) });
+  const byObjection = useMemo(() => {
+    const m = new Map<string, { id: string; title: string; status: string; version: number; body: string }>();
+    for (const t of res.data ?? []) if (t.status === "published" && !m.has(t.objection_code)) m.set(t.objection_code, t);
+    return m;
+  }, [res.data]);
+  return (
+    <section className={card}>
+      <h3 className="flex items-center gap-2 text-base font-semibold"><HelpCircle className="size-4" /> Objection Library</h3>
+      <p className="mt-1 text-xs text-muted-foreground">প্রতিটি আপত্তির জন্য: গ্রাহকের অভিপ্রায়, জিজ্ঞাস্য প্রশ্ন, পরের কাজ ও অনুমোদিত টেমপ্লেটের অবস্থা।</p>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        {OBJECTIONS.map((o) => {
+          const lib = OBJECTION_LIBRARY[o.code];
+          const tpl = byObjection.get(o.code);
+          return (
+            <div key={o.code} className="rounded-xl border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-1">
+                <p className="text-sm font-semibold">{o.label} <span className="font-normal text-muted-foreground">· {o.bn}</span></p>
+                {tpl ? <Badge variant="default">টেমপ্লেট v{tpl.version}</Badge> : <Badge variant="secondary">টেমপ্লেট নেই</Badge>}
+              </div>
+              <p className="mt-1 text-sm"><span className="font-medium">অভিপ্রায়:</span> {lib.intent}</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm">{lib.questions.map((q) => <li key={q}>{q}</li>)}</ul>
+              <p className="mt-1 text-xs text-muted-foreground">পরের কাজ: {lib.nextAction}</p>
+              {tpl && <p className="mt-2 rounded-lg bg-muted/50 p-2 text-xs whitespace-pre-wrap break-words text-muted-foreground">অনুমোদিত প্রতিক্রিয়া: {tpl.body}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
