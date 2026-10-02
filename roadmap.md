@@ -27,3 +27,8 @@
 - [ ] Capped weighted KPI performance %, separate compliance state
 - [ ] Deterministic 5:30 PM Top 3 from stored snapshot
 - [ ] 6:00 PM Dhaka finalization lock + admin correction with reason/audit
+
+## 2026-10-02 — Winstone Sales Success build (in progress)
+- [x] Reconnect Google Drive in new workspace (linked; gateway-backed)
+- [ ] Reconnect Google Search Console — BLOCKED: no workspace connection exists; user must create it in Connectors settings, then agent links it
+- [ ] Sales Success operating loop: map spec to existing Sales Intelligence modules, implement gaps, verify, final report
