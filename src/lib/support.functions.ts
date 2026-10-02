@@ -217,7 +217,28 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
       attachments: data.attachments ?? [],
     });
 
-    await runAiTurn(conversation.id, customer?.name ?? null);
+    // The paid AI assistant only answers verified signed-in users. Guests'
+    // messages are saved and routed to the human support team instead.
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const auth = getRequest()?.headers?.get("authorization") ?? "";
+    const bearer = auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "";
+    let signedIn = false;
+    if (bearer) {
+      const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
+      signedIn = Boolean(userData?.user);
+    }
+    if (signedIn) {
+      await runAiTurn(conversation.id, customer?.name ?? null);
+    } else if (!conversation.escalated_at) {
+      const { escalateConversation } = await import("@/lib/support.server");
+      await escalateConversation({
+        conversationId: conversation.id,
+        reason: "Guest message — AI assistant requires sign-in",
+        title: (conversation.subject ?? data.body).slice(0, 120),
+        description: data.body,
+        createdByKind: "customer",
+      });
+    }
     return buildThread(conversation.id);
   });
 
