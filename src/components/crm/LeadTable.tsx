@@ -440,6 +440,7 @@ function LeadRows({
               <th className="px-3 py-2.5 font-medium">নাম</th>
               <th className="px-3 py-2.5 font-medium">ফোন নম্বর</th>
               <th className="px-3 py-2.5 font-medium">রেফারেন্স</th>
+              <th className="px-3 py-2.5 font-medium">ঠিকানা</th>
               <th className="px-3 py-2.5 font-medium">চাহিদা</th>
               <th className="px-3 py-2.5 font-medium">অবস্থা</th>
               <th className="px-3 py-2.5 font-medium">পরের ফলো-আপ</th>
@@ -469,6 +470,12 @@ function LeadRows({
                 <td className="tabular px-3 py-2.5">{lead.phone_number}</td>
                 <td className="px-3 py-2.5 text-xs text-muted-foreground">
                   {lead.reference_by ?? "—"}
+                </td>
+                <td
+                  className="max-w-[160px] truncate px-3 py-2.5 text-xs text-muted-foreground"
+                  title={lead.address ?? undefined}
+                >
+                  {lead.address ?? "—"}
                 </td>
                 <td className="max-w-[180px] truncate px-3 py-2.5 text-xs">
                   {extras.get(lead.id)?.requirement ?? "—"}
