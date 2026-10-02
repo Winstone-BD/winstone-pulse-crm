@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, ChevronDown, Search, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin, Search, X } from "lucide-react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -403,6 +403,16 @@ function LeadRows({
                 </dd>
               </dl>
             </button>
+            {lead.address && (
+              <details className="group/addr mt-2 text-xs">
+                <summary className="flex cursor-pointer list-none items-center gap-1 text-muted-foreground [&::-webkit-details-marker]:hidden">
+                  <MapPin className="size-3 shrink-0" />
+                  <span className="truncate">{lead.address}</span>
+                  <ChevronDown className="size-3 shrink-0 transition-transform group-open/addr:rotate-180" />
+                </summary>
+                <p className="mt-1 rounded-lg bg-surface-2 p-2 leading-relaxed">{lead.address}</p>
+              </details>
+            )}
             <div className="mt-3 flex items-center gap-2">
               <WebCallButton
                 leadId={lead.id}
@@ -423,13 +433,14 @@ function LeadRows({
       </ul>
 
       <div className="card-elevated hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[860px] text-sm">
+        <table className="w-full min-w-[960px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
               <th className="px-3 py-2.5 font-medium">ক্রমিক</th>
               <th className="px-3 py-2.5 font-medium">নাম</th>
               <th className="px-3 py-2.5 font-medium">ফোন নম্বর</th>
               <th className="px-3 py-2.5 font-medium">রেফারেন্স</th>
+              <th className="px-3 py-2.5 font-medium">ঠিকানা</th>
               <th className="px-3 py-2.5 font-medium">চাহিদা</th>
               <th className="px-3 py-2.5 font-medium">অবস্থা</th>
               <th className="px-3 py-2.5 font-medium">পরের ফলো-আপ</th>
@@ -459,6 +470,12 @@ function LeadRows({
                 <td className="tabular px-3 py-2.5">{lead.phone_number}</td>
                 <td className="px-3 py-2.5 text-xs text-muted-foreground">
                   {lead.reference_by ?? "—"}
+                </td>
+                <td
+                  className="max-w-[160px] truncate px-3 py-2.5 text-xs text-muted-foreground"
+                  title={lead.address ?? undefined}
+                >
+                  {lead.address ?? "—"}
                 </td>
                 <td className="max-w-[180px] truncate px-3 py-2.5 text-xs">
                   {extras.get(lead.id)?.requirement ?? "—"}
@@ -500,7 +517,7 @@ function LeadRows({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
                   এই তালিকায় এখন কোনো লিড নেই
                 </td>
               </tr>
