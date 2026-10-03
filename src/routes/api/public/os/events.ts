@@ -1,4 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createRateLimiter } from "@/lib/rate-limit";
+
+/** 120 requests per minute per source address. */
+const osLimiter = createRateLimiter(120, 60_000);
+
 
 const json = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -22,6 +27,13 @@ export const Route = createFileRoute("/api/public/os/events")({
       POST: async ({ request }) => {
         const secret = process.env["CRM_BRIDGE_SECRET"];
         if (!secret) return json(503, { ok: false, error: "receiver_not_configured" });
+
+        const ip =
+          request.headers.get("cf-connecting-ip") ??
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+          "unknown";
+        if (!osLimiter(ip)) return json(429, { ok: false, error: "rate_limited", retryable: true });
+
 
         const rawBody = await request.text();
         if (rawBody.length > 64_000) return json(413, { ok: false, error: "payload_too_large" });
