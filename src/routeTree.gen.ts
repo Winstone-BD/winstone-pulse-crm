@@ -84,6 +84,7 @@ import { Route as ApiPublicIngestMessageRouteImport } from './routes/api/public/
 import { Route as ApiPublicIngestOutcomeRouteImport } from './routes/api/public/ingest/outcome'
 import { Route as ApiPublicIngestRecordingRouteImport } from './routes/api/public/ingest/recording'
 import { Route as ApiPublicIngestReprocessRouteImport } from './routes/api/public/ingest/reprocess'
+import { Route as ApiPublicOsEventsRouteImport } from './routes/api/public/os/events'
 import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
 import { Route as ApiPublicReportsSummaryRouteImport } from './routes/api/public/reports/summary'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
@@ -480,6 +481,11 @@ const ApiPublicIngestReprocessRoute =
     path: '/api/public/ingest/reprocess',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOsEventsRoute = ApiPublicOsEventsRouteImport.update({
+  id: '/api/public/os/events',
+  path: '/api/public/os/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
   id: '/api/public/paddle/webhook',
   path: '/api/public/paddle/webhook',
@@ -589,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -756,6 +764,7 @@ export interface FileRoutesById {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -841,6 +850,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
@@ -924,6 +934,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
@@ -1007,6 +1018,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
     | '/api/public/whatsapp/webhook'
@@ -1091,6 +1103,7 @@ export interface RootRouteChildren {
   ApiPublicIngestOutcomeRoute: typeof ApiPublicIngestOutcomeRoute
   ApiPublicIngestRecordingRoute: typeof ApiPublicIngestRecordingRoute
   ApiPublicIngestReprocessRoute: typeof ApiPublicIngestReprocessRoute
+  ApiPublicOsEventsRoute: typeof ApiPublicOsEventsRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   ApiPublicReportsSummaryRoute: typeof ApiPublicReportsSummaryRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
@@ -1626,6 +1639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestReprocessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/os/events': {
+      id: '/api/public/os/events'
+      path: '/api/public/os/events'
+      fullPath: '/api/public/os/events'
+      preLoaderRoute: typeof ApiPublicOsEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/paddle/webhook': {
       id: '/api/public/paddle/webhook'
       path: '/api/public/paddle/webhook'
@@ -1748,6 +1768,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicIngestOutcomeRoute: ApiPublicIngestOutcomeRoute,
   ApiPublicIngestRecordingRoute: ApiPublicIngestRecordingRoute,
   ApiPublicIngestReprocessRoute: ApiPublicIngestReprocessRoute,
+  ApiPublicOsEventsRoute: ApiPublicOsEventsRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   ApiPublicReportsSummaryRoute: ApiPublicReportsSummaryRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
