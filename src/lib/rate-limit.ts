@@ -1,0 +1,18 @@
+/**
+ * Best-effort fixed-window limiter (per server instance). It is a flood brake
+ * in front of signature checks, not an authority — idempotency and HMAC stay
+ * the real protection.
+ */
+export function createRateLimiter(limit: number, windowMs: number) {
+  const hits = new Map<string, { start: number; count: number }>();
+  return (key: string, now = Date.now()): boolean => {
+    const entry = hits.get(key);
+    if (!entry || now - entry.start >= windowMs) {
+      if (hits.size > 5_000) hits.clear();
+      hits.set(key, { start: now, count: 1 });
+      return true;
+    }
+    entry.count += 1;
+    return entry.count <= limit;
+  };
+}
