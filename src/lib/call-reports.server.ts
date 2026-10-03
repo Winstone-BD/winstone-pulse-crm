@@ -462,6 +462,27 @@ export async function submitCallReport(input: {
   // A concurrent submit (double tap, offline replay) already won: no side effects twice.
   if (!claimed?.length) return { ok: true, alreadySubmitted: true as const };
 
+  // Immutable evaluation audit: raw answers, score, rule version, call, agent, time.
+  if (answers) {
+    const { evaluationAuditDetail } = await import("@/lib/lead-evaluation");
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({
+      leadId: report.lead_id,
+      agentId: input.agentId,
+      recordingId: report.recording_id ?? null,
+      kind: "evaluation_recorded",
+      detail: evaluationAuditDetail({
+        answers,
+        followUpPending: Boolean(input.followUpAt),
+        reportId: report.id,
+        recordingId: report.recording_id ?? null,
+        agentId: input.agentId,
+        at: new Date().toISOString(),
+      }),
+    });
+  }
+
+
   // Direction and call state belong to the call itself, so the linked call row
   // carries what the agent confirmed in the popup.
   if (report.recording_id && input.direction && input.callStatus) {

@@ -37,3 +37,13 @@ describe("inbound lead intake", () => {
     expect(src).toMatch(/caller\.kind === "device" \? caller\.profile\.id : null/);
   });
 });
+
+import { evaluationAuditDetail } from "@/lib/lead-evaluation";
+describe("evaluation audit", () => {
+  it("records rule version, raw answers, score and ids", () => {
+    const answers = parseAnswers({ project_interest: true, asked_price: true, wanted_info: false, visit_interest: true, decision_30d: false, wants_follow_up: true })!;
+    const d = JSON.parse(evaluationAuditDetail({ answers, followUpPending: true, reportId: "r1", recordingId: "c1", agentId: "a1", at: "2026-10-03T00:00:00Z" }));
+    expect(d).toMatchObject({ rule_version: "v2_six_question", report_id: "r1", call_id: "c1", agent_id: "a1", score: 60, category: "hot", priority: "high" });
+    expect(d.answers.wanted_info).toBe(false);
+  });
+});

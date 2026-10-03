@@ -61,6 +61,30 @@ export function nextBestAction(category: EvaluationCategory, a: EvaluationAnswer
   return "নিয়মিত তালিকায় রাখুন";
 }
 
+/** Immutable audit payload (stored in append-only lead_events). */
+export function evaluationAuditDetail(input: {
+  answers: EvaluationAnswers;
+  followUpPending: boolean;
+  reportId: string;
+  recordingId: string | null;
+  agentId: string;
+  at: string;
+}) {
+  const r = evaluate(input.answers, input.followUpPending);
+  return JSON.stringify({
+    rule_version: EVALUATION_MODEL,
+    report_id: input.reportId,
+    call_id: input.recordingId,
+    agent_id: input.agentId,
+    answers: input.answers,
+    score: r.score,
+    category: r.category,
+    follow_up: input.followUpPending,
+    priority: r.priority,
+    at: input.at,
+  });
+}
+
 export function evaluate(a: EvaluationAnswers, followUpPending: boolean) {
   const score = scoreAnswers(a);
   const category = categoryForScore(score);
