@@ -45,7 +45,10 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
         // An agent adding their own lead keeps it — no approval, no round-robin.
         let assignedTo: string | null = null;
         let ownerName: string | null = null;
-        const requestedAgentId = caller.kind === "device" ? caller.profile.id : body.agent_id;
+        // Only an authenticated device may self-own its capture. Any other
+        // inbound record lands unassigned: LeadHub Nexus is the only
+        // assignment path (no round-robin, no browser-supplied agent_id).
+        const requestedAgentId = caller.kind === "device" ? caller.profile.id : null;
         if (requestedAgentId) {
           const { data: agent } = await supabaseAdmin
             .from("profiles")
@@ -57,28 +60,6 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
           if (agent) {
             assignedTo = agent.id;
             ownerName = agent.name;
-          }
-        }
-
-        // Round-robin: hand the lead to whichever active agent currently owns the fewest.
-        if (!assignedTo && body.assign) {
-          const [{ data: agents }, { data: openLeads }] = await Promise.all([
-            supabaseAdmin
-              .from("profiles")
-              .select("id")
-              .eq("is_active", true)
-              .in("role", ["agent", "team_leader"])
-              .order("name"),
-            supabaseAdmin.from("leads").select("assigned_to").neq("status", "closed"),
-          ]);
-          if (agents?.length) {
-            const load = new Map(agents.map((a) => [a.id, 0]));
-            for (const lead of openLeads ?? []) {
-              if (lead.assigned_to && load.has(lead.assigned_to)) {
-                load.set(lead.assigned_to, (load.get(lead.assigned_to) ?? 0) + 1);
-              }
-            }
-            assignedTo = [...load.entries()].sort((a, b) => a[1] - b[1])[0]?.[0] ?? null;
           }
         }
 
