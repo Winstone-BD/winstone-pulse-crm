@@ -512,6 +512,13 @@
       "when": 1790959430914,
       "tag": "0072_restrict_releases_and_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791007601977,
+      "tag": "0073_os_event_receipts",
+      "breakpoints": true
     }
   ]
 }

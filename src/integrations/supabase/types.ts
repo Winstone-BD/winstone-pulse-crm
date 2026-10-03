@@ -2356,6 +2356,51 @@ export type Database = {
         }
         Relationships: []
       }
+      os_event_receipts: {
+        Row: {
+          api_version: string | null
+          attempts: number
+          booking_id: string | null
+          event_id: string
+          event_type: string
+          idempotency_key: string
+          lead_id: string | null
+          outcome: string | null
+          payload_sha256: string
+          processed_at: string | null
+          received_at: string
+          status: string
+        }
+        Insert: {
+          api_version?: string | null
+          attempts?: number
+          booking_id?: string | null
+          event_id: string
+          event_type: string
+          idempotency_key: string
+          lead_id?: string | null
+          outcome?: string | null
+          payload_sha256: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          api_version?: string | null
+          attempts?: number
+          booking_id?: string | null
+          event_id?: string
+          event_type?: string
+          idempotency_key?: string
+          lead_id?: string | null
+          outcome?: string | null
+          payload_sha256?: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null
