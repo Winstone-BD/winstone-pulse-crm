@@ -135,7 +135,7 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
   const [project, setProject] = useState("");
   const [edited, setEdited] = useState<string | null>(null);
   const [actionIds] = useState(() => new Map<string, string>());
-  const rec = useMutation({ mutationFn: (o: ObjectionCode) => recFn({ data: { adminToken, leadId, objection: o, language, note: note || null } }), onSuccess: () => setEdited(null) });
+  const rec = useMutation({ mutationFn: ({ o, lang }: { o: ObjectionCode; lang: CopilotLanguage }) => recFn({ data: { adminToken, leadId, objection: o, language: lang, note: note || null } }), onSuccess: () => setEdited(null) });
   const text = edited ?? rec.data?.response?.text ?? "";
 
   const record = async (action: PitchAction) => {
@@ -155,7 +155,9 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
 
   const pickLanguage = (code: CopilotLanguage) => {
     setLanguage(code);
-    if (objection) rec.mutate(objection);
+    // Pass the new language explicitly: the closure below would otherwise capture
+    // the pre-setState value and answer in the previous language.
+    if (objection) rec.mutate({ o: objection, lang: code });
   };
 
   return (
@@ -188,7 +190,7 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
         <p className="mt-3 text-xs text-muted-foreground">গ্রাহকের আপত্তি বেছে নিন</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {OBJECTIONS.map((o) => (
-            <button key={o.code} onClick={() => { setObjection(o.code); rec.mutate(o.code); }} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${objection === o.code ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>
+            <button key={o.code} onClick={() => { setObjection(o.code); rec.mutate({ o: o.code, lang: language }); }} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${objection === o.code ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}>
               {o.label}
             </button>
           ))}
@@ -228,7 +230,7 @@ function LeadPitchbook({ leadId }: { leadId: string }) {
                 if (r) toast.success("WhatsApp খোলা হয়েছে / বার্তা প্রস্তুত — পাঠানো নিশ্চিত নয়");
               }}><MessageCircle className="size-4" /> WhatsApp</Button>
               <Button size="sm" variant="outline" onClick={async () => { const r = await record("saved"); if (r) toast.success(r.duplicate ? "আগেই সংরক্ষিত" : "লিড ইতিহাসে সংরক্ষিত"); }}><Save className="size-4" /> Save to Lead History</Button>
-              <Button size="sm" variant="ghost" onClick={() => rec.mutate(objection)}><RefreshCw className="size-4" /> Edit / Regenerate</Button>
+              <Button size="sm" variant="ghost" onClick={() => rec.mutate({ o: objection, lang: language })}><RefreshCw className="size-4" /> Edit / Regenerate</Button>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Supporting Facts</p>
