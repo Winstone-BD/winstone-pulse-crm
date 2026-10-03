@@ -71,7 +71,8 @@ export type AuditAction =
   | "migration_export"
   | "it_notice_published"
   | "drive_knowledge_indexed"
-  | "drive_knowledge_read";
+  | "drive_knowledge_read"
+  | "os_event_received";
 
 
 export async function logAudit(input: {
