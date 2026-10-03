@@ -100,6 +100,7 @@ describe("receiver route", () => {
   it("500 retryable on transient failure and marks receipt failed", async () => {
     bridge.claimOsEvent.mockResolvedValue({ kind: "fresh" });
     bridge.applyLeadIngested.mockRejectedValue(new Error("db down"));
+    bridge.markOsEventFailed.mockResolvedValue(undefined);
     const r = await post(envelope());
     expect(r).toMatchObject({ status: 500, body: { retryable: true } });
     expect(bridge.markOsEventFailed).toHaveBeenCalled();
