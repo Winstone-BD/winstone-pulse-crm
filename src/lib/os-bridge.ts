@@ -91,3 +91,85 @@ export async function sha256Hex(text: string): Promise<string> {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+
+/* ---------------- Unified bridge envelope (RFC v2) ---------------- */
+
+export const OS_V2_EVENT_TYPES = ["lead_ingested"] as const;
+
+/** Polymorphic envelope. Detected by the presence of `payload` (legacy uses `data`). */
+export const osEnvelopeSchema = z
+  .object({
+    event_id: z.string().min(1).max(200),
+    event_type: z.string().min(1).max(60),
+    idempotency_key: z.string().regex(IDEMPOTENCY_KEY_RE).optional(),
+    occurred_at: z.string().datetime({ offset: true }),
+    payload: z.record(z.string(), z.unknown()),
+  })
+  .strict();
+export type OsEnvelope = z.infer<typeof osEnvelopeSchema>;
+
+const BD_CANONICAL = /^8801[3-9]\d{8}$/;
+
+export const leadIngestedSchema = z
+  .object({
+    external_lead_id: z.string().trim().min(1).max(200),
+    source: z.string().trim().min(1).max(40),
+    contact: z
+      .object({
+        name: z.string().trim().min(1).max(120),
+        phone: z.string().trim().min(6).max(24),
+        email: z.string().trim().email().max(200).nullable().optional(),
+        city: z.string().trim().max(120).nullable().optional(),
+      })
+      .strict(),
+    qualification: z
+      .object({
+        project_interest: z.string().trim().max(200).nullable().optional(),
+        intent_level: z.string().trim().max(40).nullable().optional(),
+        budget_range: z.string().trim().max(120).nullable().optional(),
+        ai_confidence_score: z.number().min(0).max(1).nullable().optional(),
+        score_category: z.string().trim().max(40).nullable().optional(),
+        call_summary: z.string().trim().max(2000).nullable().optional(),
+      })
+      .strict()
+      .optional(),
+    metadata: z
+      .object({
+        campaign_id: z.string().trim().max(200).nullable().optional(),
+        operator_id: z.string().trim().max(200).nullable().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .strict();
+export type LeadIngested = z.infer<typeof leadIngestedSchema>;
+
+/** Returns canonical 8801XXXXXXXXX or null when not a Bangladesh mobile. */
+export function canonicalBdPhone(raw: string): string | null {
+  const d = raw.replace(/\D/g, "");
+  const c = /^01[3-9]\d{8}$/.test(d) ? `88${d}` : /^1[3-9]\d{8}$/.test(d) ? `880${d}` : d;
+  return BD_CANONICAL.test(c) ? c : null;
+}
+
+export type V2Parse =
+  | { ok: true; kind: "lead_ingested"; envelope: OsEnvelope; lead: LeadIngested; phone: string }
+  | { ok: false; status: 422; error: string; issues?: string[] };
+
+/** Envelope + discriminator + payload validation. All failures are 422 (non-retryable). */
+export function parseV2Envelope(raw: unknown): V2Parse {
+  const env = osEnvelopeSchema.safeParse(raw);
+  if (!env.success) return { ok: false, status: 422, error: "invalid_envelope", issues: env.error.issues.map((i) => i.path.join(".")) };
+  if (env.data.event_type !== "lead_ingested") return { ok: false, status: 422, error: "unsupported_event_type" };
+  const lead = leadIngestedSchema.safeParse(env.data.payload);
+  if (!lead.success) return { ok: false, status: 422, error: "invalid_payload", issues: lead.error.issues.map((i) => i.path.join(".")) };
+  const phone = canonicalBdPhone(lead.data.contact.phone);
+  if (!phone) return { ok: false, status: 422, error: "invalid_phone", issues: ["contact.phone"] };
+  return { ok: true, kind: "lead_ingested", envelope: env.data, lead: lead.data, phone };
+}
+
+/** Constant-time check of `Authorization: Bearer <secret>`. */
+export function verifyBearer(secret: string, header: string | null): boolean {
+  if (!header?.startsWith("Bearer ")) return false;
+  const token = header.slice(7).trim();
+  return safeEqual(token, secret);
+}
