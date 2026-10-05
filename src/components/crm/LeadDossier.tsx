@@ -46,8 +46,6 @@ import { LEAD_EVENT_LABELS } from "@/lib/crm-data";
 import { reanalyzeRecording } from "@/lib/crm.functions";
 import { getAdminToken } from "@/lib/local-session";
 import {
-  clockTime,
-  dayLabel,
   formatDuration,
   fullDateTime,
   parseTranscript,
