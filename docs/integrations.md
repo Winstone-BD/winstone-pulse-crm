@@ -18,6 +18,20 @@
 | এজেন্টের সিম কলিং + অ্যান্ড্রয়েড অ্যাপ         | ✅ চালু (হার্ডওয়্যারে যাচাই দরকার) | —                                                            | আসল ফোনে নতুন APK ইনস্টল                                                                                   |
 | Twilio                                          | ⛔ স্থায়ীভাবে বাদ (২০২৬-০৯-১৩)     | —                                                            | ফেরানো হবে না                                                                                              |
 
+## ২০২৬-১০ ecosystem audit
+
+- Web/Android lead intake এখনও canonical `leads`/LeadHub path-এই যায়; browser-supplied agent identity বিশ্বাস করা হয় না।
+- OS → CRM receiver HMAC/Bearer auth, schema validation, payload hash, idempotency এবং retry-safe receipt ব্যবহার করে।
+- CRM booking change একই database transaction-এ existing `sync_events` outbox-এ queued হয়। OS-এর real outbound URL/contract না থাকায় dispatcher ইচ্ছাকৃতভাবে চালু নয়।
+- Paddle duplicate event ID-তে ভিন্ন payload এলে 409 conflict; stale subscription event state পিছিয়ে দিতে পারে না।
+- Public mutation/webhook routes-এ per-instance flood brake আছে; durable authority হিসেবে signature, idempotency, RLS এবং database audit-ই ব্যবহৃত হয়।
+- Public MCP-তে শুধু `list_public_property_facts`; private lead/staff/call tools public tool directory থেকে আলাদা করা হয়েছে।
+- Booking amount UI-তে “Booked Value” — collected revenue নয়। CRM payment, receipt, journal, BOQ, procurement, GRN বা inventory-এর authority নয়; সেগুলো OS-এ যাচাই করতে হবে।
+- Phone OTP custom SMS hook এবং Meta Ads code/configuration এখনও নেই। বাস্তব provider contract/credentials ছাড়া এগুলোকে connected বলা যাবে না।
+- WhatsApp customer notification code প্রস্তুত; credentials/configuration না থাকলে sent/delivered দাবি করে না এবং OTP পাঠায় না।
+- Google Drive ও GitHub workspace connectors live authorization দিয়ে যাচাই হয়েছে; repository automation target আলাদাভাবে নির্ধারিত নয়।
+- Database linter-এর বাকি 35টি `RLS enabled, no policy` তথ্য server-only/fail-closed tables; anonymous booking access regression-tested।
+
 ## স্বয়ংক্রিয় cron (ঢাকা সময়)
 
 | সময়           | কাজ                                         |
