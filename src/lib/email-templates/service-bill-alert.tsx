@@ -23,7 +23,7 @@ interface Props {
   reviewUrl?: string
 }
 
-const Email = ({ title, detail, period, amount, stageLabel }: Props) => (
+const Email = ({ title, detail, period, amount, stageLabel, reviewUrl }: Props) => (
   <Html lang="bn" dir="ltr">
     <Head />
     <Preview>{title || 'সার্ভিস বিল সংক্রান্ত জরুরি তথ্য'}</Preview>
