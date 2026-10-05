@@ -71,13 +71,45 @@ export async function hostingerReadiness(): Promise<{ ok: boolean; reason?: stri
   }
 }
 
+/** Confirmed contract: OS relay at NOTIFY_EMAIL_ENDPOINT (https only), Bearer NOTIFY_EMAIL_API_KEY. */
+export function relayEndpoint(): string | null {
+  const ep = process.env["NOTIFY_EMAIL_ENDPOINT"]?.trim() ?? "";
+  return /^https:\/\/[^\s]+$/.test(ep) ? ep : null;
+}
+
+export function senderAddress(): string {
+  const s = process.env["HOSTINGER_SENDER_EMAIL"]?.trim().toLowerCase();
+  return s === SERVICE_BILL_SENDER ? s : SERVICE_BILL_SENDER;
+}
+
+async function sendViaRelay(endpoint: string, apiKey: string, to: string, stage: string, key: string) {
+  const p = buildHostingerServiceBillPayload({
+    recipient: to,
+    stage,
+    reviewUrl: "https://crm1.winstonebd.com/service-bill-unlock",
+  });
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Idempotency-Key": key,
+    },
+    body: JSON.stringify({ from: senderAddress(), to: p.to, subject: p.subject, text: p.text, idempotency_key: key }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`Email relay responded ${res.status}`);
+}
+
 export async function sendViaHostinger(
   to: string,
   stage: string,
-  _idempotencyKey: string,
+  idempotencyKey: string,
 ): Promise<void> {
   const apiKey = token();
-  if (!apiKey) throw new Error("Hostinger service-bill email is not configured");
+  if (!apiKey) throw new Error("Service-bill email is not configured (NOTIFY_EMAIL_API_KEY REQUIRED)");
+  const relay = relayEndpoint();
+  if (relay) return sendViaRelay(relay, apiKey, to, stage, idempotencyKey);
   const mailboxId = await senderMailboxId(apiKey);
   const payload = buildHostingerServiceBillPayload({
     recipient: to,
