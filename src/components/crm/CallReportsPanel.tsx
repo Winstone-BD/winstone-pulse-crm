@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { CallReportSummary } from "@/components/crm/CallReportSummary";
 import { LeadDossier } from "@/components/crm/LeadDossier";
+import { ReportDetails } from "@/components/crm/ReportDetails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { listCallReports } from "@/lib/call-reports.functions";
 import { buildTimeline, useSnapshot } from "@/lib/crm-data";
-import { clockTime } from "@/lib/crm-format";
+import { fullDateTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 
 const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABEL_CLIENT);
@@ -249,12 +250,12 @@ export function CallReportsPanel() {
                 <p className="truncate text-xs text-muted-foreground">
                   {row.lead?.phone_number ?? row.phone_number ?? "—"}
                   {row.agent?.name ? ` · ${row.agent.name}` : ""}
-                  {row.call_ended_at ? ` · ${clockTime(row.call_ended_at)}` : ""}
+                  {` · ${fullDateTime(row.call_ended_at ?? row.submitted_at ?? row.created_at)}`}
                   {` · ${row.duration_seconds ?? 0} সেকেন্ড`}
                 </p>
-                {row.summary ? (
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{row.summary}</p>
-                ) : null}
+                <div className="mt-1">
+                  <ReportDetails report={{ ...row, agentName: row.agent?.name ?? null }} />
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge variant="outline" className="gap-1 text-[11px]">
