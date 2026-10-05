@@ -71,3 +71,17 @@ export function summaryBullets(summary: string | null): string[] {
     .map((l) => l.replace(/^[•\-*]\s*/, "").trim())
     .filter(Boolean);
 }
+
+/** Full Dhaka date + time, e.g. "05 Oct 2026, 09:31 AM" — never relative. */
+export function fullDateTime(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-GB", {
+    timeZone: "Asia/Dhaka",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}

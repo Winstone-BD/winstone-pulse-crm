@@ -19,3 +19,4 @@
 - Server-module rules for maintenance, Sales Intelligence and Market News live in src/lib/AGENTS.md.
 - Dense CRM data views use compact cards below `md` and full tables at `md+`; lower-frequency wide tables scroll only inside `.table-scroll` — why: phone usability without weakening desktop comparison views.
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
+- Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.

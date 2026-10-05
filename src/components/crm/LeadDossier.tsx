@@ -21,6 +21,8 @@ import { toast } from "sonner";
 
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
 import { PreCallBriefCard } from "@/components/crm/PreCallBriefCard";
+import { LeadNotesPanel } from "@/components/crm/LeadNotesPanel";
+import { LeadReportsSection } from "@/components/crm/LeadReportsSection";
 import { ContactSuppressionNotice } from "@/components/crm/ContactSuppressionNotice";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { Button } from "@/components/ui/button";
@@ -44,9 +46,8 @@ import { LEAD_EVENT_LABELS } from "@/lib/crm-data";
 import { reanalyzeRecording } from "@/lib/crm.functions";
 import { getAdminToken } from "@/lib/local-session";
 import {
-  clockTime,
-  dayLabel,
   formatDuration,
+  fullDateTime,
   parseTranscript,
   summaryBullets,
 } from "@/lib/crm-format";
@@ -134,10 +135,26 @@ export function LeadDossier({
             </SheetHeader>
 
             <div className="space-y-4 px-5 py-5">
+              <section className="space-y-1 rounded-xl border bg-card p-4 text-sm">
+                <h3 className="text-sm font-semibold">পরিচিতি / Overview</h3>
+                {lead.address ? <p><span className="text-muted-foreground">ঠিকানা: </span>{lead.address}</p> : null}
+                <p className="tabular text-xs text-muted-foreground">যোগ হয়েছে: {fullDateTime(lead.created_at)}</p>
+                {lead.notes ? (
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground">লিডের মূল নোট</p>
+                    <p className="whitespace-pre-wrap break-words">{lead.notes}</p>
+                  </div>
+                ) : null}
+              </section>
+
               <PreCallBriefCard leadId={lead.id} />
 
+              <LeadNotesPanel leadId={lead.id} />
+
+              <LeadReportsSection leadId={lead.id} />
+
               <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                সব মাধ্যমের টাইমলাইন
+                টাইমলাইন / সিস্টেম ইভেন্ট
               </h3>
 
               {(() => {
@@ -202,7 +219,7 @@ function LifecycleEntry({ event }: { event: LeadEvent }) {
       <Activity className="size-3.5 shrink-0" />
       <span className="font-medium">{LEAD_EVENT_LABELS[event.kind] ?? event.kind}</span>
       {event.detail && <span className="opacity-80">· {event.detail}</span>}
-      <span className="tabular ml-auto opacity-70">{clockTime(event.created_at)}</span>
+      <span className="tabular ml-auto opacity-70">{fullDateTime(event.created_at)}</span>
     </div>
   );
 }
@@ -245,7 +262,7 @@ export function CallEntry({ call }: { call: CallRecording }) {
               : "ক্রেতা ফিরতি কল করেছেন"}
           </p>
           <p className="tabular text-xs text-muted-foreground">
-            {dayLabel(call.created_at)} · {clockTime(call.created_at)} ·{" "}
+            {fullDateTime(call.created_at)} ·{" "}
             {formatDuration(call.duration_seconds)}
           </p>
         </div>
@@ -437,7 +454,7 @@ function MessageEntry({ message }: { message: WhatsappMessage }) {
         </p>
         <p className="mt-1 text-sm">{message.message_content}</p>
         <p className="tabular mt-1 flex items-center justify-end gap-1.5 text-[11px] text-muted-foreground">
-          <span>{clockTime(message.created_at)}</span>
+          <span>{fullDateTime(message.created_at)}</span>
           {fromAgent && (
             <span
               className={whatsappStatusTone(message.status)}
