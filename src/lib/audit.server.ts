@@ -73,6 +73,9 @@ export type AuditAction =
   | "drive_knowledge_indexed"
   | "drive_knowledge_read"
   | "os_event_received"
+  | "os_booking_sync_sent"
+  | "os_booking_sync_dead"
+  | "os_booking_sync_requeued"
   | "booking_created"
   | "booking_status_changed";
 
