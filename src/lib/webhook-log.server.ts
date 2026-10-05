@@ -46,7 +46,7 @@ export async function claimWebhookEvent(input: {
   // Duplicate delivery (or an insert race): record the retry attempt.
   const { data: existing } = await supabaseAdmin
     .from("webhook_deliveries")
-    .select("id, attempts, status, payload_sha256")
+    .select("id, attempts, status, payload_sha256, payload")
     .eq("provider", input.provider)
     .eq("event_id", input.eventId)
     .eq("event_type", input.eventType)
@@ -57,7 +57,10 @@ export async function claimWebhookEvent(input: {
     return { id: null, fresh: true, conflict: false };
   }
 
-  if (existing.payload_sha256 && existing.payload_sha256 !== hash) {
+  const existingHash =
+    existing.payload_sha256 ??
+    (await payloadHash((existing.payload ?? {}) as Record<string, unknown>));
+  if (existingHash !== hash) {
     await supabaseAdmin
       .from("webhook_deliveries")
       .update({ attempts: existing.attempts + 1, error_message: "event_id_payload_conflict" })

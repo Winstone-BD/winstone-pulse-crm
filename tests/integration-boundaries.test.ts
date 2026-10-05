@@ -26,7 +26,7 @@ describe("ecosystem integration boundaries", () => {
       "drizzle/migrations/0079_booking_os_transactional_outbox.sql",
       "utf8",
     );
-    expect(source).toContain("crm_to_os_booking.");
+    expect(source).toContain("'crm_to_os_' || bridge_event");
     expect(source).toContain("'queued'");
     expect(source).not.toMatch(/https?:\/\/|CRM_BRIDGE_SECRET/);
   });
