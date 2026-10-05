@@ -2,12 +2,14 @@
 export type ExportRow = {
   id: string; name: string | null; phone: string; source: string | null; referenceBy: string | null;
   calls: number; connected: number; followUps: number; nextFollowUpAt: string | null; fuState: string;
+  lastReportAt: string | null; lastReportNote: string | null;
 };
 export type ExportFilter = { label: string; value: string };
 
 const COLS: Array<[keyof ExportRow, string]> = [
   ["id", "Lead ID"], ["name", "Name"], ["phone", "Phone"], ["source", "Source"], ["referenceBy", "Reference"],
   ["calls", "Calls"], ["connected", "Connected"], ["followUps", "Follow-ups"], ["nextFollowUpAt", "Next follow-up"], ["fuState", "Follow-up state"],
+  ["lastReportAt", "Last report date"], ["lastReportNote", "Last report description"],
 ];
 
 /** Neutralises spreadsheet formulas and quotes every cell. */

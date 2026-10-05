@@ -2,7 +2,9 @@
 
 ## Active
 0. **Phone-friendly CRM tables** — Completed: high-use lead, support, performance, accountability and synced-call tables now become compact phone cards while retaining full laptop tables; remaining wide tables use contained touch scrolling.
-0. **Google Drive reconnection** — Completed: linked a fresh Google Drive account in the new workspace and verified access.
+0. **Google Drive reconnection** — Completed: linked a fresh Google Drive account in the new workspace; verified folder reads and a write/delete probe in the CRM archive (probe file removed).
+0. **Search results show report description** — Pending: every result that references a report must show its manually entered description with an expand-full-report option.
+0. **Mobile check of lead details + Personal Notes** — Pending: phone-sized layout/interaction test of LeadDossier sections and the notes panel, fix what breaks.
 0. **LeadHub Nexus consolidation** — Completed: Coordinator entry removed; dedicated PIN-only canonical database, import, quality, oldest-first quantity assignment and safe `/dispatch` redirect added.
 1. **Correct agent performance analysis** — Use actual call duration/connected status/outcomes from `call_reports`/`calls`/`recordings`, not report submission counts. Identify who is actually wasting leads (short/no-answer/fake reports) vs genuinely working them.
 2. **Google Sheets reconnection** — Pending; user paused to fix report logic first.
