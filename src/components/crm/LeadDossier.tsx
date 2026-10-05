@@ -134,26 +134,46 @@ export function LeadDossier({
               </p>
             </SheetHeader>
 
+            <nav className="sticky top-0 z-10 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-5 py-2 text-xs font-semibold backdrop-blur">
+              {[
+                ["lead-brief", "Brief Me"],
+                ["lead-overview", "Details"],
+                ["lead-reports", "রিপোর্ট"],
+                ["lead-notes", "নোট যোগ করুন"],
+                ["lead-timeline", "টাইমলাইন"],
+              ].map(([id, label]) => (
+                <a key={id} href={`#${id}`} className="shrink-0 rounded-full border border-border bg-card px-3 py-2 hover:bg-secondary">
+                  {label}
+                </a>
+              ))}
+            </nav>
+
             <div className="space-y-4 px-5 py-5">
-              <section className="space-y-1 rounded-xl border bg-card p-4 text-sm">
-                <h3 className="text-sm font-semibold">পরিচিতি / Overview</h3>
+              <div id="lead-brief" className="scroll-mt-14">
+                <PreCallBriefCard leadId={lead.id} />
+              </div>
+
+              <section id="lead-overview" className="scroll-mt-14 space-y-1 rounded-xl border bg-card p-4 text-sm">
+                <h3 className="text-sm font-semibold">পরিচিতি / Details</h3>
                 {lead.address ? <p><span className="text-muted-foreground">ঠিকানা: </span>{lead.address}</p> : null}
                 <p className="tabular text-xs text-muted-foreground">যোগ হয়েছে: {fullDateTime(lead.created_at)}</p>
                 {lead.notes ? (
                   <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground">লিডের মূল নোট</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground">লিডের মূল বিবরণ</p>
                     <p className="whitespace-pre-wrap break-words">{lead.notes}</p>
                   </div>
                 ) : null}
               </section>
 
-              <PreCallBriefCard leadId={lead.id} />
+              <div id="lead-reports" className="scroll-mt-14">
+                <LeadReportsSection leadId={lead.id} />
+              </div>
 
-              <LeadNotesPanel leadId={lead.id} />
+              <div id="lead-notes" className="scroll-mt-14">
+                <LeadNotesPanel leadId={lead.id} />
+              </div>
 
-              <LeadReportsSection leadId={lead.id} />
-
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 id="lead-timeline" className="scroll-mt-14 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 টাইমলাইন / সিস্টেম ইভেন্ট
               </h3>
 
