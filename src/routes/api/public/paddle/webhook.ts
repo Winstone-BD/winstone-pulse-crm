@@ -36,9 +36,8 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
         }
         if (!env || !event) return new Response("Invalid signature", { status: 401 });
 
-        const { claimWebhookEvent, markWebhookFailed, markWebhookProcessed } = await import(
-          "@/lib/webhook-log.server"
-        );
+        const { claimWebhookEvent, markWebhookFailed, markWebhookProcessed } =
+          await import("@/lib/webhook-log.server");
         const eventId = event.eventId;
         const eventType = String(event.eventType);
         const occurredAt = event.occurredAt;

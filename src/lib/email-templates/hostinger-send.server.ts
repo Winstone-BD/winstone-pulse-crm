@@ -3,7 +3,7 @@
  * relay configured by NOTIFY_EMAIL_ENDPOINT / NOTIFY_EMAIL_API_KEY /
  * HOSTINGER_SENDER_EMAIL. Used only for service-bill alerts; sign-in codes and
  * password resets stay on the managed email system.
- * Returns false when not configured so callers can fall back.
+ * There is deliberately no managed-email fallback for these alerts.
  */
 import { MAINTENANCE_FEE_LABEL } from "@/lib/maintenance-rules";
 
@@ -28,11 +28,16 @@ export function buildHostingerServiceBillPayload(input: {
 }
 
 export function hostingerConfigured(): boolean {
-  return Boolean(
-    process.env["NOTIFY_EMAIL_ENDPOINT"] &&
-      process.env["NOTIFY_EMAIL_API_KEY"] &&
-      process.env["HOSTINGER_SENDER_EMAIL"],
-  );
+  const endpoint = process.env["NOTIFY_EMAIL_ENDPOINT"];
+  const sender = process.env["HOSTINGER_SENDER_EMAIL"]?.trim().toLowerCase();
+  if (!endpoint || !process.env["NOTIFY_EMAIL_API_KEY"] || sender !== "info@winstonebd.com") {
+    return false;
+  }
+  try {
+    return new URL(endpoint).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export async function sendViaHostinger(
@@ -40,6 +45,7 @@ export async function sendViaHostinger(
   stage: string,
   idempotencyKey: string,
 ): Promise<void> {
+  if (!hostingerConfigured()) throw new Error("Hostinger service-bill email is not configured");
   const endpoint = process.env["NOTIFY_EMAIL_ENDPOINT"]!;
   const apiKey = process.env["NOTIFY_EMAIL_API_KEY"]!;
   const from = process.env["HOSTINGER_SENDER_EMAIL"]!;
