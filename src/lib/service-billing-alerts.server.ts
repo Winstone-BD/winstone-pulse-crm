@@ -128,15 +128,31 @@ async function emailRecipients(
   let failed = 0;
   for (const email of emails) {
     try {
+      const idempotencyKey = `service-bill-${invoice.period}-${stage}-${email}`;
+      const templateData = {
+        title: copy.title,
+        detail: copy.detail,
+        period: invoice.period,
+        amount: `৳${invoice.amountBdt.toLocaleString("bn-BD")}`,
+        stageLabel: STAGE_LABEL[stage],
+      };
+      // Service-bill alerts go through Hostinger when configured; if the relay
+      // is missing or fails, fall back to the managed system so HQ still hears.
+      const { hostingerConfigured, sendViaHostinger } = await import(
+        "@/lib/email-templates/hostinger-send.server"
+      );
+      if (hostingerConfigured()) {
+        try {
+          await sendViaHostinger("service-bill-alert", email, templateData, idempotencyKey);
+          sent += 1;
+          continue;
+        } catch (error) {
+          console.error("hostinger relay failed, falling back", error instanceof Error ? error.message : "unknown");
+        }
+      }
       const result = await sendTemplateEmail("service-bill-alert", email, {
-        idempotencyKey: `service-bill-${invoice.period}-${stage}-${email}`,
-        templateData: {
-          title: copy.title,
-          detail: copy.detail,
-          period: invoice.period,
-          amount: `৳${invoice.amountBdt.toLocaleString("bn-BD")}`,
-          stageLabel: STAGE_LABEL[stage],
-        },
+        idempotencyKey,
+        templateData,
       });
       if (result.sent) sent += 1;
       else skipped += 1;
