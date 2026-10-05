@@ -47,10 +47,9 @@ export function serviceBillPayload(row: ServiceBillRow, recipient: string): Serv
   };
 }
 
+/** Hostinger Mail API token + reviewer address. Sender is fixed in code (info@winstonebd.com). */
 export const HOSTINGER_REVIEW_SECRET_NAMES = [
-  "NOTIFY_EMAIL_ENDPOINT",
   "NOTIFY_EMAIL_API_KEY",
-  "HOSTINGER_SENDER_EMAIL",
   "SERVICE_BILL_APPROVER_EMAIL",
 ] as const;
 

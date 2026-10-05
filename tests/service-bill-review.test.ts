@@ -34,9 +34,9 @@ describe("review-only service bill", () => {
   });
 
   it("reports missing secret names without values", () => {
-    expect(
-      missingServiceBillEmailSecrets({ NOTIFY_EMAIL_ENDPOINT: "https://relay.example" }),
-    ).toEqual(["NOTIFY_EMAIL_API_KEY", "HOSTINGER_SENDER_EMAIL", "SERVICE_BILL_APPROVER_EMAIL"]);
+    expect(missingServiceBillEmailSecrets({ NOTIFY_EMAIL_API_KEY: "token" })).toEqual([
+      "SERVICE_BILL_APPROVER_EMAIL",
+    ]);
   });
 
   it("contains no payment execution or financial approval action", () => {
