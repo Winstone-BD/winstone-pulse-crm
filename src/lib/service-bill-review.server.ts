@@ -88,11 +88,19 @@ export async function unlockServiceBillReview(reviewer: Reviewer, pin: string) {
   const expected = process.env["SERVICE_BILL_UNLOCK_PIN"];
   if (!expected) {
     await recordAttempt(reviewer, false, "configuration_missing");
-    return { ok: false as const, error: "Configuration required", missing: ["SERVICE_BILL_UNLOCK_PIN"] };
+    return {
+      ok: false as const,
+      error: "Configuration required",
+      missing: ["SERVICE_BILL_UNLOCK_PIN"],
+    };
   }
   if ((await failedAttempts(reviewer)) >= FAILURE_LIMIT) {
     await recordAttempt(reviewer, false, "rate_limited");
-    return { ok: false as const, error: "Too many attempts. Try again in 15 minutes.", missing: [] };
+    return {
+      ok: false as const,
+      error: "Too many attempts. Try again in 15 minutes.",
+      missing: [],
+    };
   }
   if (!secureEqual(pin, expected)) {
     await recordAttempt(reviewer, false, "invalid_pin");
@@ -122,7 +130,10 @@ export async function clearServiceBillReviewSession() {
   await session.clear();
 }
 
-export async function currentServiceBill(recipient: string, markReviewed: Reviewer | null): Promise<ServiceBillPayload> {
+export async function currentServiceBill(
+  recipient: string,
+  markReviewed: Reviewer | null,
+): Promise<ServiceBillPayload> {
   const client = await admin();
   const period = dhakaPeriod();
   let { data: row, error } = await client
@@ -148,7 +159,11 @@ export async function currentServiceBill(recipient: string, markReviewed: Review
     const reviewedAt = new Date().toISOString();
     const { data: updated } = await client
       .from("system_maintenance")
-      .update({ review_status: "in_review", reviewed_by: markReviewed.email, reviewed_at: reviewedAt })
+      .update({
+        review_status: "in_review",
+        reviewed_by: markReviewed.email,
+        reviewed_at: reviewedAt,
+      })
       .eq("id", row.id)
       .eq("review_status", "pending_review")
       .select("id, created_at, due_date, review_status, reviewed_by, reviewed_at")

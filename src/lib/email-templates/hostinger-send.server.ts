@@ -52,7 +52,12 @@ export async function sendViaHostinger(
   const apiKey = process.env["NOTIFY_EMAIL_API_KEY"]!;
   const from = process.env["HOSTINGER_SENDER_EMAIL"]!;
   const reviewUrl = "https://crm1.winstonebd.com/service-bill-unlock";
-  const payload = buildHostingerServiceBillPayload({ sender: from, recipient: to, stage, reviewUrl });
+  const payload = buildHostingerServiceBillPayload({
+    sender: from,
+    recipient: to,
+    stage,
+    reviewUrl,
+  });
 
   const res = await fetch(endpoint, {
     method: "POST",

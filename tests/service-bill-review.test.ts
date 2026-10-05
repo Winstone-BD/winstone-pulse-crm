@@ -1,10 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import {
-  missingServiceBillEmailSecrets,
-  serviceBillPayload,
-} from "@/lib/service-bill-review";
+import { missingServiceBillEmailSecrets, serviceBillPayload } from "@/lib/service-bill-review";
 
 describe("review-only service bill", () => {
   const bill = serviceBillPayload(
@@ -37,11 +34,9 @@ describe("review-only service bill", () => {
   });
 
   it("reports missing secret names without values", () => {
-    expect(missingServiceBillEmailSecrets({ NOTIFY_EMAIL_ENDPOINT: "https://relay.example" })).toEqual([
-      "NOTIFY_EMAIL_API_KEY",
-      "HOSTINGER_SENDER_EMAIL",
-      "SERVICE_BILL_APPROVER_EMAIL",
-    ]);
+    expect(
+      missingServiceBillEmailSecrets({ NOTIFY_EMAIL_ENDPOINT: "https://relay.example" }),
+    ).toEqual(["NOTIFY_EMAIL_API_KEY", "HOSTINGER_SENDER_EMAIL", "SERVICE_BILL_APPROVER_EMAIL"]);
   });
 
   it("contains no payment execution or financial approval action", () => {
@@ -52,14 +47,21 @@ describe("review-only service bill", () => {
     ];
     for (const file of files) {
       const source = readFileSync(file, "utf8");
-      expect(source).not.toMatch(/verifyMaintenancePayment|verifyPayment\(|paddle|transferFunds|approvePayment/);
+      expect(source).not.toMatch(
+        /verifyMaintenancePayment|verifyPayment\(|paddle|transferFunds|approvePayment/,
+      );
     }
   });
 
   it("never places service-bill secrets in route components", () => {
-    for (const file of ["src/routes/service-bill-alert.tsx", "src/routes/service-bill-unlock.tsx"]) {
+    for (const file of [
+      "src/routes/service-bill-alert.tsx",
+      "src/routes/service-bill-unlock.tsx",
+    ]) {
       const source = readFileSync(file, "utf8");
-      expect(source).not.toMatch(/SERVICE_BILL_UNLOCK_PIN|SERVICE_BILL_APPROVER_EMAIL|process\.env|localStorage|sessionStorage/);
+      expect(source).not.toMatch(
+        /SERVICE_BILL_UNLOCK_PIN|SERVICE_BILL_APPROVER_EMAIL|process\.env|localStorage|sessionStorage/,
+      );
     }
   });
 });

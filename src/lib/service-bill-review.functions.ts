@@ -6,9 +6,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 async function requireReviewer(context: {
   userId: string;
   claims: Record<string, unknown>;
-  supabase: { rpc: (name: "has_role", args: { _user_id: string; _role: "admin" }) => PromiseLike<{ data: boolean | null }> };
+  supabase: {
+    rpc: (
+      name: "has_role",
+      args: { _user_id: string; _role: "admin" },
+    ) => PromiseLike<{ data: boolean | null }>;
+  };
 }) {
-  const email = typeof context.claims["email"] === "string" ? context.claims["email"].trim().toLowerCase() : "";
+  const email =
+    typeof context.claims["email"] === "string" ? context.claims["email"].trim().toLowerCase() : "";
   const { data: isAdmin } = await context.supabase.rpc("has_role", {
     _user_id: context.userId,
     _role: "admin",
@@ -38,7 +44,10 @@ export const getServiceBillReviewAccess = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const reviewer = await requireReviewer(context);
     const service = await import("@/lib/service-bill-review.server");
-    return { authorized: true as const, unlocked: await service.hasServiceBillReviewSession(reviewer) };
+    return {
+      authorized: true as const,
+      unlocked: await service.hasServiceBillReviewSession(reviewer),
+    };
   });
 
 export const unlockServiceBillDetails = createServerFn({ method: "POST" })
@@ -55,8 +64,10 @@ export const getUnlockedServiceBill = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const reviewer = await requireReviewer(context);
     const service = await import("@/lib/service-bill-review.server");
-    if (!(await service.hasServiceBillReviewSession(reviewer))) throw new Error("Review session expired");
-    const recipient = process.env["SERVICE_BILL_APPROVER_EMAIL"]?.trim() || "CONFIGURATION REQUIRED";
+    if (!(await service.hasServiceBillReviewSession(reviewer)))
+      throw new Error("Review session expired");
+    const recipient =
+      process.env["SERVICE_BILL_APPROVER_EMAIL"]?.trim() || "CONFIGURATION REQUIRED";
     return {
       bill: await service.currentServiceBill(recipient, reviewer),
       email: { missing: service.serviceBillEmailConfiguration() },
@@ -68,7 +79,8 @@ export const sendServiceBillTestEmail = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const reviewer = await requireReviewer(context);
     const service = await import("@/lib/service-bill-review.server");
-    if (!(await service.hasServiceBillReviewSession(reviewer))) throw new Error("Review session expired");
+    if (!(await service.hasServiceBillReviewSession(reviewer)))
+      throw new Error("Review session expired");
     const missing = service.serviceBillEmailConfiguration();
     if (missing.length) return { sent: false as const, missing };
     const recipient = process.env["SERVICE_BILL_APPROVER_EMAIL"]?.trim();

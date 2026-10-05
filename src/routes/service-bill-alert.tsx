@@ -19,7 +19,10 @@ export const Route = createFileRoute("/service-bill-alert")({
   head: () => ({
     meta: [
       { title: "Service Bill Alert — Winstone CRM" },
-      { name: "description", content: "Winstone CRM IT service bill awaiting authorized human review." },
+      {
+        name: "description",
+        content: "Winstone CRM IT service bill awaiting authorized human review.",
+      },
       { property: "og:title", content: "Service Bill Alert — Winstone CRM" },
       { property: "og:description", content: "Review-only Winstone IT service bill notice." },
       { property: "og:type", content: "website" },
@@ -46,7 +49,10 @@ function ServiceBillAlertPage() {
               এটি একটি review notification—কোনো payment, transfer বা automatic approval নয়।
             </p>
           </div>
-          <Badge variant="outline" className="w-fit border-warning/50 bg-warning/10 text-warning-foreground">
+          <Badge
+            variant="outline"
+            className="w-fit border-warning/50 bg-warning/10 text-warning-foreground"
+          >
             Pending Review
           </Badge>
         </header>
@@ -56,7 +62,9 @@ function ServiceBillAlertPage() {
             <CardHeader className="border-b border-border bg-ink text-ink-foreground">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-ink-muted">Monthly service bill</p>
+                  <p className="text-xs font-semibold uppercase text-ink-muted">
+                    Monthly service bill
+                  </p>
                   <CardTitle className="mt-2 text-xl">{bill.service_name}</CardTitle>
                 </div>
                 <FileCheck2 className="size-7 text-primary" />
@@ -72,7 +80,10 @@ function ServiceBillAlertPage() {
                 <BillField label="Bill ID" value={bill.bill_id} mono />
                 <BillField label="Status" value={bill.status} />
                 <BillField label="Issuer" value={bill.issuer} />
-                <BillField label="Review status" value={bill.review_status === "in_review" ? "In Review" : "Pending Review"} />
+                <BillField
+                  label="Review status"
+                  value={bill.review_status === "in_review" ? "In Review" : "Pending Review"}
+                />
                 <BillField label="Created" value={dhakaTime(bill.created_at)} />
                 <BillField label="Due" value={dhakaTime(bill.due_at)} />
               </dl>
@@ -84,14 +95,16 @@ function ServiceBillAlertPage() {
               <LockKeyhole className="size-4" />
               <AlertTitle>Human review required</AlertTitle>
               <AlertDescription>
-                বিস্তারিত দেখতে authorized CRM admin-কে sign in এবং secure PIN verification করতে হবে।
+                বিস্তারিত দেখতে authorized CRM admin-কে sign in এবং secure PIN verification করতে
+                হবে।
               </AlertDescription>
             </Alert>
             <div className="rounded-lg border border-border bg-surface p-5">
               <CalendarClock className="size-5 text-primary" />
               <p className="mt-3 text-sm font-semibold">Review-only workflow</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Review access কোনো payment status বদলায় না এবং কোনো financial instruction submit করে না।
+                Review access কোনো payment status বদলায় না এবং কোনো financial instruction submit
+                করে না।
               </p>
               <Button asChild className="mt-5 w-full">
                 <Link to="/service-bill-unlock">Authorized review</Link>
@@ -104,11 +117,21 @@ function ServiceBillAlertPage() {
   );
 }
 
-function BillField({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function BillField({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="min-w-0 border-t border-border pt-3">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={`mt-1 break-words font-semibold ${mono ? "font-mono text-xs" : ""}`}>{value}</dd>
+      <dd className={`mt-1 break-words font-semibold ${mono ? "font-mono text-xs" : ""}`}>
+        {value}
+      </dd>
     </div>
   );
 }
