@@ -92,15 +92,31 @@ async function runLead360Search(data: z.infer<typeof SearchInput>) {
     const nextCursor = data.cursor + ids.length < total ? data.cursor + ids.length : null;
     if (!ids.length) return { locked: false as const, rows: [], total, nextCursor: null };
     const [reps, fus] = await Promise.all([
-      all<{ lead_id: string; connected: boolean | null }>((a, b) => db.from("call_reports").select("lead_id, connected").in("lead_id", ids).order("id").range(a, b)),
+      all<{
+        lead_id: string; connected: boolean | null; note: string | null; summary: string | null;
+        category: string | null; status: string | null; created_at: string; submitted_at: string | null;
+        call_ended_at: string | null; interest: string | null; requirement: string | null;
+        customer_response: string | null; next_action: string | null; follow_up_at: string | null;
+        reason: string | null; agent_id: string | null;
+      }>((a, b) => db.from("call_reports")
+        .select("lead_id, connected, note, summary, category, status, created_at, submitted_at, call_ended_at, interest, requirement, customer_response, next_action, follow_up_at, reason, agent_id")
+        .in("lead_id", ids).order("created_at").order("id").range(a, b)),
       all<{ lead_id: string | null; status: string; scheduled_at: string }>((a, b) => db.from("follow_up_events").select("lead_id, status, scheduled_at").in("lead_id", ids).order("id").range(a, b)),
     ]);
+    // Who wrote each lead's latest report, so the search result can name the author.
+    const repAgentIds = [...new Set((reps ?? []).map((x) => x.agent_id).filter(Boolean) as string[])];
+    const { data: repPeople } = repAgentIds.length
+      ? await db.from("profiles").select("id, name, employee_id").in("id", repAgentIds)
+      : { data: [] as { id: string; name: string; employee_id: string | null }[] };
+    const repAgentName: Record<string, string> = {};
+    for (const p of repPeople ?? []) repAgentName[p.id] = p.employee_id ? `${p.name} — ${p.employee_id}` : p.name;
     const now = Date.now();
     const rows = (leads ?? []).map((l) => {
       const r = (reps ?? []).filter((x) => x.lead_id === l.id);
       const f = (fus ?? []).filter((x) => x.lead_id === l.id);
       const open = f.filter((x) => x.status !== "done" && x.status !== "completed").sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
       const overdue = open.some((x) => new Date(x.scheduled_at).getTime() < now);
+      const last = r[r.length - 1] ?? null;
       return {
         id: l.id,
         name: l.name,
@@ -113,8 +129,28 @@ async function runLead360Search(data: z.infer<typeof SearchInput>) {
         followUps: f.length,
         nextFollowUpAt: open[0]?.scheduled_at ?? null,
         fuState: open.length === 0 ? ("none" as const) : overdue ? ("overdue" as const) : ("upcoming" as const),
+        latestReport: last
+          ? {
+              note: last.note,
+              summary: last.summary,
+              category: last.category,
+              status: last.status,
+              connected: last.connected,
+              created_at: last.created_at,
+              submitted_at: last.submitted_at,
+              call_ended_at: last.call_ended_at,
+              interest: last.interest,
+              requirement: last.requirement,
+              customer_response: last.customer_response,
+              next_action: last.next_action,
+              follow_up_at: last.follow_up_at,
+              reason: last.reason,
+              agentName: last.agent_id ? (repAgentName[last.agent_id] ?? null) : null,
+            }
+          : null,
       };
     });
+
     return {
       locked: false as const,
       rows: data.followUpStatus === "any" ? rows : rows.filter((r) => r.fuState === data.followUpStatus),
