@@ -36,6 +36,20 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
         }
         if (!env || !event) return new Response("Invalid signature", { status: 401 });
 
+        const { claimWebhookEvent, markWebhookFailed, markWebhookProcessed } =
+          await import("@/lib/webhook-log.server");
+        const eventId = event.eventId;
+        const eventType = String(event.eventType);
+        const occurredAt = event.occurredAt;
+        const claim = await claimWebhookEvent({
+          provider: `paddle_${env}`,
+          eventId,
+          eventType,
+          signatureValid: true,
+          payload: JSON.parse(rawBody) as Record<string, unknown>,
+        });
+        if (!claim.fresh) return new Response("ok");
+
         type SubPayload = {
           id: string;
           customer_id: string;
@@ -54,6 +68,19 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
         ) {
           const sub = event.data as unknown as SubPayload;
           const firstItem = sub.items?.[0];
+          const { data: stored } = await supabaseAdmin
+            .from("subscriptions")
+            .select("last_webhook_occurred_at")
+            .eq("paddle_subscription_id", sub.id)
+            .maybeSingle();
+          if (
+            stored?.last_webhook_occurred_at &&
+            new Date(stored.last_webhook_occurred_at).getTime() > new Date(occurredAt).getTime()
+          ) {
+            await markWebhookProcessed(claim.id, "stale_event_ignored");
+            return new Response("ok");
+          }
+
           const row = {
             paddle_subscription_id: sub.id,
             paddle_customer_id: sub.customer_id,
@@ -67,16 +94,20 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
             buyer_email: sub.custom_data?.buyer_email ?? null,
             environment: env,
             updated_at: new Date().toISOString(),
+            last_webhook_event_id: eventId,
+            last_webhook_occurred_at: occurredAt,
           };
           const { error } = await supabaseAdmin
             .from("subscriptions")
             .upsert(row, { onConflict: "paddle_subscription_id" });
           if (error) {
             console.error("subscription upsert failed", error);
+            await markWebhookFailed(claim.id, error);
             return new Response("Store failed", { status: 500 });
           }
         }
 
+        await markWebhookProcessed(claim.id);
         return new Response("ok");
       },
     },

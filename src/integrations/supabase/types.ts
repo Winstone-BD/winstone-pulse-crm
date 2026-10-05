@@ -3119,6 +3119,8 @@ export type Database = {
           current_period_start: string | null
           environment: string
           id: string
+          last_webhook_event_id: string | null
+          last_webhook_occurred_at: string | null
           paddle_customer_id: string
           paddle_subscription_id: string
           price_id: string
@@ -3136,6 +3138,8 @@ export type Database = {
           current_period_start?: string | null
           environment?: string
           id?: string
+          last_webhook_event_id?: string | null
+          last_webhook_occurred_at?: string | null
           paddle_customer_id: string
           paddle_subscription_id: string
           price_id: string
@@ -3153,6 +3157,8 @@ export type Database = {
           current_period_start?: string | null
           environment?: string
           id?: string
+          last_webhook_event_id?: string | null
+          last_webhook_occurred_at?: string | null
           paddle_customer_id?: string
           paddle_subscription_id?: string
           price_id?: string

@@ -28,7 +28,7 @@ export async function claimWebhookEvent(input: {
       event_type: input.eventType,
       signature_valid: input.signatureValid,
       payload: input.payload as never,
-      status: "received",
+      status: "processing",
     })
     .select("id")
     .maybeSingle();
@@ -49,13 +49,24 @@ export async function claimWebhookEvent(input: {
     return { id: null, fresh: true };
   }
 
-  await supabaseAdmin
-    .from("webhook_deliveries")
-    .update({ attempts: existing.attempts + 1 })
-    .eq("id", existing.id);
+  if (existing.status !== "failed") {
+    await supabaseAdmin
+      .from("webhook_deliveries")
+      .update({ attempts: existing.attempts + 1 })
+      .eq("id", existing.id);
+    return { id: existing.id, fresh: false };
+  }
 
-  // A previously failed delivery is allowed to run again; a processed one is not.
-  return { id: existing.id, fresh: existing.status === "failed" };
+  const { data: retry } = await supabaseAdmin
+    .from("webhook_deliveries")
+    .update({ attempts: existing.attempts + 1, status: "processing", error_message: null })
+    .eq("id", existing.id)
+    .eq("status", "failed")
+    .select("id")
+    .maybeSingle();
+
+  // Conditional update is the atomic retry claim: only one concurrent retry can win.
+  return { id: existing.id, fresh: Boolean(retry) };
 }
 
 export async function markWebhookProcessed(id: string | null, note?: string): Promise<void> {
