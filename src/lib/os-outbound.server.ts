@@ -127,7 +127,17 @@ export async function osSyncStatus() {
   const rows = data ?? [];
   const counts: Record<string, number> = {};
   for (const r of rows) counts[r.status] = (counts[r.status] ?? 0) + 1;
-  return { missing: outboundConfig().missing, counts, rows };
+  const { serviceBillEmailConfiguration } = await import("@/lib/service-bill-review.server");
+  const has = (n: string) => Boolean(process.env[n]?.trim());
+  const emailIssues = serviceBillEmailConfiguration();
+  const health = [
+    { name: "OS booking endpoint", ok: !outboundConfig().missing.includes("OS_BOOKING_ENDPOINT"), setting: "OS_BOOKING_ENDPOINT" },
+    { name: "CRM bridge secret", ok: has("CRM_BRIDGE_SECRET"), setting: "CRM_BRIDGE_SECRET" },
+    { name: "Bill email relay", ok: emailIssues.length === 0, setting: emailIssues.join(", ") || "OK" },
+    { name: "Bill review PIN", ok: has("SERVICE_BILL_UNLOCK_PIN"), setting: "SERVICE_BILL_UNLOCK_PIN" },
+    { name: "Automatic timer", ok: true, setting: "off (manual Send Now only)" },
+  ];
+  return { missing: outboundConfig().missing, counts, rows, health };
 }
 
 /** Manual retry of a dead/failed event: resets attempts, never duplicates the event (same idempotency key). */
