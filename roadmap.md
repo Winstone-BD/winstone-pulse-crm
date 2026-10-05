@@ -1,6 +1,10 @@
 # Roadmap
 
 ## Active
+0. **Winstone ecosystem integration completion audit** — In progress: preserve CRM as canonical leads, Web as acquisition, OS as ERP/operations/finance; audit and complete only legitimate email/API/webhook/bridge/public MCP/WhatsApp/Drive/Meta/Lovable API/auth/RBAC/RLS/observability/source-control integrations. No duplicate lead or ERP store, no fake data, no invented credentials, no private data in public MCP.
+   - Hostinger service-bill sender: verify `info@winstonebd.com`; current endpoint test is BLOCKED because saved `NOTIFY_EMAIL_ENDPOINT` is not a valid URL.
+   - Phone OTP: custom Bangladesh SMS hook, 6 digits, 300 seconds, auto-confirm off; CONFIGURATION REQUIRED until a real gateway and credentials exist.
+   - Connector-backed services: connect only with real workspace authorization; otherwise report CONFIGURATION REQUIRED without blocking CRM/OS core.
 0. **Phone-friendly CRM tables** — Completed: high-use lead, support, performance, accountability and synced-call tables now become compact phone cards while retaining full laptop tables; remaining wide tables use contained touch scrolling.
 0. **Google Drive reconnection** — Completed: linked a fresh Google Drive account in the new workspace; verified folder reads and a write/delete probe in the CRM archive (probe file removed).
 0. **Search results show report description** — Completed: Lead 360 search rows and its call timeline render the shared expandable report card (manual description + structured fields), and exports carry the last report date/description.
