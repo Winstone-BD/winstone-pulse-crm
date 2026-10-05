@@ -97,5 +97,13 @@ export async function sendViaHostinger(
       signal: AbortSignal.timeout(15000),
     },
   );
-  if (!res.ok) throw new Error(`Hostinger Mail API send responded ${res.status}`);
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { code?: string; error?: string } | null;
+    const notAllowed = /allow list/i.test(err?.error ?? "");
+    throw new Error(
+      notAllowed
+        ? "Hostinger refused: recipient is not on the mailbox allow list"
+        : `Hostinger Mail API send responded ${res.status}${err?.code ? ` (${err.code})` : ""}`,
+    );
+  }
 }
