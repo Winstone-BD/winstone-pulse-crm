@@ -14,7 +14,7 @@ describe("Hostinger service-bill payload", () => {
       sender: "alerts@example.com",
       recipient: "hq@example.com",
       subject: "Service-Bill Alert: মেয়াদ শেষ - Winstone CRM",
-      body: "This is a service-bill alert for Winstone CRM at মেয়াদ শেষ. The required fee is $46.29 USD.",
+      body: "WINSTONE CRM — SERVICE BILL ALERT\n\nStatus: মেয়াদ শেষ\nAmount: $46.29 USD\n\nThis notice requires authorized human review. It does not execute or approve a payment.",
     });
   });
 });

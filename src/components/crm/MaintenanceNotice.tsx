@@ -160,7 +160,7 @@ export function MaintenanceProfileNotice() {
   );
 }
 
-const OPEN_PATHS = ["/system", "/architect", "/auth"];
+const OPEN_PATHS = ["/system", "/architect", "/auth", "/service-bill-alert", "/service-bill-unlock"];
 
 /** CRM-wide banner before the lock, full lock screen after it. */
 export function MaintenanceGate() {

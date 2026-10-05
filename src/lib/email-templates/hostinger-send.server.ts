@@ -18,12 +18,14 @@ export function buildHostingerServiceBillPayload(input: {
   sender: string;
   recipient: string;
   stage: string;
+  reviewUrl?: string;
 }): HostingerServiceBillPayload {
+  const reviewLine = input.reviewUrl ? `\n\nReview securely: ${input.reviewUrl}` : "";
   return {
     sender: input.sender,
     recipient: input.recipient,
     subject: `Service-Bill Alert: ${input.stage} - Winstone CRM`,
-    body: `This is a service-bill alert for Winstone CRM at ${input.stage}. The required fee is ${MAINTENANCE_FEE_LABEL}.`,
+    body: `WINSTONE CRM — SERVICE BILL ALERT\n\nStatus: ${input.stage}\nAmount: ${MAINTENANCE_FEE_LABEL}\n\nThis notice requires authorized human review. It does not execute or approve a payment.${reviewLine}`,
   };
 }
 
@@ -49,7 +51,8 @@ export async function sendViaHostinger(
   const endpoint = process.env["NOTIFY_EMAIL_ENDPOINT"]!;
   const apiKey = process.env["NOTIFY_EMAIL_API_KEY"]!;
   const from = process.env["HOSTINGER_SENDER_EMAIL"]!;
-  const payload = buildHostingerServiceBillPayload({ sender: from, recipient: to, stage });
+  const reviewUrl = "https://crm1.winstonebd.com/service-bill-unlock";
+  const payload = buildHostingerServiceBillPayload({ sender: from, recipient: to, stage, reviewUrl });
 
   const res = await fetch(endpoint, {
     method: "POST",

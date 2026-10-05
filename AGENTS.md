@@ -20,3 +20,4 @@
 - Dense CRM data views use compact cards below `md` and full tables at `md+`; lower-frequency wide tables scroll only inside `.table-scroll` — why: phone usability without weakening desktop comparison views.
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
 - Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.
+- Service-bill review may reveal details to an authenticated admin after a server-only PIN check, but never executes payment or grants financial approval — why: notification and financial execution must remain separate.

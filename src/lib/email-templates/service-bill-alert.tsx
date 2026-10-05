@@ -8,6 +8,7 @@ import {
   Preview,
   Section,
   Text,
+  Button,
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
@@ -19,6 +20,7 @@ interface Props {
   period?: string
   amount?: string
   stageLabel?: string
+  reviewUrl?: string
 }
 
 const Email = ({ title, detail, period, amount, stageLabel }: Props) => (
@@ -35,8 +37,11 @@ const Email = ({ title, detail, period, amount, stageLabel }: Props) => (
           {amount ? <Text style={row}>পরিমাণ: {amount}</Text> : null}
           {stageLabel ? <Text style={row}>অবস্থা: {stageLabel}</Text> : null}
         </Section>
+        <Button href={reviewUrl || 'https://crm1.winstonebd.com/service-bill-unlock'} style={button}>
+          Secure human review
+        </Button>
         <Text style={muted}>
-          পেমেন্ট পাঠানোর পর IT কনসোলে রেফারেন্স দিয়ে যাচাই করলেই সার্ভিস চালু থাকবে।
+          এই alert কোনো payment, transfer বা automatic approval সম্পন্ন করে না।
         </Text>
       </Container>
     </Body>
@@ -56,6 +61,7 @@ export const template = {
     period: '2026-10',
     amount: '$46.29 USD',
     stageLabel: 'মেয়াদ শেষ',
+    reviewUrl: 'https://crm1.winstonebd.com/service-bill-unlock',
   },
 } satisfies TemplateEntry
 
@@ -72,3 +78,4 @@ const box = {
 }
 const row = { fontSize: '14px', color: '#4a4a4a', margin: '4px 0' }
 const muted = { fontSize: '13px', color: '#6b6b6b', lineHeight: '20px' }
+const button = { backgroundColor: '#8a6a1f', borderRadius: '6px', color: '#ffffff', fontSize: '14px', fontWeight: '600', padding: '12px 18px', textDecoration: 'none' }
