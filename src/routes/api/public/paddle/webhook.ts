@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+
+const paddleLimiter = createRateLimiter(180, 60_000);
 
 /**
  * Paddle webhook receiver. Verifies the signature, then mirrors the
@@ -10,6 +13,8 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!paddleLimiter(requestSourceKey(request)))
+          return new Response("Rate limited", { status: 429 });
         const rawBody = await request.clone().text();
         const signature = request.headers.get("paddle-signature");
         if (!signature || !rawBody) return new Response("Missing signature", { status: 401 });
@@ -48,6 +53,7 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
           signatureValid: true,
           payload: JSON.parse(rawBody) as Record<string, unknown>,
         });
+        if (claim.conflict) return new Response("Event payload conflict", { status: 409 });
         if (!claim.fresh) return new Response("ok");
 
         type SubPayload = {

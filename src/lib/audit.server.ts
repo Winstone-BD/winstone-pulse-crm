@@ -72,8 +72,9 @@ export type AuditAction =
   | "it_notice_published"
   | "drive_knowledge_indexed"
   | "drive_knowledge_read"
-  | "os_event_received";
-
+  | "os_event_received"
+  | "booking_created"
+  | "booking_status_changed";
 
 export async function logAudit(input: {
   action: AuditAction;

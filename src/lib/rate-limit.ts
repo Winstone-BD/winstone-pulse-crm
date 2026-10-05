@@ -1,7 +1,8 @@
 /**
  * Best-effort fixed-window limiter (per server instance). It is a flood brake
- * in front of signature checks, not an authority — idempotency and HMAC stay
- * the real protection.
+ * in front of signature checks, not an authority — idempotency, HMAC and the
+ * database-backed workflow limits stay the real protection. Stateless worker
+ * fleets do not share this map, so never use it as the only security control.
  */
 export function createRateLimiter(limit: number, windowMs: number) {
   const hits = new Map<string, { start: number; count: number }>();
@@ -15,4 +16,14 @@ export function createRateLimiter(limit: number, windowMs: number) {
     entry.count += 1;
     return entry.count <= limit;
   };
+}
+
+/** A non-secret request bucket key suitable for best-effort public-route limits. */
+export function requestSourceKey(request: Request): string {
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-device-id") ??
+    "unknown"
+  );
 }

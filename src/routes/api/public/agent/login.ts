@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/integrations/supabase/types";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+
+const loginLimiter = createRateLimiter(10, 5 * 60_000);
 
 /**
  * Sign-in for the Winstone Connect Android app.
@@ -79,6 +82,9 @@ export const Route = createFileRoute("/api/public/agent/login")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!loginLimiter(requestSourceKey(request))) {
+          return json({ error: "অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে আবার চেষ্টা করুন" }, 429);
+        }
         // Bootstrap endpoint: the only credential is the agent's own CRM
         // email + password. Nothing privileged is shipped inside the APK.
         const raw = await request.json().catch(() => null);

@@ -9,7 +9,13 @@
 export type WebhookClaim = {
   id: string | null;
   fresh: boolean;
+  conflict: boolean;
 };
+
+async function payloadHash(payload: Record<string, unknown>): Promise<string> {
+  const { createHash } = await import("node:crypto");
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
 
 export async function claimWebhookEvent(input: {
   provider: string;
@@ -19,6 +25,7 @@ export async function claimWebhookEvent(input: {
   payload: Record<string, unknown>;
 }): Promise<WebhookClaim> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const hash = await payloadHash(input.payload);
 
   const { data, error } = await supabaseAdmin
     .from("webhook_deliveries")
@@ -28,17 +35,18 @@ export async function claimWebhookEvent(input: {
       event_type: input.eventType,
       signature_valid: input.signatureValid,
       payload: input.payload as never,
+      payload_sha256: hash,
       status: "processing",
     })
     .select("id")
     .maybeSingle();
 
-  if (!error && data) return { id: data.id, fresh: true };
+  if (!error && data) return { id: data.id, fresh: true, conflict: false };
 
   // Duplicate delivery (or an insert race): record the retry attempt.
   const { data: existing } = await supabaseAdmin
     .from("webhook_deliveries")
-    .select("id, attempts, status")
+    .select("id, attempts, status, payload_sha256, payload")
     .eq("provider", input.provider)
     .eq("event_id", input.eventId)
     .eq("event_type", input.eventType)
@@ -46,7 +54,18 @@ export async function claimWebhookEvent(input: {
 
   if (!existing) {
     console.error("[webhook] claim failed", error);
-    return { id: null, fresh: true };
+    return { id: null, fresh: true, conflict: false };
+  }
+
+  const existingHash =
+    existing.payload_sha256 ??
+    (await payloadHash((existing.payload ?? {}) as Record<string, unknown>));
+  if (existingHash !== hash) {
+    await supabaseAdmin
+      .from("webhook_deliveries")
+      .update({ attempts: existing.attempts + 1, error_message: "event_id_payload_conflict" })
+      .eq("id", existing.id);
+    return { id: existing.id, fresh: false, conflict: true };
   }
 
   if (existing.status !== "failed") {
@@ -54,7 +73,7 @@ export async function claimWebhookEvent(input: {
       .from("webhook_deliveries")
       .update({ attempts: existing.attempts + 1 })
       .eq("id", existing.id);
-    return { id: existing.id, fresh: false };
+    return { id: existing.id, fresh: false, conflict: false };
   }
 
   const { data: retry } = await supabaseAdmin
@@ -66,7 +85,7 @@ export async function claimWebhookEvent(input: {
     .maybeSingle();
 
   // Conditional update is the atomic retry claim: only one concurrent retry can win.
-  return { id: existing.id, fresh: Boolean(retry) };
+  return { id: existing.id, fresh: Boolean(retry), conflict: false };
 }
 
 export async function markWebhookProcessed(id: string | null, note?: string): Promise<void> {
