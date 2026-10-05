@@ -2,6 +2,7 @@
 
 ## Active
 
+0. **Review-only Service Bill Alert** — In progress: add `/service-bill-alert` and authenticated `/service-bill-unlock`, server-only PIN and approver-email gates, persistent throttling/audit, safe Hostinger test send, and no payment execution or financial approval.
 0. **Winstone ecosystem integration completion audit** — In progress: canonical boundaries audited; Paddle webhook replay/order protection and public MCP privacy hardening implemented; final checks/configuration blockers remain.
    - Hostinger service-bill sender: verify `info@winstonebd.com`; current endpoint test is BLOCKED because saved `NOTIFY_EMAIL_ENDPOINT` is not a valid URL.
    - Phone OTP: custom Bangladesh SMS hook, 6 digits, 300 seconds, auto-confirm off; CONFIGURATION REQUIRED until a real gateway and credentials exist.
