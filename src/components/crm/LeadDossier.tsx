@@ -134,7 +134,7 @@ export function LeadDossier({
               </p>
             </SheetHeader>
 
-            <nav className="sticky top-0 z-10 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-5 py-2 text-xs font-semibold backdrop-blur">
+            <nav className="sticky top-0 z-10 grid grid-cols-3 gap-1.5 border-b sm:flex sm:flex-wrap sm:gap-2 border-border bg-background/95 px-5 py-2 text-xs font-semibold backdrop-blur">
               {[
                 ["lead-brief", "Brief Me"],
                 ["lead-overview", "Details"],
@@ -142,7 +142,7 @@ export function LeadDossier({
                 ["lead-notes", "নোট যোগ করুন"],
                 ["lead-timeline", "টাইমলাইন"],
               ].map(([id, label]) => (
-                <a key={id} href={`#${id}`} className="shrink-0 rounded-full border border-border bg-card px-3 py-2 hover:bg-secondary">
+                <a key={id} href={`#${id}`} className="flex min-h-10 items-center justify-center rounded-full border border-border bg-card px-2 py-2 text-center hover:bg-secondary sm:px-3">
                   {label}
                 </a>
               ))}
@@ -232,7 +232,7 @@ function LifecycleEntry({ event }: { event: LeadEvent }) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-full border px-3.5 py-2 text-xs",
+        "flex flex-wrap items-center gap-2 rounded-xl border px-3.5 py-2 text-xs",
         EVENT_TONE[event.kind] ?? "border-border bg-surface-2 text-muted-foreground",
       )}
     >
