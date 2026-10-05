@@ -35,7 +35,7 @@ UI → `*.functions.ts` → `*.server.ts` → ডেটাবেজ। এই �
 2. **দৈনিক বিতরণ** — সকাল ৯:১০ (ঢাকা) cron → `lead-pool.server.ts` `distributeDailyLeads()` → প্রতি ডেস্কে কোটা অনুযায়ী; `lead_distribution_runs` টেবিলে দিনে একবারই (idempotent, cursor সংরক্ষিত)।
 3. **কল** — এজেন্টের নিজের সিম → OEM রেকর্ডিং → অ্যান্ড্রয়েড আপলোড → Drive → ট্রান্সক্রিপ্ট → AI সারসংক্ষেপ ও শ্রেণিবিন্যাস (`call-intel.server.ts`, `analysis-queue.server.ts`; প্রতি ১৫ মিনিটে ঝাড়ু)।
 4. **রিপোর্ট** — পোস্ট-কল রিপোর্ট বাধ্যতামূলক (`PostCallReportGate`) → শিফট সারসংক্ষেপ ১২:৫০ ও ৫:৩০ → `reports.tsx` / `hq.tsx`।
-5. **বিলিং** — মাসের ১৫ তারিখে ৳৪,০০০ ইনভয়েস; IT কনসোলে যাচাই → পরিশোধিত → সার্ভিস চালু → ৩,০০০/১,০০০ ভাগ → পেআউট। প্রতিটি ধাপ একবারই, সব অডিটে (`service-billing.server.ts`)।
+5. **Maintenance** — মাসিক $46.29 USD; ১৪ তারিখ 00:00 Dhaka-তে unpaid থাকলে server-side lock। IT যাচাই এবং System Architect-এর সীমিত unlock একই canonical audit path-এ থাকে (`maintenance.server.ts`)।
 
 ## নিরাপত্তার তিন স্তর
 

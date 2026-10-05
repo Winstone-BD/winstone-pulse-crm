@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Active
-0. **Winstone ecosystem integration completion audit** — In progress: preserve CRM as canonical leads, Web as acquisition, OS as ERP/operations/finance; audit and complete only legitimate email/API/webhook/bridge/public MCP/WhatsApp/Drive/Meta/Lovable API/auth/RBAC/RLS/observability/source-control integrations. No duplicate lead or ERP store, no fake data, no invented credentials, no private data in public MCP.
+0. **Winstone ecosystem integration completion audit** — In progress: canonical boundaries audited; Paddle webhook replay/order protection and public MCP privacy hardening implemented; final checks/configuration blockers remain.
    - Hostinger service-bill sender: verify `info@winstonebd.com`; current endpoint test is BLOCKED because saved `NOTIFY_EMAIL_ENDPOINT` is not a valid URL.
    - Phone OTP: custom Bangladesh SMS hook, 6 digits, 300 seconds, auto-confirm off; CONFIGURATION REQUIRED until a real gateway and credentials exist.
    - Connector-backed services: connect only with real workspace authorization; otherwise report CONFIGURATION REQUIRED without blocking CRM/OS core.
