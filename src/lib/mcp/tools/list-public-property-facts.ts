@@ -22,8 +22,9 @@ export default defineTool({
           "id, category, metric, value, unit, geography, source_name, source_url, effective_date, review_date, expiry_date, version",
         )
         .eq("category", "project_property")
-        .eq("status", "approved")
+        .eq("status", "published")
         .not("verified_at", "is", null)
+        .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString().slice(0, 10)}`)
         .order("effective_date", { ascending: false })
         .limit(limit);
       if (geography) query = query.ilike("geography", `%${geography}%`);
