@@ -1189,6 +1189,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_event_receipts: {
+        Row: {
+          event_key: string
+          event_type: string
+          id: string
+          mailbox: string | null
+          payload_hash: string
+          provider: string
+          received_at: string
+          status: string
+        }
+        Insert: {
+          event_key: string
+          event_type: string
+          id?: string
+          mailbox?: string | null
+          payload_hash: string
+          provider?: string
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          event_key?: string
+          event_type?: string
+          id?: string
+          mailbox?: string | null
+          payload_hash?: string
+          provider?: string
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       follow_up_changes: {
         Row: {
           action: string

@@ -568,6 +568,13 @@
       "when": 1791218179381,
       "tag": "0080_harden_trigger_function_privileges",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1791230569270,
+      "tag": "0081_email_event_receipts",
+      "breakpoints": true
     }
   ]
 }

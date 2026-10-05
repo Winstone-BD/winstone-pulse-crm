@@ -50,6 +50,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
 import { Route as HelpSlugRouteImport } from './routes/help_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as ApiPublicEmailEventsRouteImport } from './routes/api/public/email-events'
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
 import { Route as ApiPublicTmpBulkImportRouteImport } from './routes/api/public/tmp-bulk-import'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
@@ -87,6 +88,7 @@ import { Route as ApiPublicIngestMessageRouteImport } from './routes/api/public/
 import { Route as ApiPublicIngestOutcomeRouteImport } from './routes/api/public/ingest/outcome'
 import { Route as ApiPublicIngestRecordingRouteImport } from './routes/api/public/ingest/recording'
 import { Route as ApiPublicIngestReprocessRouteImport } from './routes/api/public/ingest/reprocess'
+import { Route as ApiPublicIntegrationsStatusRouteImport } from './routes/api/public/integrations/status'
 import { Route as ApiPublicOsEventsRouteImport } from './routes/api/public/os/events'
 import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
 import { Route as ApiPublicReportsSummaryRouteImport } from './routes/api/public/reports/summary'
@@ -301,6 +303,11 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEmailEventsRoute = ApiPublicEmailEventsRouteImport.update({
+  id: '/api/public/email-events',
+  path: '/api/public/email-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSmokeRoute = ApiPublicSmokeRouteImport.update({
   id: '/api/public/smoke',
   path: '/api/public/smoke',
@@ -500,6 +507,12 @@ const ApiPublicIngestReprocessRoute =
     path: '/api/public/ingest/reprocess',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIntegrationsStatusRoute =
+  ApiPublicIntegrationsStatusRouteImport.update({
+    id: '/api/public/integrations/status',
+    path: '/api/public/integrations/status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOsEventsRoute = ApiPublicOsEventsRouteImport.update({
   id: '/api/public/os/events',
   path: '/api/public/os/events',
@@ -580,6 +593,7 @@ export interface FileRoutesByFullPath {
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/email-events': typeof ApiPublicEmailEventsRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -617,6 +631,7 @@ export interface FileRoutesByFullPath {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/integrations/status': typeof ApiPublicIntegrationsStatusRoute
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
@@ -667,6 +682,7 @@ export interface FileRoutesByTo {
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/email-events': typeof ApiPublicEmailEventsRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -704,6 +720,7 @@ export interface FileRoutesByTo {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/integrations/status': typeof ApiPublicIntegrationsStatusRoute
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
@@ -755,6 +772,7 @@ export interface FileRoutesById {
   '/docs_/$slug': typeof DocsSlugRoute
   '/help_/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/email-events': typeof ApiPublicEmailEventsRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -792,6 +810,7 @@ export interface FileRoutesById {
   '/api/public/ingest/outcome': typeof ApiPublicIngestOutcomeRoute
   '/api/public/ingest/recording': typeof ApiPublicIngestRecordingRoute
   '/api/public/ingest/reprocess': typeof ApiPublicIngestReprocessRoute
+  '/api/public/integrations/status': typeof ApiPublicIntegrationsStatusRoute
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
@@ -844,6 +863,7 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/help/$slug'
     | '/.lovable/oauth/consent'
+    | '/api/public/email-events'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -881,6 +901,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/integrations/status'
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
@@ -931,6 +952,7 @@ export interface FileRouteTypes {
     | '/docs/$slug'
     | '/help/$slug'
     | '/.lovable/oauth/consent'
+    | '/api/public/email-events'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -968,6 +990,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/integrations/status'
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
@@ -1018,6 +1041,7 @@ export interface FileRouteTypes {
     | '/docs_/$slug'
     | '/help_/$slug'
     | '/.lovable/oauth/consent'
+    | '/api/public/email-events'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin_/editor/$slug'
@@ -1055,6 +1079,7 @@ export interface FileRouteTypes {
     | '/api/public/ingest/outcome'
     | '/api/public/ingest/recording'
     | '/api/public/ingest/reprocess'
+    | '/api/public/integrations/status'
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
@@ -1106,6 +1131,7 @@ export interface RootRouteChildren {
   DocsSlugRoute: typeof DocsSlugRoute
   HelpSlugRoute: typeof HelpSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  ApiPublicEmailEventsRoute: typeof ApiPublicEmailEventsRoute
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
   ApiPublicTmpBulkImportRoute: typeof ApiPublicTmpBulkImportRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
@@ -1143,6 +1169,7 @@ export interface RootRouteChildren {
   ApiPublicIngestOutcomeRoute: typeof ApiPublicIngestOutcomeRoute
   ApiPublicIngestRecordingRoute: typeof ApiPublicIngestRecordingRoute
   ApiPublicIngestReprocessRoute: typeof ApiPublicIngestReprocessRoute
+  ApiPublicIntegrationsStatusRoute: typeof ApiPublicIntegrationsStatusRoute
   ApiPublicOsEventsRoute: typeof ApiPublicOsEventsRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   ApiPublicReportsSummaryRoute: typeof ApiPublicReportsSummaryRoute
@@ -1441,6 +1468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/email-events': {
+      id: '/api/public/email-events'
+      path: '/api/public/email-events'
+      fullPath: '/api/public/email-events'
+      preLoaderRoute: typeof ApiPublicEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/smoke': {
       id: '/api/public/smoke'
       path: '/api/public/smoke'
@@ -1700,6 +1734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestReprocessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/integrations/status': {
+      id: '/api/public/integrations/status'
+      path: '/api/public/integrations/status'
+      fullPath: '/api/public/integrations/status'
+      preLoaderRoute: typeof ApiPublicIntegrationsStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/os/events': {
       id: '/api/public/os/events'
       path: '/api/public/os/events'
@@ -1795,6 +1836,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsSlugRoute: DocsSlugRoute,
   HelpSlugRoute: HelpSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  ApiPublicEmailEventsRoute: ApiPublicEmailEventsRoute,
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
   ApiPublicTmpBulkImportRoute: ApiPublicTmpBulkImportRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,
@@ -1832,6 +1874,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicIngestOutcomeRoute: ApiPublicIngestOutcomeRoute,
   ApiPublicIngestRecordingRoute: ApiPublicIngestRecordingRoute,
   ApiPublicIngestReprocessRoute: ApiPublicIngestReprocessRoute,
+  ApiPublicIntegrationsStatusRoute: ApiPublicIntegrationsStatusRoute,
   ApiPublicOsEventsRoute: ApiPublicOsEventsRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   ApiPublicReportsSummaryRoute: ApiPublicReportsSummaryRoute,
