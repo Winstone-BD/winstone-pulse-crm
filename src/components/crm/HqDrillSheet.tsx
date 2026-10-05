@@ -66,7 +66,7 @@ export function HqDrillSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-full overflow-hidden p-0 sm:max-w-lg">
         <div className="flex h-full flex-col">
-          <SheetHeader className="border-b border-border bg-surface px-4 py-4 text-left sm:px-5">
+          <SheetHeader className="m-0 border-b border-border bg-surface px-4 py-4 text-left sm:px-5">
             <SheetTitle className="text-lg">{spec?.title ?? "বিস্তারিত"}</SheetTitle>
             <p className="text-xs text-muted-foreground">{spec?.subtitle}</p>
             {!loading && (

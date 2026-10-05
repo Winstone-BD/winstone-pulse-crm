@@ -81,7 +81,7 @@ export function ReportDetails({ report, defaultOpen = false }: { report: ReportL
         <p className="line-clamp-2 whitespace-pre-wrap text-xs text-muted-foreground">{preview}</p>
       ) : null}
       {fields.length > 0 ? (
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setOpen((v) => !v)}>
+        <Button size="sm" variant="ghost" className="h-9 min-h-9 px-3 text-xs" onClick={() => setOpen((v) => !v)}>
           {open ? "সংক্ষেপে দেখুন" : "সম্পূর্ণ রিপোর্ট দেখুন"}
         </Button>
       ) : null}
