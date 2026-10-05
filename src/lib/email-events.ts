@@ -16,7 +16,8 @@ const eventSchema = z
 
 export type EmailEventCheck =
   | { ok: true; eventType: string; eventKey: string; mailbox: string | null; payloadHash: string }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string }
+  | { ok: "ignored"; eventType: string };
 
 function pickString(obj: Record<string, unknown> | undefined, keys: string[]): string | null {
   for (const k of keys) {
@@ -48,7 +49,8 @@ export async function checkEmailEvent(input: {
   if (!ev.success) return { ok: false, status: 422, error: "invalid_event" };
   const eventType = ev.data.event ?? ev.data.type ?? "";
   if (!(EMAIL_EVENT_TYPES as readonly string[]).includes(eventType))
-    return { ok: false, status: 422, error: "unsupported_event_type" };
+    // Authenticated test/other deliveries are acknowledged (2xx) but never persisted.
+    return { ok: "ignored", eventType: eventType || "unknown" };
   const payloadHash = await sha256Hex(input.rawBody);
   const data = ev.data.data;
   const msgId = pickString(data, ["messageId", "message_id", "uid", "id"]) ??
