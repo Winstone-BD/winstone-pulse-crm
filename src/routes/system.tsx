@@ -15,6 +15,7 @@ import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { MaintenancePanel } from "@/components/crm/MaintenancePanel";
+import { OsSyncPanel } from "@/components/crm/OsSyncPanel";
 import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
@@ -208,6 +209,7 @@ function SystemBoard() {
       {sec === "billing" && (
         <div className="space-y-6">
       <MaintenancePanel />
+      <OsSyncPanel />
 
       <AuditTrail />
 
