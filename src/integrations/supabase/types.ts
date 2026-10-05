@@ -4223,6 +4223,7 @@ export type Database = {
           event_type: string
           id: string
           payload: Json
+          payload_sha256: string | null
           processed_at: string | null
           provider: string
           signature_valid: boolean
@@ -4236,6 +4237,7 @@ export type Database = {
           event_type: string
           id?: string
           payload?: Json
+          payload_sha256?: string | null
           processed_at?: string | null
           provider: string
           signature_valid?: boolean
@@ -4249,6 +4251,7 @@ export type Database = {
           event_type?: string
           id?: string
           payload?: Json
+          payload_sha256?: string | null
           processed_at?: string | null
           provider?: string
           signature_valid?: boolean
