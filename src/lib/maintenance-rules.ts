@@ -3,8 +3,8 @@
  * Fee is USD only; no other currency is ever shown for this feature.
  */
 
-export const MAINTENANCE_FEE_USD = 35.29;
-export const MAINTENANCE_FEE_LABEL = "$35.29 USD";
+export const MAINTENANCE_FEE_USD = 46.29;
+export const MAINTENANCE_FEE_LABEL = "$46.29 USD";
 export const BILLING_DAY = 14;
 export const MAX_UNLOCK_MINUTES = 24 * 60;
 export const UNLOCK_PRESET_HOURS = [1, 2, 4, 8, 12, 24] as const;
