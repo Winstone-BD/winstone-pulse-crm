@@ -1818,6 +1818,54 @@ export type Database = {
           },
         ]
       }
+      lead_personal_notes: {
+        Row: {
+          author_label: string | null
+          author_profile_id: string | null
+          body: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          lead_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_label?: string | null
+          author_profile_id?: string | null
+          body: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          lead_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_label?: string | null
+          author_profile_id?: string | null
+          body?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          lead_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_personal_notes_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_personal_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_phone_keys: {
         Row: {
           canonical_phone: string

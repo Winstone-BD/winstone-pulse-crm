@@ -519,6 +519,13 @@
       "when": 1791007601977,
       "tag": "0073_os_event_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1791182385205,
+      "tag": "0074_lead_personal_notes",
+      "breakpoints": true
     }
   ]
 }
