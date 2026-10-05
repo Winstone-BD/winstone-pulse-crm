@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { getRequestIP, useSession } from "@tanstack/react-start/server";
+import { getRequestIP, useSession as getServerSession } from "@tanstack/react-start/server";
 
 import { dhakaPeriod } from "@/lib/maintenance-rules";
 import {
@@ -44,7 +44,9 @@ function reviewSessionConfig() {
 }
 
 async function reviewSession() {
-  return useSession<{ userId?: string; email?: string; expiresAt?: number }>(reviewSessionConfig());
+  return getServerSession<{ userId?: string; email?: string; expiresAt?: number }>(
+    reviewSessionConfig(),
+  );
 }
 
 function ipHash(): string {

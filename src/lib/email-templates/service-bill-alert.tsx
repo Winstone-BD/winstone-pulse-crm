@@ -53,7 +53,7 @@ const Email = ({ title, detail, period, amount, stageLabel, reviewUrl }: Props) 
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) =>
+  subject: (data: Record<string, unknown>) =>
     typeof data["title"] === "string" && data["title"]
       ? data["title"]
       : "Winstone CRM — সার্ভিস বিল আপডেট",
