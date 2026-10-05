@@ -84,7 +84,7 @@ export function LeadDossier({
       >
         {lead && (
           <>
-            <SheetHeader className="border-b border-border bg-surface px-5 py-4">
+            <SheetHeader className="m-0 border-b border-border bg-surface px-5 py-4">
               <SheetTitle className="text-xl">{lead.name}</SheetTitle>
               <p className="text-sm text-muted-foreground">
                 {lead.company ? `${lead.company} · ` : ""}

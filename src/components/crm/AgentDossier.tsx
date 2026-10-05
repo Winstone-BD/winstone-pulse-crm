@@ -42,7 +42,7 @@ export function AgentDossier({
       <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 sm:max-w-2xl">
         {agent && (
           <>
-            <SheetHeader className="border-b border-border bg-surface px-5 py-4">
+            <SheetHeader className="m-0 border-b border-border bg-surface px-5 py-4">
               <SheetTitle className="text-xl">{agent.name}</SheetTitle>
               <p className="text-sm text-muted-foreground">
                 {agent.employee_id ? `${agent.employee_id} · ` : ""}

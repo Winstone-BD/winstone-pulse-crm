@@ -237,7 +237,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
         side="left"
         className="w-72 max-w-[85vw] overflow-y-auto bg-background p-0 sm:max-w-[85vw]"
       >
-        <SheetHeader className="border-b border-border px-4 py-4 text-left">
+        <SheetHeader className="m-0 border-b border-border px-4 py-4 text-left">
           <SheetTitle asChild>
             <span className="flex items-center gap-2.5">
               <img
