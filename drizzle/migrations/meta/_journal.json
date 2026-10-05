@@ -526,6 +526,13 @@
       "when": 1791182385205,
       "tag": "0074_lead_personal_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791216884186,
+      "tag": "0075_update_maintenance_fee_default",
+      "breakpoints": true
     }
   ]
 }

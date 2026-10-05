@@ -1,0 +1,1 @@
+ALTER TABLE public.system_maintenance ALTER COLUMN fee_usd SET DEFAULT 46.29;
