@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/hooks/service-billing")({
           });
         }
 
-        // Retired: the monthly bill is now the $35.29 USD maintenance system,
+        // Retired: the monthly bill is now the $46.29 USD maintenance system,
         // evaluated on every request by maintenance.server.ts.
         return Response.json({ ok: true, retired: true });
       },

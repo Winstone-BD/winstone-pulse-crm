@@ -51,10 +51,10 @@ export const template = {
       : 'Winstone CRM — সার্ভিস বিল আপডেট',
   displayName: 'Service bill alert',
   previewData: {
-    title: '2026-10 সার্ভিস বিল বকেয়া — ৳৪,০০০',
+    title: '2026-10 সার্ভিস বিল বকেয়া — $46.29 USD',
     detail: 'আজ মেয়াদ শেষ; ১৮ অক্টোবর পর্যন্ত গ্রেস।',
     period: '2026-10',
-    amount: '৳৪,০০০',
+    amount: '$46.29 USD',
     stageLabel: 'মেয়াদ শেষ',
   },
 } satisfies TemplateEntry

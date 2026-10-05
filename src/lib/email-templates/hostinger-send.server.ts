@@ -1,13 +1,31 @@
 /**
- * Server-only: sends ONE rendered registered template through the Hostinger
+ * Server-only: sends ONE service-bill alert through the Hostinger
  * relay configured by NOTIFY_EMAIL_ENDPOINT / NOTIFY_EMAIL_API_KEY /
  * HOSTINGER_SENDER_EMAIL. Used only for service-bill alerts; sign-in codes and
  * password resets stay on the managed email system.
  * Returns false when not configured so callers can fall back.
  */
-import * as React from "react";
-import { render } from "@react-email/render";
-import { TEMPLATES } from "./registry";
+import { MAINTENANCE_FEE_LABEL } from "@/lib/maintenance-rules";
+
+export type HostingerServiceBillPayload = {
+  sender: string;
+  recipient: string;
+  subject: string;
+  body: string;
+};
+
+export function buildHostingerServiceBillPayload(input: {
+  sender: string;
+  recipient: string;
+  stage: string;
+}): HostingerServiceBillPayload {
+  return {
+    sender: input.sender,
+    recipient: input.recipient,
+    subject: `Service-Bill Alert: ${input.stage} - Winstone CRM`,
+    body: `This is a service-bill alert for Winstone CRM at ${input.stage}. The required fee is ${MAINTENANCE_FEE_LABEL}.`,
+  };
+}
 
 export function hostingerConfigured(): boolean {
   return Boolean(
@@ -18,21 +36,14 @@ export function hostingerConfigured(): boolean {
 }
 
 export async function sendViaHostinger(
-  templateName: string,
   to: string,
-  templateData: Record<string, unknown>,
+  stage: string,
   idempotencyKey: string,
 ): Promise<void> {
   const endpoint = process.env["NOTIFY_EMAIL_ENDPOINT"]!;
   const apiKey = process.env["NOTIFY_EMAIL_API_KEY"]!;
   const from = process.env["HOSTINGER_SENDER_EMAIL"]!;
-  const template = TEMPLATES[templateName];
-  if (!template) throw new Error(`Template '${templateName}' not found`);
-  const element = React.createElement(template.component, templateData);
-  const html = await render(element);
-  const text = await render(element, { plainText: true });
-  const subject =
-    typeof template.subject === "function" ? template.subject(templateData) : template.subject;
+  const payload = buildHostingerServiceBillPayload({ sender: from, recipient: to, stage });
 
   const res = await fetch(endpoint, {
     method: "POST",
@@ -41,7 +52,7 @@ export async function sendViaHostinger(
       Authorization: `Bearer ${apiKey}`,
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ from, to, subject, html, text }),
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) throw new Error(`Hostinger relay responded ${res.status}`);

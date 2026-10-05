@@ -1,5 +1,5 @@
 /**
- * Automatic reminders for the monthly ৳4,000 service bill.
+ * Automatic reminders for the monthly $46.29 USD maintenance fee.
  *
  * Three stages per period, each fired at most once: the bill is coming up
  * (3 days before the 15th), the bill is due, and the grace window closed so it
@@ -13,6 +13,7 @@
  */
 
 import { logAudit } from "@/lib/audit.server";
+import { MAINTENANCE_FEE_LABEL } from "@/lib/maintenance-rules";
 import { sendPush } from "@/lib/push.server";
 import {
   dhakaPeriod,
@@ -65,7 +66,7 @@ export function stageFor(invoice: ServiceInvoice, now = new Date()): AlertStage 
 }
 
 function copyFor(invoice: ServiceInvoice, stage: AlertStage) {
-  const amount = `৳${invoice.amountBdt.toLocaleString("bn-BD")}`;
+  const amount = MAINTENANCE_FEE_LABEL;
   if (stage === "due_soon") {
     return {
       title: `${invoice.period} সার্ভিস বিল সামনে — ${amount}`,
@@ -122,7 +123,6 @@ async function emailRecipients(
   emails: string[],
 ): Promise<{ sent: number; skipped: number; failed: number }> {
   if (emails.length === 0) return { sent: 0, skipped: 0, failed: 0 };
-  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   let sent = 0;
   let skipped = 0;
   let failed = 0;
@@ -133,29 +133,19 @@ async function emailRecipients(
         title: copy.title,
         detail: copy.detail,
         period: invoice.period,
-        amount: `৳${invoice.amountBdt.toLocaleString("bn-BD")}`,
+        amount: MAINTENANCE_FEE_LABEL,
         stageLabel: STAGE_LABEL[stage],
       };
-      // Service-bill alerts go through Hostinger when configured; if the relay
-      // is missing or fails, fall back to the managed system so HQ still hears.
+      // Service-bill alerts use Hostinger only. Authentication emails continue
+      // to use the managed email system through their separate auth handler.
       const { hostingerConfigured, sendViaHostinger } = await import(
         "@/lib/email-templates/hostinger-send.server"
       );
-      if (hostingerConfigured()) {
-        try {
-          await sendViaHostinger("service-bill-alert", email, templateData, idempotencyKey);
-          sent += 1;
-          continue;
-        } catch (error) {
-          console.error("hostinger relay failed, falling back", error instanceof Error ? error.message : "unknown");
-        }
+      if (!hostingerConfigured()) {
+        throw new Error("Hostinger service-bill email is not configured");
       }
-      const result = await sendTemplateEmail("service-bill-alert", email, {
-        idempotencyKey,
-        templateData,
-      });
-      if (result.sent) sent += 1;
-      else skipped += 1;
+      await sendViaHostinger(email, String(templateData.stageLabel), idempotencyKey);
+      sent += 1;
     } catch (error) {
       failed += 1;
       console.error("service bill alert email failed", error instanceof Error ? error.message : "unknown error");
@@ -221,7 +211,7 @@ export async function runServiceBillingAlerts(now = new Date()): Promise<AlertRu
           entityType: "service_invoice",
           entityId: invoice.period,
           actorLabel: "Billing scheduler",
-          metadata: { stage, amountBdt: invoice.amountBdt, status: invoice.status },
+          metadata: { stage, amountUsd: 46.29, status: invoice.status },
         });
       }
     }
