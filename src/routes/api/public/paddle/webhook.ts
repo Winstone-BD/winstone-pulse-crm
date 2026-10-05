@@ -13,7 +13,8 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!paddleLimiter(requestSourceKey(request))) return new Response("Rate limited", { status: 429 });
+        if (!paddleLimiter(requestSourceKey(request)))
+          return new Response("Rate limited", { status: 429 });
         const rawBody = await request.clone().text();
         const signature = request.headers.get("paddle-signature");
         if (!signature || !rawBody) return new Response("Missing signature", { status: 401 });

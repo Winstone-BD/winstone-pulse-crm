@@ -21,11 +21,14 @@ describe("ecosystem integration boundaries", () => {
     }
   });
 
-  it("queues booking events without inventing an OS endpoint or secret", () => {
-    const source = readFileSync("src/lib/os-bridge-outbound.server.ts", "utf8");
-    expect(source).toContain('from("sync_events")');
-    expect(source).toContain('status: "queued"');
-    expect(source).not.toMatch(/process\.env|fetch\(|CRM_BRIDGE_SECRET/);
+  it("queues booking events transactionally without inventing an OS endpoint", () => {
+    const source = readFileSync(
+      "drizzle/migrations/0079_booking_os_transactional_outbox.sql",
+      "utf8",
+    );
+    expect(source).toContain("crm_to_os_booking.");
+    expect(source).toContain("'queued'");
+    expect(source).not.toMatch(/https?:\/\/|CRM_BRIDGE_SECRET/);
   });
 
   it("rejects provider event-id reuse with a changed payload", () => {

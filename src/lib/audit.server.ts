@@ -76,7 +76,6 @@ export type AuditAction =
   | "booking_created"
   | "booking_status_changed";
 
-
 export async function logAudit(input: {
   action: AuditAction;
   entityType: string;

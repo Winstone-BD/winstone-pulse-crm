@@ -65,8 +65,6 @@ export const createBooking = createServerFn({ method: "POST" })
     }
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({ action: "booking_created", entityType: "booking", entityId: booking.id, actorProfileId: c.agentId, actorLabel: c.actor, metadata: { lead_id: data.leadId, status: booking.status } });
-    const { queueBookingForOs } = await import("@/lib/os-bridge-outbound.server");
-    await queueBookingForOs({ bookingId: booking.id, leadId: data.leadId, eventType: "booking.created", actorAgentId: c.agentId });
     return { ok: true };
   });
 
@@ -85,8 +83,6 @@ export const setBookingStatus = createServerFn({ method: "POST" })
     const booking = rows[0]!;
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({ action: "booking_status_changed", entityType: "booking", entityId: booking.id, actorProfileId: c.agentId, actorLabel: c.actor, metadata: { status: data.status } });
-    const { queueBookingForOs } = await import("@/lib/os-bridge-outbound.server");
-    await queueBookingForOs({ bookingId: booking.id, leadId: booking.lead_id, eventType: data.status === "cancelled" ? "booking.cancelled" : "booking.updated", actorAgentId: c.agentId });
     return { ok: true };
   });
 
