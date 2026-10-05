@@ -533,6 +533,13 @@
       "when": 1791216884186,
       "tag": "0075_update_maintenance_fee_default",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1791217100810,
+      "tag": "0076_harden_subscription_webhook_order",
+      "breakpoints": true
     }
   ]
 }
