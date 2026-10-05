@@ -16,7 +16,8 @@ describe("Hostinger email-events receiver", () => {
   it("rejects malformed and unsupported payloads", async () => {
     const auth = `Bearer ${secret}`;
     expect(await checkEmailEvent({ secret, authorization: auth, rawBody: "{bad" })).toMatchObject({ status: 400 });
-    expect(await checkEmailEvent({ secret, authorization: auth, rawBody: '{"event":"x"}' })).toMatchObject({ status: 422 });
+    expect(await checkEmailEvent({ secret, authorization: auth, rawBody: '{"event":"x"}' })).toMatchObject({ ok: "ignored" });
+    expect(await checkEmailEvent({ secret, authorization: auth, rawBody: "[1]" })).toMatchObject({ status: 422 });
   });
   it("accepts a valid event with a stable duplicate key", async () => {
     const a = await checkEmailEvent({ secret, authorization: `Bearer ${secret}`, rawBody: body });

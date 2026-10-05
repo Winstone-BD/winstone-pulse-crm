@@ -29,6 +29,7 @@ export const Route = createFileRoute("/api/public/email-events")({
           authorization: request.headers.get("authorization"),
           rawBody: await request.text(),
         });
+        if (check.ok === "ignored") return json(200, { ok: true, ignored: true });
         if (!check.ok) return json(check.status, { ok: false, error: check.error });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
