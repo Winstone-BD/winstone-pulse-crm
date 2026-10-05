@@ -15,6 +15,12 @@ export type L360Call = {
   requirement: string | null;
   closeReason?: string | null;
   closeNote?: string | null;
+  /** Manually typed description (call_reports.note). */
+  description?: string | null;
+  interest?: string | null;
+  followUpAt?: string | null;
+  submittedAt?: string | null;
+  status?: string | null;
 };
 export type L360StateChange = { id: string; field: string; oldValue: string | null; newValue: string | null; changedBy: string | null; source: string; at: string };
 export type L360FollowUp = {
@@ -59,6 +65,8 @@ export type TimelineItem = {
   title: string;
   lines: string[];
   agentId: string | null;
+  /** The report this item came from, when it is a call, so the UI can expand the full text. */
+  report?: L360Call;
 };
 
 const isDone = (s: string) => s === "done" || s === "completed";
@@ -140,13 +148,13 @@ export function buildLeadTimeline(input: {
         ? [
             `Duration: ${mmss(c.durationSeconds)}`,
             c.customerResponse ? `Customer response: ${c.customerResponse}` : "",
-            c.summary ? c.summary : "",
             c.nextAction ? `Next Action: ${c.nextAction}` : "",
             c.closeReason ? `যোগাযোগ বন্ধের কারণ: ${contactCloseReasonLabel(c.closeReason, c.closeNote)}` : "",
             `Agent: ${agentName(c.agentId)}`,
           ].filter(Boolean)
         : [c.category ? `ফলাফল: ${c.category}` : "No Answer", "System Action: Retry Queue-তে পাঠানো হয়েছে", `Agent: ${agentName(c.agentId)}`],
       agentId: c.agentId,
+      report: c,
     });
   });
   const fuById = new Map(input.followUps.map((f) => [f.id, f]));

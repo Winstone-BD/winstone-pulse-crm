@@ -173,7 +173,14 @@ export const exportLead360Search = createServerFn({ method: "POST" })
     for (let c: number | null = 0; c !== null; ) {
       const page = await runLead360Search({ ...data, cursor: c, pageSize: 200 });
       if (page.locked) return { locked: true as const };
-      rows.push(...page.rows);
+      rows.push(
+        ...page.rows.map((r) => ({
+          ...r,
+          lastReportAt:
+            r.latestReport?.call_ended_at ?? r.latestReport?.submitted_at ?? r.latestReport?.created_at ?? null,
+          lastReportNote: r.latestReport?.note ?? r.latestReport?.summary ?? null,
+        })),
+      );
       c = page.nextCursor;
     }
     const { buildLead360Export } = await import("@/lib/lead360-export");
@@ -199,7 +206,7 @@ export const getLead360 = createServerFn({ method: "POST" })
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
     const [rp, rc, fu, ch, ev, sc, pe] = await Promise.all([
       all((a, b) => db.from("call_reports")
-        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, no_follow_up_note, reason")
+        .select("id, agent_id, recording_id, call_started_at, call_ended_at, created_at, connected, duration_seconds, category, customer_response, next_action, summary, requirement, status, no_follow_up_reason, no_follow_up_note, reason, note, interest, follow_up_at, submitted_at")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("call_recordings")
         .select("id, agent_id, started_at, created_at, duration_seconds, call_status")
@@ -240,6 +247,11 @@ export const getLead360 = createServerFn({ method: "POST" })
         requirement: r.requirement,
         closeReason: r.no_follow_up_reason,
         closeNote: r.no_follow_up_note,
+        description: r.note,
+        interest: r.interest,
+        followUpAt: r.follow_up_at,
+        submittedAt: r.submitted_at,
+        status: r.status,
       })),
       ...(recs.data ?? [])
         .filter((r) => !reported.has(r.id))
