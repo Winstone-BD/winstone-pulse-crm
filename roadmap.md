@@ -63,3 +63,7 @@
 - [x] Date-range filters on charts dashboard (আজ/৭/১৪/৩০ দিন/সব সময়/কাস্টম from-to, Dhaka dates) — typecheck clean, build OK, phone-verified on agent desk; not yet published
 - [x] Review-only service-bill alert and secure human-review workflow — `/service-bill-alert` plus admin/RBAC + server-PIN `/service-bill-unlock`, immutable attempt audit, database-backed throttling, safe JSON preview, and Hostinger test-send guard. Migration 0077 applied; 327/327 tests, typecheck/build, and desktop/mobile public/signed-out checks passed. Not published; live Hostinger delivery still awaits valid relay configuration.
 - [ ] Hostinger-only service-bill delivery — configure/verify the HTTPS relay, `info@winstonebd.com`, approver recipient and test delivery, then publish; sign-in and reset emails remain on the managed email system
+
+## 2026-10-06 — OS booking relay integration audit (in progress)
+- [ ] Audit existing CRM ingestion endpoint (/api/public/os/events): HTTPS-only, server-side HMAC/Bearer auth, idempotency + harmless duplicates, Zod validation, safe errors, inbound sync audit, retry-safe delivery. Reuse existing endpoint; no new parallel endpoint, no invented URLs/secrets.
+- [ ] Report exact endpoint path, auth mechanism, required secret NAMES only, remaining configuration requirements (OS_BOOKING_ENDPOINT not yet saved — secure form couldn't open in background).
