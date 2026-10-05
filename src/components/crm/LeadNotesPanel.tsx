@@ -58,7 +58,7 @@ export function LeadNotesPanel({ leadId }: { leadId: string }) {
           placeholder="সম্পর্ক, পরিচয়, লোকেশন বা জরুরি তথ্য লিখুন…"
           className="min-h-20"
         />
-        <Button size="sm" disabled={!draft.trim() || addM.isPending} onClick={() => addM.mutate(draft.trim())}>
+        <Button size="sm" className="min-h-9" disabled={!draft.trim() || addM.isPending} onClick={() => addM.mutate(draft.trim())}>
           {addM.isPending ? <Loader2 className="size-4 animate-spin" /> : null} নোট যোগ করুন
         </Button>
       </div>

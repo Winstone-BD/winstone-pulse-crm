@@ -27,6 +27,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
         <Button
           size="sm"
           variant="secondary"
+          className="min-h-9"
           onClick={() => brief.mutate()}
           disabled={brief.isPending}
         >
