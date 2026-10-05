@@ -5,7 +5,9 @@ describe("ecosystem integration boundaries", () => {
   it("keeps the public MCP limited to verified public property facts", () => {
     const index = readFileSync("src/lib/mcp/index.ts", "utf8");
     expect(index).toContain("tools: [listPublicPropertyFacts]");
-    expect(index).not.toMatch(/createLead|listLeads|listAgents|getCallIntel|leadHistory|floorSummary/);
+    expect(index).not.toMatch(
+      /createLead|listLeads|listAgents|getCallIntel|leadHistory|floorSummary/,
+    );
     expect(readdirSync("src/lib/mcp/tools")).toEqual(["list-public-property-facts.ts"]);
   });
 
