@@ -15,7 +15,7 @@ const usd = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits
 type F = { fromDay: string; toDay: string; agentId: string | null };
 
 /**
- * Read-only. Market Pulse = saved lead areas + saved booking amounts (USD) per area.
+ * Read-only. Market Pulse = saved lead areas + booked values (USD) per area.
  * Pitch → Booking funnel = distinct leads at each step from real records only.
  */
 export function MarketPulseFunnel({ leads, reports, filters, onDrill }: { leads: Lead[]; reports: CcReport[]; filters: F; onDrill: (title: string, leadIds: string[]) => void }) {
@@ -73,7 +73,7 @@ export function MarketPulseFunnel({ leads, reports, filters, onDrill }: { leads:
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-xl border border-border bg-card p-4">
         <h3 className="text-sm font-semibold">মার্কেট পালস — এলাকা অনুযায়ী</h3>
-        <p className="mb-3 text-[11px] text-muted-foreground">শুধু সংরক্ষিত এলাকা ও বুকিংয়ের আসল USD পরিমাণ থেকে · কোনো অনুমান নয়</p>
+        <p className="mb-3 text-[11px] text-muted-foreground">সংরক্ষিত এলাকা ও বুকড ভ্যালু থেকে · এটি আদায় করা রেভেনিউ নয়</p>
         {loading ? (
           <p className="text-xs text-muted-foreground">লোড হচ্ছে…</p>
         ) : pulse.length === 0 ? (

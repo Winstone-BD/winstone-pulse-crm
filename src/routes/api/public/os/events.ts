@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
 
 /** 120 requests per minute per source address. */
 const osLimiter = createRateLimiter(120, 60_000);
@@ -31,11 +31,7 @@ export const Route = createFileRoute("/api/public/os/events")({
         const secret = process.env["CRM_BRIDGE_SECRET"];
         if (!secret) return json(503, { ok: false, error: "receiver_not_configured", retryable: true });
 
-        const ip =
-          request.headers.get("cf-connecting-ip") ??
-          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-          "unknown";
-        if (!osLimiter(ip)) return json(429, { ok: false, error: "rate_limited", retryable: true });
+        if (!osLimiter(requestSourceKey(request))) return json(429, { ok: false, error: "rate_limited", retryable: true });
 
         const rawBody = await request.text();
         if (rawBody.length > 64_000) return json(413, { ok: false, error: "payload_too_large" });
@@ -51,6 +47,8 @@ export const Route = createFileRoute("/api/public/os/events")({
             rawBody,
             timestamp: request.headers.get("x-winstone-timestamp"),
             signature,
+            // HMAC authenticates raw bytes before parsing. The envelope's
+            // real idempotency key is validated immediately after parsing.
             idempotencyKey: "signature-only-check",
           });
           if (failure) return json(401, { ok: false, error: failure });

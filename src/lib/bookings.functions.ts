@@ -46,7 +46,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const lead = await leadForCaller(supabaseAdmin, c, data.leadId); // ownership check for agents
     const agentId = c.scope === "agent" ? c.agentId : ((lead as { assigned_agent_id?: string | null }).assigned_agent_id ?? null);
-    const { error } = await supabaseAdmin.from("bookings").insert({
+    const { data: booking, error } = await supabaseAdmin.from("bookings").insert({
       lead_id: data.leadId,
       agent_id: agentId,
       booked_at: data.bookedAt ?? new Date().toISOString(),
@@ -55,7 +55,7 @@ export const createBooking = createServerFn({ method: "POST" })
       amount_usd: data.amountUsd ?? null,
       notes: data.notes || null,
       created_by: c.actor,
-    });
+    }).select("id, status").single();
     if (error) throw new Error("বুকিং সংরক্ষণ হয়নি");
     // Record the area on the canonical lead too, so area-level demand
     // trends become possible over time. Only fills an empty area — never
@@ -63,6 +63,10 @@ export const createBooking = createServerFn({ method: "POST" })
     if (data.area) {
       await supabaseAdmin.from("leads").update({ area: data.area }).eq("id", data.leadId).is("area", null);
     }
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({ action: "booking_created", entityType: "booking", entityId: booking.id, actorProfileId: c.agentId, actorLabel: c.actor, metadata: { lead_id: data.leadId, status: booking.status } });
+    const { queueBookingForOs } = await import("@/lib/os-bridge-outbound.server");
+    await queueBookingForOs({ bookingId: booking.id, leadId: data.leadId, eventType: "booking.created", actorAgentId: c.agentId });
     return { ok: true };
   });
 
@@ -76,8 +80,13 @@ export const setBookingStatus = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin.from("bookings").update({ status: data.status, updated_by: c.actor }).eq("id", data.id);
     if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
-    const { data: rows, error } = await q.select("id");
+    const { data: rows, error } = await q.select("id, lead_id");
     if (error || !rows?.length) throw new Error("অবস্থা বদলানো যায়নি");
+    const booking = rows[0]!;
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({ action: "booking_status_changed", entityType: "booking", entityId: booking.id, actorProfileId: c.agentId, actorLabel: c.actor, metadata: { status: data.status } });
+    const { queueBookingForOs } = await import("@/lib/os-bridge-outbound.server");
+    await queueBookingForOs({ bookingId: booking.id, leadId: booking.lead_id, eventType: data.status === "cancelled" ? "booking.cancelled" : "booking.updated", actorAgentId: c.agentId });
     return { ok: true };
   });
 

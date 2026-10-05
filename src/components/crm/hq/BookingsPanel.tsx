@@ -47,7 +47,7 @@ export function BookingsPanel({ leads, fromDay, toDay, agentId = null }: { leads
     return (!fromDay || d >= fromDay) && (!toDay || d <= toDay) && (!agentId || b.agent_id === agentId);
   });
   const active = rows.filter((r) => r.status !== "cancelled");
-  const revenue = active.reduce((s, r) => s + (r.amount_usd ?? 0), 0);
+  const bookedValue = active.reduce((s, r) => s + (r.amount_usd ?? 0), 0);
   const withAmount = active.filter((r) => r.amount_usd != null).length;
   const counts = Object.fromEntries(BOOKING_STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length]));
 
@@ -78,8 +78,8 @@ export function BookingsPanel({ leads, fromDay, toDay, agentId = null }: { leads
     <section className="card-elevated min-w-0 p-4 sm:p-5">
       <header className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold tracking-tight">বুকিং ও রেভেনিউ</h3>
-          <p className="text-[11px] text-muted-foreground">লিডের সাথে যুক্ত আসল বুকিং — পরিমাণ শুধু USD-তে, কোনো অনুমান নয়</p>
+          <h3 className="text-sm font-semibold tracking-tight">বুকিং ও বুকড ভ্যালু</h3>
+          <p className="text-[11px] text-muted-foreground">লিডের সাথে যুক্ত বুকিং — এটি বুকড ভ্যালু, আদায় করা রেভেনিউ নয়</p>
         </div>
         <button type="button" onClick={() => setOpen((o) => !o)} className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
           {open ? "বন্ধ" : "+ বুকিং"}
@@ -115,8 +115,8 @@ export function BookingsPanel({ leads, fromDay, toDay, agentId = null }: { leads
           <p className="text-lg font-bold tabular-nums">{active.length}</p>
         </div>
         <div className="rounded-xl border border-border p-2.5">
-          <p className="text-[10px] text-muted-foreground">রেভেনিউ (USD)</p>
-          <p className="text-lg font-bold tabular-nums">{withAmount ? usd(revenue) : "—"}</p>
+          <p className="text-[10px] text-muted-foreground">বুকড ভ্যালু (USD)</p>
+          <p className="text-lg font-bold tabular-nums">{withAmount ? usd(bookedValue) : "—"}</p>
           {withAmount > 0 && withAmount < active.length && <p className="text-[10px] text-muted-foreground">{withAmount}/{active.length} বুকিংয়ে পরিমাণ আছে</p>}
         </div>
         {BOOKING_STATUSES.map((s) => (

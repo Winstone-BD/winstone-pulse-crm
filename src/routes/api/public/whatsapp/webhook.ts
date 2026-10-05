@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+
+const whatsappLimiter = createRateLimiter(180, 60_000);
 
 /**
  * Official Meta WhatsApp Cloud API webhook.
@@ -20,6 +23,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
         return new Response("forbidden", { status: 403 });
       },
       POST: async ({ request }) => {
+        if (!whatsappLimiter(requestSourceKey(request))) return new Response("rate limited", { status: 429 });
         const rawBody = await request.text();
         const signature = request.headers.get("x-hub-signature-256");
         const { getWhatsAppProvider } = await import("@/lib/whatsapp-provider.server");

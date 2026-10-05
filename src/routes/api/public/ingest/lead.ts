@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+
+const leadIngestLimiter = createRateLimiter(120, 60_000);
 
 /** Webhook payload from website forms / Facebook lead ads. */
 const Payload = z.object({
@@ -32,6 +35,9 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!leadIngestLimiter(requestSourceKey(request))) {
+          return json({ error: "Rate limited", retryable: true }, 429);
+        }
         const { resolveApiCaller } = await import("@/lib/device-auth.server");
         const caller = await resolveApiCaller(request);
         if (caller.kind === "none") return json({ error: "Unauthorized" }, 401);
