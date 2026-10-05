@@ -41,4 +41,4 @@
 - Unified bridge lead_ingested on /api/public/os/events (Bearer or HMAC, 409 duplicate_ignored, 422 validation, unassigned canonical intake) — docs/crm1-receiver.md.
 
 - [ ] Phone OTP login (6-digit, 300s, BulkSMSBD via SMS hook, staff+role check after OTP) — blocked: BulkSMSBD API key/sender ID, approval
-- [ ] Charts dashboard (real leads, current colours) — blocked: placement answer
+- [x] Charts dashboard on HQ overview + agent desk (real snapshot data)

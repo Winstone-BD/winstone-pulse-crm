@@ -16,6 +16,7 @@ import {
 import { useMemo, useState } from "react";
 
 
+import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { SiteVisitReminder } from "@/components/crm/hq/SiteVisitsPanel";
 import { AppShell } from "@/components/crm/AppShell";
@@ -314,6 +315,7 @@ function DeskPage() {
           <SiteVisitReminder />
           <MyProfileCard />
           <MyPhoneSetup />
+          <SalesChartsDashboard scope="agent" />
 
           <DeskCommandCenter
             onJumpTab={(next) => {
