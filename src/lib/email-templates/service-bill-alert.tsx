@@ -23,6 +23,8 @@ interface Props {
   reviewUrl?: string;
 }
 
+// React Email registry modules intentionally export the component through `template` below.
+// eslint-disable-next-line react-refresh/only-export-components
 const Email = ({ title, detail, period, amount, stageLabel, reviewUrl }: Props) => (
   <Html lang="bn" dir="ltr">
     <Head />
