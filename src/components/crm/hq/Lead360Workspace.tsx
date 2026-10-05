@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
-import { buildLeadTimeline, lead360Csv, summarize, type TimelineItem } from "@/lib/lead360";
+import { buildLeadTimeline, lead360Csv, summarize, type L360Call, type TimelineItem } from "@/lib/lead360";
 import { exportLead360Search, getLead360, searchLead360 } from "@/lib/lead360.functions";
-import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS } from "@/lib/contact-close-reasons";
+import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS, contactCloseReasonLabel } from "@/lib/contact-close-reasons";
+import { ReportDetails, type ReportLike } from "@/components/crm/ReportDetails";
 import { useAdminToken } from "@/lib/local-session";
 import { SalesBriefCard } from "@/components/crm/sales-intel/SalesIntelPanels";
 
@@ -128,8 +129,8 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border">
           {res.data.rows.map((r) => (
-            <li key={r.id}>
-              <button type="button" onClick={() => onOpen(r.id)} className="flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-accent sm:flex-row sm:items-center sm:justify-between">
+            <li key={r.id} className="px-4 py-3">
+              <button type="button" onClick={() => onOpen(r.id)} className="flex w-full flex-col gap-1 text-left hover:bg-accent sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{r.name || "নাম নেই"}</p>
                   <p className="text-xs text-muted-foreground">{r.phone} · {r.source ?? "—"}{r.referenceBy ? ` · Ref: ${r.referenceBy}` : ""}</p>
@@ -141,12 +142,33 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
                   )}
                 </div>
               </button>
+              {r.latestReport ? <ReportDetails report={r.latestReport} /> : null}
             </li>
           ))}
         </ul>
       )}
     </div>
   );
+}
+
+/** Lead 360's own call shape -> the shared report card shape. */
+function toReportLike(c: L360Call, agentName: (id: string | null) => string): ReportLike {
+  return {
+    note: c.description ?? null,
+    summary: c.summary,
+    interest: c.interest ?? null,
+    requirement: c.requirement,
+    customer_response: c.customerResponse,
+    next_action: c.nextAction,
+    follow_up_at: c.followUpAt ?? null,
+    created_at: c.at,
+    category: c.category,
+    connected: c.connected,
+    status: c.status ?? null,
+    duration_seconds: c.durationSeconds,
+    reason: c.closeReason ? contactCloseReasonLabel(c.closeReason, c.closeNote) : null,
+    agentName: agentName(c.agentId),
+  };
 }
 
 const KIND_STYLE: Record<TimelineItem["kind"], string> = {
@@ -269,6 +291,7 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
                     <ul className="mt-1 space-y-0.5 text-sm">
                       {t.lines.map((l, i) => <li key={i}>{l}</li>)}
                     </ul>
+                    {t.report ? <ReportDetails report={toReportLike(t.report, view.name)} /> : null}
                   </li>
                 ))}
               </ol>
