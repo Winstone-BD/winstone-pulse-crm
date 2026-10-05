@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,9 +17,14 @@ import { MessageCircle, Phone, PhoneCall, Users, Flame, CheckCircle2 } from "luc
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { relativeTime } from "@/lib/crm-format";
 
-const DAYS = 14;
 const dhakaKey = (iso: string) =>
   new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
+const todayKey = () => dhakaKey(new Date().toISOString());
+const addDays = (key: string, n: number) => {
+  const d = new Date(key + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
 const STATUS_LABEL: Record<string, string> = {
   pending: "নতুন / বাকি",
   contacted: "কথা হয়েছে",
@@ -32,48 +37,95 @@ const tip = {
   contentStyle: { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)", fontSize: 12 },
 };
 
+type Preset = "today" | "7" | "14" | "30" | "all" | "custom";
+const PRESETS: { id: Preset; label: string }[] = [
+  { id: "today", label: "আজ" },
+  { id: "7", label: "৭ দিন" },
+  { id: "14", label: "১৪ দিন" },
+  { id: "30", label: "৩০ দিন" },
+  { id: "all", label: "সব সময়" },
+  { id: "custom", label: "কাস্টম" },
+];
+
 /**
  * Charts dashboard built only from the role-scoped CRM snapshot:
  * HQ sees the whole floor, an agent sees only their own leads and calls.
+ * A date-range filter (Dhaka dates) scopes every KPI, chart and list.
  */
 export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
   const { leads, calls, messages, isPending } = useSnapshot();
+  const [preset, setPreset] = useState<Preset>("14");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const range = useMemo((): { from: string | null; to: string | null } => {
+    const today = todayKey();
+    if (preset === "today") return { from: today, to: today };
+    if (preset === "7") return { from: addDays(today, -6), to: today };
+    if (preset === "14") return { from: addDays(today, -13), to: today };
+    if (preset === "30") return { from: addDays(today, -29), to: today };
+    if (preset === "custom") {
+      const f = from || null;
+      const t = to || null;
+      return f && t && f > t ? { from: t, to: f } : { from: f, to: t };
+    }
+    return { from: null, to: null };
+  }, [preset, from, to]);
 
   const data = useMemo(() => {
-    const days: string[] = [];
-    for (let i = DAYS - 1; i >= 0; i--) days.push(dhakaKey(new Date(Date.now() - i * 86400000).toISOString()));
-    const row = new Map(days.map((d) => [d, { day: d.slice(5), leads: 0, calls: 0, connected: 0, whatsapp: 0 }]));
-    for (const l of leads) row.get(dhakaKey(l.created_at)) && row.get(dhakaKey(l.created_at))!.leads++;
-    for (const c of calls) {
-      const r = row.get(dhakaKey(c.started_at ?? c.created_at));
-      if (!r) continue;
-      r.calls++;
-      if (c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS) r.connected++;
-    }
-    for (const m of messages) row.get(dhakaKey(m.created_at)) && row.get(dhakaKey(m.created_at))!.whatsapp++;
+    const inRange = (iso: string) => {
+      const k = dhakaKey(iso);
+      return (!range.from || k >= range.from) && (!range.to || k <= range.to);
+    };
+    const fLeads = leads.filter((l) => inRange(l.created_at));
+    const fCalls = calls.filter((c) => inRange(c.started_at ?? c.created_at));
+    const fMsgs = messages.filter((m) => inRange(m.created_at));
 
-    const status = Object.keys(STATUS_LABEL).map((k) => ({ name: STATUS_LABEL[k], value: leads.filter((l) => l.status === k).length }));
-    const connected = calls.filter((c) => c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS).length;
+    const row = new Map<string, { day: string; leads: number; calls: number; connected: number; whatsapp: number }>();
+    if (range.from && range.to) {
+      for (let d = range.from; d <= range.to; d = addDays(d, 1))
+        row.set(d, { day: d.slice(5), leads: 0, calls: 0, connected: 0, whatsapp: 0 });
+    }
+    const bump = (iso: string, fn: (r: { leads: number; calls: number; connected: number; whatsapp: number }) => void) => {
+      const k = dhakaKey(iso);
+      let r = row.get(k);
+      if (!r) {
+        r = { day: k.slice(5), leads: 0, calls: 0, connected: 0, whatsapp: 0 };
+        row.set(k, r);
+      }
+      fn(r);
+    };
+    for (const l of fLeads) bump(l.created_at, (r) => r.leads++);
+    for (const c of fCalls)
+      bump(c.started_at ?? c.created_at, (r) => {
+        r.calls++;
+        if (c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS) r.connected++;
+      });
+    for (const m of fMsgs) bump(m.created_at, (r) => r.whatsapp++);
+    const trend = [...row.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+
+    const status = Object.keys(STATUS_LABEL).map((k) => ({ name: STATUS_LABEL[k], value: fLeads.filter((l) => l.status === k).length }));
+    const connected = fCalls.filter((c) => c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS).length;
     const activity = [
-      ...calls.map((c) => ({ id: "c" + c.id, kind: "call" as const, at: c.started_at ?? c.created_at, text: c.phone_number, ok: c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS })),
-      ...messages.map((m) => ({ id: "m" + m.id, kind: "wa" as const, at: m.created_at, text: m.sender_type === "customer" ? "গ্রাহকের মেসেজ" : "এজেন্টের মেসেজ", ok: true })),
+      ...fCalls.map((c) => ({ id: "c" + c.id, kind: "call" as const, at: c.started_at ?? c.created_at, text: c.phone_number, ok: c.duration_seconds >= CONNECTED_THRESHOLD_SECONDS })),
+      ...fMsgs.map((m) => ({ id: "m" + m.id, kind: "wa" as const, at: m.created_at, text: m.sender_type === "customer" ? "গ্রাহকের মেসেজ" : "এজেন্টের মেসেজ", ok: true })),
     ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8);
     return {
-      trend: [...row.values()],
+      trend,
       status,
       kpi: {
-        leads: leads.length,
-        hot: leads.filter((l) => l.temperature === "hot").length,
-        calls: calls.length,
+        leads: fLeads.length,
+        hot: fLeads.filter((l) => l.temperature === "hot").length,
+        calls: fCalls.length,
         connected,
-        rate: calls.length ? Math.round((connected / calls.length) * 100) : 0,
-        whatsapp: messages.length,
-        closed: leads.filter((l) => l.status === "closed").length,
+        rate: fCalls.length ? Math.round((connected / fCalls.length) * 100) : 0,
+        whatsapp: fMsgs.length,
+        closed: fLeads.filter((l) => l.status === "closed").length,
       },
-      recent: [...leads].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6),
+      recent: [...fLeads].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6),
       activity,
     };
-  }, [leads, calls, messages]);
+  }, [leads, calls, messages, range]);
 
   const k = data.kpi;
   const tiles = [
@@ -84,15 +136,64 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
     { label: "হোয়াটসঅ্যাপ", value: k.whatsapp, icon: MessageCircle },
     { label: "বন্ধ লিড", value: k.closed, icon: CheckCircle2 },
   ];
+  const rangeLabel =
+    preset === "all" ? "সব সময়"
+    : preset === "custom" ? (range.from || range.to ? `${range.from ?? "শুরু"} → ${range.to ?? "আজ"}` : "তারিখ বেছে নিন")
+    : range.from === range.to ? range.from!
+    : `${range.from} → ${range.to}`;
 
   return (
     <section className="space-y-4" aria-label="চার্ট ড্যাশবোর্ড">
-      <div>
-        <h2 className="text-lg font-semibold">চার্ট ড্যাশবোর্ড</h2>
-        <p className="text-sm text-muted-foreground">
-          {scope === "hq" ? "পুরো টিমের আসল লিড ও কল" : "শুধু আপনার আসল লিড ও কল"} · শেষ {DAYS} দিন
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">চার্ট ড্যাশবোর্ড</h2>
+          <p className="text-sm text-muted-foreground">
+            {scope === "hq" ? "পুরো টিমের আসল লিড ও কল" : "শুধু আপনার আসল লিড ও কল"} · {rangeLabel}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPreset(p.id)}
+              className={`min-h-9 rounded-full border px-3 text-xs font-medium transition-colors ${
+                preset === p.id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {preset === "custom" && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1.5 text-muted-foreground">
+            থেকে
+            <input
+              type="date"
+              value={from}
+              max={to || todayKey()}
+              onChange={(e) => setFrom(e.target.value)}
+              className="min-h-9 rounded-md border border-border bg-card px-2 text-foreground"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-muted-foreground">
+            পর্যন্ত
+            <input
+              type="date"
+              value={to}
+              min={from || undefined}
+              max={todayKey()}
+              onChange={(e) => setTo(e.target.value)}
+              className="min-h-9 rounded-md border border-border bg-card px-2 text-foreground"
+            />
+          </label>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {tiles.map((t) => (
@@ -165,7 +266,7 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
         <div className="card-elevated min-w-0 p-3">
           <h3 className="mb-2 text-sm font-medium">সাম্প্রতিক লিড</h3>
           {data.recent.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">এখনো কোনো লিড নেই</p>
+            <p className="py-4 text-sm text-muted-foreground">এই সময়ে কোনো লিড নেই</p>
           ) : (
             <ul className="divide-y divide-border">
               {data.recent.map((l) => (
@@ -181,7 +282,7 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
         <div className="card-elevated min-w-0 p-3">
           <h3 className="mb-2 text-sm font-medium">কল ও হোয়াটসঅ্যাপ কার্যকলাপ</h3>
           {data.activity.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">এখনো কোনো কার্যকলাপ নেই</p>
+            <p className="py-4 text-sm text-muted-foreground">এই সময়ে কোনো কার্যকলাপ নেই</p>
           ) : (
             <ul className="divide-y divide-border">
               {data.activity.map((a) => (
