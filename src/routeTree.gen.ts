@@ -37,6 +37,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
+import { Route as ServiceBillUnlockRouteImport } from './routes/service-bill-unlock'
 import { Route as SiteVisitsRouteImport } from './routes/site-visits'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
@@ -230,6 +232,16 @@ const SalesIntelRoute = SalesIntelRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceBillAlertRoute = ServiceBillAlertRouteImport.update({
+  id: '/service-bill-alert',
+  path: '/service-bill-alert',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceBillUnlockRoute = ServiceBillUnlockRouteImport.update({
+  id: '/service-bill-unlock',
+  path: '/service-bill-unlock',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SiteVisitsRoute = SiteVisitsRouteImport.update({
@@ -548,6 +560,8 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/service-bill-alert': typeof ServiceBillAlertRoute
+  '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -632,6 +646,8 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/service-bill-alert': typeof ServiceBillAlertRoute
+  '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -717,6 +733,8 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/service-bill-alert': typeof ServiceBillAlertRoute
+  '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
@@ -803,6 +821,8 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/service-bill-alert'
+    | '/service-bill-unlock'
     | '/site-visits'
     | '/support'
     | '/support-admin'
@@ -887,6 +907,8 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/service-bill-alert'
+    | '/service-bill-unlock'
     | '/site-visits'
     | '/support'
     | '/support-admin'
@@ -971,6 +993,8 @@ export interface FileRouteTypes {
     | '/reports'
     | '/sales-intel'
     | '/security'
+    | '/service-bill-alert'
+    | '/service-bill-unlock'
     | '/site-visits'
     | '/support'
     | '/support-admin'
@@ -1056,6 +1080,8 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
+  ServiceBillAlertRoute: typeof ServiceBillAlertRoute
+  ServiceBillUnlockRoute: typeof ServiceBillUnlockRoute
   SiteVisitsRoute: typeof SiteVisitsRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
@@ -1308,6 +1334,20 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service-bill-alert': {
+      id: '/service-bill-alert'
+      path: '/service-bill-alert'
+      fullPath: '/service-bill-alert'
+      preLoaderRoute: typeof ServiceBillAlertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service-bill-unlock': {
+      id: '/service-bill-unlock'
+      path: '/service-bill-unlock'
+      fullPath: '/service-bill-unlock'
+      preLoaderRoute: typeof ServiceBillUnlockRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/site-visits': {
@@ -1720,6 +1760,8 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
+  ServiceBillAlertRoute: ServiceBillAlertRoute,
+  ServiceBillUnlockRoute: ServiceBillUnlockRoute,
   SiteVisitsRoute: SiteVisitsRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,

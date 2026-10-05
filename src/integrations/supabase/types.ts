@@ -2895,6 +2895,36 @@ export type Database = {
           },
         ]
       }
+      service_bill_review_attempts: {
+        Row: {
+          actor_email: string | null
+          actor_user_id: string | null
+          attempted_at: string
+          id: string
+          ip_hash: string
+          reason_code: string
+          success: boolean
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_user_id?: string | null
+          attempted_at?: string
+          id?: string
+          ip_hash: string
+          reason_code: string
+          success: boolean
+        }
+        Update: {
+          actor_email?: string | null
+          actor_user_id?: string | null
+          attempted_at?: string
+          id?: string
+          ip_hash?: string
+          reason_code?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       service_invoices: {
         Row: {
           amount_bdt: number
@@ -3863,6 +3893,9 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at: string | null
           payment_verified_by: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           unlock_expires_at: string | null
           unlock_started_at: string | null
           unlock_status: Database["public"]["Enums"]["maintenance_unlock_status"]
@@ -3883,6 +3916,9 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           unlock_expires_at?: string | null
           unlock_started_at?: string | null
           unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
@@ -3903,6 +3939,9 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           unlock_expires_at?: string | null
           unlock_started_at?: string | null
           unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
