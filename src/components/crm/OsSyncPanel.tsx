@@ -50,6 +50,19 @@ export function OsSyncPanel() {
         </Button>
       </div>
       {q.isLoading ? <Loader2 className="size-4 animate-spin" /> : null}
+      {q.data?.health ? (
+        <ul className="grid gap-1.5 text-xs sm:grid-cols-2">
+          {q.data.health.map((h) => (
+            <li key={h.name} className="flex items-start gap-2 rounded-lg border border-border p-2">
+              <span className={h.ok ? "text-success" : "text-destructive"}>{h.ok ? "✓" : "✕"}</span>
+              <span className="min-w-0">
+                <span className="font-medium">{h.name}</span>
+                {h.ok ? null : <span className="block break-words text-muted-foreground">দরকার: {h.setting}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {q.data?.missing.length ? (
         <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
           কনফিগারেশন দরকার: {q.data.missing.join(", ")} — বুকিং নিরাপদে সারিতে জমা থাকবে।
