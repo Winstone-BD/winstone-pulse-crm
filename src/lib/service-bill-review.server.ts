@@ -189,19 +189,11 @@ export async function currentServiceBill(
 /** Names of missing OR invalid settings (never values). */
 export function serviceBillEmailConfiguration() {
   const missing = missingServiceBillEmailSecrets({
-    NOTIFY_EMAIL_ENDPOINT: process.env["NOTIFY_EMAIL_ENDPOINT"],
     NOTIFY_EMAIL_API_KEY: process.env["NOTIFY_EMAIL_API_KEY"],
-    HOSTINGER_SENDER_EMAIL: process.env["HOSTINGER_SENDER_EMAIL"],
     SERVICE_BILL_APPROVER_EMAIL: process.env["SERVICE_BILL_APPROVER_EMAIL"],
   });
-  let httpsOk = false;
-  try {
-    httpsOk = new URL(process.env["NOTIFY_EMAIL_ENDPOINT"] ?? "").protocol === "https:";
-  } catch {
-    httpsOk = false;
-  }
-  if (!httpsOk && !missing.includes("NOTIFY_EMAIL_ENDPOINT")) missing.push("NOTIFY_EMAIL_ENDPOINT (must be https URL)");
-  const sender = process.env["HOSTINGER_SENDER_EMAIL"]?.trim().toLowerCase();
-  if (sender && sender !== "info@winstonebd.com") missing.push("HOSTINGER_SENDER_EMAIL (must be info@winstonebd.com)");
+  const approver = process.env["SERVICE_BILL_APPROVER_EMAIL"]?.trim();
+  if (approver && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(approver))
+    missing.push("SERVICE_BILL_APPROVER_EMAIL (must be an email address)");
   return missing;
 }
