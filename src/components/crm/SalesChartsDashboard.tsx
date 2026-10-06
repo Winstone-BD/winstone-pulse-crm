@@ -212,7 +212,7 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.trend} margin={{ left: -20, right: 8, top: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.6} vertical={false} />
+                <CartesianGrid stroke="var(--border)" strokeOpacity={0.5} vertical={false} />
                 <XAxis dataKey="day" {...axis} />
                 <YAxis allowDecimals={false} {...axis} />
                 <Tooltip {...tip} />
@@ -252,7 +252,7 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data.trend} margin={{ left: -20, right: 8, top: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.6} vertical={false} />
+              <CartesianGrid stroke="var(--border)" strokeOpacity={0.5} vertical={false} />
               <XAxis dataKey="day" {...axis} />
               <YAxis allowDecimals={false} {...axis} />
               <Tooltip {...tip} />

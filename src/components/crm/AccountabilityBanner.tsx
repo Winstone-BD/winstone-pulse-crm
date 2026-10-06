@@ -24,37 +24,42 @@ export function AccountabilityBanner() {
   if (approved && latest.unlock_for_date < (data?.today ?? "")) return null;
 
   const tone = approved
-    ? "border-success/40 bg-success/10"
+    ? "border-success/30 bg-success/5"
     : status === "hold"
-      ? "border-destructive/40 bg-destructive/5"
-      : "border-warning/50 bg-warning/10";
+      ? "border-destructive/30 bg-destructive/5"
+      : "border-warning/30 bg-warning/5";
+  const pendingLeads = Math.max(0, latest.pending_count - latest.overdue_followups);
 
   return (
-    <section className={`rounded-2xl border p-4 ${tone}`} role="status">
+    <section className={`rounded-xl border px-4 py-3 ${tone}`} role="status">
       <div className="flex items-start gap-3">
         {approved ? (
-          <ClipboardCheck className="mt-0.5 size-5 shrink-0 text-success" />
+          <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-success" />
         ) : (
-          <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" />
+          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning" />
         )}
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold text-foreground">
-            দৈনিক কাজের পর্যালোচনা — {STATUS_LABEL[status]}
+            {approved
+              ? "আপনার কাজের পর্যালোচনা অনুমোদিত হয়েছে"
+              : status === "hold"
+                ? "নতুন লিড এখন স্থগিত — HQ-র সাথে কথা বলুন"
+                : "আগের কাজ শেষ করুন, তারপর নতুন লিড আসবে"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {latest.business_date} তারিখে {latest.eligible_count}টি কাজের মধ্যে {latest.completed_count}টি সম্পন্ন,{" "}
-            {latest.pending_count}টি বাকি ({latest.pending_percent}%, সীমা 10%)। মেয়াদোত্তীর্ণ ফলো-আপ:{" "}
-            {latest.overdue_followups}, অসম্পূর্ণ রিপোর্ট: {latest.missed_reports}।
+            {latest.business_date}: মোট {latest.eligible_count}টি কাজের মধ্যে {latest.completed_count}টি শেষ হয়েছে।
+            বাকি — ফলো-আপ {latest.overdue_followups}টি, লিড {pendingLeads}টি
+            {latest.missed_reports > 0 ? `, রিপোর্ট ${latest.missed_reports}টি` : ""}।
           </p>
           {approved ? (
             <p className="text-xs font-medium text-success">
-              Executive HQ অনুমোদন দিয়েছে — {latest.unlock_for_date} থেকে আপনার কিউ খোলা।
-              {latest.approval_note ? ` নোট: ${latest.approval_note}` : ""}
+              {latest.unlock_for_date} থেকে নতুন লিড চালু।
+              {latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}
             </p>
           ) : (
-            <p className="text-xs font-medium text-foreground">
-              HQ Review Required — {latest.unlock_for_date} তারিখের লিড কিউ Executive HQ অনুমোদনের পর খুলবে।
-              এর মধ্যে বাকি ফলো-আপ ও অসম্পূর্ণ রিপোর্টগুলো শেষ করুন।
+            <p className="text-xs text-foreground">
+              কল, ফলো-আপ ও রিপোর্ট সব কাজ স্বাভাবিকভাবে করা যাবে। শুধু {latest.unlock_for_date}-এর নতুন লিড
+              HQ দেখার পর আসবে। ভালো পারফরম্যান্স (Top 3) আর বাকি কাজ — দুটো আলাদা হিসাব।
               {status === "hold" && latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}
             </p>
           )}
