@@ -3,9 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/integrations/supabase/types";
-import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+import { createFailureLimiter, requestSourceKey } from "@/lib/rate-limit";
 
-const loginLimiter = createRateLimiter(10, 5 * 60_000);
+// Only failed attempts count: a whole sales floor shares one office IP, so
+// successful sign-ins must never consume the budget.
+const loginLimiter = createFailureLimiter(10, 5 * 60_000);
 
 /**
  * Sign-in for the Winstone Connect Android app.
@@ -82,7 +84,8 @@ export const Route = createFileRoute("/api/public/agent/login")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!loginLimiter(requestSourceKey(request))) {
+        const sourceKey = requestSourceKey(request);
+        if (!loginLimiter.check(sourceKey)) {
           return json({ error: "অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে আবার চেষ্টা করুন" }, 429);
         }
         // Bootstrap endpoint: the only credential is the agent's own CRM
@@ -111,6 +114,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
 
         const loginEmail = await resolveLoginEmail(parsed.data.email);
         if (!loginEmail) {
+          loginLimiter.record(sourceKey);
           return json({ error: "এই ফোন নম্বর বা Employee ID পাওয়া যায়নি" }, 401);
         }
 
@@ -119,6 +123,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
           password: parsed.data.password,
         });
         if (error || !session.user) {
+          loginLimiter.record(sourceKey);
           return json({ error: "লগইন তথ্য মিলছে না" }, 401);
         }
 
