@@ -1,10 +1,11 @@
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { RefreshCw, RotateCw, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { recordLoad } from "@/lib/load-perf";
 
 const SLOW_AFTER_MS = 8000;
 
@@ -54,13 +55,26 @@ export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows
   const [slow, setSlow] = useState(false);
   const [round, setRound] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const accountBusy = useIsFetching({ queryKey: ["my-account"] });
+  const snapshotBusy = useIsFetching({ queryKey: ["crm-snapshot"] });
+  const startRef = useRef(0);
+  const stepsRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    const s = startRef.current;
+    if (!s) return;
+    if (!accountBusy && stepsRef.current["account"] == null) stepsRef.current["account"] = Math.round(performance.now() - s);
+    if (!snapshotBusy && stepsRef.current["snapshot"] == null) stepsRef.current["snapshot"] = Math.round(performance.now() - s);
+  }, [accountBusy, snapshotBusy]);
   useEffect(() => {
     const start = performance.now();
+    startRef.current = start;
+    stepsRef.current = {};
     const id = setInterval(() => setElapsed(performance.now() - start), 200);
     return () => {
       clearInterval(id);
       const ms = Math.round(performance.now() - start);
-      if (ms > 300) console.info(`[load-timing] dashboard loaded in ${ms}ms`);
+      const steps = ["account", "snapshot"].map((key) => ({ key, ms: stepsRef.current[key] ?? ms }));
+      if (ms > 50) recordLoad({ at: Date.now(), ms, steps });
     };
   }, [round]);
   useEffect(() => {
