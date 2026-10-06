@@ -80,7 +80,7 @@ function LeadHubWorkspace() {
   const agentOptions: { id: string; name: string }[] = [];
 
   return (
-    <div className="space-y-5">
+    <div className="hq-luxe space-y-5 rounded-3xl p-3 sm:p-5">
       <header>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Single lead intelligence and identity layer</p>
         <h1 className="text-2xl font-bold">LeadHub Nexus</h1>
