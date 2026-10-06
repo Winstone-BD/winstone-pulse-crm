@@ -84,7 +84,8 @@ export const Route = createFileRoute("/api/public/agent/login")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        if (!loginLimiter(requestSourceKey(request))) {
+        const sourceKey = requestSourceKey(request);
+        if (!loginLimiter.check(sourceKey)) {
           return json({ error: "অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে আবার চেষ্টা করুন" }, 429);
         }
         // Bootstrap endpoint: the only credential is the agent's own CRM
