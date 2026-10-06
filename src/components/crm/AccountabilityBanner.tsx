@@ -28,7 +28,7 @@ export function AccountabilityBanner() {
     : status === "hold"
       ? "border-destructive/30 bg-destructive/5"
       : "border-warning/30 bg-warning/5";
-  const backlog = Number((latest.evidence as { backlog_followups?: number } | null)?.backlog_followups ?? 0);
+  const backlog = Number((latest as { backlog?: unknown }).backlog ?? 0);
   const pendingLeads = Math.max(0, latest.pending_count - latest.overdue_followups);
 
   return (

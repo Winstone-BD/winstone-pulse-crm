@@ -19,7 +19,7 @@ export const myAccountability = createServerFn({ method: "POST" })
     const { data: rows } = await supabaseAdmin
       .from("agent_accountability_reviews")
       .select(
-        "id, business_date, unlock_for_date, assigned_count, eligible_count, completed_count, pending_count, pending_percent, overdue_followups, missed_reports, status, reviewed_at, approval_note",
+        "id, business_date, unlock_for_date, assigned_count, eligible_count, completed_count, pending_count, pending_percent, overdue_followups, missed_reports, status, reviewed_at, approval_note, backlog:evidence->backlog_followups",
       )
       .eq("agent_id", caller.profile.id)
       .order("business_date", { ascending: false })
