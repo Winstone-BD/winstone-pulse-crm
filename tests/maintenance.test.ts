@@ -14,15 +14,15 @@ const lockAt = defaultLockAt("2026-10");
 const base = { lockAt, paymentStatus: "unpaid" as const, unlockStatus: "none" as const, unlockExpiresAt: null };
 
 describe("maintenance lock rule", () => {
-  it("locks at 14th 00:00 Asia/Dhaka", () => {
-    expect(lockAt).toBe("2026-10-13T18:00:00.000Z");
-    expect(dhakaPeriod(new Date("2026-10-13T18:30:00Z"))).toBe("2026-10");
+  it("locks at 15th 00:00 Asia/Dhaka", () => {
+    expect(lockAt).toBe("2026-10-14T18:00:00.000Z");
+    expect(dhakaPeriod(new Date("2026-10-14T18:30:00Z"))).toBe("2026-10");
   });
-  it("13th stays active", () => {
-    expect(decide({ ...base, now: new Date("2026-10-13T10:00:00Z") })).toEqual({ locked: false, stage: "due_today" });
+  it("14th stays active (grace)", () => {
+    expect(decide({ ...base, now: new Date("2026-10-14T10:00:00Z") })).toEqual({ locked: false, stage: "due_today" });
   });
-  it("14th unpaid locks", () => {
-    expect(decide({ ...base, now: new Date("2026-10-13T18:00:01Z") }).locked).toBe(true);
+  it("15th unpaid locks", () => {
+    expect(decide({ ...base, now: new Date("2026-10-14T18:00:01Z") }).locked).toBe(true);
   });
   it("verified stays active", () => {
     expect(decide({ ...base, paymentStatus: "verified", now: new Date("2026-10-20T00:00:00Z") }).locked).toBe(false);
@@ -78,5 +78,12 @@ describe("maintenance wiring", () => {
     const sql = readFileSync("drizzle/migrations/0065_maintenance_lock_system.sql", "utf8");
     expect(sql).toMatch(/maintenance_audit_immutable BEFORE UPDATE OR DELETE/);
     expect(sql).toMatch(/maintenance_one_open_request[\s\S]*WHERE status = 'requested'/);
+  });
+});
+
+describe("notice window", () => {
+  it("8th is clear, 9th starts the notice", () => {
+    expect(decide({ ...base, now: new Date("2026-10-07T17:59:00Z") }).stage).toBe("clear");
+    expect(decide({ ...base, now: new Date("2026-10-08T18:00:00Z") }).stage).toBe("upcoming");
   });
 });

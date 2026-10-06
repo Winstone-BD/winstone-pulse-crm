@@ -5,7 +5,10 @@
 
 export const MAINTENANCE_FEE_USD = 46.29;
 export const MAINTENANCE_FEE_LABEL = "$46.29 USD";
-export const BILLING_DAY = 14;
+/** Unpaid lock: 15th 00:00 Dhaka (grace period runs through the 14th 23:59). */
+export const BILLING_DAY = 15;
+/** Payment notice starts on the 9th 00:00 Dhaka. */
+export const NOTICE_DAY = 9;
 export const MAX_UNLOCK_MINUTES = 24 * 60;
 export const UNLOCK_PRESET_HOURS = [1, 2, 4, 8, 12, 24] as const;
 export const ARCHITECT_EMAIL = "zhemon.sm123@gmail.com";
@@ -29,7 +32,7 @@ export function dhakaPeriod(now: Date = new Date()): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-/** 14th of the period at 00:00 Asia/Dhaka, as a UTC ISO string. */
+/** 15th of the period at 00:00 Asia/Dhaka, as a UTC ISO string. */
 export function defaultLockAt(period: string): string {
   const [y, m] = period.split("-").map(Number);
   return new Date(Date.UTC(y!, m! - 1, BILLING_DAY, 0, 0, 0) - DHAKA_MS).toISOString();
@@ -59,7 +62,7 @@ export function decide(input: RuleInput): { locked: boolean; stage: Stage } {
   const days = (lockAt - now) / 86_400_000;
   if (days <= 1) return { locked: false, stage: "due_today" };
   if (days <= 3) return { locked: false, stage: "soon" };
-  if (days <= 8) return { locked: false, stage: "upcoming" };
+  if (days <= BILLING_DAY - NOTICE_DAY) return { locked: false, stage: "upcoming" };
   return { locked: false, stage: "clear" };
 }
 

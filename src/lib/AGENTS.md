@@ -1,4 +1,4 @@
-- Maintenance lock ($46.29 USD, 14th 00:00 Dhaka) is decided only in maintenance.server.ts; resolveCaller + src/server.ts enforce it; IT PIN + /architect exempt; 2026-09-30 closure ended, default open — why: one server-authoritative state.
+- Maintenance lock ($46.29 USD, 15th 00:00 Dhaka lock, notice from 9th) is decided only in maintenance.server.ts; resolveCaller + src/server.ts enforce it; IT PIN + /architect exempt; 2026-09-30 closure ended, default open — why: one server-authoritative state.
 - Sales Intelligence writes only via sales-intel.server.ts (session actor, append-only pitch_events + correlation_key, validateGrounding) — why: grounded, auditable path.
 - Market News writes only via market-news.server.ts; auto items keep source_url + retrieved_excerpt and pass groundedAgainst; rows unpublished, never deleted — why: AI must never invent news.
 - site_visits is server-only (site-visits.functions.ts via siCaller); never deleted, lead link immutable, cancel via status — why: visit history must stay trustworthy.

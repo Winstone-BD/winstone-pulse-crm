@@ -53,19 +53,19 @@ beforeEach(() => {
   vi.useRealTimers();
 });
 
-describe("14th at 00:00 Asia/Dhaka", () => {
+describe("15th at 00:00 Asia/Dhaka", () => {
   it("one second before midnight Dhaka is open, midnight is locked", async () => {
-    // 2026-10-13 23:59:59 Dhaka = 17:59:59Z
-    expect((await m.maintenanceAccess(new Date("2026-10-13T17:59:59Z"))).locked).toBe(false);
+    // 2026-10-14 23:59:59 Dhaka = 17:59:59Z
+    expect((await m.maintenanceAccess(new Date("2026-10-14T17:59:59Z"))).locked).toBe(false);
     m.clearMaintenanceCache();
-    const s = await m.maintenanceAccess(new Date("2026-10-13T18:00:00Z"));
-    expect(s).toMatchObject({ period: OCT, locked: true, stage: "locked", lockAt: "2026-10-13T18:00:00.000Z" });
+    const s = await m.maintenanceAccess(new Date("2026-10-14T18:00:00Z"));
+    expect(s).toMatchObject({ period: OCT, locked: true, stage: "locked", lockAt: "2026-10-14T18:00:00.000Z" });
     expect(actions()).toContain("system_locked");
   });
   it("logs the lock once, not on every check", async () => {
-    await m.maintenanceAccess(new Date("2026-10-14T00:00:00Z"));
+    await m.maintenanceAccess(new Date("2026-10-15T00:00:00Z"));
     m.clearMaintenanceCache();
-    await m.maintenanceAccess(new Date("2026-10-14T01:00:00Z"));
+    await m.maintenanceAccess(new Date("2026-10-15T01:00:00Z"));
     expect(actions().filter((a) => a === "system_locked")).toHaveLength(1);
   });
 });
