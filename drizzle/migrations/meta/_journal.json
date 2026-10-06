@@ -575,6 +575,13 @@
       "when": 1791230569270,
       "tag": "0081_email_event_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1791317577854,
+      "tag": "0082_schedule_monthly_summary",
+      "breakpoints": true
     }
   ]
 }
