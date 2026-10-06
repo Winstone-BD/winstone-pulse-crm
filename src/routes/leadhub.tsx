@@ -18,13 +18,14 @@ import { checkLeadHubAccess } from "@/lib/leadhub.functions";
 import { LeadHubTokenScope, useLeadHubToken } from "@/lib/local-session";
 import { useMyAccount } from "@/lib/session";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
+import { useT } from "@/lib/i18n";
 
 const SECTIONS = [
-  { key: "overview", label: "Overview", icon: ShieldCheck },
-  { key: "import", label: "Import Leads", icon: FileUp },
-  { key: "database", label: "Canonical Lead Database", icon: Database },
-  { key: "assign", label: "Assign by Agent + Quantity", icon: Send },
-  { key: "history", label: "Distribution History / Quality", icon: History },
+  { key: "overview", label: { bn: "ওভারভিউ", en: "Overview" }, icon: ShieldCheck },
+  { key: "import", label: { bn: "লিড ইমপোর্ট", en: "Import Leads" }, icon: FileUp },
+  { key: "database", label: { bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" }, icon: Database },
+  { key: "assign", label: { bn: "এজেন্ট ও সংখ্যা অনুযায়ী বণ্টন", en: "Assign by Agent + Quantity" }, icon: Send },
+  { key: "history", label: { bn: "বণ্টনের ইতিহাস / মান যাচাই", en: "Distribution History / Quality" }, icon: History },
 ] as const;
 type Section = (typeof SECTIONS)[number]["key"];
 
@@ -50,6 +51,7 @@ function LeadHubGate() {
   const { isPending } = useMyAccount();
   const check = useServerFn(checkLeadHubAccess);
   const [pinOpen, setPinOpen] = useState(false);
+  const t = useT();
   const access = useQuery({
     queryKey: ["leadhub-access", token ?? "locked"],
     queryFn: () => check({ data: { adminToken: token } }),
@@ -64,11 +66,11 @@ function LeadHubGate() {
     <section className="card-elevated mx-auto max-w-md space-y-4 p-6 text-center">
       <span className="mx-auto grid size-12 place-items-center rounded-full bg-primary/15 text-primary"><KeyRound className="size-6" /></span>
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">HQ / IT secured workspace</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">{t({ bn: "HQ / IT সুরক্ষিত ওয়ার্কস্পেস", en: "HQ / IT secured workspace" })}</p>
         <h1 className="text-xl font-bold">LeadHub Nexus</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Executive HQ বা IT PIN দিয়ে Canonical Lead Database খুলুন। Agent account এখানে প্রবেশ করতে পারে না।</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t({ bn: "Executive HQ বা IT PIN দিয়ে মূল লিড ডেটাবেস খুলুন। এজেন্ট অ্যাকাউন্ট এখানে প্রবেশ করতে পারে না।", en: "Open the Canonical Lead Database with the Executive HQ or IT PIN. Agent accounts cannot enter." })}</p>
       </div>
-      <Button size="lg" className="w-full" onClick={() => setPinOpen(true)}><KeyRound className="size-4" /> PIN দিয়ে খুলুন</Button>
+      <Button size="lg" className="w-full" onClick={() => setPinOpen(true)}><KeyRound className="size-4" /> {t({ bn: "PIN দিয়ে খুলুন", en: "Unlock with PIN" })}</Button>
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} surface="leadhub" />
     </section>
   );
@@ -78,27 +80,28 @@ function LeadHubWorkspace() {
   const [section, setSection] = useState<Section>("overview");
   const [assignFor, setAssignFor] = useState<string>();
   const agentOptions: { id: string; name: string }[] = [];
+  const t = useT();
 
   return (
     <div className="hq-luxe space-y-5 rounded-3xl p-3 sm:p-5">
       <header>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Single lead intelligence and identity layer</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">{t({ bn: "একক লিড ইন্টেলিজেন্স ও পরিচয় স্তর", en: "Single lead intelligence and identity layer" })}</p>
         <h1 className="text-2xl font-bold">LeadHub Nexus</h1>
-        <p className="text-sm text-muted-foreground">Import → normalize → identity resolve → Canonical Lead Database → agent assignment</p>
+        <p className="text-sm text-muted-foreground">{t({ bn: "ইমপোর্ট → ঠিকঠাক করা → পরিচয় মেলানো → মূল লিড ডেটাবেস → এজেন্টে বণ্টন", en: "Import → normalize → identity resolve → Canonical Lead Database → agent assignment" })}</p>
       </header>
       <nav aria-label="LeadHub Nexus" className="flex gap-1 overflow-x-auto border-b border-border pb-2">
         {SECTIONS.map(({ key, label, icon: Icon }) => (
           <Button key={key} size="sm" variant={section === key ? "default" : "ghost"} onClick={() => setSection(key)}>
-            <Icon className="size-4" /> {label}
+            <Icon className="size-4" /> {t(label)}
           </Button>
         ))}
       </nav>
 
       {section === "overview" && <><DeckKpis /><AllocationTable onAssign={(id) => { setAssignFor(id); setSection("assign"); }} /></>}
       {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
-      {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title="Canonical Lead Database" />}
+      {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title={t({ bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" })} />}
       {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
-      {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title="Duplicate / parked records" /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title="Data quality review" /></div>}
+      {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title={t({ bn: "ডুপ্লিকেট / আলাদা রাখা রেকর্ড", en: "Duplicate / parked records" })} /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title={t({ bn: "ডেটার মান যাচাই", en: "Data quality review" })} /></div>}
     </div>
   );
 }

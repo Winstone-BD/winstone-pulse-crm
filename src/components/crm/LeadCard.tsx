@@ -55,6 +55,8 @@ export function LeadCard({
         </span>
       </div>
 
+      <RequirementPills lead={lead} />
+
       {headline && (
         <p className="flex gap-1.5 rounded-lg bg-surface-2 p-2.5 text-xs text-muted-foreground">
           <Sparkles className="mt-0.5 size-3 shrink-0 text-primary" />
@@ -98,5 +100,28 @@ export function LeadCard({
         </Button>
       </div>
     </article>
+  );
+}
+
+/** Pull bedroom / location / budget out of the saved requirement + area — never invented. */
+function RequirementPills({ lead }: { lead: Lead }) {
+  const req = (lead as Lead & { requirement?: string | null }).requirement ?? "";
+  const area = (lead as Lead & { area?: string | null }).area ?? null;
+  const bed = req.match(/(\d+)\s*(?:bed|br|bhk|বেড)/i)?.[1];
+  const budget = req.match(/(\d+(?:\.\d+)?\s*(?:-|–|to)?\s*\d*(?:\.\d+)?\s*(?:cr|crore|lakh|lac|কোটি|লাখ))/i)?.[1];
+  const pills = [
+    bed && { k: "bed", text: `🛏 ${bed} Bed`, cls: "border-primary/40 bg-primary/15 text-primary" },
+    area && { k: "loc", text: `📍 ${area}`, cls: "border-chart-4/40 bg-chart-4/15 text-chart-4" },
+    budget && { k: "bud", text: `💰 ${budget.trim()}`, cls: "border-live/40 bg-live/15 text-live" },
+  ].filter(Boolean) as { k: string; text: string; cls: string }[];
+  if (!pills.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {pills.map((p) => (
+        <span key={p.k} className={cn("max-w-full truncate rounded-full border px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur-sm", p.cls)}>
+          {p.text}
+        </span>
+      ))}
+    </div>
   );
 }
