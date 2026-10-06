@@ -371,15 +371,7 @@ export async function submitCallReport(input: {
   evaluationAnswers?: unknown;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  // Friday (Dhaka) is not a working day: a follow-up picked for Friday moves
-  // to Saturday at the same time, so it never turns OVERDUE on the holiday.
-  if (input.followUpAt) {
-    const { dhakaDateOf, isFriday } = await import("@/lib/business-day");
-    const at = new Date(input.followUpAt);
-    if (!Number.isNaN(at.getTime()) && isFriday(dhakaDateOf(at.getTime()))) {
-      input = { ...input, followUpAt: new Date(at.getTime() + 86_400_000).toISOString() };
-    }
-  }
+  // Friday only pauses lead distribution; a follow-up picked for Friday is kept as-is.
   const category = input.category as CallCategory;
 
   const { data: report, error: readError } = await supabaseAdmin
