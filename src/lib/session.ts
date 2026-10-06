@@ -56,8 +56,12 @@ export function useMyAccount() {
   const query = useQuery({
     queryKey: ["my-account", token ? "pin" : "session"],
     queryFn: () => getMyAccount({ data: { adminToken: token } }),
-    staleTime: 20_000,
-    refetchInterval: 60_000,
+    staleTime: 60_000,
+    gcTime: 30 * 60_000,
+    refetchInterval: 120_000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    retryDelay: 800,
   });
   return {
     account: query.data ?? null,
