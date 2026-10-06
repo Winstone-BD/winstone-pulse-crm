@@ -121,6 +121,8 @@ function DeskStats() {
   const donePct = stats.leads ? Math.round((stats.done / stats.leads) * 100) : 0;
 
   return (
+    <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <QuotaGauge done={stats.done} total={stats.leads} />
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Tile
         icon={<Users className="size-4" />}
@@ -155,6 +157,43 @@ function DeskStats() {
         deltaUnit="টি"
       />
     </dl>
+    </div>
+  );
+}
+
+/** Interactive daily-quota gauge: completed vs today's leads (tap toggles % / count). */
+function QuotaGauge({ done, total }: { done: number; total: number }) {
+  const [showCount, setShowCount] = useState(false);
+  const pct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  const r = 52;
+  const c = Math.PI * r;
+  const tone = pct >= 80 ? "var(--live)" : pct >= 40 ? "var(--primary)" : "var(--warning)";
+  return (
+    <button
+      type="button"
+      onClick={() => setShowCount((v) => !v)}
+      className="card-elevated glass-panel flex flex-col items-center p-4 text-center transition-transform active:scale-[0.98]"
+      aria-label={`দৈনিক কোটা ${pct}%`}
+    >
+      <p className="text-xs font-semibold text-muted-foreground">আজকের কোটা অগ্রগতি</p>
+      <svg viewBox="0 0 128 72" className="mt-2 w-44">
+        <path d="M12 66 A52 52 0 0 1 116 66" fill="none" stroke="var(--muted)" strokeWidth="10" strokeLinecap="round" />
+        <path
+          d="M12 66 A52 52 0 0 1 116 66"
+          fill="none"
+          stroke={tone}
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * pct) / 100}
+          style={{ transition: "stroke-dashoffset 1s ease-out", filter: `drop-shadow(0 0 6px ${tone})` }}
+        />
+      </svg>
+      <p className="tabular -mt-8 text-2xl font-bold">{showCount ? `${done}/${total}` : `${pct}%`}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        {done}টি সম্পন্ন · {Math.max(0, total - done)}টি বাকি · ছুঁয়ে দেখুন
+      </p>
+    </button>
   );
 }
 

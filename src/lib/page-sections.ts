@@ -30,14 +30,14 @@ export const PAGE_SECTIONS = {
     { key: "admin", label: "Knowledge Admin" },
   ],
   "/system": [
-    { key: "health", label: "সিস্টেম হেলথ" },
-    { key: "leads", label: "লিড ডেটাবেস" },
-    { key: "calls", label: "কল ও রেকর্ডিং" },
-    { key: "knowledge", label: "নলেজ (ওয়েবসাইট ও ড্রাইভ)" },
-    { key: "notices", label: "নোটিশ ও সাপোর্ট" },
-    { key: "access", label: "অ্যাকাউন্ট ও অ্যাক্সেস" },
-    { key: "releases", label: "অ্যাপ ও রিলিজ" },
-    { key: "billing", label: "বিল ও অডিট" },
+    { key: "health", label: "সিস্টেম হেলথ", en: "System Health" },
+    { key: "leads", label: "লিড ডেটাবেস", en: "Lead Database" },
+    { key: "calls", label: "কল ও রেকর্ডিং", en: "Calls & Recordings" },
+    { key: "knowledge", label: "নলেজ (ওয়েবসাইট ও ড্রাইভ)", en: "Knowledge (Website & Drive)" },
+    { key: "notices", label: "নোটিশ ও সাপোর্ট", en: "Notices & Support" },
+    { key: "access", label: "অ্যাকাউন্ট ও অ্যাক্সেস", en: "Accounts & Access" },
+    { key: "releases", label: "অ্যাপ ও রিলিজ", en: "Apps & Releases" },
+    { key: "billing", label: "বিল ও অডিট", en: "Billing & Audit" },
   ],
 } as const;
 

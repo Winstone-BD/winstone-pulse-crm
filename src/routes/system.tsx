@@ -3,6 +3,7 @@ import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 import { AccountApprovals } from "@/components/crm/AccountApprovals";
 import { ApkInstallCard } from "@/components/crm/ApkInstallCard";
@@ -116,15 +117,16 @@ function SystemBoard() {
   }, [leads]);
 
   const [sec, setSec] = useSection("/system");
+  const t = useT();
   const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">সিস্টেম ও বিল</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{t({ bn: "সিস্টেম ও বিল", en: "System & Billing" })}</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            মূল ইঞ্জিনের অবস্থা, ডেটা আসার ঠিকানা আর মাসিক টেলিফোন খরচ।
+            {t({ bn: "মূল ইঞ্জিনের অবস্থা, ডেটা আসার ঠিকানা আর মাসিক টেলিফোন খরচ।", en: "Core engine health, data intake endpoints and monthly phone cost." })}
           </p>
         </div>
         <CopilotDrawer />
@@ -140,7 +142,7 @@ function SystemBoard() {
             onClick={() => setSec(x.key)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${sec === x.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}
           >
-            {x.label}
+            {t({ bn: x.label, en: x.en })}
           </button>
         ))}
       </nav>

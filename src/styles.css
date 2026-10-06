@@ -419,7 +419,9 @@
   color-scheme: dark;
 }
 .hq-luxe .card-elevated {
-  background: var(--card);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--card) 82%, transparent), color-mix(in oklab, var(--card) 62%, transparent));
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
   border-color: var(--border);
   box-shadow: var(--shadow-card);
 }
@@ -480,3 +482,14 @@
 }
 .kpi-line { color: color-mix(in oklab, var(--kpi) 70%, transparent); }
 .section-shell { box-shadow: 0 1px 0 oklch(1 0 0 / 4%) inset, 0 18px 40px -32px oklch(0 0 0 / 70%); }
+
+/* Glass panel: frosted surface with a soft top highlight. */
+.glass-panel {
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 8%) inset, 0 18px 40px -28px oklch(0 0 0 / 70%);
+}
+.hq-luxe {
+  background-image: radial-gradient(60rem 30rem at 10% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%),
+    radial-gradient(40rem 24rem at 100% 0%, color-mix(in oklab, var(--chart-4) 10%, transparent), transparent 60%);
+}
