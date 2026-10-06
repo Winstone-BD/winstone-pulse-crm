@@ -114,6 +114,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
 
         const loginEmail = await resolveLoginEmail(parsed.data.email);
         if (!loginEmail) {
+          loginLimiter.record(sourceKey);
           return json({ error: "এই ফোন নম্বর বা Employee ID পাওয়া যায়নি" }, 401);
         }
 
@@ -122,6 +123,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
           password: parsed.data.password,
         });
         if (error || !session.user) {
+          loginLimiter.record(sourceKey);
           return json({ error: "লগইন তথ্য মিলছে না" }, 401);
         }
 
