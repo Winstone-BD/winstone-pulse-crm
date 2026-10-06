@@ -620,6 +620,21 @@ export async function submitCallReport(input: {
     followUpId = event?.id ?? null;
   }
 
+  // No new follow-up date → the contact was closed on this report. Settle every
+  // open follow-up for this lead as done (never deleted): the update trigger
+  // writes a permanent 'completed' row to follow_up_changes, so HQ keeps when,
+  // why and by which report the follow-up stopped, and it stops showing overdue.
+  if (!input.followUpAt) {
+    const closeNote = input.noFollowUpReason
+      ? `কল রিপোর্ট সম্পন্ন (${input.noFollowUpReason})${noFollowUpNote ? ` — ${noFollowUpNote}` : ""}`
+      : "কল সম্পন্ন — ফলো-আপ সমাপ্ত";
+    await supabaseAdmin
+      .from("follow_up_events")
+      .update({ status: "done", completed_at: nowIso, report_id: report.id, note: closeNote })
+      .eq("lead_id", report.lead_id)
+      .neq("status", "done");
+  }
+
   const { logLeadEvent } = await import("@/lib/lead-events.server");
   await logLeadEvent({
     leadId: report.lead_id,
