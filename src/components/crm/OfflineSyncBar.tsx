@@ -28,13 +28,19 @@ export function OfflineSyncBar() {
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
     update();
+    const back = () => {
+      toast.success("ইন্টারনেট ফিরে এসেছে — ডেটা আবার লোড হচ্ছে");
+      void queryClient.refetchQueries({ type: "active" });
+    };
+    window.addEventListener("online", back);
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     return () => {
+      window.removeEventListener("online", back);
       window.removeEventListener("online", update);
       window.removeEventListener("offline", update);
     };
-  }, []);
+  }, [queryClient]);
 
   const flush = useCallback(async () => {
     if (!navigator.onLine) return;
@@ -68,7 +74,7 @@ export function OfflineSyncBar() {
           ? items.length
             ? `${items.length}টি কাজ এখনো এই ফোনেই আছে — সার্ভারে পাঠানো হচ্ছে`
             : "সব সিঙ্ক হয়েছে"
-          : "ইন্টারনেট নেই — কাজ এই ফোনে সেভ হচ্ছে, নেট ফিরলে নিজে থেকেই সার্ভারে যাবে"}
+          : "ইন্টারনেট সংযোগ বিচ্ছিন্ন — ড্যাশবোর্ডের ডেটা এখন আপডেট হবে না। কাজ এই ফোনে সেভ হচ্ছে; নেট ফিরলে নিজে থেকেই আবার লোড ও সিঙ্ক হবে"}
       </p>
       {items.slice(0, 5).map((item) => (
         <p key={item.id} className="text-muted-foreground">
