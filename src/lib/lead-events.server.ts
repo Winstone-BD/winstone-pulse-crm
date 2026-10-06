@@ -19,7 +19,9 @@ export type LeadEventKind =
   | "self_claimed"
   | "lead_classified"
   | "workday_moved"
-  | "evaluation_recorded";
+  | "evaluation_recorded"
+  | "neglect_warning"
+  | "neglect_recalled";
 
 export async function logLeadEvent(input: {
   leadId: string | null;

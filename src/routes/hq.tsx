@@ -36,6 +36,7 @@ import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
 import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
 import { FactsBoard } from "@/components/crm/sales-intel/SalesIntelPanels";
 import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReviewPanel";
+import { NeglectDisputePanel } from "@/components/crm/LeadNeglectPanel";
 import { ReportsBoard } from "@/routes/reports";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
@@ -286,6 +287,7 @@ function ControlBoard() {
               <div className="space-y-8">
                 <SystemManualCard />
                 <AccountabilityReviewPanel surface="hq" />
+                <NeglectDisputePanel />
                 <FloorLockAdminPanel />
                 <ShiftSummaryPanel scope="hq" />
                 <CommandAgentPanel surface="hq" />

@@ -65,6 +65,13 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
           .eq("id", parsed.data.lead_id)
           .maybeSingle();
         if (!lead) return json({ error: "Unknown lead" }, 404);
+        {
+          const { wasRecalledFrom } = await import("@/lib/lead-neglect.server");
+          if (await wasRecalledFrom(lead.id, caller.profile.id)) {
+            const { NEGLECT_CALL_LOCK } = await import("@/lib/lead-neglect");
+            return json({ blocked: true, locked: "neglect_recall", reason: NEGLECT_CALL_LOCK }, 403);
+          }
+        }
         if (leadNotAssignedTo(lead, caller.profile.id)) {
           return json({ error: LEAD_NOT_YOURS }, 403);
         }
