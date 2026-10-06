@@ -16,6 +16,7 @@ import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { MaintenancePanel } from "@/components/crm/MaintenancePanel";
 import { OsSyncPanel } from "@/components/crm/OsSyncPanel";
+import { LoginFailuresPanel, MonthlySummaryPanel } from "@/components/crm/SecurityMonitorPanel";
 import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
@@ -210,6 +211,8 @@ function SystemBoard() {
         <div className="space-y-6">
       <MaintenancePanel />
       <OsSyncPanel />
+      <LoginFailuresPanel />
+      <MonthlySummaryPanel />
 
       <AuditTrail />
 

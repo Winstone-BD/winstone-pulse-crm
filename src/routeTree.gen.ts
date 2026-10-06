@@ -77,6 +77,7 @@ import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/do
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
 import { Route as ApiPublicHooksMarketNewsRouteImport } from './routes/api/public/hooks/market-news'
+import { Route as ApiPublicHooksMonthlySummaryRouteImport } from './routes/api/public/hooks/monthly-summary'
 import { Route as ApiPublicHooksOsOutboundRouteImport } from './routes/api/public/hooks/os-outbound'
 import { Route as ApiPublicHooksRemindersRouteImport } from './routes/api/public/hooks/reminders'
 import { Route as ApiPublicHooksServiceBillingRouteImport } from './routes/api/public/hooks/service-billing'
@@ -446,6 +447,12 @@ const ApiPublicHooksMarketNewsRoute =
     path: '/api/public/hooks/market-news',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksMonthlySummaryRoute =
+  ApiPublicHooksMonthlySummaryRouteImport.update({
+    id: '/api/public/hooks/monthly-summary',
+    path: '/api/public/hooks/monthly-summary',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksOsOutboundRoute =
   ApiPublicHooksOsOutboundRouteImport.update({
     id: '/api/public/hooks/os-outbound',
@@ -620,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
+  '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
@@ -709,6 +717,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
+  '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
@@ -799,6 +808,7 @@ export interface FileRoutesById {
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
+  '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
   '/api/public/hooks/reminders': typeof ApiPublicHooksRemindersRoute
   '/api/public/hooks/service-billing': typeof ApiPublicHooksServiceBillingRoute
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/market-news'
+    | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
@@ -979,6 +990,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/market-news'
+    | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
@@ -1068,6 +1080,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/market-news'
+    | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
     | '/api/public/hooks/reminders'
     | '/api/public/hooks/service-billing'
@@ -1158,6 +1171,7 @@ export interface RootRouteChildren {
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
   ApiPublicHooksMarketNewsRoute: typeof ApiPublicHooksMarketNewsRoute
+  ApiPublicHooksMonthlySummaryRoute: typeof ApiPublicHooksMonthlySummaryRoute
   ApiPublicHooksOsOutboundRoute: typeof ApiPublicHooksOsOutboundRoute
   ApiPublicHooksRemindersRoute: typeof ApiPublicHooksRemindersRoute
   ApiPublicHooksServiceBillingRoute: typeof ApiPublicHooksServiceBillingRoute
@@ -1657,6 +1671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksMarketNewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/monthly-summary': {
+      id: '/api/public/hooks/monthly-summary'
+      path: '/api/public/hooks/monthly-summary'
+      fullPath: '/api/public/hooks/monthly-summary'
+      preLoaderRoute: typeof ApiPublicHooksMonthlySummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/os-outbound': {
       id: '/api/public/hooks/os-outbound'
       path: '/api/public/hooks/os-outbound'
@@ -1863,6 +1884,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
   ApiPublicHooksMarketNewsRoute: ApiPublicHooksMarketNewsRoute,
+  ApiPublicHooksMonthlySummaryRoute: ApiPublicHooksMonthlySummaryRoute,
   ApiPublicHooksOsOutboundRoute: ApiPublicHooksOsOutboundRoute,
   ApiPublicHooksRemindersRoute: ApiPublicHooksRemindersRoute,
   ApiPublicHooksServiceBillingRoute: ApiPublicHooksServiceBillingRoute,
