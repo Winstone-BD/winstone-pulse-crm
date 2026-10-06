@@ -427,3 +427,19 @@
   border-color: oklch(1 0 0 / 14%);
   box-shadow: var(--shadow-card-hover);
 }
+
+/* Highlighted notice: luminous hairline + accent bar so alerts read at a glance. */
+.notice-highlight {
+  position: relative;
+  overflow: hidden;
+  border-width: 1px;
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%) inset, 0 10px 30px -18px currentColor;
+}
+.notice-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: currentColor;
+  opacity: 0.85;
+}

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useCrmRealtime } from "@/hooks/use-crm-realtime";
 import { setAdminToken, useAdminToken } from "@/lib/local-session";
 import { useMyAccount, useSignOut } from "@/lib/session";
+import { NAV_LABELS, setLang, useLang, useT } from "@/lib/i18n";
 
 // Latest build is streamed from the backend; the bundled asset stays as a fallback.
 const APK_URL = "/api/public/download/apk";
@@ -61,10 +62,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { scope } = useMyAccount();
   const signOut = useSignOut();
   const [pinOpen, setPinOpen] = useState(false);
-  const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope));
+  const lang = useLang();
+  const t = useT();
+  const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope)).map((item) => ({
+    ...item,
+    label: NAV_LABELS[item.to]?.[lang] ?? item.label,
+  }));
 
   return (
-    <div className="min-h-screen grid-noise">
+    <div className="hq-luxe min-h-screen">
       <header className="glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-6">
           <div className="lg:hidden">
@@ -88,6 +94,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
           <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 overflow-x-auto [scrollbar-width:none] sm:gap-2 [&>*]:shrink-0">
+            <div role="group" aria-label="Language" className="inline-flex h-8 items-center rounded-full border border-border bg-card p-0.5 text-[11px] font-semibold">
+              {(["bn", "en"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  aria-pressed={lang === l}
+                  onClick={() => setLang(l)}
+                  className={`h-7 rounded-full px-2.5 transition-colors ${lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {l === "bn" ? "বাংলা" : "EN"}
+                </button>
+              ))}
+            </div>
+
             {adminToken && <AgentSelector />}
 
             {scope !== "none" && <ReminderBell />}
@@ -116,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               {adminToken ? <LockOpen className="size-3.5" /> : <Lock className="size-3.5" />}
               <span className="hidden lg:inline">
-                {adminToken ? "Authority unlocked" : "Master PIN"}
+                {adminToken ? t({ bn: "অথরিটি খোলা", en: "Authority unlocked" }) : t({ bn: "মাস্টার পিন", en: "Master PIN" })}
               </span>
             </button>
 
@@ -130,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-2 text-xs font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground hover:shadow-sm sm:px-3"
               >
                 <LogOut className="size-3.5 sm:hidden" />
-                <span className="hidden sm:inline">Sign out</span>
+                <span className="hidden sm:inline">{t({ bn: "সাইন আউট", en: "Sign out" })}</span>
               </button>
             )}
 
@@ -158,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75" />
                 <span className="relative inline-flex size-2 rounded-full bg-live" />
               </span>
-              <span className="text-[11px] font-semibold text-live">Live</span>
+              <span className="text-[11px] font-semibold text-live">{t({ bn: "লাইভ", en: "Live" })}</span>
             </div>
           </div>
         </div>
