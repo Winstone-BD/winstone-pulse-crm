@@ -42,7 +42,7 @@ export function SectionGroup({
     </div>
   );
   return (
-    <section className={`rounded-2xl border border-border ${bg} shadow-sm`}>
+    <section className={`section-shell rounded-2xl border border-border ${bg}`}>
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-3">
         {collapsible ? (
           <button
@@ -71,6 +71,7 @@ export type Metric = {
   hint?: string | undefined;
 };
 
+const KPI_CYCLE = ["kpi-info", "kpi-ok", "kpi-warn", "kpi-neutral"] as const;
 const TONE = { ok: "text-success", warn: "text-warning", bad: "text-destructive" } as const;
 
 /** A labelled cluster of related KPIs. Unknown values show "…" / "—", never a fake 0. */
@@ -78,11 +79,11 @@ export function MetricGroup({
   label, metrics, loading, error,
 }: { label: string; metrics: Metric[]; loading?: boolean; error?: boolean }) {
   return (
-    <div className="min-w-0 rounded-xl border border-border bg-background p-3">
+    <div className="min-w-0 rounded-2xl border border-border bg-card p-3">
       <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-      <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
-        {metrics.map((m) => (
-          <div key={m.label} className="min-w-0">
+      <dl className="grid grid-cols-2 gap-2">
+        {metrics.map((m, i) => (
+          <div key={m.label} className={`kpi-tile min-w-0 ${m.tone ? `kpi-${m.tone}` : KPI_CYCLE[i % KPI_CYCLE.length]}`}>
             <dt className="truncate text-[11px] text-muted-foreground">{m.label}</dt>
             <dd className={`tabular text-xl font-bold leading-tight ${m.tone ? TONE[m.tone] : "text-foreground"}`}>
               {error ? "—" : loading || m.value === undefined ? "…" : m.value === null ? "—" : typeof m.value === "number" ? m.value.toLocaleString("en-US") : m.value}

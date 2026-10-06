@@ -433,7 +433,13 @@
   position: relative;
   overflow: hidden;
   border-width: 1px;
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%) inset, 0 10px 30px -18px currentColor;
+  background-image: linear-gradient(90deg, color-mix(in oklab, currentColor 14%, transparent), transparent 70%);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%) inset, 0 12px 32px -20px currentColor;
+  animation: notice-in 0.5s ease-out both;
+}
+@keyframes notice-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
 }
 .notice-highlight::before {
   content: "";
@@ -443,3 +449,34 @@
   background: currentColor;
   opacity: 0.85;
 }
+
+/* KPI tiles: one accent colour per tile (blue / green / amber / coral) like a bento dashboard. */
+.kpi-info { --kpi: var(--chart-2); }
+.kpi-ok { --kpi: var(--success); }
+.kpi-warn { --kpi: var(--warning); }
+.kpi-bad { --kpi: var(--destructive); }
+.kpi-neutral { --kpi: var(--muted-foreground); }
+.kpi-tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  padding: 0.6rem 0.7rem 0.55rem;
+  background: color-mix(in oklab, var(--kpi) 10%, transparent);
+  border: 1px solid color-mix(in oklab, var(--kpi) 22%, transparent);
+}
+.kpi-tile::before, .kpi-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--kpi);
+}
+.kpi-accent { border-color: color-mix(in oklab, var(--kpi) 25%, var(--border)); }
+.kpi-glow { background: color-mix(in oklab, var(--kpi) 22%, transparent); }
+.kpi-icon {
+  color: var(--kpi);
+  background: color-mix(in oklab, var(--kpi) 15%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--kpi) 30%, transparent);
+}
+.kpi-line { color: color-mix(in oklab, var(--kpi) 70%, transparent); }
+.section-shell { box-shadow: 0 1px 0 oklch(1 0 0 / 4%) inset, 0 18px 40px -32px oklch(0 0 0 / 70%); }
