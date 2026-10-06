@@ -74,13 +74,13 @@ export const Route = createFileRoute("/desk")({
 
 /** Desk sections, mapped to the existing tab values — no new routes. */
 const SECTION_RAIL = [
-  { tab: "leads", label: "লিড ড্যাশবোর্ড" },
-  { tab: "queue", label: "কার্ড ভিউ" },
-  { tab: "calls", label: "কল রেকর্ড" },
-  { tab: "whatsapp", label: "হোয়াটসঅ্যাপ" },
-  { tab: "calendar", label: "ফলো-আপ" },
-  { tab: "reports", label: "আমার রিপোর্ট" },
-  { tab: "support", label: "টিম সাপোর্ট" },
+  { tab: "leads", label: "লিড ড্যাশবোর্ড", hint: "আমার সব লিডের পূর্ণ তালিকা — নাম, ফোন, চাহিদা (যেমন 3 Bed), স্ট্যাটাস।" },
+  { tab: "queue", label: "কার্ড ভিউ", hint: "আজ কী কাজ বাকি — প্রতিটি লিড কার্ডে, সেখান থেকেই কল/হোয়াটসঅ্যাপ।" },
+  { tab: "calls", label: "কল রেকর্ড", hint: "ফোনের সিম থেকে আসা আসল কল — কত সময় কথা হলো, রিসিভ না মিসড।" },
+  { tab: "whatsapp", label: "হোয়াটসঅ্যাপ", hint: "কাস্টমারের সাথে হোয়াটসঅ্যাপ কথোপকথন।" },
+  { tab: "calendar", label: "ফলো-আপ", hint: "কোন কাস্টমারকে কবে আবার ফোন করতে হবে।" },
+  { tab: "reports", label: "আমার রিপোর্ট", hint: "কলের পর জমা দেওয়া রিপোর্টের ইতিহাস — যা কাজ শেষ করেছি।" },
+  { tab: "support", label: "টিম সাপোর্ট", hint: "সমস্যা হলে টিম লিডার/IT-কে জানানোর জায়গা।" },
 ] as const;
 
 /** Live counters for the agent's own day, each compared with yesterday. */
@@ -388,11 +388,15 @@ function DeskPage() {
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  {s.label}
+                  <span className="block">{s.label}</span>
+                  <span className="block text-xs font-normal opacity-80">{s.hint}</span>
                 </button>
               ))}
             </div>
           </details>
+          <p className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+            {SECTION_RAIL.find((s) => s.tab === tab)?.hint}
+          </p>
           
           <TabsContent value="support">
             <TeamSupportPanel />

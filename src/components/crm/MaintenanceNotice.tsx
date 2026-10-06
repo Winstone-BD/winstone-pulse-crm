@@ -189,12 +189,12 @@ export function MaintenanceGate() {
   if (!needsNotice(data)) return null;
   const text =
     data.stage === "locked"
-      ? "🔴 SYSTEM MAINTENANCE LOCKED — IT access only"
+      ? "🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি বাকি — সিস্টেম লক। দয়া করে কোম্পানি কর্তৃপক্ষকে জানান।"
       : data.stage === "due_today"
-        ? `🔴 Maintenance payment is due today — ${MAINTENANCE_FEE_LABEL} — CONTACT IT CONSOLE`
+        ? `🔴 আজ কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) পরিশোধের শেষ দিন — কর্তৃপক্ষকে মনে করিয়ে দিন।`
         : data.stage === "soon"
-          ? `🔴 SYSTEM MAINTENANCE PAYMENT DUE SOON — ${MAINTENANCE_FEE_LABEL} — CONTACT IT CONSOLE`
-          : `সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) ১৪ তারিখের মধ্যে IT Console জমা দেবে — আপনার কাজ স্বাভাবিক চলবে।`;
+          ? `🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) শিগগির পরিশোধযোগ্য — ১৫ তারিখ ০০:০০-এ লক। কর্তৃপক্ষকে জানান।`
+          : `কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) ১৪ তারিখের মধ্যে পরিশোধযোগ্য। ফি কোম্পানি দেয় — কর্তৃপক্ষ না জানলে তাঁদের জানান।`;
   const strong = data.stage !== "upcoming";
   return (
     <div
