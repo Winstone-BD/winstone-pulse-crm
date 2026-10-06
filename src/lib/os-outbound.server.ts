@@ -90,6 +90,16 @@ async function sendOne(row: Row, endpoint: string, secret: string) {
       actorLabel: "CRM → OS dispatcher",
       metadata: { sync_event_id: row.id, attempts, http_status: status },
     });
+    if (next === "dead") {
+      const { openBookingFailureIssue } = await import("@/lib/github-issues.server");
+      await openBookingFailureIssue({
+        syncEventId: row.id,
+        bookingId: row.entity_id,
+        eventType: row.event_type,
+        httpStatus: status,
+        attempts,
+      });
+    }
   }
   return next;
 }
