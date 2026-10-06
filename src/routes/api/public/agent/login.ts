@@ -3,9 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/integrations/supabase/types";
-import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+import { createFailureLimiter, requestSourceKey } from "@/lib/rate-limit";
 
-const loginLimiter = createRateLimiter(10, 5 * 60_000);
+// Only failed attempts count: a whole sales floor shares one office IP, so
+// successful sign-ins must never consume the budget.
+const loginLimiter = createFailureLimiter(10, 5 * 60_000);
 
 /**
  * Sign-in for the Winstone Connect Android app.
