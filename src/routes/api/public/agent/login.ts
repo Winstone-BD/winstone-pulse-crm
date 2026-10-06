@@ -58,6 +58,28 @@ async function resolveLoginEmail(raw: string): Promise<string | null> {
   return byPhone[0]?.email ?? null;
 }
 
+/** Audit a failed / locked-out sign-in. Never stores the password. */
+async function recordLoginFailure(
+  sourceKey: string,
+  request: Request,
+  identifier: string | null,
+  reason: "unknown_account" | "wrong_password" | "locked",
+) {
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({
+    action: reason === "locked" ? "agent_login_locked" : "agent_login_failed",
+    entityType: "agent_login",
+    actorLabel: "Android sign-in",
+    metadata: {
+      reason,
+      identifier: identifier ? identifier.slice(0, 80) : null,
+      source: sourceKey,
+      device: request.headers.get("x-device-id")?.slice(0, 80) ?? null,
+      user_agent: request.headers.get("user-agent")?.slice(0, 120) ?? null,
+    },
+  });
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -86,6 +108,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
       POST: async ({ request }) => {
         const sourceKey = requestSourceKey(request);
         if (!loginLimiter.check(sourceKey)) {
+          void recordLoginFailure(sourceKey, request, null, "locked");
           return json({ error: "অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে আবার চেষ্টা করুন" }, 429);
         }
         // Bootstrap endpoint: the only credential is the agent's own CRM
@@ -115,6 +138,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
         const loginEmail = await resolveLoginEmail(parsed.data.email);
         if (!loginEmail) {
           loginLimiter.record(sourceKey);
+          void recordLoginFailure(sourceKey, request, parsed.data.email, "unknown_account");
           return json({ error: "এই ফোন নম্বর বা Employee ID পাওয়া যায়নি" }, 401);
         }
 
@@ -124,6 +148,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
         });
         if (error || !session.user) {
           loginLimiter.record(sourceKey);
+          void recordLoginFailure(sourceKey, request, parsed.data.email, "wrong_password");
           return json({ error: "লগইন তথ্য মিলছে না" }, 401);
         }
 

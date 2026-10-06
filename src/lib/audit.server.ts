@@ -77,7 +77,11 @@ export type AuditAction =
   | "os_booking_sync_dead"
   | "os_booking_sync_requeued"
   | "booking_created"
-  | "booking_status_changed";
+  | "booking_status_changed"
+  | "agent_login_failed"
+  | "agent_login_locked"
+  | "github_issue_created"
+  | "monthly_summary_saved";
 
 export async function logAudit(input: {
   action: AuditAction;
