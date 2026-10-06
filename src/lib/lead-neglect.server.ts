@@ -79,7 +79,7 @@ export async function runNeglectSweep(today: string = dhakaDateOf()) {
           lead_id: lead.id,
           agent_id: lead.owner,
           kind: "neglect_warning",
-          detail: `অবহেলা সতর্কবার্তা ${stage.day}/৩ — এখনো কোনো কল হয়নি`,
+          detail: `অবহেলা সতর্কবার্তা ${stage.day}/২ — এখনো কোনো কল হয়নি`,
         });
       }
       continue;
@@ -94,7 +94,7 @@ export async function runNeglectSweep(today: string = dhakaDateOf()) {
         assigned_at: at,
         business_date: today,
         reason: NEGLECT_RECALL_REASON,
-        evidence: { assigned_at: at, calls: 0, reports: 0, recordings: 0, notices: 3 },
+        evidence: { assigned_at: at, calls: 0, reports: 0, recordings: 0, notices: 2 },
       })
       .select("id")
       .maybeSingle();

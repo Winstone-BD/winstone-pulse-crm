@@ -26,12 +26,12 @@ export function MyNeglectNotice() {
           <h3 className="flex items-center gap-2 text-sm font-semibold text-destructive">
             <AlertTriangle className="size-4" /> অবহেলা সতর্কবার্তা — এই লিডগুলোতে এখনো কল হয়নি
           </h3>
-          <p className="text-xs text-muted-foreground">৩ কার্যদিবস সতর্কবার্তার পরও কল না হলে লিড LeadHub-এ ফেরত যাবে এবং আপনার অ্যাকাউন্টে ডিসপুট লেখা হবে।</p>
+          <p className="text-xs text-muted-foreground">২ কার্যদিবস সতর্কবার্তার পরও কল না হলে লিড LeadHub-এ ফেরত যাবে এবং আপনার অ্যাকাউন্টে ডিসপুট লেখা হবে।</p>
           <ul className="space-y-1 text-sm">
             {notices.map((n) => (
               <li key={n.id} className="flex justify-between gap-2">
                 <span>{(n.lead as Named)?.name ?? "লিড"}</span>
-                <span className="text-destructive">সতর্কবার্তা {n.notice_day}/৩</span>
+                <span className="text-destructive">সতর্কবার্তা {n.notice_day}/২</span>
               </li>
             ))}
           </ul>

@@ -331,11 +331,15 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     breakdown: scoreBreakdown(line),
     ...performerInsight(line),
   }));
-  const topThree = detailed.filter(isActive).slice(0, 3);
+  // Top 3 eligibility: more than 30% of today's assigned leads still pending excludes the desk.
+  const TOP3_MAX_PENDING = 30;
+  const pendingPct = (l: PerformerLine) => (l.assigned ? ((l.assigned - l.completed) / l.assigned) * 100 : 0);
+  const topThree = detailed.filter((l) => isActive(l) && pendingPct(l) <= TOP3_MAX_PENDING).slice(0, 3);
+  for (const l of detailed) if (isActive(l) && pendingPct(l) > TOP3_MAX_PENDING) l.gap = `পেন্ডিং ${Math.round(pendingPct(l))}% (৩০%-এর বেশি) — তাই আজ Top 3-এর বাইরে`;
   const topIds = new Set(topThree.map((line) => line.agentId));
   const otherAgents = detailed.filter((line) => !topIds.has(line.agentId));
-  const winner = activeRanked[0] ?? null;
-  const runnerUp = activeRanked[1] ?? null;
+  const winner = topThree[0] ?? null;
+  const runnerUp = topThree[1] ?? null;
 
   const team = lines.reduce(
     (acc, l) => ({

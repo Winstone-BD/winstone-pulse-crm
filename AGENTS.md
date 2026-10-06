@@ -21,4 +21,4 @@
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
 - Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.
 - Service-bill review may reveal details to an authenticated admin after a server-only PIN check, but never executes payment or grants financial approval — why: notification and financial execution must remain separate.
-- Lead neglect: zero-work leads get 3 business-day notices then recall to the pool via `lead-neglect.server.ts`; recalls are append-only disputes, DB blocks re-assigning to the same agent and call-start refuses them — why: leads must not rot and the rule can't be bypassed from the UI.
+- Lead neglect: zero-work leads get 2 business-day notices (recall on the 3rd) then recall to the pool via `lead-neglect.server.ts`; recalls are append-only disputes, DB blocks re-assigning to the same agent and call-start refuses them — why: leads must not rot and the rule can't be bypassed from the UI.

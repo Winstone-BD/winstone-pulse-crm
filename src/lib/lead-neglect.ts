@@ -1,12 +1,12 @@
 /**
  * Lead neglect rule (pure, shared). A lead held by an agent with zero work
- * (no call, report or recording) is warned once on each of the first three
+ * (no call, report or recording) is warned once on each of the first two
  * business days after the day it was given, and recalled to the LeadHub
- * Nexus pool on the fourth. Friday never counts (business-day rule).
+ * Nexus pool on the third. Friday never counts (business-day rule).
  */
 import { isBusinessDay } from "@/lib/business-day";
 
-export const NEGLECT_NOTICE_DAYS = 3;
+export const NEGLECT_NOTICE_DAYS = 2;
 
 /** Business days strictly after `assignedDay`, up to and including `today`. */
 export function businessDaysSince(assignedDay: string, today: string): number {
@@ -31,7 +31,7 @@ export function neglectStage(assignedDay: string, today: string): NeglectStage {
 }
 
 export const NEGLECT_RECALL_REASON =
-  "৩ কার্যদিবস সতর্কবার্তার পরও লিডে কোনো কল, রিপোর্ট বা রেকর্ডিং হয়নি — লিড অবহেলা";
+  "২ কার্যদিবস সতর্কবার্তার পরও লিডে কোনো কল, রিপোর্ট বা রেকর্ডিং হয়নি — লিড অবহেলা";
 
 export const NEGLECT_CALL_LOCK =
   "এই লিডটি অবহেলার কারণে আপনার কাছ থেকে LeadHub Nexus-এ ফেরত নেওয়া হয়েছে — আপনি আর কল করতে পারবেন না";

@@ -79,7 +79,7 @@ function SystemPage() {
         title="আইটি কনসোল"
         description="সিস্টেম সেটিং, অ্যাকাউন্ট অনুমোদন, ডেটার অবস্থা আর বিল। মাস্টার পিন লাগবে।"
       >
-        <SystemBoard />
+        <div className="hq-luxe rounded-3xl p-3 sm:p-5"><SystemBoard /></div>
       </RoleGate>
     </AppShell>
   );
