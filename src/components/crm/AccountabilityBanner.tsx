@@ -28,6 +28,7 @@ export function AccountabilityBanner() {
     : status === "hold"
       ? "border-destructive/30 bg-destructive/5"
       : "border-warning/30 bg-warning/5";
+  const backlog = Number((latest.evidence as { backlog_followups?: number } | null)?.backlog_followups ?? 0);
   const pendingLeads = Math.max(0, latest.pending_count - latest.overdue_followups);
 
   return (
@@ -47,10 +48,13 @@ export function AccountabilityBanner() {
                 : "আগের কাজ শেষ করুন, তারপর নতুন লিড আসবে"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {latest.business_date}: মোট {latest.eligible_count}টি কাজের মধ্যে {latest.completed_count}টি শেষ হয়েছে।
+            আজকের কাজ ({latest.business_date}): মোট {latest.eligible_count}টি কাজের মধ্যে {latest.completed_count}টি শেষ হয়েছে।
             বাকি — ফলো-আপ {latest.overdue_followups}টি, লিড {pendingLeads}টি
             {latest.missed_reports > 0 ? `, রিপোর্ট ${latest.missed_reports}টি` : ""}।
           </p>
+          {backlog > 0 && (
+            <p className="text-xs text-muted-foreground">পুরনো ব্যাকলগ (আগের দিনের ফলো-আপ): {backlog}টি — আজকের হিসাবে ধরা হয়নি।</p>
+          )}
           {approved ? (
             <p className="text-xs font-medium text-success">
               {latest.unlock_for_date} থেকে নতুন লিড চালু।

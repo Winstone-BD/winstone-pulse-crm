@@ -50,12 +50,15 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
     .lte("scheduled_at", end)
     .or(`status.eq.upcoming,completed_at.gte.${start}`)
     .limit(1000);
-  const due = (fus ?? []).map((f) => ({
+  const all = (fus ?? []).map((f) => ({
     id: f.id,
     handled: f.status === "done" && Boolean(f.completed_at) && String(f.completed_at) <= end,
     scheduled_at: f.scheduled_at,
     customer: f.customer_name,
   }));
+  // Today's work = follow-ups scheduled for this day; older ones are backlog, shown separately.
+  const due = all.filter((f) => String(f.scheduled_at) >= start);
+  const backlog = all.filter((f) => String(f.scheduled_at) < start && !f.handled);
 
   const { count: missed } = await db
     .from("call_reports")
@@ -70,6 +73,7 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
     ...m,
     evidence: {
       measured_at: new Date().toISOString(),
+      backlog_followups: backlog.length,
       window: { start, end, timezone: "Asia/Dhaka" },
       pending_lead_ids: leadRows.filter((l) => !l.completed).map((l) => l.id).slice(0, 100),
       overdue_followups: due.filter((f) => !f.handled).slice(0, 50).map((f) => ({ id: f.id, scheduled_at: f.scheduled_at, customer: f.customer })),
