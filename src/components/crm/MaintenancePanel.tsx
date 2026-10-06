@@ -98,9 +98,21 @@ export function MaintenancePanel() {
         ))}
       </dl>
 
+      <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed">
+        <p className="mb-1 text-sm font-semibold">কীভাবে কাজ করে (ঢাকা সময়)</p>
+        <ol className="list-decimal space-y-0.5 pl-4 text-muted-foreground">
+          <li>৯ তারিখ ০০:০০ — সবার স্ক্রিনে পেমেন্ট নোটিশ শুরু।</li>
+          <li>১৪ তারিখ ২৩:৫৯ পর্যন্ত — CRM পুরোপুরি চালু (গ্রেস সময়)।</li>
+          <li>১৫ তারিখ ০০:০০ — পেমেন্ট যাচাই না হলে এজেন্ট/HQ লক; IT Console খোলা থাকে।</li>
+          <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Verify payment” চাপুন — মাসটি সাথে সাথে PAID হবে, লক হবে না।</li>
+          <li>যাচাইয়ের আগে জরুরি দরকার হলে “Request system unlock” — শুধু System Architect সর্বোচ্চ ২৪ ঘণ্টার জন্য খুলতে পারে।</li>
+        </ol>
+        <p className="mt-1 text-muted-foreground">এই বক্সের মাস: <b>{state.period}</b>। প্রতিটি কাজ কে, কখন, কোন রেফারেন্সে করেছে — নিচের অডিটে স্থায়ীভাবে থাকে।</p>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-2 rounded-lg border border-border p-3">
-          <p className="text-sm font-semibold">Payment verification</p>
+          <p className="text-sm font-semibold">Payment verification — {state.period}</p>
           <Label htmlFor="mt-ref">Payment reference</Label>
           <Input id="mt-ref" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Transaction / receipt ID" />
           <Button className="w-full" disabled={ref.trim().length < 3 || verify.isPending || state.paymentStatus === "verified"} onClick={() => verify.mutate()}>

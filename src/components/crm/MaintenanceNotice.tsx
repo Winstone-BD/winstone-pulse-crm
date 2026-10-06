@@ -194,7 +194,7 @@ export function MaintenanceGate() {
         ? `🔴 Maintenance payment is due today — ${MAINTENANCE_FEE_LABEL} — CONTACT IT CONSOLE`
         : data.stage === "soon"
           ? `🔴 SYSTEM MAINTENANCE PAYMENT DUE SOON — ${MAINTENANCE_FEE_LABEL} — CONTACT IT CONSOLE`
-          : `Maintenance payment (${MAINTENANCE_FEE_LABEL}) is due on the 14th.`;
+          : `সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) ১৪ তারিখের মধ্যে IT Console জমা দেবে — আপনার কাজ স্বাভাবিক চলবে।`;
   const strong = data.stage !== "upcoming";
   return (
     <div
