@@ -14,13 +14,17 @@ describe("ecosystem integration boundaries", () => {
   it("keeps public mutation and webhook routes behind flood brakes", () => {
     for (const file of [
       "src/routes/api/public/ingest/lead.ts",
-      "src/routes/api/public/agent/login.ts",
       "src/routes/api/public/os/events.ts",
       "src/routes/api/public/paddle/webhook.ts",
       "src/routes/api/public/whatsapp/webhook.ts",
     ]) {
       expect(readFileSync(file, "utf8"), file).toContain("createRateLimiter");
     }
+    // Login limits failed attempts only, so a shared office IP never locks
+    // out agents signing in successfully at shift start.
+    const login = readFileSync("src/routes/api/public/agent/login.ts", "utf8");
+    expect(login).toContain("createFailureLimiter");
+    expect(login).toContain("loginLimiter.record(sourceKey)");
   });
 
   it("queues booking events transactionally without inventing an OS endpoint", () => {
