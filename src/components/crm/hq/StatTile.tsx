@@ -15,17 +15,18 @@ export function StatTile({
   /** Opens the drill-down list behind this number. */
   onOpen?: () => void;
 }) {
+  const tone = TILE_TONES[(label.length + label.charCodeAt(0)) % TILE_TONES.length];
   return (
     <button
       type="button"
       onClick={onOpen}
       disabled={!onOpen}
       aria-label={`${label}: ${value} — বিস্তারিত তালিকা খুলুন / Open detailed list`}
-      className="card-elevated relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:border-border disabled:hover:bg-transparent"
+      className={`card-elevated kpi-accent ${tone} relative w-full overflow-hidden p-5 text-left transition-colors hover:border-primary/40 hover:bg-surface-2/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-default disabled:hover:border-border disabled:hover:bg-transparent`}
     >
-      <span className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/10 blur-2xl" />
+      <span className="kpi-glow absolute -right-6 -top-6 size-24 rounded-full blur-2xl" />
       <div className="flex items-start gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/25">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full kpi-icon">
           {icon}
         </span>
         <div className="min-w-0">
@@ -41,6 +42,8 @@ export function StatTile({
   );
 }
 
+const TILE_TONES = ["kpi-info", "kpi-ok", "kpi-warn", "kpi-bad"] as const;
+
 /** Tiny decorative sparkline; deterministic per tile so it doesn't jitter on refetch. */
 export function Sparkline({ seed }: { seed: number }) {
   const points = Array.from({ length: 12 }, (_, i) => {
@@ -50,7 +53,7 @@ export function Sparkline({ seed }: { seed: number }) {
   return (
     <svg
       viewBox="0 0 100 20"
-      className="mt-3 h-5 w-full text-chart-1/60"
+      className="kpi-line mt-3 h-5 w-full"
       preserveAspectRatio="none"
     >
       <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" />
