@@ -1851,6 +1851,99 @@ export type Database = {
           },
         ]
       }
+      lead_neglect_notices: {
+        Row: {
+          agent_id: string
+          assigned_at: string
+          business_date: string
+          created_at: string
+          id: string
+          lead_id: string
+          notice_day: number
+        }
+        Insert: {
+          agent_id: string
+          assigned_at: string
+          business_date: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notice_day: number
+        }
+        Update: {
+          agent_id?: string
+          assigned_at?: string
+          business_date?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notice_day?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_neglect_notices_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_neglect_notices_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_neglect_recalls: {
+        Row: {
+          agent_id: string
+          assigned_at: string
+          business_date: string
+          evidence: Json
+          id: string
+          lead_id: string
+          reason: string
+          recalled_at: string
+        }
+        Insert: {
+          agent_id: string
+          assigned_at: string
+          business_date: string
+          evidence?: Json
+          id?: string
+          lead_id: string
+          reason: string
+          recalled_at?: string
+        }
+        Update: {
+          agent_id?: string
+          assigned_at?: string
+          business_date?: string
+          evidence?: Json
+          id?: string
+          lead_id?: string
+          reason?: string
+          recalled_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_neglect_recalls_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_neglect_recalls_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_personal_notes: {
         Row: {
           author_label: string | null
@@ -4420,6 +4513,10 @@ export type Database = {
         Returns: boolean
       }
       lead_has_work_history: { Args: { _lead_id: string }; Returns: boolean }
+      lead_is_recalled_untouched: {
+        Args: { _lead_id: string }
+        Returns: boolean
+      }
       lead_phone_status: {
         Args: { _raw: string }
         Returns: {

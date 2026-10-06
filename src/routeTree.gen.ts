@@ -76,6 +76,7 @@ import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/co
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
+import { Route as ApiPublicHooksLeadNeglectRouteImport } from './routes/api/public/hooks/lead-neglect'
 import { Route as ApiPublicHooksMarketNewsRouteImport } from './routes/api/public/hooks/market-news'
 import { Route as ApiPublicHooksMonthlySummaryRouteImport } from './routes/api/public/hooks/monthly-summary'
 import { Route as ApiPublicHooksOsOutboundRouteImport } from './routes/api/public/hooks/os-outbound'
@@ -441,6 +442,12 @@ const ApiPublicHooksLeadDistributionRoute =
     path: '/api/public/hooks/lead-distribution',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksLeadNeglectRoute =
+  ApiPublicHooksLeadNeglectRouteImport.update({
+    id: '/api/public/hooks/lead-neglect',
+    path: '/api/public/hooks/lead-neglect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksMarketNewsRoute =
   ApiPublicHooksMarketNewsRouteImport.update({
     id: '/api/public/hooks/market-news',
@@ -626,6 +633,7 @@ export interface FileRoutesByFullPath {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
@@ -716,6 +724,7 @@ export interface FileRoutesByTo {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
@@ -807,6 +816,7 @@ export interface FileRoutesById {
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
+  '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
   '/api/public/hooks/market-news': typeof ApiPublicHooksMarketNewsRoute
   '/api/public/hooks/monthly-summary': typeof ApiPublicHooksMonthlySummaryRoute
   '/api/public/hooks/os-outbound': typeof ApiPublicHooksOsOutboundRoute
@@ -899,6 +909,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/lead-neglect'
     | '/api/public/hooks/market-news'
     | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
@@ -989,6 +1000,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/lead-neglect'
     | '/api/public/hooks/market-news'
     | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
@@ -1079,6 +1091,7 @@ export interface FileRouteTypes {
     | '/api/public/download/apk'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
+    | '/api/public/hooks/lead-neglect'
     | '/api/public/hooks/market-news'
     | '/api/public/hooks/monthly-summary'
     | '/api/public/hooks/os-outbound'
@@ -1170,6 +1183,7 @@ export interface RootRouteChildren {
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
+  ApiPublicHooksLeadNeglectRoute: typeof ApiPublicHooksLeadNeglectRoute
   ApiPublicHooksMarketNewsRoute: typeof ApiPublicHooksMarketNewsRoute
   ApiPublicHooksMonthlySummaryRoute: typeof ApiPublicHooksMonthlySummaryRoute
   ApiPublicHooksOsOutboundRoute: typeof ApiPublicHooksOsOutboundRoute
@@ -1664,6 +1678,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLeadDistributionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/lead-neglect': {
+      id: '/api/public/hooks/lead-neglect'
+      path: '/api/public/hooks/lead-neglect'
+      fullPath: '/api/public/hooks/lead-neglect'
+      preLoaderRoute: typeof ApiPublicHooksLeadNeglectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/market-news': {
       id: '/api/public/hooks/market-news'
       path: '/api/public/hooks/market-news'
@@ -1883,6 +1904,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
+  ApiPublicHooksLeadNeglectRoute: ApiPublicHooksLeadNeglectRoute,
   ApiPublicHooksMarketNewsRoute: ApiPublicHooksMarketNewsRoute,
   ApiPublicHooksMonthlySummaryRoute: ApiPublicHooksMonthlySummaryRoute,
   ApiPublicHooksOsOutboundRoute: ApiPublicHooksOsOutboundRoute,

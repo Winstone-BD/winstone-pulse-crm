@@ -1,3 +1,4 @@
+import { MyNeglectNotice } from "@/components/crm/LeadNeglectPanel";
 import { PhotoUpload } from "@/components/crm/PhotoUpload";
 import { StaffAvatar } from "@/components/crm/StaffAvatar";
 import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
@@ -354,6 +355,8 @@ function DeskPage() {
             </div>
           </details>
         )}
+
+        <MyNeglectNotice />
 
         <CommandAgentPanel surface="desk" />
 
