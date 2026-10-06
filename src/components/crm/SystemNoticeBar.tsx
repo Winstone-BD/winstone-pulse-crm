@@ -158,7 +158,7 @@ function PendingAccountActions() {
 
 function NoticeRow({ notice, canAct }: { notice: SystemNotice; canAct: boolean }) {
   return (
-    <li className={`rounded-xl border px-3 py-2.5 ${STYLES[notice.level].row}`}>
+    <li className={`notice-highlight rounded-xl px-3 py-2.5 pl-4 ${STYLES[notice.level].row}`}>
       <div className="flex gap-3">
         <NoticeIcon level={notice.level} />
         <div className="min-w-0 space-y-0.5">

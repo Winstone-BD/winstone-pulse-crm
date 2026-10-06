@@ -24,15 +24,15 @@ export function AccountabilityBanner() {
   if (approved && latest.unlock_for_date < (data?.today ?? "")) return null;
 
   const tone = approved
-    ? "border-success/30 bg-success/5"
+    ? "border-success/40 bg-success/10 text-success"
     : status === "hold"
-      ? "border-destructive/30 bg-destructive/5"
-      : "border-warning/30 bg-warning/5";
+      ? "border-destructive/40 bg-destructive/10 text-destructive"
+      : "border-warning/40 bg-warning/10 text-warning";
   const backlog = Number((latest as { backlog?: unknown }).backlog ?? 0);
   const pendingLeads = Math.max(0, latest.pending_count - latest.overdue_followups);
 
   return (
-    <section className={`rounded-xl border px-4 py-3 ${tone}`} role="status">
+    <section className={`notice-highlight rounded-xl px-4 py-3 pl-5 ${tone}`} role="status">
       <div className="flex items-start gap-3">
         {approved ? (
           <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-success" />

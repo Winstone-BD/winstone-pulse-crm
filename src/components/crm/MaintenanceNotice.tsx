@@ -144,7 +144,7 @@ export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
   if (!data || !needsNotice(data)) return null;
   return (
-    <div className="mt-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+    <div className="notice-highlight mt-3 rounded-lg border-destructive/40 bg-destructive/10 p-3 pl-4 text-sm">
       <div className="flex items-center justify-between gap-2">
         <p className="font-bold text-destructive">🔴 P — SYSTEM MAINTENANCE NOTICE</p>
         <MaintenanceBadge />
