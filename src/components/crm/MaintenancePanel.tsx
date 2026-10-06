@@ -133,7 +133,7 @@ export function MaintenancePanel() {
           <p className="text-sm font-semibold">Lock time (Asia/Dhaka)</p>
           <Input type="datetime-local" value={lockAt || toLocalInput(state.lockAt)} onChange={(e) => setLockAt(e.target.value)} />
           <Button variant="secondary" className="w-full" disabled={!lockAt || saveLock.isPending} onClick={() => saveLock.mutate()}>Save lock time</Button>
-          <p className="text-xs text-muted-foreground">Default: 14th at 00:00 Dhaka.</p>
+          <p className="text-xs text-muted-foreground">Default: 15th at 00:00 Dhaka (notice from the 9th).</p>
         </div>
       </div>
 

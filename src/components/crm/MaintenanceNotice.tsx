@@ -85,7 +85,7 @@ function NoticeBody({ s }: { s: Status }) {
         <dt className="text-muted-foreground">Fee</dt>
         <dd className="font-semibold">{MAINTENANCE_FEE_LABEL}</dd>
         <dt className="text-muted-foreground">Billing date</dt>
-        <dd className="font-semibold">14th of every month</dd>
+        <dd className="font-semibold">14th of every month (lock 15th 00:00)</dd>
         <dt className="text-muted-foreground">Lock time</dt>
         <dd className="font-semibold">{dhakaTime(s.lockAt)}</dd>
         <dt className="text-muted-foreground">Current status</dt>
@@ -150,7 +150,7 @@ export function MaintenanceProfileNotice() {
         <MaintenanceBadge />
       </div>
       <p className="mt-1">
-        Monthly System Maintenance Fee: <b>{MAINTENANCE_FEE_LABEL}</b> · Due: 14th of every month ·
+        Monthly System Maintenance Fee: <b>{MAINTENANCE_FEE_LABEL}</b> · Due: 14th of every month (lock 15th 00:00) ·
         Status: <b className="text-destructive">{statusLabel(data)}</b>
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
