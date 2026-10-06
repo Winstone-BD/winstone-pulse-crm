@@ -62,8 +62,8 @@ export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows
   useEffect(() => {
     const s = startRef.current;
     if (!s) return;
-    if (!accountBusy && stepsRef.current.account == null) stepsRef.current.account = Math.round(performance.now() - s);
-    if (!snapshotBusy && stepsRef.current.snapshot == null) stepsRef.current.snapshot = Math.round(performance.now() - s);
+    if (!accountBusy && stepsRef.current["account"] == null) stepsRef.current["account"] = Math.round(performance.now() - s);
+    if (!snapshotBusy && stepsRef.current["snapshot"] == null) stepsRef.current["snapshot"] = Math.round(performance.now() - s);
   }, [accountBusy, snapshotBusy]);
   useEffect(() => {
     const start = performance.now();

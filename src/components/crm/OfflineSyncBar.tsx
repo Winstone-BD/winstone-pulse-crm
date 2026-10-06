@@ -161,7 +161,7 @@ export function OfflineSyncBar() {
               <p className="font-bold">{t({ bn: "সবচেয়ে ধীর ধাপ", en: "Slowest steps" })}</p>
               {slowest.map((s) => (
                 <p key={s.key} className="flex justify-between text-muted-foreground">
-                  <span>{t(STEP_LABELS[s.key])}</span>
+                  <span>{t(STEP_LABELS[s.key] ?? { bn: s.key, en: s.key })}</span>
                   <span className="tabular text-foreground">{(s.ms / 1000).toFixed(1)}s</span>
                 </p>
               ))}
