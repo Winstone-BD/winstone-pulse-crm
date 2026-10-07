@@ -11,6 +11,7 @@ import {
 const line = (overrides: Partial<PerformerLine> = {}): PerformerLine => ({
   agentId: "agent-1",
   name: "Agent 1",
+  photoUrl: null,
   called: 10,
   connected: 5,
   reports: 10,
