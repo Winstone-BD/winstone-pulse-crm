@@ -63,7 +63,10 @@ export const staffPortal = createServerFn({ method: "POST" })
     }));
 
     const agentId = data.agentId ?? null;
-    if (!agentId) return { agents, reports: [] as PortalReport[], leads: [] as PortalLead[], score: null as PortalScore };
+    if (!agentId) {
+      const overview = await buildOverview(supabaseAdmin, agents);
+      return { agents, reports: [] as PortalReport[], leads: [] as PortalLead[], score: null as PortalScore, overview };
+    }
 
     const [reportsRes, leadsRes, board] = await Promise.all([
       supabaseAdmin
