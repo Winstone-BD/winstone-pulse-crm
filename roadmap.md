@@ -69,3 +69,8 @@
 - [ ] Report exact endpoint path, auth mechanism, required secret NAMES only, remaining configuration requirements (OS_BOOKING_ENDPOINT not yet saved — secure form couldn't open in background).
 
 - [x] 3-day lead neglect warnings + auto-return to LeadHub pool + HQ dispute log (needs rule: may a returned lead be re-given, since worked numbers are blocked from fresh assignment)
+
+- [ ] Reconnect GitHub API in new workspace
+- [ ] Reconnect Google Drive in new workspace
+- [ ] QR code on agent login cards
+- [ ] One-time password reset link flow (IT Console) + forced change on first login
