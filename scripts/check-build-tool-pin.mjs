@@ -19,6 +19,37 @@ if (declared !== PINNED) {
   console.log(`OK: package.json pins ${PKG}@${PINNED}`);
 }
 
+// Verify lockfiles resolve to exactly the pinned version.
+// package-lock.json: packages["node_modules/<pkg>"].version
+try {
+  const lock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+  const v = lock.packages?.[`node_modules/${PKG}`]?.version;
+  if (v !== PINNED) {
+    console.error(`FAIL: package-lock.json resolves ${PKG} to ${v ?? "(missing)"} — must be exactly ${PINNED}`);
+    failed = true;
+  } else {
+    console.log(`OK: package-lock.json resolves ${PKG} to ${PINNED}`);
+  }
+} catch {
+  console.log(`SKIP: no package-lock.json`);
+}
+
+// bun.lock (JSONC-ish): the resolved entry is ["<pkg>@<version>", ...]
+try {
+  const bunLock = readFileSync("bun.lock", "utf8");
+  const marker = `"${PKG}": ["${PKG}@`;
+  const idx = bunLock.indexOf(marker);
+  const v = idx === -1 ? undefined : bunLock.slice(idx + marker.length, bunLock.indexOf('"', idx + marker.length));
+  if (v !== PINNED) {
+    console.error(`FAIL: bun.lock resolves ${PKG} to ${v ?? "(missing)"} — must be exactly ${PINNED}`);
+    failed = true;
+  } else {
+    console.log(`OK: bun.lock resolves ${PKG} to ${PINNED}`);
+  }
+} catch {
+  console.log(`SKIP: no bun.lock`);
+}
+
 // Also verify the actually-installed version, if node_modules is present.
 try {
   const installed = JSON.parse(readFileSync(`node_modules/${PKG}/package.json`, "utf8"));
