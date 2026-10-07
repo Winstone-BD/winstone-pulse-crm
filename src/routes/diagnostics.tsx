@@ -452,7 +452,12 @@ function Board() {
                 {filteredReloads.map((r, i) => {
                   const ok = isResolved(r, reloads);
                   return (
-                    <tr key={i} className="border-t border-border align-top">
+                    <tr
+                      key={i}
+                      className="cursor-pointer border-t border-border align-top transition-colors hover:bg-muted/40"
+                      onClick={() => setSelected(r)}
+                      title="বিস্তারিত দেখুন"
+                    >
                       <td className="p-2 whitespace-nowrap">{dhakaTime(r.at)}</td>
                       <td className="p-2">{KIND_LABEL[r.kind] ?? r.kind}</td>
                       <td className="p-2">
