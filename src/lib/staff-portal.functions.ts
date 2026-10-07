@@ -77,7 +77,7 @@ export const staffPortal = createServerFn({ method: "POST" })
         .limit(50),
       supabaseAdmin
         .from("leads")
-        .select("id, name, status, work_state, work_date, last_call_at, area")
+        .select("id, name, status, work_state, work_date, last_call_at, area", { count: "exact" })
         .or(`assigned_agent_id.eq.${agentId},assigned_to.eq.${agentId}`)
         .order("work_date", { ascending: false, nullsFirst: false })
         .limit(200),
@@ -124,7 +124,7 @@ export const staffPortal = createServerFn({ method: "POST" })
         }
       : null;
 
-    return { agents, reports, leads, score };
+    return { agents, reports, leads, leadTotal: leadsRes.count ?? leads.length, score };
   });
 
 export type OverviewRow = {
@@ -155,9 +155,19 @@ async function buildOverview(db: any, agents: PortalAgent[]): Promise<Overview> 
   for (let i = 6; i >= 0; i--) days.push(dhakaDay(new Date(Date.now() - i * 86400_000).toISOString()));
   const since = new Date(Date.now() - 7 * 86400_000).toISOString();
   const ids = agents.map((a) => a.profileId);
+  // Paged reads: the database caps each response at 1000 rows.
+  const pageAll = async (build: (from: number, to: number) => PromiseLike<{ data: unknown[] | null }>) => {
+    const out: unknown[] = [];
+    for (let from = 0; from < 50000; from += 1000) {
+      const { data } = await build(from, from + 999);
+      out.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+    }
+    return { data: out };
+  };
   const [rep, leads] = await Promise.all([
-    db.from("call_reports").select("agent_id, created_at, status, connected, temperature").gte("created_at", since).in("agent_id", ids).limit(10000),
-    db.from("leads").select("assigned_agent_id, last_call_at").in("assigned_agent_id", ids).limit(20000),
+    pageAll((f, t) => db.from("call_reports").select("agent_id, created_at, status, connected, temperature").gte("created_at", since).in("agent_id", ids).order("id").range(f, t)),
+    pageAll((f, t) => db.from("leads").select("assigned_agent_id, last_call_at").in("assigned_agent_id", ids).order("id").range(f, t)),
   ]);
   const by = new Map<string, OverviewRow>();
   for (const a of agents)

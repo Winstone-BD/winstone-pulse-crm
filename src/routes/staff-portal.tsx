@@ -115,7 +115,12 @@ function Portal() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-semibold">বরাদ্দ লিড ({d?.leads.length ?? 0})</h2>
+            <h2 className="font-semibold">
+              বরাদ্দ লিড ({d && "leadTotal" in d ? d.leadTotal : (d?.leads.length ?? 0)})
+              {d && "leadTotal" in d && d.leadTotal > d.leads.length ? (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">সাম্প্রতিক {d.leads.length}টি দেখানো হচ্ছে</span>
+              ) : null}
+            </h2>
             <div className="table-scroll rounded-lg border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
