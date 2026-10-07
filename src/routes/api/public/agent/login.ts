@@ -154,7 +154,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
 
         // A reset link or IT-set password flags the account: the agent must
         // choose their own password on the web before the phone can sign in.
-        if ((session.user.app_metadata as Record<string, unknown> | undefined)?.must_change_password === true) {
+        if ((session.user.app_metadata as Record<string, unknown> | undefined)?.["must_change_password"] === true) {
           void auth.auth.signOut().catch(() => {});
           return json(
             {
