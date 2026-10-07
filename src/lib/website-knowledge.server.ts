@@ -39,6 +39,23 @@ export type WebsiteAnswer = {
   documents: DriveSource[];
 };
 
+/** Only Winstone's own public sites may be read (blocks fetching arbitrary/internal hosts). */
+export function isAllowedWebsiteUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:" || u.username || u.password || u.port) return false;
+    const h = u.hostname.toLowerCase();
+    return (
+      h === "winstonebd.com" ||
+      h.endsWith(".winstonebd.com") ||
+      h === "winstone.lovable.app" ||
+      h === new URL(DEFAULT_WEBSITE_URL).hostname
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function websiteBaseUrl(): Promise<string> {
   const { data } = await supabaseAdmin
     .from("app_config")
@@ -47,10 +64,13 @@ export async function websiteBaseUrl(): Promise<string> {
     .maybeSingle();
   const raw = (data?.data as { baseUrl?: unknown } | null)?.baseUrl;
   const value = typeof raw === "string" ? raw.trim() : "";
-  return value || DEFAULT_WEBSITE_URL;
+  return value && isAllowedWebsiteUrl(value) ? value : DEFAULT_WEBSITE_URL;
 }
 
 export async function setWebsiteBaseUrl(url: string): Promise<void> {
+  if (!isAllowedWebsiteUrl(url)) {
+    throw new Error("Only Winstone's own https websites can be used as the knowledge source");
+  }
   await supabaseAdmin.from("app_config").upsert({ id: CONFIG_ID, data: { baseUrl: url } });
 }
 
@@ -80,6 +100,7 @@ function decodeTitle(title: string) {
 }
 
 async function fetchText(url: string): Promise<{ title: string; text: string } | null> {
+  if (!isAllowedWebsiteUrl(url)) return null;
   try {
     const response = await fetch(url, {
       headers: { "User-Agent": "WinstoneCRM-KnowledgeReader/1.0" },
