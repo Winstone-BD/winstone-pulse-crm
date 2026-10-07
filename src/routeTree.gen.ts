@@ -37,6 +37,7 @@ import { Route as NewsRouteImport } from './routes/news'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
@@ -239,6 +240,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalesIntelRoute = SalesIntelRouteImport.update({
@@ -606,6 +612,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -699,6 +706,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -793,6 +801,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -888,6 +897,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -981,6 +991,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1074,6 +1085,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/projects'
     | '/reports'
+    | '/reset-password'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1168,6 +1180,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
@@ -1429,6 +1442,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sales-intel': {
@@ -1904,6 +1924,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
   ServiceBillAlertRoute: ServiceBillAlertRoute,
