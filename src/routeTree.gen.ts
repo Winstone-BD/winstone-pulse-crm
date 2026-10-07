@@ -17,6 +17,7 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DeskRouteImport } from './routes/desk'
+import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsAdminRouteImport } from './routes/docs-admin'
@@ -138,6 +139,11 @@ const CustomersRoute = CustomersRouteImport.update({
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticsRoute = DiagnosticsRouteImport.update({
+  id: '/diagnostics',
+  path: '/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DispatchRoute = DispatchRouteImport.update({
@@ -580,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
@@ -765,6 +773,7 @@ export interface FileRoutesById {
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
@@ -859,6 +868,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/customers'
     | '/desk'
+    | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
@@ -951,6 +961,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/customers'
     | '/desk'
+    | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
@@ -1043,6 +1054,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/customers'
     | '/desk'
+    | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
@@ -1136,6 +1148,7 @@ export interface RootRouteChildren {
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
   DeskRoute: typeof DeskRoute
+  DiagnosticsRoute: typeof DiagnosticsRoute
   DispatchRoute: typeof DispatchRoute
   DocsRoute: typeof DocsRoute
   DocsAdminRoute: typeof DocsAdminRoute
@@ -1276,6 +1289,13 @@ declare module '@tanstack/react-router' {
       path: '/desk'
       fullPath: '/desk'
       preLoaderRoute: typeof DeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostics': {
+      id: '/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof DiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dispatch': {
@@ -1864,6 +1884,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
   DeskRoute: DeskRoute,
+  DiagnosticsRoute: DiagnosticsRoute,
   DispatchRoute: DispatchRoute,
   DocsRoute: DocsRoute,
   DocsAdminRoute: DocsAdminRoute,
