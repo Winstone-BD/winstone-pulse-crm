@@ -84,16 +84,16 @@ function entryKey(e: ReloadEntry): string {
   return `${e.at}|${e.kind}|${e.page}`;
 }
 
-function matchRange(at: string, range: RangeFilter): boolean {
+function matchRange(at: string | number, range: RangeFilter): boolean {
   if (range === "all") return true;
   const t = new Date(at).getTime();
   if (Number.isNaN(t)) return false;
   return Date.now() - t <= RANGE_MS[range];
 }
 
-function dhakaTime(iso: string): string {
+function dhakaTime(iso: string | number): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
 }
 
 function csvCell(value: string): string {
@@ -327,7 +327,7 @@ function Board() {
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="size-4 text-muted-foreground" />
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-              <SelectTrigger size="sm" className="w-[170px]">
+              <SelectTrigger className="h-9 w-[170px]">
                 <SelectValue placeholder="অবস্থা" />
               </SelectTrigger>
               <SelectContent>
@@ -339,7 +339,7 @@ function Board() {
               </SelectContent>
             </Select>
             <Select value={rangeFilter} onValueChange={(v) => setRangeFilter(v as RangeFilter)}>
-              <SelectTrigger size="sm" className="w-[150px]">
+              <SelectTrigger className="h-9 w-[150px]">
                 <SelectValue placeholder="সময়" />
               </SelectTrigger>
               <SelectContent>
