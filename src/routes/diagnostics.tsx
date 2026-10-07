@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, CheckCircle2, Download, Filter, RefreshCw, Trash2, TriangleAlert } from "lucide-react";
+import { Activity, CheckCircle2, Copy, Download, Eye, Filter, Layers, RefreshCw, Trash2, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +7,13 @@ import { AppShell } from "@/components/crm/AppShell";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
