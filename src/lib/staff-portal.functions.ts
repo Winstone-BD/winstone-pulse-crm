@@ -126,3 +126,67 @@ export const staffPortal = createServerFn({ method: "POST" })
 
     return { agents, reports, leads, score };
   });
+
+export type OverviewRow = {
+  profileId: string;
+  name: string;
+  employeeId: string | null;
+  /** Reports per Dhaka day, oldest → newest, aligned with `days`. */
+  daily: number[];
+  reports: number;
+  connected: number;
+  pending: number;
+  hot: number;
+  assignedLeads: number;
+  calledLeads: number;
+};
+export type Overview = {
+  days: string[];
+  rows: OverviewRow[];
+  statusMix: { label: string; count: number }[];
+  hourMix: number[];
+};
+
+const dhakaDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600_000).toISOString().slice(0, 10);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function buildOverview(db: any, agents: PortalAgent[]): Promise<Overview> {
+  const days: string[] = [];
+  for (let i = 6; i >= 0; i--) days.push(dhakaDay(new Date(Date.now() - i * 86400_000).toISOString()));
+  const since = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const ids = agents.map((a) => a.profileId);
+  const [rep, leads] = await Promise.all([
+    db.from("call_reports").select("agent_id, created_at, status, connected, temperature").gte("created_at", since).in("agent_id", ids).limit(10000),
+    db.from("leads").select("assigned_agent_id, last_call_at").in("assigned_agent_id", ids).limit(20000),
+  ]);
+  const by = new Map<string, OverviewRow>();
+  for (const a of agents)
+    by.set(a.profileId, { profileId: a.profileId, name: a.name, employeeId: a.employeeId, daily: days.map(() => 0), reports: 0, connected: 0, pending: 0, hot: 0, assignedLeads: 0, calledLeads: 0 });
+  const status = new Map<string, number>();
+  const hourMix = Array.from({ length: 24 }, () => 0);
+  for (const r of (rep.data ?? []) as { agent_id: string; created_at: string; status: string | null; connected: boolean | null; temperature: string | null }[]) {
+    const row = by.get(r.agent_id);
+    if (!row) continue;
+    const di = days.indexOf(dhakaDay(r.created_at));
+    if (di >= 0) row.daily[di]++;
+    row.reports++;
+    if (r.connected) row.connected++;
+    if (r.status === "pending") row.pending++;
+    if ((r.temperature ?? "").toLowerCase() === "hot") row.hot++;
+    const k = r.status ?? "unknown";
+    status.set(k, (status.get(k) ?? 0) + 1);
+    hourMix[(new Date(r.created_at).getUTCHours() + 6) % 24]++;
+  }
+  for (const l of (leads.data ?? []) as { assigned_agent_id: string; last_call_at: string | null }[]) {
+    const row = by.get(l.assigned_agent_id);
+    if (!row) continue;
+    row.assignedLeads++;
+    if (l.last_call_at) row.calledLeads++;
+  }
+  return {
+    days,
+    rows: [...by.values()].sort((a, b) => b.reports - a.reports),
+    statusMix: [...status.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count),
+    hourMix,
+  };
+}
