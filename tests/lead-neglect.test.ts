@@ -34,3 +34,34 @@ describe("neglect never recalls without delivered warnings", () => {
     expect(nextNeglectAction(both, "2026-10-07")).toEqual({ kind: "recall" });
   });
 });
+
+describe("sweep simulation with skipped cron days", () => {
+  function simulate(assigned: string, runDays: string[]) {
+    const sent = new Map<number, string>();
+    const log: string[] = [];
+    for (const day of runDays) {
+      if (neglectStage(assigned, day).kind === "none") { log.push(`${day}:none`); continue; }
+      const a = nextNeglectAction(sent, day);
+      if (a.kind === "notice") sent.set(a.day, day);
+      log.push(`${day}:${a.kind === "notice" ? `notice${a.day}` : a.kind}`);
+      if (a.kind === "recall") break;
+    }
+    return log;
+  }
+  it("daily runs: notice1, notice2, recall", () => {
+    expect(simulate("2026-10-04", ["2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"]))
+      .toEqual(["2026-10-04:none", "2026-10-05:notice1", "2026-10-06:notice2", "2026-10-07:recall"]);
+  });
+  it("first-ever sweep on a 10-day-old lead still warns twice first", () => {
+    expect(simulate("2026-09-20", ["2026-10-04", "2026-10-05", "2026-10-06"]))
+      .toEqual(["2026-10-04:notice1", "2026-10-05:notice2", "2026-10-06:recall"]);
+  });
+  it("cron skips days: warnings are delayed, never skipped", () => {
+    expect(simulate("2026-10-04", ["2026-10-07", "2026-10-11", "2026-10-13"]))
+      .toEqual(["2026-10-07:notice1", "2026-10-11:notice2", "2026-10-13:recall"]);
+  });
+  it("same-day rerun does not advance", () => {
+    expect(simulate("2026-10-04", ["2026-10-05", "2026-10-05", "2026-10-05"]))
+      .toEqual(["2026-10-05:notice1", "2026-10-05:wait", "2026-10-05:wait"]);
+  });
+});
