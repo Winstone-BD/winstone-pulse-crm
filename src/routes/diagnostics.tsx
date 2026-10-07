@@ -91,6 +91,37 @@ function entryKey(e: ReloadEntry): string {
   return `${e.at}|${e.kind}|${e.page}`;
 }
 
+/** Group key for repeated errors of the same kind on the same page. */
+function groupKey(e: ReloadEntry): string {
+  return `${e.kind}|${e.page}`;
+}
+
+type ErrorGroup = {
+  key: string;
+  kind: string;
+  page: string;
+  count: number;
+  lastAt: string;
+  entries: ReloadEntry[];
+};
+
+/** Group entries by kind+page, most recent group first. */
+function groupEntries(entries: ReloadEntry[]): ErrorGroup[] {
+  const map = new Map<string, ErrorGroup>();
+  for (const e of entries) {
+    const key = groupKey(e);
+    const g = map.get(key);
+    if (g) {
+      g.count += 1;
+      g.entries.push(e);
+      if (new Date(e.at).getTime() > new Date(g.lastAt).getTime()) g.lastAt = e.at;
+    } else {
+      map.set(key, { key, kind: e.kind, page: e.page, count: 1, lastAt: e.at, entries: [e] });
+    }
+  }
+  return [...map.values()].sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime());
+}
+
 function matchRange(at: string | number, range: RangeFilter): boolean {
   if (range === "all") return true;
   const t = new Date(at).getTime();
