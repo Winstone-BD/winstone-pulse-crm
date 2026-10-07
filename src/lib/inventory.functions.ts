@@ -19,7 +19,7 @@ export const listInventory = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin
       .from("inventory_requirements")
-      .select("id, label, active, sort_order")
+      .select("id, label, active, sort_order, location, total_units, available_units")
       .order("sort_order", { ascending: true })
       .order("label", { ascending: true });
     if (!(data.includeInactive && canDispatch(caller))) query = query.eq("active", true);
@@ -35,6 +35,9 @@ export const saveInventory = createServerFn({ method: "POST" })
       label: z.string().trim().min(2).max(60).optional(),
       active: z.boolean().optional(),
       sortOrder: z.number().int().min(0).max(10000).optional(),
+      location: z.string().trim().max(120).nullable().optional(),
+      totalUnits: z.number().int().min(0).max(100000).nullable().optional(),
+      availableUnits: z.number().int().min(0).max(100000).nullable().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -43,7 +46,11 @@ export const saveInventory = createServerFn({ method: "POST" })
     requireDispatch(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.id) {
-      const patch: { updated_at: string; label?: string; active?: boolean; sort_order?: number } = { updated_at: new Date().toISOString() };
+      const patch: { updated_at: string; label?: string; active?: boolean; sort_order?: number; location?: string | null; total_units?: number | null; available_units?: number | null } = { updated_at: new Date().toISOString() };
+      if (data.location !== undefined) patch.location = data.location || null;
+      if (data.totalUnits !== undefined) patch.total_units = data.totalUnits;
+      if (data.availableUnits !== undefined) patch.available_units = data.availableUnits;
+      if (patch.total_units != null && patch.available_units != null && patch.available_units > patch.total_units) throw new Error("উপলভ্য ইউনিট মোট ইউনিটের বেশি হতে পারে না");
       if (data.label !== undefined) patch.label = data.label;
       if (data.active !== undefined) patch.active = data.active;
       if (data.sortOrder !== undefined) patch.sort_order = data.sortOrder;
