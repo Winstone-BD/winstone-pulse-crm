@@ -9,7 +9,7 @@ import { dhaka } from "@/components/crm/AgentOnboarding";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
 import { getAdminToken } from "@/lib/local-session";
-import { staffPortal } from "@/lib/staff-portal.functions";
+import { staffPortal, type Overview } from "@/lib/staff-portal.functions";
 
 export const Route = createFileRoute("/staff-portal")({
   head: () => ({
