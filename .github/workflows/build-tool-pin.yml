@@ -1,0 +1,21 @@
+name: Build tool pin
+
+# Guards against @lovable.dev/vite-tanstack-config drifting off 2.25.2.
+# 2.26.0 crashes every page on the live Worker (createRequire(import.meta.url))
+# while the dev preview keeps working, so this must fail before any publish.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned build tool version
+        run: node scripts/check-build-tool-pin.mjs
+      - name: Run pin regression test
+        run: |
+          npm install --no-save vitest
+          npx vitest run tests/build-config-pin.test.ts
