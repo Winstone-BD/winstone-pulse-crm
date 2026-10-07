@@ -168,14 +168,14 @@ async function buildOverview(db: any, agents: PortalAgent[]): Promise<Overview> 
     const row = by.get(r.agent_id);
     if (!row) continue;
     const di = days.indexOf(dhakaDay(r.created_at));
-    if (di >= 0) row.daily[di]++;
+    if (di >= 0) row.daily[di] = (row.daily[di] ?? 0) + 1;
     row.reports++;
     if (r.connected) row.connected++;
     if (r.status === "pending") row.pending++;
     if ((r.temperature ?? "").toLowerCase() === "hot") row.hot++;
     const k = r.status ?? "unknown";
     status.set(k, (status.get(k) ?? 0) + 1);
-    hourMix[(new Date(r.created_at).getUTCHours() + 6) % 24]++;
+    { const h = (new Date(r.created_at).getUTCHours() + 6) % 24; hourMix[h] = (hourMix[h] ?? 0) + 1; }
   }
   for (const l of (leads.data ?? []) as { assigned_agent_id: string; last_call_at: string | null }[]) {
     const row = by.get(l.assigned_agent_id);
