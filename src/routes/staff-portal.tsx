@@ -9,7 +9,7 @@ import { dhaka } from "@/components/crm/AgentOnboarding";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
 import { getAdminToken } from "@/lib/local-session";
-import { staffPortal } from "@/lib/staff-portal.functions";
+import { staffPortal, type Overview } from "@/lib/staff-portal.functions";
 
 export const Route = createFileRoute("/staff-portal")({
   head: () => ({
@@ -88,7 +88,11 @@ function Portal() {
       ) : q.error ? (
         <p className="text-sm text-destructive">লোড হয়নি: {(q.error as Error).message}</p>
       ) : !agent ? (
-        <p className="text-sm text-muted-foreground">উপরে থেকে একজন এজেন্ট বাছাই করুন।</p>
+        d && "overview" in d && d.overview ? (
+          <OverviewBoard o={d.overview} onPick={setAgentId} />
+        ) : (
+          <p className="text-sm text-muted-foreground">উপরে থেকে একজন এজেন্ট বাছাই করুন।</p>
+        )
       ) : (
         <>
           <section className="space-y-2">
@@ -185,6 +189,99 @@ function Portal() {
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+function Spark({ values }: { values: number[] }) {
+  const max = Math.max(1, ...values);
+  return (
+    <div className="flex h-8 items-end gap-0.5" aria-label={`৭ দিনের রিপোর্ট: ${values.join(", ")}`}>
+      {values.map((v, i) => (
+        <div key={i} className="w-2 rounded-sm bg-primary/70" style={{ height: `${Math.max(6, (v / max) * 100)}%` }} title={String(v)} />
+      ))}
+    </div>
+  );
+}
+
+function OverviewBoard({ o, onPick }: { o: Overview; onPick: (id: string) => void }) {
+  const total = o.rows.reduce((s, r) => s + r.reports, 0);
+  const conn = o.rows.reduce((s, r) => s + r.connected, 0);
+  const assigned = o.rows.reduce((s, r) => s + r.assignedLeads, 0);
+  const called = o.rows.reduce((s, r) => s + r.calledLeads, 0);
+  const hourMax = Math.max(1, ...o.hourMix);
+  const statusTotal = Math.max(1, o.statusMix.reduce((s, x) => s + x.count, 0));
+  return (
+    <div className="space-y-4">
+      <h2 className="font-semibold">সব এজেন্ট — গত ৭ দিন</h2>
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <Stat label="মোট রিপোর্ট" value={total} />
+        <Stat label="কানেক্ট রেট" value={`${total ? Math.round((conn / total) * 100) : 0}%`} />
+        <Stat label="বরাদ্দ লিড" value={assigned} />
+        <Stat label="কল হয়েছে এমন লিড" value={`${called} (${assigned ? Math.round((called / assigned) * 100) : 0}%)`} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border border-border bg-card p-3">
+          <h3 className="mb-2 text-sm font-semibold">কোন সময়ে রিপোর্ট জমা হয় (ঢাকা)</h3>
+          <div className="flex h-20 items-end gap-0.5">
+            {o.hourMix.map((v, h) => (
+              <div key={h} className="flex-1 rounded-sm bg-primary/60" style={{ height: `${Math.max(3, (v / hourMax) * 100)}%` }} title={`${h}:00 — ${v}`} />
+            ))}
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground"><span>০০</span><span>১২</span><span>২৩</span></div>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3">
+          <h3 className="mb-2 text-sm font-semibold">রিপোর্ট স্ট্যাটাস</h3>
+          {o.statusMix.length ? (
+            <ul className="space-y-1.5 text-sm">
+              {o.statusMix.map((s) => (
+                <li key={s.label} className="flex items-center gap-2">
+                  <span className="w-20 truncate">{s.label}</span>
+                  <div className="h-2 flex-1 rounded bg-muted">
+                    <div className="h-2 rounded bg-primary" style={{ width: `${(s.count / statusTotal) * 100}%` }} />
+                  </div>
+                  <span className="tabular w-10 text-right">{s.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">গত ৭ দিনে কোনো রিপোর্ট নেই।</p>
+          )}
+        </div>
+      </div>
+
+      <div className="table-scroll rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+            <tr>
+              <th className="p-2">এজেন্ট</th>
+              <th className="p-2">৭ দিনের ট্রেন্ড</th>
+              <th className="p-2">রিপোর্ট</th>
+              <th className="p-2">কানেক্ট %</th>
+              <th className="p-2">পেন্ডিং</th>
+              <th className="p-2">Hot</th>
+              <th className="p-2">লিড (কল / মোট)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {o.rows.map((r) => (
+              <tr key={r.profileId} className="cursor-pointer border-t border-border hover:bg-muted/40" onClick={() => onPick(r.profileId)}>
+                <td className="p-2">
+                  <span className="tabular text-xs text-muted-foreground">{r.employeeId ?? "—"}</span> {r.name}
+                </td>
+                <td className="p-2"><Spark values={r.daily} /></td>
+                <td className="tabular p-2">{r.reports}</td>
+                <td className="tabular p-2">{r.reports ? Math.round((r.connected / r.reports) * 100) : 0}%</td>
+                <td className={`tabular p-2 ${r.pending > 0 ? "text-destructive" : ""}`}>{r.pending}</td>
+                <td className="tabular p-2">{r.hot}</td>
+                <td className="tabular p-2">{r.calledLeads} / {r.assignedLeads}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted-foreground">কোনো সারিতে ক্লিক করলে সেই এজেন্টের বিস্তারিত খুলবে।</p>
     </div>
   );
 }
