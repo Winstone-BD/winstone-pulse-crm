@@ -254,7 +254,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       .eq("role", "agent"),
     supabaseAdmin
       .from("call_reports")
-      .select("agent_id, status, connected, duration_seconds, created_at")
+      .select("agent_id, lead_id, status, connected, duration_seconds, created_at")
       .gte("created_at", startIso)
       .lte("created_at", endIso),
     supabaseAdmin
@@ -277,7 +277,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   // The scored day's own list per desk: how many leads arrived and how many are finished.
   const { data: todayLeads } = await supabaseAdmin
     .from("leads")
-    .select("assigned_to, work_state")
+    .select("id, assigned_to, work_state")
     .eq("work_date", effectiveDateKey)
     .not("assigned_to", "is", null)
     .limit(20000);
@@ -294,7 +294,9 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
     const quota = quotaFor(agent.employee_id, floorQuota);
     const targetQuota = effectiveQuota(quota, extraToday[agent.id] ?? 0);
-    const completed = myLeads.filter((row) => row.work_state === "completed").length;
+    // A lead counts as worked once it is completed OR has a call report today.
+    const reportedIds = new Set(mine.map((r) => r.lead_id).filter(Boolean));
+    const completed = myLeads.filter((row) => row.work_state === "completed" || reportedIds.has(row.id)).length;
     const base = {
       agentId: agent.id,
       name: agent.name,
