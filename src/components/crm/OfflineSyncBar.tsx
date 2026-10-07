@@ -49,7 +49,11 @@ export function OfflineSyncBar() {
   }, []);
 
   // Last successful sync = newest successful data update in the cache.
+  // Cache events can fire while another component renders (suspense queries
+  // are created mid-render), so the state update is deferred to a microtask.
   useEffect(() => {
+    let scheduled = false;
+    let alive = true;
     const calc = () => {
       let max = 0;
       for (const q of queryClient.getQueryCache().getAll()) {
@@ -57,8 +61,20 @@ export function OfflineSyncBar() {
       }
       setLastSync(max);
     };
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      queueMicrotask(() => {
+        scheduled = false;
+        if (alive) calc();
+      });
+    };
     calc();
-    return queryClient.getQueryCache().subscribe(calc);
+    const unsub = queryClient.getQueryCache().subscribe(schedule);
+    return () => {
+      alive = false;
+      unsub();
+    };
   }, [queryClient]);
 
   useEffect(() => {
