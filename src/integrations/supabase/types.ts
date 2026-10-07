@@ -1383,29 +1383,38 @@ export type Database = {
       inventory_requirements: {
         Row: {
           active: boolean
+          available_units: number | null
           created_at: string
           created_by: string | null
           id: string
           label: string
+          location: string | null
           sort_order: number
+          total_units: number | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          available_units?: number | null
           created_at?: string
           created_by?: string | null
           id?: string
           label: string
+          location?: string | null
           sort_order?: number
+          total_units?: number | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          available_units?: number | null
           created_at?: string
           created_by?: string | null
           id?: string
           label?: string
+          location?: string | null
           sort_order?: number
+          total_units?: number | null
           updated_at?: string
         }
         Relationships: [

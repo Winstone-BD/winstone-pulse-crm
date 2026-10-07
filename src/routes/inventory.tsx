@@ -37,7 +37,7 @@ function InventoryPage() {
     queryFn: () => fetchList({ data: { adminToken, includeInactive: true } }),
   });
   const mutate = useMutation({
-    mutationFn: (data: { id?: string; label?: string; active?: boolean }) =>
+    mutationFn: (data: { id?: string; label?: string; active?: boolean; location?: string | null; totalUnits?: number | null; availableUnits?: number | null }) =>
       save({ data: { adminToken, ...data } }),
     onSuccess: () => {
       setLabel("");
@@ -80,7 +80,25 @@ function InventoryPage() {
         <ul className="divide-y rounded-xl border bg-card">
           {(list.data?.items ?? []).map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-              <span className={item.active ? "" : "text-muted-foreground line-through"}>{item.label}</span>
+              <div className="min-w-0 flex-1 space-y-1">
+                <span className={item.active ? "" : "text-muted-foreground line-through"}>{item.label}</span>
+                {canManage ? (
+                  <form
+                    className="flex flex-wrap gap-1"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const f = new FormData(e.currentTarget);
+                      const num = (k: string) => { const v = String(f.get(k) ?? "").trim(); return v === "" ? null : Number(v); };
+                      mutate.mutate({ id: item.id, location: String(f.get("location") ?? "").trim() || null, totalUnits: num("total"), availableUnits: num("available") });
+                    }}
+                  >
+                    <Input name="location" defaultValue={item.location ?? ""} placeholder="ঠিকানা" className="h-8 w-40" aria-label="ঠিকানা" />
+                    <Input name="total" type="number" min={0} defaultValue={item.total_units ?? ""} placeholder="মোট ইউনিট" className="h-8 w-24" aria-label="মোট ইউনিট" />
+                    <Input name="available" type="number" min={0} defaultValue={item.available_units ?? ""} placeholder="উপলভ্য" className="h-8 w-24" aria-label="উপলভ্য ইউনিট" />
+                    <Button size="sm" type="submit" variant="outline" disabled={mutate.isPending}>সেভ</Button>
+                  </form>
+                ) : null}
+              </div>
               {canManage ? (
                 <Button size="sm" variant={item.active ? "secondary" : "default"} onClick={() => mutate.mutate({ id: item.id, active: !item.active })}>
                   {item.active ? "বন্ধ করুন" : "চালু করুন"}
