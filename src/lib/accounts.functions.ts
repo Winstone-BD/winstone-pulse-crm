@@ -111,16 +111,20 @@ export const registerMyAccount = createServerFn({ method: "POST" })
     const { rosterRole, normalizeName } = await import("@/lib/roster.server");
     const rostered = rosterRole(data.name);
 
-    if (rostered) {
-      // Link this sign-up to the desk profile waiting for this person, but keep
-      // it pending until the IT Console approves.
+    if (rostered && email) {
+      // Link this sign-up to a waiting desk profile ONLY when IT already put
+      // this exact (verified) sign-in email on that profile. A matching name
+      // alone is never enough — anyone can type a colleague's name.
       const { data: unclaimed } = await supabaseAdmin
         .from("profiles")
-        .select("id, name")
+        .select("id, name, email")
         .is("user_id", null)
-        .limit(200);
+        .ilike("email", email)
+        .limit(5);
       const match = (unclaimed ?? []).find(
-        (row) => normalizeName(row.name) === normalizeName(data.name),
+        (row) =>
+          (row.email ?? "").toLowerCase() === email.toLowerCase() &&
+          normalizeName(row.name) === normalizeName(data.name),
       );
 
       if (match) {
