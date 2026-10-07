@@ -117,7 +117,7 @@ describe("Top Performer loader (dailyTopPerformer)", () => {
     expect(board.topThree[1].photoUrl).toBe("https://signed/a2.jpg");
     expect(board.topThree[2].photoUrl).toBeNull(); // no photo uploaded
     expect(board.otherAgents.map((l) => l.agentId)).toEqual(["a4"]);
-    expect(board.sources.reports).toBe(20);
+    expect(board.sources.callReportRows).toBe(20);
   });
 
   it("excludes desks with more than 30% pending leads from the Top 3", async () => {
@@ -136,7 +136,9 @@ describe("Top Performer loader (dailyTopPerformer)", () => {
 
     expect(board.topThree.map((l) => l.agentId)).toEqual(["a2"]);
     expect(board.winner?.agentId).toBe("a2");
-    expect(board.reasons.join(" ")).toContain("30%");
+    // The excluded desk keeps its rank in the full list but carries the reason.
+    const excluded = board.otherAgents.find((l) => l.agentId === "a1");
+    expect(excluded?.gap).toContain("৩০%");
   });
 
   it("fails loudly when a database query errors instead of rendering a broken board", async () => {
