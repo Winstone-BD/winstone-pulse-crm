@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MaintenanceCountdown } from "@/components/crm/MaintenanceNotice";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -78,6 +79,8 @@ export function MaintenancePanel() {
           {state.openRequest && <Tone tone="amber">UNLOCK PENDING</Tone>}
         </span>
       </header>
+
+      <MaintenanceCountdown />
 
       <dl className="grid gap-2 text-sm sm:grid-cols-3">
         {[
