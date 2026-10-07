@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { MustChangePasswordGate } from "@/components/crm/MustChangePasswordGate";
 import { FloorLockGate } from "@/components/crm/FloorLockGate";
 import { MaintenanceGate } from "@/components/crm/MaintenanceNotice";
 import { TemporaryClosureNotice } from "@/components/crm/TemporaryClosureNotice";
@@ -224,6 +225,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       {/* The floor notice must cover every signed-in route, including the home page. */}
+      <MustChangePasswordGate />
       <FloorLockGate />
       {/* Monthly maintenance banner / lock screen — the server enforces the lock itself. */}
       <MaintenanceGate />

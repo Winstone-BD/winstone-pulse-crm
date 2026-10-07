@@ -364,6 +364,7 @@ export const createStaffAccount = createServerFn({ method: "POST" })
       email,
       password: data.password,
       email_confirm: true,
+      app_metadata: { must_change_password: true },
       user_metadata: { name: data.name, employee_id: employeeId },
     });
     if (created.error || !created.data.user) {
@@ -461,6 +462,7 @@ export const updateStaffAccount = createServerFn({ method: "POST" })
       if (!profile.user_id) throw new Error("এই প্রোফাইলে সাইন-ইন অ্যাকাউন্ট নেই");
       const { error } = await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
         password: data.password,
+        app_metadata: { must_change_password: true },
       });
       if (error) throw new Error(error.message);
     }
@@ -478,5 +480,77 @@ export const updateStaffAccount = createServerFn({ method: "POST" })
       },
     });
 
+    return { ok: true };
+  });
+
+/**
+ * IT issues a one-time password reset link for one agent. The link is a
+ * single-use recovery link from the auth service (expires automatically); it
+ * is returned once to the IT screen, never stored or logged. The account is
+ * flagged so the agent must set a new password before using the desk.
+ */
+export const issuePasswordResetLink = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        adminToken: z.string().nullable().optional(),
+        profileId: z.string().uuid(),
+        origin: z.string().url().max(200),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const access = await import("@/lib/access.server");
+    const caller = await access.resolveCaller(data.adminToken ?? null);
+    access.requireAuthority(caller);
+    access.requireWrite(caller);
+    const allowed = ["https://crm.winstonebd.com", "https://winstone-crm-v01.lovable.app"];
+    const origin = new URL(data.origin).origin;
+    const safeOrigin =
+      allowed.includes(origin) || origin.endsWith(".lovable.app") || origin.startsWith("http://localhost")
+        ? origin
+        : allowed[0]!;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, user_id, name, employee_id")
+      .eq("id", data.profileId)
+      .maybeSingle();
+    if (!profile?.user_id) throw new Error("এই প্রোফাইলে সাইন-ইন অ্যাকাউন্ট নেই");
+    const { data: authUser, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+    const email = authUser?.user?.email;
+    if (userErr || !email) throw new Error("সাইন-ইন ইমেইল পাওয়া যায়নি");
+
+    await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
+      app_metadata: { ...(authUser.user.app_metadata ?? {}), must_change_password: true },
+    });
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: `${safeOrigin}/reset-password` },
+    });
+    const actionLink = link?.properties?.action_link;
+    if (error || !actionLink) throw new Error(error?.message ?? "লিংক তৈরি হয়নি");
+
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({
+      action: "agent_password_reset_link_issued",
+      entityType: "profile",
+      entityId: profile.id,
+      actorProfileId: caller.profile?.id ?? null,
+      actorLabel: caller.profile?.name ?? "Authority PIN",
+      metadata: { employeeId: profile.employee_id },
+    });
+    return { link: actionLink, name: profile.name };
+  });
+
+/** After the agent saves a new password, clear the must-change flag. */
+export const clearMustChangePassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const meta = { ...(data?.user?.app_metadata ?? {}), must_change_password: false };
+    await supabaseAdmin.auth.admin.updateUserById(context.userId, { app_metadata: meta });
     return { ok: true };
   });

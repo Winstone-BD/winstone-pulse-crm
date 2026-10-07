@@ -19,6 +19,7 @@ import {
   updateStaffAccount,
 } from "@/lib/accounts.functions";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
+import { PasswordResetLinks } from "@/components/crm/PasswordResetLinks";
 
 type Draft = {
   name: string;
@@ -301,6 +302,7 @@ export function StaffAccountsTable() {
       {!list.isPending && staff.length === 0 && (
         <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
       )}
+      {staff.length > 0 && <PasswordResetLinks staff={staff} />}
     </section>
   );
 }
