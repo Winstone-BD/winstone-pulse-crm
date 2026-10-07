@@ -37,8 +37,9 @@ try {
 // bun.lock (JSONC-ish): the resolved entry is ["<pkg>@<version>", ...]
 try {
   const bunLock = readFileSync("bun.lock", "utf8");
-  const m = bunLock.match(new RegExp(`"${PKG.replace(/[/.]/g, "\\$&)}":\\s*\\["${PKG.replace(/[/.]/g, "\\$&)}@([^"]+)"`));
-  const v = m?.[1];
+  const marker = `"${PKG}": ["${PKG}@`;
+  const idx = bunLock.indexOf(marker);
+  const v = idx === -1 ? undefined : bunLock.slice(idx + marker.length, bunLock.indexOf('"', idx + marker.length));
   if (v !== PINNED) {
     console.error(`FAIL: bun.lock resolves ${PKG} to ${v ?? "(missing)"} — must be exactly ${PINNED}`);
     failed = true;
