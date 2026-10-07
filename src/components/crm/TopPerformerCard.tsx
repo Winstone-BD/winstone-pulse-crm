@@ -159,6 +159,12 @@ export function TopPerformerCard() {
         <Countdown target={data.nextUpdateAt} kind={data.nextUpdateKind ?? "rollover"} />
       ) : null}
 
+      {!winner && otherAgents.some((a) => a.score > 0) ? (
+        <div className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+          আজ কেউ Top 3-এর শর্ত পূরণ করেননি — প্রত্যেকের আজকের লিডের ৩০%-এর বেশি এখনো কল/রিপোর্ট ছাড়া পেন্ডিং। নিচে সবার আজকের স্কোর ও কারণ দেখুন।
+        </div>
+      ) : null}
+
       {winner ? (
         <>
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
@@ -261,6 +267,18 @@ export function TopPerformerCard() {
             )}
           </div>
         </>
+      ) : otherAgents.some((a) => a.score > 0) ? (
+        <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface px-3">
+          {otherAgents.map((agent) => (
+            <li key={agent.agentId} className="grid gap-1 py-3">
+              <p className="break-words text-sm font-semibold">
+                #{agent.rank} {agent.name} <span className="tabular text-xs text-primary">· স্কোর {agent.score}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">{agent.reason}</p>
+              <p className="text-xs text-warning">{agent.gap}</p>
+            </li>
+          ))}
+        </ul>
       ) : sources ? (
         <EmptyReason sources={sources} fallback={data.advice?.[0]} />
       ) : (
