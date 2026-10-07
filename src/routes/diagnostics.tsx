@@ -176,6 +176,7 @@ function Board() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [rangeFilter, setRangeFilter] = useState<RangeFilter>("all");
   const [alertDismissed, setAlertDismissed] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ReloadEntry | null>(null);
   const knownUnresolved = useRef<Set<string> | null>(null);
 
   const refresh = () => {
