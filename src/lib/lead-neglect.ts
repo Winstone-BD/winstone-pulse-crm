@@ -30,6 +30,27 @@ export function neglectStage(assignedDay: string, today: string): NeglectStage {
   return { kind: "recall" };
 }
 
+export type NeglectAction = { kind: "wait" } | { kind: "notice"; day: number } | { kind: "recall" };
+
+/**
+ * Given the notices already delivered for this assignment (day → Dhaka date),
+ * decide today's step. Warnings are always delivered in order, one per
+ * business day; recall only happens on a later day than the final warning.
+ * Call only once neglectStage(...) is not "none".
+ */
+export function nextNeglectAction(sent: Map<number, string>, today: string): NeglectAction {
+  for (let day = 1; day <= NEGLECT_NOTICE_DAYS; day++) {
+    const on = sent.get(day);
+    if (!on) {
+      const prev = sent.get(day - 1);
+      if (prev && prev >= today) return { kind: "wait" };
+      return { kind: "notice", day };
+    }
+  }
+  const last = sent.get(NEGLECT_NOTICE_DAYS)!;
+  return last < today ? { kind: "recall" } : { kind: "wait" };
+}
+
 export const NEGLECT_RECALL_REASON =
   "২ কার্যদিবস সতর্কবার্তার পরও লিডে কোনো কল, রিপোর্ট বা রেকর্ডিং হয়নি — লিড অবহেলা";
 
