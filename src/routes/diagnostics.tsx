@@ -235,6 +235,11 @@ function Board() {
   });
   const filteredLoads = loads.filter((l) => matchRange(l.at, rangeFilter));
 
+  // Grouped view of repeated unresolved errors (kind + page), with count and last occurrence.
+  const unresolvedGroups = groupEntries(
+    unresolved.filter((r) => matchRange(r.at, rangeFilter)),
+  );
+
   const exportCsv = () => {
     const rows: string[][] = [
       ["সময় (ঢাকা)", "ধরন", "অবস্থা", "পেজ", "রিলোড হয়েছিল", "বিস্তারিত"],
