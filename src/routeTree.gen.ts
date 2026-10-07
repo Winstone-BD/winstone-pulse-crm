@@ -34,6 +34,7 @@ import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -222,6 +223,11 @@ const NewsRoute = NewsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -591,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
@@ -682,6 +689,7 @@ export interface FileRoutesByTo {
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
@@ -774,6 +782,7 @@ export interface FileRoutesById {
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
+  '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
@@ -867,6 +876,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/news'
     | '/privacy'
+    | '/projects'
     | '/reports'
     | '/sales-intel'
     | '/security'
@@ -958,6 +968,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/news'
     | '/privacy'
+    | '/projects'
     | '/reports'
     | '/sales-intel'
     | '/security'
@@ -1049,6 +1060,7 @@ export interface FileRouteTypes {
     | '/migration-export'
     | '/news'
     | '/privacy'
+    | '/projects'
     | '/reports'
     | '/sales-intel'
     | '/security'
@@ -1141,6 +1153,7 @@ export interface RootRouteChildren {
   MigrationExportRoute: typeof MigrationExportRoute
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
@@ -1382,6 +1395,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reports': {
@@ -1861,6 +1881,7 @@ const rootRouteChildren: RootRouteChildren = {
   MigrationExportRoute: MigrationExportRoute,
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
+  ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
