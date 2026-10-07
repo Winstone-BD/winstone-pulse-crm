@@ -81,7 +81,10 @@ export function AgentOnboarding() {
     <div className="mt-6 rounded-lg border border-border p-4">
       <div className="flex items-center gap-2">
         <KeyRound className="size-4 text-primary" />
-        <h3 className="font-semibold">এজেন্ট অনবোর্ডিং</h3>
+        <h3 className="flex-1 font-semibold">এজেন্ট অনবোর্ডিং</h3>
+        <a href="/agent-activity" className="text-xs text-primary underline">
+          অ্যাক্টিভিটি ও প্রিন্ট তালিকা →
+        </a>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
         ধাপ: অ্যাকাউন্ট (উপরের ফর্ম) → একবারের লিংক পাঠান → এজেন্ট নিজে পাসওয়ার্ড সেট করবে → প্রথম লগইন স্বয়ংক্রিয়ভাবে নিশ্চিত হবে → সক্রিয় করুন। পাসওয়ার্ড কেউ দেখে না।
