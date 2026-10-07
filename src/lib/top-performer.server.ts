@@ -302,6 +302,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     const base = {
       agentId: agent.id,
       name: agent.name,
+      photoUrl: null as string | null,
       called: mine.length,
       connected,
       reports: mine.filter((r) => r.status === "submitted").length,
