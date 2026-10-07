@@ -6,7 +6,7 @@
  * moved here. Idempotent: notices/recalls are unique per assignment.
  */
 import { dhakaDateOf } from "@/lib/business-day";
-import { NEGLECT_RECALL_REASON, neglectStage } from "@/lib/lead-neglect";
+import { NEGLECT_RECALL_REASON, neglectStage, nextNeglectAction } from "@/lib/lead-neglect";
 
 const IGNORED_EVENT_KINDS = new Set(["workday_moved", "neglect_warning", "neglect_recalled"]);
 
@@ -56,6 +56,23 @@ export async function runNeglectSweep(today: string = dhakaDateOf()) {
     for (const a of assigns.data ?? []) assignedAt.set(`${a.lead_id}:${a.to_agent_id}`, a.created_at);
   }
 
+  // Notices already sent, per assignment: never recall unless both warnings
+  // were actually delivered on earlier business days (missed cron runs or
+  // the first-ever sweep must not skip the warnings).
+  const sent = new Map<string, Map<number, string>>();
+  for (const ids of chunks(held.map((l) => l.id))) {
+    const { data } = await supabaseAdmin
+      .from("lead_neglect_notices")
+      .select("lead_id, agent_id, assigned_at, notice_day, business_date")
+      .in("lead_id", ids);
+    for (const n of data ?? []) {
+      const key = `${n.lead_id}:${n.agent_id}:${new Date(n.assigned_at).getTime()}`;
+      const m = sent.get(key) ?? new Map<number, string>();
+      m.set(n.notice_day, n.business_date);
+      sent.set(key, m);
+    }
+  }
+
   let notices = 0;
   let recalled = 0;
   for (const lead of held) {
@@ -65,12 +82,16 @@ export async function runNeglectSweep(today: string = dhakaDateOf()) {
     const stage = neglectStage(dhakaDateOf(new Date(at).getTime()), today);
     if (stage.kind === "none") continue;
 
-    if (stage.kind === "notice") {
+    const prior = sent.get(`${lead.id}:${lead.owner}:${new Date(at).getTime()}`) ?? new Map<number, string>();
+    const plan = nextNeglectAction(prior, today);
+    if (plan.kind === "wait") continue;
+
+    if (plan.kind === "notice") {
       const { error } = await supabaseAdmin.from("lead_neglect_notices").insert({
         lead_id: lead.id,
         agent_id: lead.owner,
         assigned_at: at,
-        notice_day: stage.day,
+        notice_day: plan.day,
         business_date: today,
       });
       if (!error) {
@@ -79,11 +100,12 @@ export async function runNeglectSweep(today: string = dhakaDateOf()) {
           lead_id: lead.id,
           agent_id: lead.owner,
           kind: "neglect_warning",
-          detail: `অবহেলা সতর্কবার্তা ${stage.day}/২ — এখনো কোনো কল হয়নি`,
+          detail: `অবহেলা সতর্কবার্তা ${plan.day}/২ — এখনো কোনো কল হয়নি`,
         });
       }
       continue;
     }
+
 
     // Recall: the dispute row is written first; its unique key makes reruns harmless.
     const { data: dispute, error } = await supabaseAdmin
