@@ -61,9 +61,12 @@ const SendInput = z.object({
 export const sendWhatsappMessage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SendInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
+    const { resolveCaller, requireWrite } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    if (caller.scope === "none" || !caller.profile) {
+      throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
+    }
+    requireWrite(caller);
 
     const { getWhatsAppProvider } = await import("@/lib/whatsapp-provider.server");
     const provider = getWhatsAppProvider();
@@ -78,12 +81,30 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, assigned_to, phone_number")
+      .select("id, assigned_to, assigned_agent_id, phone_number")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
-    if (caller.scope === "agent" && lead.assigned_to !== caller.profile?.id) {
+    // Only the lead's owner (either owner column) may message it; HQ authority
+    // may message any lead. Coordinators are treated like agents here.
+    const owner = lead.assigned_to ?? lead.assigned_agent_id;
+    if (caller.scope !== "authority" && owner !== caller.profile.id) {
       throw new Error("এই লিড আপনার তালিকায় নেই");
+    }
+
+    const { assertContactable } = await import("@/lib/comms-guard.server");
+    await assertContactable(lead.phone_number, "whatsapp");
+
+    // Per-sender cap so a session cannot be used to blast customers.
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("whatsapp_interactions")
+      .select("id", { count: "exact", head: true })
+      .eq("agent_id", caller.profile.id)
+      .eq("provider", "meta-cloud-api")
+      .gte("created_at", since);
+    if ((count ?? 0) >= 40) {
+      throw new Error("এক ঘণ্টায় সর্বোচ্চ ৪০টি মেসেজ পাঠানো যায় — একটু পরে চেষ্টা করুন");
     }
 
     const { normalizeWhatsAppNumber } = await import("@/lib/whatsapp");

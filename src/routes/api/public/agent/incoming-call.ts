@@ -174,14 +174,24 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
 
         const { data: existing } = await supabaseAdmin
           .from("call_recordings")
-          .select("id")
+          .select("id, agent_id")
           .eq("external_call_id", body.call_uid)
           .maybeSingle();
+
+        // A call id belongs to the phone that first reported it; another
+        // agent's device can never update that row.
+        if (existing && existing.agent_id !== caller.profile.id) {
+          return json({ error: "call_uid belongs to another agent", code: "call_uid_conflict" }, 409);
+        }
 
         let recordingId = existing?.id ?? null;
 
         if (existing) {
-          await supabaseAdmin.from("call_recordings").update(patch).eq("id", existing.id);
+          await supabaseAdmin
+            .from("call_recordings")
+            .update(patch)
+            .eq("id", existing.id)
+            .eq("agent_id", caller.profile.id);
         } else {
           const { data: inserted, error } = await supabaseAdmin
             .from("call_recordings")
@@ -206,10 +216,13 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
           if (error) {
             const { data: raced } = await supabaseAdmin
               .from("call_recordings")
-              .select("id")
+              .select("id, agent_id")
               .eq("external_call_id", body.call_uid)
               .maybeSingle();
             if (!raced) return json({ error: error.message }, 500);
+            if (raced.agent_id !== caller.profile.id) {
+              return json({ error: "call_uid belongs to another agent", code: "call_uid_conflict" }, 409);
+            }
             recordingId = raced.id;
           } else {
             recordingId = inserted?.id ?? null;
