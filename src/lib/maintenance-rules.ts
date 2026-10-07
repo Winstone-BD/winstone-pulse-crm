@@ -38,6 +38,22 @@ export function defaultLockAt(period: string): string {
   return new Date(Date.UTC(y!, m! - 1, BILLING_DAY, 0, 0, 0) - DHAKA_MS).toISOString();
 }
 
+/** Renewal due day (12th 00:00 Dhaka). */
+export const RENEWAL_DAY = 12;
+
+/** Next renewal due instant (12th 00:00 Dhaka) at or after `now`; skips the current month when already paid. */
+export function nextRenewalDueAt(now: Date, paid: boolean): string {
+  const d = new Date(now.getTime() + DHAKA_MS);
+  let y = d.getUTCFullYear();
+  let m = d.getUTCMonth();
+  const at = (yy: number, mm: number) => Date.UTC(yy, mm, RENEWAL_DAY) - DHAKA_MS;
+  if (paid || at(y, m) <= now.getTime()) {
+    m += 1;
+    if (m > 11) { m = 0; y += 1; }
+  }
+  return new Date(at(y, m)).toISOString();
+}
+
 export type RuleInput = {
   now: Date;
   lockAt: string;

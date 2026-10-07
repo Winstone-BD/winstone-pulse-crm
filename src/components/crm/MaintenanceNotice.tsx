@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
 import { Lock, LogIn, ShieldAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, dhakaTime } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, dhakaTime, nextRenewalDueAt } from "@/lib/maintenance-rules";
 
 export function useMaintenance() {
   const adminToken = useAdminToken();
@@ -85,7 +85,7 @@ function NoticeBody({ s }: { s: Status }) {
         <dt className="text-muted-foreground">Fee</dt>
         <dd className="font-semibold">{MAINTENANCE_FEE_LABEL}</dd>
         <dt className="text-muted-foreground">Billing date</dt>
-        <dd className="font-semibold">14th of every month (lock 15th 00:00)</dd>
+        <dd className="font-semibold">Renewal 12th · lock 15th 00:00 (Dhaka)</dd>
         <dt className="text-muted-foreground">Lock time</dt>
         <dd className="font-semibold">{dhakaTime(s.lockAt)}</dd>
         <dt className="text-muted-foreground">Current status</dt>
@@ -139,10 +139,58 @@ export function MaintenanceBadge() {
   );
 }
 
+function fmtLeft(ms: number) {
+  if (ms <= 0) return "০০:০০:০০";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const hh = String(Math.floor((s % 86400) / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${d > 0 ? `${d} দিন ` : ""}${hh}:${mm}:${ss}`;
+}
+
+/** Live Dhaka-time countdown to next renewal due and to the unpaid lock. */
+export function MaintenanceCountdown() {
+  const { data } = useMaintenance();
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  if (!data || now === null) return null;
+  const paid = data.paymentStatus === "verified";
+  const renewal = nextRenewalDueAt(new Date(now), paid);
+  const lockMs = new Date(data.lockAt).getTime() - now;
+  return (
+    <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
+      <div className="rounded-lg border border-border bg-card/60 p-3">
+        <p className="text-[11px] text-muted-foreground">পরবর্তী Renewal Due (ঢাকা সময়)</p>
+        <p className="font-semibold">{dhakaTime(renewal)}</p>
+        <p className="font-mono text-base tabular-nums text-primary">{fmtLeft(new Date(renewal).getTime() - now)}</p>
+      </div>
+      <div className={`rounded-lg border p-3 ${paid ? "border-border bg-card/60" : "border-destructive/40 bg-destructive/5"}`}>
+        <p className="text-[11px] text-muted-foreground">Unpaid Lock পর্যন্ত (ঢাকা সময়)</p>
+        {paid ? (
+          <p className="font-semibold text-primary">🟢 পেমেন্ট যাচাইকৃত — এই মাসে লক হবে না</p>
+        ) : (
+          <>
+            <p className="font-semibold">{dhakaTime(data.lockAt)}</p>
+            <p className="font-mono text-base tabular-nums text-destructive">
+              {lockMs > 0 ? fmtLeft(lockMs) : data.locked ? "🔒 লক হয়েছে" : "আনলক অনুমোদিত"}
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Profile-card version: prominent red box for Agent and Executive profiles. */
 export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
-  if (!data || !needsNotice(data)) return null;
+  if (!data) return null;
+  if (!needsNotice(data)) return <MaintenanceCountdown />;
   return (
     <div className="notice-highlight mt-3 rounded-lg border-destructive/40 bg-destructive/10 p-3 pl-4 text-sm">
       <div className="flex items-center justify-between gap-2">
@@ -150,12 +198,13 @@ export function MaintenanceProfileNotice() {
         <MaintenanceBadge />
       </div>
       <p className="mt-1">
-        Monthly System Maintenance Fee: <b>{MAINTENANCE_FEE_LABEL}</b> · Due: 14th of every month (lock 15th 00:00) ·
+        Monthly System Maintenance Fee: <b>{MAINTENANCE_FEE_LABEL}</b> · Renewal due: 12th · Unpaid lock: 15th 00:00 (Dhaka) ·
         Status: <b className="text-destructive">{statusLabel(data)}</b>
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
         Please contact IT Console / authorized team to complete the maintenance payment and request system unlock.
       </p>
+      <MaintenanceCountdown />
     </div>
   );
 }
