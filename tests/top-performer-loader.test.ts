@@ -65,11 +65,20 @@ const agent = (id: string, name: string, photo_path: string | null = null): Row 
   photo_path,
 });
 
-const report = (agent_id: string, connected: boolean): Row => ({
+const report = (agent_id: string, connected: boolean, lead_id: string | null = null): Row => ({
   agent_id,
+  lead_id,
+  status: "submitted",
+  connected,
+  duration_seconds: connected ? 120 : 0,
   created_at: "2026-10-07T06:00:00Z",
-  call_outcome: connected ? "connected" : "no_answer",
-  talk_seconds: connected ? 120 : 0,
+});
+
+const lead = (assigned_to: string, work_state: string): Row => ({
+  id: `lead-${assigned_to}-${Math.random().toString(36).slice(2, 8)}`,
+  assigned_to,
+  work_state,
+  work_date: "2026-10-07",
 });
 
 beforeEach(() => {
@@ -119,11 +128,8 @@ describe("Top Performer loader (dailyTopPerformer)", () => {
       ...Array.from({ length: 5 }, () => report("a2", true)),
     ];
     state.leads = [
-      ...Array.from({ length: 50 }, (_, i) => ({
-        assigned_to: "a1",
-        status: i < 10 ? "contacted" : "new",
-      })),
-      ...Array.from({ length: 50 }, () => ({ assigned_to: "a2", status: "contacted" })),
+      ...Array.from({ length: 50 }, (_, i) => lead("a1", i < 10 ? "completed" : "new")),
+      ...Array.from({ length: 50 }, () => lead("a2", "completed")),
     ];
 
     const board = await dailyTopPerformer();
