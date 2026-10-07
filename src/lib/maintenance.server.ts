@@ -5,6 +5,7 @@ import {
   clampUnlockMinutes,
   decide,
   defaultLockAt,
+  dhakaTime,
   dhakaPeriod,
   isArchitectIdentity,
   type PaymentStatus,
@@ -18,6 +19,7 @@ export type MaintenanceState = {
   dueDate: string;
   lockAt: string;
   paymentStatus: PaymentStatus;
+  paymentRef: string | null;
   paymentVerifiedAt: string | null;
   paymentVerifiedBy: string | null;
   unlockStatus: UnlockStatus;
@@ -138,7 +140,13 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
       .is("locked_logged_at", null)
       .select("id")
       .maybeSingle();
-    if (flagged) await audit({ actor: "system", actorRole: "system", action: "system_locked", period, previous: "active", next: "locked" });
+    if (flagged) {
+      await audit({ actor: "system", actorRole: "system", action: "system_locked", period, previous: "active", next: "locked" });
+      await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — maintenance unpaid", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Submit the payment reference in IT Console.`);
+    }
+  }
+  if (result.stage === "due_today") {
+    await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Fee $46.29 USD.`);
   }
 
   const { count } = await client
@@ -153,6 +161,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     dueDate: row.due_date,
     lockAt: row.lock_at,
     paymentStatus: row.payment_status,
+    paymentRef: row.payment_ref,
     paymentVerifiedAt: row.payment_verified_at,
     paymentVerifiedBy: row.payment_verified_by,
     unlockStatus: row.unlock_status,
@@ -294,9 +303,9 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 export async function maintenanceHistory() {
   const client = await db();
   const [{ data: periods }, { data: requests }, { data: log }] = await Promise.all([
-    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").order("billing_period", { ascending: false }).limit(24),
+    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").order("requested_at", { ascending: false }).limit(50),
-    client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at").order("at", { ascending: false }).limit(200),
+    client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
   ]);
   return { periods: periods ?? [], requests: requests ?? [], audit: log ?? [] };
 }

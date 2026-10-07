@@ -87,24 +87,23 @@ export const itMaintenance = createServerFn({ method: "POST" })
     return { state, ...history };
   });
 
-export const verifyMaintenancePayment = createServerFn({ method: "POST" })
+/** IT submits a real reference only; verification belongs to the System Architect. */
+export const submitMaintenancePayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     Token.extend({ paymentRef: z.string().trim().min(3).max(120), note: z.string().trim().max(300).optional() }).parse(input),
   )
   .handler(async ({ data }) => {
     const { label } = await itCaller(data.adminToken);
-    const { verifyPayment } = await import("@/lib/maintenance.server");
-    return verifyPayment({ actor: label, paymentRef: data.paymentRef, note: data.note ?? null });
+    const { submitPayment } = await import("@/lib/maintenance.server");
+    return submitPayment({ actor: label, paymentRef: data.paymentRef, note: data.note ?? null });
   });
 
-export const setMaintenancePayment = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    Token.extend({ status: z.enum(["unpaid", "pending"]), reason: z.string().trim().max(300).optional() }).parse(input),
-  )
+export const withdrawMaintenancePayment = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Token.extend({ reason: z.string().trim().max(300).optional() }).parse(input))
   .handler(async ({ data }) => {
     const { label } = await itCaller(data.adminToken);
-    const { setPaymentStatus } = await import("@/lib/maintenance.server");
-    return setPaymentStatus({ actor: label, status: data.status, reason: data.reason ?? null });
+    const { withdrawPayment } = await import("@/lib/maintenance.server");
+    return withdrawPayment({ actor: label, reason: data.reason ?? null });
   });
 
 export const setMaintenanceLockAt = createServerFn({ method: "POST" })
@@ -196,4 +195,15 @@ export const architectDecision = createServerFn({ method: "POST" })
       ...(data.minutes === undefined ? {} : { minutes: data.minutes }),
       reason: data.reason ?? null,
     });
+  });
+
+/** Architect-only: verify or reject the submitted payment reference (audit reason required). */
+export const architectPaymentDecision = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ session: z.string().min(10), approve: z.boolean(), reason: z.string().trim().min(3).max(300) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const who = await architect(data.session);
+    const { architectReviewPayment } = await import("@/lib/maintenance.server");
+    return architectReviewPayment({ actor: `System Architect (${who.email})`, approve: data.approve, reason: data.reason });
   });
