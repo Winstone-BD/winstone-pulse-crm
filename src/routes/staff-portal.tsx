@@ -88,7 +88,11 @@ function Portal() {
       ) : q.error ? (
         <p className="text-sm text-destructive">লোড হয়নি: {(q.error as Error).message}</p>
       ) : !agent ? (
-        <p className="text-sm text-muted-foreground">উপরে থেকে একজন এজেন্ট বাছাই করুন।</p>
+        d && "overview" in d && d.overview ? (
+          <OverviewBoard o={d.overview} onPick={setAgentId} />
+        ) : (
+          <p className="text-sm text-muted-foreground">উপরে থেকে একজন এজেন্ট বাছাই করুন।</p>
+        )
       ) : (
         <>
           <section className="space-y-2">
