@@ -106,6 +106,7 @@ export function MaintenancePanel() {
         <p className="mb-1 text-sm font-semibold">কীভাবে কাজ করে (ঢাকা সময়)</p>
         <ol className="list-decimal space-y-0.5 pl-4 text-muted-foreground">
           <li>৯ তারিখ ০০:০০ — সবার স্ক্রিনে পেমেন্ট নোটিশ শুরু।</li>
+          <li>১২ তারিখ ০০:০০ — Renewal Due ($46.29 USD পরিশোধের দিন)।</li>
           <li>১৪ তারিখ ২৩:৫৯ পর্যন্ত — CRM পুরোপুরি চালু (গ্রেস সময়)।</li>
           <li>১৫ তারিখ ০০:০০ — পেমেন্ট যাচাই না হলে এজেন্ট/HQ লক; IT Console খোলা থাকে।</li>
           <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Submit for verification” চাপুন — মাসটি PENDING হবে।</li>
