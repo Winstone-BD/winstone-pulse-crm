@@ -81,7 +81,7 @@ export const siRecordPitch = createServerFn({ method: "POST" })
   });
 
 export const siPitchHistory = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ ...Tok, filters: Filters, cursor: z.object({ at: z.string(), id: uuid }).nullable(), pageSize: z.number().int().min(10).max(200).default(50) }).parse(d))
+  .inputValidator((d) => z.object({ ...Tok, filters: Filters, cursor: z.object({ at: z.string().datetime({ offset: true }), id: uuid }).nullable(), pageSize: z.number().int().min(10).max(200).default(50) }).parse(d))
   .handler(async ({ data }) => {
     const m = await s();
     return m.searchPitchEvents(await m.siCaller(data.adminToken), data.filters, data.cursor, data.pageSize);

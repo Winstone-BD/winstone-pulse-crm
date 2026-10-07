@@ -256,7 +256,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       .eq("role", "agent"),
     supabaseAdmin
       .from("call_reports")
-      .select("agent_id, lead_id, status, connected, duration_seconds, created_at")
+      .select("agent_id, lead_id, status, connected, duration_seconds, created_at, connection_verified, submitted_at")
       .gte("created_at", startIso)
       .lte("created_at", endIso),
     supabaseAdmin
@@ -289,9 +289,10 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
 
   const lines: PerformerLine[] = (agentsRes.data ?? []).map((agent) => {
     const mine = reports.filter((r) => r.agent_id === agent.id);
-    const connected = mine.filter((r) => r.connected).length;
+    const scored = mine.filter(countsTowardScore);
+    const connected = scored.filter((r) => r.connected).length;
     const talkMinutes = Math.round(
-      mine.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60,
+      scored.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60,
     );
     const myLeads = (todayLeads ?? []).filter((row) => row.assigned_to === agent.id);
     const quota = quotaFor(agent.employee_id, floorQuota);
@@ -462,4 +463,11 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     advice,
     team,
   };
+}
+
+/** Reports submitted before phone-verification existed keep counting; newer ones need the phone's measurement. */
+export const VERIFIED_SCORING_SINCE = "2026-10-07T17:30:00Z";
+export function countsTowardScore(r: { connection_verified?: boolean | null; submitted_at?: string | null }) {
+  if (r.connection_verified !== false) return true;
+  return !r.submitted_at || r.submitted_at < VERIFIED_SCORING_SINCE;
 }
