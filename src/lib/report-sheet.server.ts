@@ -96,8 +96,14 @@ function formatDhaka(iso: string | null) {
   return new Date(iso).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" });
 }
 
+/** Text cells starting with =, +, -, @ would run as formulas under USER_ENTERED. */
+export function safeCell(v: unknown): string {
+  const s = v == null ? "" : String(v);
+  return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+}
+
 function toSheetLine(row: ReportSheetRow) {
-  return [
+  return ([
     formatDhaka(row.callEndedAt),
     row.agentName,
     row.leadName,
@@ -108,7 +114,7 @@ function toSheetLine(row: ReportSheetRow) {
     row.summary,
     row.note,
     formatDhaka(row.followUpAt),
-  ];
+  ] as unknown[]).map(safeCell);
 }
 
 function gatewayHeaders() {

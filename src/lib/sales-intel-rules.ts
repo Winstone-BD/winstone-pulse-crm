@@ -225,7 +225,9 @@ export function pitchHistoryCsv(
   rows: Array<{ id: string; created_at: string; lead_id: string; lead_name: string | null; agent: string | null; objection_code: string; template_id: string | null; action: string; project: string | null; final_text: string | null; generated_text: string | null; fact_ids: string[] }>,
 ) {
   const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
+    const raw = v == null ? "" : String(v);
+    // Neutralise spreadsheet formulas (=, +, -, @, tab, CR) planted in free text.
+    const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const dh = (iso: string) => new Date(Date.parse(iso) + 6 * 3600_000).toISOString().replace("T", " ").slice(0, 16);
