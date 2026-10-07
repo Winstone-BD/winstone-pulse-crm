@@ -86,7 +86,7 @@ async function sendViaRelay(endpoint: string, apiKey: string, to: string, stage:
   const p = buildHostingerServiceBillPayload({
     recipient: to,
     stage,
-    reviewUrl: "https://crm1.winstonebd.com/service-bill-unlock",
+    reviewUrl: "https://crm.winstonebd.com/service-bill-unlock",
   });
   const res = await fetch(endpoint, {
     method: "POST",
@@ -114,7 +114,7 @@ export async function sendViaHostinger(
   const payload = buildHostingerServiceBillPayload({
     recipient: to,
     stage,
-    reviewUrl: "https://crm1.winstonebd.com/service-bill-unlock",
+    reviewUrl: "https://crm.winstonebd.com/service-bill-unlock",
   });
   const res = await fetch(
     `${HOSTINGER_MAIL_API}/api/v1/mailboxes/${encodeURIComponent(mailboxId)}/send`,
