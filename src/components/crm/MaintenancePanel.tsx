@@ -12,8 +12,8 @@ import {
   itMaintenance,
   requestSystemUnlock,
   setMaintenanceLockAt,
-  setMaintenancePayment,
-  verifyMaintenancePayment,
+  submitMaintenancePayment,
+  withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
 import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
@@ -57,9 +57,10 @@ export function MaintenancePanel() {
     onSuccess: () => { toast.success(ok); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const verify = useMutation(run(() => verifyMaintenancePayment({ data: { adminToken, paymentRef: ref } }), "Payment verified"));
-  const pending = useMutation(run(() => setMaintenancePayment({ data: { adminToken, status: "pending" } }), "Marked as pending"));
-  const unpaid = useMutation(run(() => setMaintenancePayment({ data: { adminToken, status: "unpaid", reason: "Payment rejected by IT" } }), "Marked as unpaid"));
+  const submit = useMutation(run(() => submitMaintenancePayment({ data: { adminToken, paymentRef: ref } }), "Submitted — waiting for System Architect verification"));
+  const withdraw = useMutation(run(() => withdrawMaintenancePayment({ data: { adminToken, reason: "Submission withdrawn by IT" } }), "Submission withdrawn"));
+  const [search, setSearch] = useState("");
+  const [kind, setKind] = useState<AuditKind>("all");
   const unlock = useMutation(run(() => requestSystemUnlock({ data: { adminToken, hours, reason: reason || undefined } }), "Unlock request sent to System Architect"));
   const saveLock = useMutation(run(() => setMaintenanceLockAt({ data: { adminToken, lockAt: new Date(`${lockAt}:00+06:00`).toISOString() } }), "Lock time updated"));
 
@@ -107,7 +108,8 @@ export function MaintenancePanel() {
           <li>৯ তারিখ ০০:০০ — সবার স্ক্রিনে পেমেন্ট নোটিশ শুরু।</li>
           <li>১৪ তারিখ ২৩:৫৯ পর্যন্ত — CRM পুরোপুরি চালু (গ্রেস সময়)।</li>
           <li>১৫ তারিখ ০০:০০ — পেমেন্ট যাচাই না হলে এজেন্ট/HQ লক; IT Console খোলা থাকে।</li>
-          <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Verify payment” চাপুন — মাসটি সাথে সাথে PAID হবে, লক হবে না।</li>
+          <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Submit for verification” চাপুন — মাসটি PENDING হবে।</li>
+          <li>চূড়ান্ত যাচাই শুধু System Architect করেন; যাচাই হলেই মাসটি PAID হয়, লক হবে না।</li>
           <li>যাচাইয়ের আগে জরুরি দরকার হলে “Request system unlock” — শুধু System Architect সর্বোচ্চ ২৪ ঘণ্টার জন্য খুলতে পারে।</li>
         </ol>
         <p className="mt-1 text-muted-foreground">এই বক্সের মাস: <b>{state.period}</b>। প্রতিটি কাজ কে, কখন, কোন রেফারেন্সে করেছে — নিচের অডিটে স্থায়ীভাবে থাকে।</p>
@@ -115,16 +117,15 @@ export function MaintenancePanel() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-2 rounded-lg border border-border p-3">
-          <p className="text-sm font-semibold">Payment verification — {state.period}</p>
+          <p className="text-sm font-semibold">Payment submission — {state.period}</p>
+          {state.paymentRef && <p className="text-xs text-muted-foreground">Current reference: <b>{state.paymentRef}</b></p>}
           <Label htmlFor="mt-ref">Payment reference</Label>
-          <Input id="mt-ref" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Transaction / receipt ID" />
-          <Button className="w-full" disabled={ref.trim().length < 3 || verify.isPending || state.paymentStatus === "verified"} onClick={() => verify.mutate()}>
-            Verify payment
+          <Input id="mt-ref" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="bKash TrxID / bank receipt" />
+          <Button className="w-full" disabled={ref.trim().length < 3 || submit.isPending || state.paymentStatus === "verified"} onClick={() => submit.mutate()}>
+            Submit for verification
           </Button>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" className="flex-1" disabled={pending.isPending || state.paymentStatus === "verified"} onClick={() => pending.mutate()}>Mark pending</Button>
-            <Button variant="ghost" size="sm" className="flex-1" disabled={unpaid.isPending} onClick={() => unpaid.mutate()}>Mark unpaid</Button>
-          </div>
+          <Button variant="ghost" size="sm" className="w-full" disabled={withdraw.isPending || state.paymentStatus !== "pending"} onClick={() => withdraw.mutate()}>Withdraw submission</Button>
+          <p className="text-xs text-muted-foreground">Final verification requires System Architect approval.</p>
         </div>
 
         <div className="space-y-2 rounded-lg border border-border p-3">
@@ -170,26 +171,51 @@ export function MaintenancePanel() {
             ))}
           </div>
         </div>
-        <div>
-          <p className="mb-2 text-sm font-semibold">Payment history</p>
-          <div className="max-h-72 space-y-1 overflow-y-auto text-xs">
-            {periods.map((p) => (
-              <div key={p.billing_period} className="flex flex-wrap justify-between gap-2 rounded border border-border p-2">
-                <span>{p.billing_period} · ${Number(p.fee_usd).toFixed(2)} USD</span>
-                <span>{p.payment_status.toUpperCase()} {p.payment_verified_by ? `· ${p.payment_verified_by}` : ""}</span>
-              </div>
-            ))}
-          </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold">Month-wise payment history</p>
+        <div className="table-scroll rounded border border-border">
+          <table className="w-full min-w-[720px] text-xs">
+            <thead className="bg-muted/50 text-left"><tr><th className="p-2">Month</th><th className="p-2">Amount</th><th className="p-2">Reference</th><th className="p-2">Status</th><th className="p-2">Submitted</th><th className="p-2">Verified</th></tr></thead>
+            <tbody>
+              {periods.map((p) => {
+                const sub = audit.find((a) => a.billing_period === p.billing_period && a.action === "payment_submitted");
+                return (
+                  <tr key={p.billing_period} className="border-t border-border">
+                    <td className="p-2 font-medium">{p.billing_period}</td>
+                    <td className="p-2">${Number(p.fee_usd).toFixed(2)} USD</td>
+                    <td className="p-2">{p.payment_ref ?? "—"}</td>
+                    <td className="p-2">
+                      <Tone tone={p.payment_status === "verified" ? "green" : p.payment_status === "pending" ? "amber" : "red"}>
+                        {p.payment_status === "verified" ? "PAID" : p.payment_status === "pending" ? "SUBMITTED" : "UNPAID"}
+                      </Tone>
+                    </td>
+                    <td className="p-2">{sub ? `${sub.actor} · ${dhakaTime(sub.at)}` : "—"}</td>
+                    <td className="p-2">{p.payment_verified_by ? `${p.payment_verified_by} · ${dhakaTime(p.payment_verified_at)}` : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-semibold">Audit history</p>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold">Audit history</p>
+          <Input className="h-8 max-w-xs text-xs" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search action, reason, user, date…" />
+          <div className="flex flex-wrap gap-1">
+            {AUDIT_KINDS.map((k) => (
+              <Button key={k.id} size="sm" variant={kind === k.id ? "default" : "secondary"} onClick={() => setKind(k.id)}>{k.label}</Button>
+            ))}
+          </div>
+        </div>
         <div className="max-h-80 overflow-auto rounded border border-border">
           <table className="w-full min-w-[560px] text-xs">
             <thead className="bg-muted/50 text-left"><tr><th className="p-2">Time</th><th className="p-2">Action</th><th className="p-2">Actor</th><th className="p-2">Change</th><th className="p-2">Reason</th></tr></thead>
             <tbody>
-              {audit.map((a) => (
+              {filterAudit(audit, kind, search).map((a) => (
                 <tr key={a.id} className="border-t border-border">
                   <td className="p-2 whitespace-nowrap">{dhakaTime(a.at)}</td>
                   <td className="p-2">{a.action}</td>
@@ -204,4 +230,26 @@ export function MaintenancePanel() {
       </div>
     </section>
   );
+}
+
+type AuditKind = "all" | "payment" | "lock" | "policy";
+const AUDIT_KINDS: { id: AuditKind; label: string }[] = [
+  { id: "all", label: "সব" },
+  { id: "payment", label: "পেমেন্ট" },
+  { id: "lock", label: "লক / আনলক" },
+  { id: "policy", label: "পলিসি" },
+];
+
+type AuditRow = { at: string; action: string; actor: string; actor_role: string; reason: string | null; billing_period: string | null };
+
+function filterAudit<T extends AuditRow>(rows: T[], kind: AuditKind, search: string): T[] {
+  const q = search.trim().toLowerCase();
+  return rows.filter((a) => {
+    const act = a.action;
+    if (kind === "payment" && !act.startsWith("payment") && act !== "maintenance_due") return false;
+    if (kind === "lock" && !/lock|unlock/.test(act)) return false;
+    if (kind === "policy" && !/lock_at|policy|lock_time/.test(act)) return false;
+    if (!q) return true;
+    return [act, a.actor, a.actor_role, a.reason ?? "", a.billing_period ?? "", dhakaTime(a.at)].join(" ").toLowerCase().includes(q);
+  });
 }
