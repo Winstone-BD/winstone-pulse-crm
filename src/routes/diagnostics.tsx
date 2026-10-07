@@ -503,6 +503,71 @@ function Board() {
           </ul>
         )}
       </section>
+
+      <Dialog open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-w-2xl">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {KIND_LABEL[selected.kind] ?? selected.kind}
+                  {isResolved(selected, reloads) ? (
+                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                      ঠিক হয়েছে
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">অমীমাংসিত</Badge>
+                  )}
+                </DialogTitle>
+                <DialogDescription>
+                  ঘটনার সময় (ঢাকা): {dhakaTime(selected.at)} · রিলোড হয়েছিল: {selected.reloaded ? "হ্যাঁ" : "না"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="mb-1 font-medium text-muted-foreground">সংশ্লিষ্ট পেজ</p>
+                  <p className="rounded-lg border border-border bg-muted/40 p-2 font-mono text-xs break-all">
+                    {selected.page || "/"}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 font-medium text-muted-foreground">স্ট্যাক ট্রেস / বিস্তারিত</p>
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-border bg-muted/40 p-3 font-mono text-xs">
+                    {selected.detail || "কোনো বিস্তারিত রেকর্ড হয়নি"}
+                  </pre>
+                </div>
+                <div>
+                  <p className="mb-1 font-medium text-muted-foreground">এই ধরনের ঘটনার সময়রেখা</p>
+                  <ul className="max-h-40 space-y-1 overflow-auto rounded-lg border border-border bg-muted/40 p-2 font-mono text-xs">
+                    {reloads
+                      .filter((r) => groupKey(r) === groupKey(selected))
+                      .map((r, i) => (
+                        <li key={i} className="flex justify-between gap-2">
+                          <span className="tabular-nums">{dhakaTime(r.at)}</span>
+                          <span className={isResolved(r, reloads) ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}>
+                            {isResolved(r, reloads) ? "ঠিক হয়েছে" : "অমীমাংসিত"}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(
+                      `[${dhakaTime(selected.at)}] ${selected.kind} @ ${selected.page}\n${selected.detail || ""}`,
+                    );
+                    toast.success("কপি হয়েছে");
+                  }}
+                >
+                  <Copy className="size-4" /> বিস্তারিত কপি করুন
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
