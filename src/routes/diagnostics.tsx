@@ -185,7 +185,7 @@ function Board() {
   const recovered = reloads.filter((r) => r.kind === "recovered-after-reload").length;
 
   // Latest unresolved entry key — used to dismiss the banner until a new one appears.
-  const latestUnresolvedKey = unresolved.length ? entryKey(unresolved[0]) : null;
+  const latestUnresolvedKey = unresolved.length ? entryKey(unresolved[0]!) : null;
   const showAlert = unresolved.length > 0 && latestUnresolvedKey !== alertDismissed;
 
   const filteredReloads = reloads.filter((r) => {
