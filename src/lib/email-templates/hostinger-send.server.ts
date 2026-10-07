@@ -77,8 +77,14 @@ export function relayEndpoint(): string | null {
   return /^https:\/\/[^\s]+$/.test(ep) ? ep : null;
 }
 
+/** Provider is always Hostinger; any other EMAIL_PROVIDER value is ignored. */
+export function emailProvider(): "hostinger" {
+  return "hostinger";
+}
+
+/** Sender is pinned to info@winstonebd.com; SENDER_EMAIL / HOSTINGER_SENDER_EMAIL may only confirm it. */
 export function senderAddress(): string {
-  const s = process.env["HOSTINGER_SENDER_EMAIL"]?.trim().toLowerCase();
+  const s = (process.env["SENDER_EMAIL"] || process.env["HOSTINGER_SENDER_EMAIL"])?.trim().toLowerCase();
   return s === SERVICE_BILL_SENDER ? s : SERVICE_BILL_SENDER;
 }
 

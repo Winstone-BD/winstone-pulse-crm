@@ -610,6 +610,13 @@
       "when": 1791356493327,
       "tag": "0086_restrict_article_category_reads_to_support_staff",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1791380705999,
+      "tag": "0087_migration",
+      "breakpoints": true
     }
   ]
 }
