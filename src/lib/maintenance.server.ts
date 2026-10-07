@@ -181,49 +181,77 @@ export async function isLockedForOrdinaryUsers(): Promise<boolean> {
   }
 }
 
-/* ---------------- IT Console actions ---------------- */
+/* ---------------- Notifications (system_alerts, deduped per code) ---------------- */
 
-export async function verifyPayment(input: { actor: string; paymentRef: string; note?: string | null }) {
+export async function notifyOnce(code: string, severity: "info" | "warning" | "critical", title: string, detail: string) {
+  const client = await db();
+  const { data } = await client.from("system_alerts").select("id").eq("code", code).limit(1).maybeSingle();
+  if (data) return false;
+  await client.from("system_alerts").insert({ code, severity, title, detail });
+  return true;
+}
+
+async function notify(code: string, severity: "info" | "warning" | "critical", title: string, detail: string) {
+  const client = await db();
+  await client.from("system_alerts").insert({ code, severity, title, detail });
+}
+
+/* ---------------- IT Console actions (submit only — never verify) ---------------- */
+
+/** IT records a real payment reference; the month becomes PENDING until the System Architect verifies it. */
+export async function submitPayment(input: { actor: string; paymentRef: string; note?: string | null }) {
   const state = await maintenanceAccess();
   if (state.paymentStatus === "verified") return { ok: true, already: true };
   const client = await db();
-  const at = new Date().toISOString();
   const { error } = await client
     .from("system_maintenance")
-    .update({
-      payment_status: "verified",
-      payment_ref: input.paymentRef,
-      payment_verified_at: at,
-      payment_verified_by: input.actor,
-      lock_status: "active",
-    })
+    .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null })
     .eq("billing_period", state.period);
-  if (error) throw new Error("Could not verify payment");
+  if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
-  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_verified", period: state.period, previous: state.paymentStatus, next: "verified", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
+  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
+  await notify(`maintenance_payment_submitted_${state.period}_${Date.now()}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} ($46.29 USD). Awaiting System Architect verification.`);
   return { ok: true, already: false };
 }
 
-export async function setPaymentStatus(input: { actor: string; status: "unpaid" | "pending"; reason?: string | null }) {
+/** IT may withdraw a pending submission (back to unpaid). A verified month can only be changed by the Architect. */
+export async function withdrawPayment(input: { actor: string; reason?: string | null }) {
   const state = await maintenanceAccess();
+  if (state.paymentStatus === "verified") throw new Error("Verified payment can only be changed by the System Architect");
   const client = await db();
   const { error } = await client
     .from("system_maintenance")
-    .update({ payment_status: input.status, payment_verified_at: null, payment_verified_by: null })
+    .update({ payment_status: "unpaid", payment_verified_at: null, payment_verified_by: null })
     .eq("billing_period", state.period);
   if (error) throw new Error("Could not update payment status");
   clearMaintenanceCache();
-  await audit({
-    actor: input.actor,
-    actorRole: "it_console",
-    action: input.status === "pending" ? "payment_submitted" : "payment_rejected",
-    period: state.period,
-    previous: state.paymentStatus,
-    next: input.status,
-    reason: input.reason ?? null,
-  });
+  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_withdrawn", period: state.period, previous: state.paymentStatus, next: "unpaid", reason: input.reason ?? null });
   return { ok: true };
 }
+
+/** System Architect (verified Google identity + session) verifies or rejects the pending reference. */
+export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
+  const state = await maintenanceAccess();
+  const client = await db();
+  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("billing_period", state.period).single();
+  if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
+  const at = new Date().toISOString();
+  const update = input.approve
+    ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active" }
+    : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null };
+  const { error } = await client.from("system_maintenance").update(update).eq("billing_period", state.period).eq("payment_status", "pending");
+  if (error) throw new Error("Could not record decision");
+  clearMaintenanceCache();
+  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd } });
+  await notify(
+    `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${Date.now()}`,
+    input.approve ? "info" : "critical",
+    input.approve ? "Maintenance payment verified" : "Maintenance payment rejected",
+    `${state.period} reference ${row.payment_ref}: ${input.approve ? "verified — no lock this month" : "rejected"}. Reason: ${input.reason}`,
+  );
+  return { ok: true };
+}
+
 
 export async function setLockAt(input: { actor: string; lockAt: string }) {
   const state = await maintenanceAccess();
