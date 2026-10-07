@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decide, defaultLockAt, dhakaPeriod } from "@/lib/maintenance-rules";
+import { decide, defaultDueAt, defaultLockAt, dhakaPeriod } from "@/lib/maintenance-rules";
 
 /** Dhaka wall-clock → Date (Asia/Dhaka is fixed UTC+6, no DST). */
 const dhaka = (local: string) => new Date(`${local}+06:00`);
@@ -20,6 +20,9 @@ describe.each(periods)("maintenance calendar %s (Asia/Dhaka)", (period) => {
 
   it("lock is the 15th 00:00 Dhaka (14th 18:00 UTC)", () => {
     expect(defaultLockAt(period)).toBe(`${period}-14T18:00:00.000Z`);
+  });
+  it("renewal due is the 12th 00:00 Dhaka (11th 18:00 UTC)", () => {
+    expect(defaultDueAt(period)).toBe(`${period}-11T18:00:00.000Z`);
   });
   it("no notice on the 8th 23:59", () => {
     expect(stage("08", "23:59:59").stage).toBe("clear");
