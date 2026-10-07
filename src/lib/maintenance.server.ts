@@ -4,6 +4,7 @@ import {
   MAINTENANCE_FEE_USD,
   clampUnlockMinutes,
   decide,
+  defaultDueAt,
   defaultLockAt,
   dhakaTime,
   dhakaPeriod,

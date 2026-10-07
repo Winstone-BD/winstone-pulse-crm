@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { decide, defaultLockAt, dhakaPeriod } from "@/lib/maintenance-rules";
+import { decide, defaultDueAt, defaultLockAt, dhakaPeriod } from "@/lib/maintenance-rules";
 
 /** Dhaka wall-clock → Date (Asia/Dhaka is fixed UTC+6, no DST). */
 const dhaka = (local: string) => new Date(`${local}+06:00`);
