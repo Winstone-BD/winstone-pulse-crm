@@ -346,6 +346,26 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const winner = topThree[0] ?? null;
   const runnerUp = topThree[1] ?? null;
 
+  // The board is public (shown before sign-in), so the top 3 photos get
+  // short-lived signed links here instead of going through the staff-only
+  // photo endpoint. Only display photos leave the server.
+  const photoPathById = new Map(
+    (agentsRes.data ?? []).map((a) => [a.id, a.photo_path] as const),
+  );
+  const photoPaths = topThree
+    .map((l) => photoPathById.get(l.agentId))
+    .filter((p): p is string => Boolean(p));
+  if (photoPaths.length) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from("staff-photos")
+      .createSignedUrls(photoPaths, 3600);
+    const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+    for (const l of topThree) {
+      const p = photoPathById.get(l.agentId);
+      if (p) l.photoUrl = urlByPath.get(p) ?? null;
+    }
+  }
+
   const team = lines.reduce(
     (acc, l) => ({
       called: acc.called + l.called,
