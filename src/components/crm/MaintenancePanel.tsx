@@ -247,7 +247,7 @@ function filterAudit<T extends AuditRow>(rows: T[], kind: AuditKind, search: str
   return rows.filter((a) => {
     const act = a.action;
     if (kind === "payment" && !act.startsWith("payment") && act !== "maintenance_due") return false;
-    if (kind === "lock" && !/lock|unlock/.test(act)) return false;
+    if (kind === "lock" && !/locked|relocked|unlock/.test(act)) return false;
     if (kind === "policy" && !/lock_at|policy|lock_time/.test(act)) return false;
     if (!q) return true;
     return [act, a.actor, a.actor_role, a.reason ?? "", a.billing_period ?? "", dhakaTime(a.at)].join(" ").toLowerCase().includes(q);
