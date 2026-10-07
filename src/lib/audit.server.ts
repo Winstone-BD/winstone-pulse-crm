@@ -30,6 +30,7 @@ export type AuditAction =
   | "report_sheet_sync"
   | "agent_account_created"
   | "agent_account_updated"
+  | "agent_password_reset_link_issued"
   | "shift_summary_generated"
   | "shift_summary_hq_cleared"
   | "document_summarized"
