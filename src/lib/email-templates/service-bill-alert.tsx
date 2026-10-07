@@ -40,7 +40,7 @@ const Email = ({ title, detail, period, amount, stageLabel, reviewUrl }: Props) 
           {stageLabel ? <Text style={row}>অবস্থা: {stageLabel}</Text> : null}
         </Section>
         <Button
-          href={reviewUrl || "https://crm1.winstonebd.com/service-bill-unlock"}
+          href={reviewUrl || "https://crm.winstonebd.com/service-bill-unlock"}
           style={button}
         >
           Secure human review
@@ -66,7 +66,7 @@ export const template = {
     period: "2026-10",
     amount: "$46.29 USD",
     stageLabel: "মেয়াদ শেষ",
-    reviewUrl: "https://crm1.winstonebd.com/service-bill-unlock",
+    reviewUrl: "https://crm.winstonebd.com/service-bill-unlock",
   },
 } satisfies TemplateEntry;
 
