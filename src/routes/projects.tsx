@@ -9,6 +9,7 @@ import { AppShell } from "@/components/crm/AppShell";
 import { Input } from "@/components/ui/input";
 import { useAdminToken } from "@/lib/local-session";
 import { getProjectReport } from "@/lib/project-reports.functions";
+import { listInventory } from "@/lib/inventory.functions";
 
 export const Route = createFileRoute("/projects")({
   head: () => ({
@@ -42,6 +43,14 @@ function ProjectsPage() {
     queryFn: () => fetchReport({ data: { adminToken, period: "month", key: month } }),
     staleTime: 30_000,
   });
+
+  const fetchInventory = useServerFn(listInventory);
+  const inventory = useQuery({
+    queryKey: ["projects-inventory", adminToken ? "pin" : "session"],
+    queryFn: () => fetchInventory({ data: { adminToken, includeInactive: true } }),
+    staleTime: 60_000,
+  });
+  const details = useMemo(() => new Map((inventory.data?.items ?? []).map((i) => [i.id, i])), [inventory.data]);
 
   const rows = useMemo(() => {
     const all = report.data?.rows ?? [];
@@ -122,11 +131,15 @@ function ProjectsPage() {
                         {r.active ? "চালু" : "বন্ধ"}
                       </span>
                       <h2 className="mt-1 truncate text-base font-bold">{r.project}</h2>
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" /> Inventory requirement</p>
+                      <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" /> {details.get(r.projectId)?.location || "ঠিকানা যোগ করা হয়নি"}</p>
                     </div>
                     <ChevronRight className="size-4 text-muted-foreground" />
                   </div>
-                  <div className="mt-4 grid grid-cols-4 divide-x divide-border border-y border-border py-3 text-center">
+                  <div className="mt-4 grid grid-cols-2 divide-x divide-border text-center">
+                    <Stat v={details.get(r.projectId)?.total_units ?? null} l="মোট ইউনিট" />
+                    <Stat v={details.get(r.projectId)?.available_units ?? null} l="উপলভ্য" accent />
+                  </div>
+                  <div className="mt-3 grid grid-cols-4 divide-x divide-border border-y border-border py-3 text-center">
                     <Stat v={r.leads} l="লিড" />
                     <Stat v={r.calls} l="কল" />
                     <Stat v={r.siteVisits} l="ভিজিট" />
@@ -176,10 +189,10 @@ function ProjectsPage() {
   );
 }
 
-function Stat({ v, l, accent }: { v: number; l: string; accent?: boolean }) {
+function Stat({ v, l, accent }: { v: number | null; l: string; accent?: boolean }) {
   return (
     <div>
-      <p className={`text-lg font-bold tabular-nums ${accent ? "text-emerald-400" : ""}`}>{v}</p>
+      <p className={`text-lg font-bold tabular-nums ${accent ? "text-emerald-400" : ""}`}>{v ?? "—"}</p>
       <p className="text-[11px] text-muted-foreground">{l}</p>
     </div>
   );
