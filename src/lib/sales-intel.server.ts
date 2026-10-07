@@ -383,7 +383,9 @@ export async function searchPitchEvents(c: SiCaller, f: PitchFilters, cursor: { 
   const leadIds = await leadIdsFor(db, f);
   let q = applyPitchFilters(db.from("pitch_events").select(PITCH_COLS, { count: "exact" }), c, f, leadIds);
   if (cursor && (Number.isNaN(Date.parse(cursor.at)) || !/^[0-9a-f-]{36}$/i.test(cursor.id))) throw new Error("Invalid cursor");
-  if (cursor) q = q.or(`created_at.lt.${new Date(cursor.at).toISOString()},and(created_at.eq.${new Date(cursor.at).toISOString()},id.lt.${cursor.id})`);
+  // Re-serialise so only a canonical timestamp ever reaches the filter string.
+  if (cursor) cursor = { at: new Date(cursor.at).toISOString(), id: cursor.id };
+  if (cursor) q = q.or(`created_at.lt.${cursor.at},and(created_at.eq.${cursor.at},id.lt.${cursor.id})`);
   const { data, error, count } = await q.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(pageSize);
   if (error) throw new Error("পিচ ইতিহাস পড়া যায়নি");
   let rows = (data ?? []) as PitchRow[];
