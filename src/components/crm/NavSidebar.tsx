@@ -43,6 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/leadhub": Network,
   "/hq": LayoutDashboard,
   "/inventory": Building2,
+  "/projects": Building2,
   "/sales-intel": Lightbulb,
   "/news": Newspaper,
   "/site-visits": MapPin,
@@ -63,7 +64,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 const GROUPS: { title: string; routes: string[] }[] = [
   { title: "প্রধান", routes: ["/", "/desk", "/coach"] },
-  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/news", "/site-visits", "/inventory", "/reports"] },
+  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/reports"] },
   { title: "ম্যানেজমেন্ট", routes: ["/hq"] },
   { title: "সাপোর্ট", routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {
