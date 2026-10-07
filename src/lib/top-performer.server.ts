@@ -250,7 +250,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const [agentsRes, reportsRes, followRes] = await Promise.all([
     supabaseAdmin
       .from("profiles")
-      .select("id, name, employee_id")
+      .select("id, name, employee_id, photo_path")
       .eq("approval_status", "approved")
       .eq("is_active", true)
       .eq("role", "agent"),
