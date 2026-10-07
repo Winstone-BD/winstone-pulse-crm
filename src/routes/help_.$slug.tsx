@@ -23,7 +23,7 @@ export const Route = createFileRoute("/help_/$slug")({
       (loaderData?.title
         ? `${loaderData.title}: a step-by-step guide from the Winstone Help Centre.`
         : "A step-by-step Winstone support article from the Winstone Help Centre.");
-    const url = `https://crm1.winstonebd.com/help/${params.slug}`;
+    const url = `https://crm.winstonebd.com/help/${params.slug}`;
     return {
       meta: [
         { title },
