@@ -82,7 +82,12 @@ async function ensureRow(period: string) {
   if (data) return data;
   const lockAt = defaultLockAt(period);
   await client.from("system_maintenance").upsert(
-    { billing_period: period, fee_usd: MAINTENANCE_FEE_USD, due_date: lockAt, lock_at: lockAt },
+    {
+      billing_period: period,
+      fee_usd: MAINTENANCE_FEE_USD,
+      due_date: defaultDueAt(period),
+      lock_at: lockAt,
+    },
     { onConflict: "billing_period", ignoreDuplicates: true },
   );
   const { data: row, error } = await client
