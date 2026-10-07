@@ -167,10 +167,26 @@ export function TopPerformerCard() {
 
       {winner ? (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
-            <Sparkles className="size-5 shrink-0 text-primary" />
-            <p className="min-w-0 text-sm font-semibold text-primary">
-              অভিনন্দন {winner.name}! দিনের নেতৃত্ব আপনার — স্কোর {winner.score}
+          <div className="mt-4 grid gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
+            <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Sparkles className="size-5 shrink-0" />
+              {dayLabel} Top 3-কে অভিনন্দন!
+            </p>
+            <ul className="grid gap-2">
+              {topThree.map((agent) => (
+                <li key={agent.agentId} className="flex items-center gap-3">
+                  <BoardAvatar name={agent.name} photoUrl={agent.photoUrl} className="size-9" />
+                  <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                    <span className="tabular text-primary">#{agent.rank}</span> {agent.name}
+                  </p>
+                  <span className="tabular shrink-0 text-xs font-bold text-primary">
+                    স্কোর {agent.score}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-muted-foreground">
+              দিনের নেতৃত্ব {winner.name}-এর — সবাইকে এই ছন্দে এগিয়ে যাওয়ার আহ্বান।
             </p>
           </div>
 
