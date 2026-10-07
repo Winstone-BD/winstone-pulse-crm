@@ -2,7 +2,6 @@
 
 ## Active
 
-0. **Top 3 board photos + loader regression test** — Top 3 congratulations with profile photos on the home page; regression test for the Top Performer loader so runtime errors are caught pre-publish.
 
 
 0. **Lead Details new layout** — header + quick actions, Brief Me, Reports, Personal Notes, Timeline, original lead description kept.
