@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import {
   architectDecision,
+  architectPaymentDecision,
   architectIdentity,
   architectLogin,
   architectOverview,
@@ -144,6 +145,7 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
             ["Billing Period", state.period],
             ["Due Date", dhakaTime(state.dueDate)],
             ["Payment Status", state.paymentStatus.toUpperCase()],
+            ["Payment Reference", state.paymentRef ?? "—"],
             ["Unlock Request", open.length ? "PENDING" : (requests[0]?.status ?? "none").toUpperCase()],
             ["Last Unlock", dhakaTime(last?.unlock_started_at)],
             ["Unlock Expires", dhakaTime(state.unlockExpiresAt)],
@@ -156,6 +158,7 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
           ))}
         </tbody>
       </table>
+      <PaymentReview session={session} status={state.paymentStatus} paymentRef={state.paymentRef} period={state.period} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />
       <h2 className="text-base font-semibold">Maintenance access requests</h2>
       {open.length === 0 && <p className="text-sm text-muted-foreground">No pending request.</p>}
       {open.map((r) => (
@@ -202,6 +205,28 @@ function RequestCard({ r, session, locked, onDone }: { r: Req; session: string; 
       <div className="flex gap-2">
         <Button disabled={decide.isPending} onClick={() => decide.mutate(true)}>APPROVE & UNLOCK</Button>
         <Button variant="destructive" disabled={decide.isPending || reason.trim().length < 3} onClick={() => decide.mutate(false)}>DENY</Button>
+      </div>
+    </div>
+  );
+}
+
+/** Architect-only payment verification. IT can only submit a reference. */
+function PaymentReview({ session, status, paymentRef, period, onDone }: { session: string; status: string; paymentRef: string | null; period: string; onDone: () => void }) {
+  const [reason, setReason] = useState("");
+  const decide = useMutation({
+    mutationFn: (approve: boolean) => architectPaymentDecision({ data: { session, approve, reason } }),
+    onSuccess: (_d, approve) => { toast.success(approve ? "Payment verified — no lock this month" : "Payment rejected"); setReason(""); onDone(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  if (status !== "pending" || !paymentRef) return null;
+  return (
+    <div className="card-elevated space-y-2 border-warning/40 p-4 text-sm">
+      <p className="font-bold">Payment submitted for verification — {period}</p>
+      <p>Reference: <b>{paymentRef}</b> · {MAINTENANCE_FEE_LABEL}</p>
+      <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Audit reason (required)" />
+      <div className="flex gap-2">
+        <Button disabled={reason.trim().length < 3 || decide.isPending} onClick={() => decide.mutate(true)}>Verify &amp; mark paid</Button>
+        <Button variant="destructive" disabled={reason.trim().length < 3 || decide.isPending} onClick={() => decide.mutate(false)}>Reject</Button>
       </div>
     </div>
   );
