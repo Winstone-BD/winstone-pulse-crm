@@ -33,6 +33,8 @@ export const NEW_DAY_MINUTES = 9 * 60 + 5;
 export type PerformerLine = {
   agentId: string;
   name: string;
+  /** Signed staff-photo link for the public board; null when no photo exists. */
+  photoUrl: string | null;
   called: number;
   connected: number;
   reports: number;
