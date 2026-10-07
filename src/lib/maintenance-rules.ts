@@ -41,6 +41,12 @@ export function defaultLockAt(period: string): string {
 /** Renewal due day (12th 00:00 Dhaka). */
 export const RENEWAL_DAY = 12;
 
+/** 12th of the period at 00:00 Asia/Dhaka — the renewal due instant, as UTC ISO. */
+export function defaultDueAt(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  return new Date(Date.UTC(y!, m! - 1, RENEWAL_DAY, 0, 0, 0) - DHAKA_MS).toISOString();
+}
+
 /** Next renewal due instant (12th 00:00 Dhaka) at or after `now`; skips the current month when already paid. */
 export function nextRenewalDueAt(now: Date, paid: boolean): string {
   const d = new Date(now.getTime() + DHAKA_MS);
