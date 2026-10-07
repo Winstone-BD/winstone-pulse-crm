@@ -44,6 +44,7 @@ import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
 import { Route as ServiceBillUnlockRouteImport } from './routes/service-bill-unlock'
 import { Route as SiteVisitsRouteImport } from './routes/site-visits'
+import { Route as StaffPortalRouteImport } from './routes/staff-portal'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
 import { Route as SystemRouteImport } from './routes/system'
@@ -276,6 +277,11 @@ const ServiceBillUnlockRoute = ServiceBillUnlockRouteImport.update({
 const SiteVisitsRoute = SiteVisitsRouteImport.update({
   id: '/site-visits',
   path: '/site-visits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffPortalRoute = StaffPortalRouteImport.update({
+  id: '/staff-portal',
+  path: '/staff-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -625,6 +631,7 @@ export interface FileRoutesByFullPath {
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
+  '/staff-portal': typeof StaffPortalRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -720,6 +727,7 @@ export interface FileRoutesByTo {
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
+  '/staff-portal': typeof StaffPortalRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -816,6 +824,7 @@ export interface FileRoutesById {
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
+  '/staff-portal': typeof StaffPortalRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -913,6 +922,7 @@ export interface FileRouteTypes {
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
+    | '/staff-portal'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1008,6 +1018,7 @@ export interface FileRouteTypes {
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
+    | '/staff-portal'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1103,6 +1114,7 @@ export interface FileRouteTypes {
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
+    | '/staff-portal'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1199,6 +1211,7 @@ export interface RootRouteChildren {
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
   ServiceBillUnlockRoute: typeof ServiceBillUnlockRoute
   SiteVisitsRoute: typeof SiteVisitsRoute
+  StaffPortalRoute: typeof StaffPortalRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
   SystemRoute: typeof SystemRoute
@@ -1504,6 +1517,13 @@ declare module '@tanstack/react-router' {
       path: '/site-visits'
       fullPath: '/site-visits'
       preLoaderRoute: typeof SiteVisitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-portal': {
+      id: '/staff-portal'
+      path: '/staff-portal'
+      fullPath: '/staff-portal'
+      preLoaderRoute: typeof StaffPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -1951,6 +1971,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServiceBillAlertRoute: ServiceBillAlertRoute,
   ServiceBillUnlockRoute: ServiceBillUnlockRoute,
   SiteVisitsRoute: SiteVisitsRoute,
+  StaffPortalRoute: StaffPortalRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,
   SystemRoute: SystemRoute,
