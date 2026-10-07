@@ -362,6 +362,38 @@ function Board() {
         </div>
       </div>
 
+      {unresolvedGroups.length > 0 && (
+        <section className="rounded-2xl border border-destructive/30 bg-card p-4">
+          <h2 className="mb-1 flex items-center gap-2 font-semibold">
+            <Layers className="size-4 text-destructive" /> পুনরাবৃত্ত অমীমাংসিত এরর ({unresolvedGroups.length}টি গ্রুপ)
+          </h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            একই ধরনের ও একই পেজের এরর একসাথে — কতবার ঘটেছে ও সর্বশেষ কখন।
+          </p>
+          <div className="space-y-2">
+            {unresolvedGroups.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                onClick={() => setSelected(g.entries[0] ?? null)}
+                className="flex w-full flex-wrap items-center gap-3 rounded-xl border border-border bg-background/40 p-3 text-left transition-colors hover:border-destructive/40"
+              >
+                <Badge variant="destructive" className="tabular-nums">{g.count}×</Badge>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{KIND_LABEL[g.kind] ?? g.kind}</p>
+                  <p className="truncate font-mono text-xs text-muted-foreground">{g.page}</p>
+                </div>
+                <div className="text-right text-xs text-muted-foreground">
+                  <p>সর্বশেষ</p>
+                  <p className="tabular-nums">{dhakaTime(g.lastAt)}</p>
+                </div>
+                <Eye className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">
