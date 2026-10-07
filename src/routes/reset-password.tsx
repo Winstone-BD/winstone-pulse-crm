@@ -39,14 +39,14 @@ function ResetPasswordPage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const save = async () => {
-    if (pw.length < 8) return toast.error("কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন");
-    if (pw !== pw2) return toast.error("দুটি পাসওয়ার্ড মেলেনি");
+  const save = async (): Promise<void> => {
+    if (pw.length < 8) { toast.error("কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন"); return; }
+    if (pw !== pw2) { toast.error("দুটি পাসওয়ার্ড মেলেনি"); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
     if (error) {
       setBusy(false);
-      return toast.error(error.message);
+      { toast.error(error.message); return; }
     }
     await clear();
     await supabase.auth.refreshSession();

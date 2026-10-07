@@ -70,7 +70,7 @@
 
 - [x] 3-day lead neglect warnings + auto-return to LeadHub pool + HQ dispute log (needs rule: may a returned lead be re-given, since worked numbers are blocked from fresh assignment)
 
-- [ ] Reconnect GitHub API in new workspace
+- [ ] Reconnect GitHub API in new workspace (repo Winstone-BD/winstone-crm-v01)
 - [ ] Reconnect Google Drive in new workspace
 - [ ] QR code on agent login cards
 - [ ] One-time password reset link flow (IT Console) + forced change on first login
