@@ -208,7 +208,10 @@ export function TopPerformerCard() {
                   </span>
                   <span className="tabular text-3xl font-bold text-primary">#{agent.rank}</span>
                 </div>
-                <h3 className="mt-3 break-words text-base font-bold">{agent.name}</h3>
+                <div className="mt-3 flex items-center gap-3">
+                  <BoardAvatar name={agent.name} photoUrl={agent.photoUrl} className="size-14" />
+                  <h3 className="min-w-0 break-words text-base font-bold">{agent.name}</h3>
+                </div>
                 <p className="mt-1 text-xs text-muted-foreground">{agent.reason}</p>
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-xs">
                   <span className="text-muted-foreground">স্কোর</span>
@@ -380,6 +383,34 @@ function SourcePanel({ sources }: { sources: Sources }) {
         </dl>
       ) : null}
     </div>
+  );
+}
+
+/** Round photo for the board; falls back to initials when no photo exists. */
+function BoardAvatar({
+  name,
+  photoUrl,
+  className = "size-11",
+}: {
+  name: string;
+  photoUrl?: string | null;
+  className?: string;
+}) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        className={`${className} shrink-0 rounded-full object-cover ring-2 ring-primary/40`}
+      />
+    );
+  }
+  return (
+    <span
+      className={`${className} grid shrink-0 place-items-center rounded-full bg-primary/20 text-sm font-bold text-primary ring-2 ring-primary/40`}
+    >
+      {name.slice(0, 2).toUpperCase()}
+    </span>
   );
 }
 
