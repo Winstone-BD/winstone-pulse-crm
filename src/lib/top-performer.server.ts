@@ -33,6 +33,8 @@ export const NEW_DAY_MINUTES = 9 * 60 + 5;
 export type PerformerLine = {
   agentId: string;
   name: string;
+  /** Signed staff-photo link for the public board; null when no photo exists. */
+  photoUrl: string | null;
   called: number;
   connected: number;
   reports: number;
@@ -248,7 +250,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const [agentsRes, reportsRes, followRes] = await Promise.all([
     supabaseAdmin
       .from("profiles")
-      .select("id, name, employee_id")
+      .select("id, name, employee_id, photo_path")
       .eq("approval_status", "approved")
       .eq("is_active", true)
       .eq("role", "agent"),
@@ -300,6 +302,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
     const base = {
       agentId: agent.id,
       name: agent.name,
+      photoUrl: null as string | null,
       called: mine.length,
       connected,
       reports: mine.filter((r) => r.status === "submitted").length,
@@ -342,6 +345,26 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const otherAgents = detailed.filter((line) => !topIds.has(line.agentId));
   const winner = topThree[0] ?? null;
   const runnerUp = topThree[1] ?? null;
+
+  // The board is public (shown before sign-in), so the top 3 photos get
+  // short-lived signed links here instead of going through the staff-only
+  // photo endpoint. Only display photos leave the server.
+  const photoPathById = new Map(
+    (agentsRes.data ?? []).map((a) => [a.id, a.photo_path] as const),
+  );
+  const photoPaths = topThree
+    .map((l) => photoPathById.get(l.agentId))
+    .filter((p): p is string => Boolean(p));
+  if (photoPaths.length) {
+    const { data: signed } = await supabaseAdmin.storage
+      .from("staff-photos")
+      .createSignedUrls(photoPaths, 3600);
+    const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+    for (const l of topThree) {
+      const p = photoPathById.get(l.agentId);
+      if (p) l.photoUrl = urlByPath.get(p) ?? null;
+    }
+  }
 
   const team = lines.reduce(
     (acc, l) => ({

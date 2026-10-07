@@ -167,10 +167,26 @@ export function TopPerformerCard() {
 
       {winner ? (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3">
-            <Sparkles className="size-5 shrink-0 text-primary" />
-            <p className="min-w-0 text-sm font-semibold text-primary">
-              অভিনন্দন {winner.name}! দিনের নেতৃত্ব আপনার — স্কোর {winner.score}
+          <div className="mt-4 grid gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3">
+            <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Sparkles className="size-5 shrink-0" />
+              {dayLabel} Top 3-কে অভিনন্দন!
+            </p>
+            <ul className="grid gap-2">
+              {topThree.map((agent) => (
+                <li key={agent.agentId} className="flex items-center gap-3">
+                  <BoardAvatar name={agent.name} photoUrl={agent.photoUrl} className="size-9" />
+                  <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                    <span className="tabular text-primary">#{agent.rank}</span> {agent.name}
+                  </p>
+                  <span className="tabular shrink-0 text-xs font-bold text-primary">
+                    স্কোর {agent.score}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-muted-foreground">
+              দিনের নেতৃত্ব {winner.name}-এর — সবাইকে এই ছন্দে এগিয়ে যাওয়ার আহ্বান।
             </p>
           </div>
 
@@ -192,7 +208,10 @@ export function TopPerformerCard() {
                   </span>
                   <span className="tabular text-3xl font-bold text-primary">#{agent.rank}</span>
                 </div>
-                <h3 className="mt-3 break-words text-base font-bold">{agent.name}</h3>
+                <div className="mt-3 flex items-center gap-3">
+                  <BoardAvatar name={agent.name} photoUrl={agent.photoUrl} className="size-14" />
+                  <h3 className="min-w-0 break-words text-base font-bold">{agent.name}</h3>
+                </div>
                 <p className="mt-1 text-xs text-muted-foreground">{agent.reason}</p>
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-xs">
                   <span className="text-muted-foreground">স্কোর</span>
@@ -364,6 +383,34 @@ function SourcePanel({ sources }: { sources: Sources }) {
         </dl>
       ) : null}
     </div>
+  );
+}
+
+/** Round photo for the board; falls back to initials when no photo exists. */
+function BoardAvatar({
+  name,
+  photoUrl,
+  className = "size-11",
+}: {
+  name: string;
+  photoUrl?: string | null;
+  className?: string;
+}) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        className={`${className} shrink-0 rounded-full object-cover ring-2 ring-primary/40`}
+      />
+    );
+  }
+  return (
+    <span
+      className={`${className} grid shrink-0 place-items-center rounded-full bg-primary/20 text-sm font-bold text-primary ring-2 ring-primary/40`}
+    >
+      {name.slice(0, 2).toUpperCase()}
+    </span>
   );
 }
 
