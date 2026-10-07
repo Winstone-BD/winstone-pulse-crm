@@ -152,6 +152,21 @@ export const Route = createFileRoute("/api/public/agent/login")({
           return json({ error: "লগইন তথ্য মিলছে না" }, 401);
         }
 
+        // A reset link or IT-set password flags the account: the agent must
+        // choose their own password on the web before the phone can sign in.
+        if ((session.user.app_metadata as Record<string, unknown> | undefined)?.must_change_password === true) {
+          void auth.auth.signOut().catch(() => {});
+          return json(
+            {
+              error:
+                "নতুন পাসওয়ার্ড সেট করা বাকি — IT-এর দেওয়া একবারের লিংক খুলে পাসওয়ার্ড সেট করুন, তারপর অ্যাপে লগইন করুন",
+              code: "must_change_password",
+            },
+            403,
+          );
+        }
+
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: profile } = await supabaseAdmin
           .from("profiles")
