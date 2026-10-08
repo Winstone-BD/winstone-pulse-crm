@@ -41,6 +41,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RuntimeErrorsRouteImport } from './routes/runtime-errors'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
@@ -81,6 +82,7 @@ import { Route as ApiPublicAgentWorkspaceRouteImport } from './routes/api/public
 import { Route as ApiPublicConfigMaintenanceRouteImport } from './routes/api/public/config/maintenance'
 import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/config/rules'
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
+import { Route as ApiPublicHooksDeployHealthRouteImport } from './routes/api/public/hooks/deploy-health'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
 import { Route as ApiPublicHooksLeadNeglectRouteImport } from './routes/api/public/hooks/lead-neglect'
@@ -101,6 +103,7 @@ import { Route as ApiPublicIntegrationsStatusRouteImport } from './routes/api/pu
 import { Route as ApiPublicOsEventsRouteImport } from './routes/api/public/os/events'
 import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
 import { Route as ApiPublicReportsSummaryRouteImport } from './routes/api/public/reports/summary'
+import { Route as ApiPublicTelemetryRuntimeErrorRouteImport } from './routes/api/public/telemetry/runtime-error'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -264,6 +267,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuntimeErrorsRoute = RuntimeErrorsRouteImport.update({
+  id: '/runtime-errors',
+  path: '/runtime-errors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalesIntelRoute = SalesIntelRouteImport.update({
@@ -472,6 +480,12 @@ const ApiPublicDownloadApkRoute = ApiPublicDownloadApkRouteImport.update({
   path: '/api/public/download/apk',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksDeployHealthRoute =
+  ApiPublicHooksDeployHealthRouteImport.update({
+    id: '/api/public/hooks/deploy-health',
+    path: '/api/public/hooks/deploy-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksDriveBackupRoute =
   ApiPublicHooksDriveBackupRouteImport.update({
     id: '/api/public/hooks/drive-backup',
@@ -584,6 +598,12 @@ const ApiPublicReportsSummaryRoute = ApiPublicReportsSummaryRouteImport.update({
   path: '/api/public/reports/summary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTelemetryRuntimeErrorRoute =
+  ApiPublicTelemetryRuntimeErrorRouteImport.update({
+    id: '/api/public/telemetry/runtime-error',
+    path: '/api/public/telemetry/runtime-error',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWhatsappWebhookRoute =
   ApiPublicWhatsappWebhookRouteImport.update({
     id: '/api/public/whatsapp/webhook',
@@ -640,6 +660,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -680,6 +701,7 @@ export interface FileRoutesByFullPath {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
+  '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
@@ -700,6 +722,7 @@ export interface FileRoutesByFullPath {
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
+  '/api/public/telemetry/runtime-error': typeof ApiPublicTelemetryRuntimeErrorRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -738,6 +761,7 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -778,6 +802,7 @@ export interface FileRoutesByTo {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
+  '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
@@ -798,6 +823,7 @@ export interface FileRoutesByTo {
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
+  '/api/public/telemetry/runtime-error': typeof ApiPublicTelemetryRuntimeErrorRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -837,6 +863,7 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -877,6 +904,7 @@ export interface FileRoutesById {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
+  '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
   '/api/public/hooks/lead-neglect': typeof ApiPublicHooksLeadNeglectRoute
@@ -897,6 +925,7 @@ export interface FileRoutesById {
   '/api/public/os/events': typeof ApiPublicOsEventsRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/reports/summary': typeof ApiPublicReportsSummaryRoute
+  '/api/public/telemetry/runtime-error': typeof ApiPublicTelemetryRuntimeErrorRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -937,6 +966,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -977,6 +1007,7 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
+    | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/lead-neglect'
@@ -997,6 +1028,7 @@ export interface FileRouteTypes {
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
+    | '/api/public/telemetry/runtime-error'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1035,6 +1067,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1075,6 +1108,7 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
+    | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/lead-neglect'
@@ -1095,6 +1129,7 @@ export interface FileRouteTypes {
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
+    | '/api/public/telemetry/runtime-error'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1133,6 +1168,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1173,6 +1209,7 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
+    | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
     | '/api/public/hooks/lead-neglect'
@@ -1193,6 +1230,7 @@ export interface FileRouteTypes {
     | '/api/public/os/events'
     | '/api/public/paddle/webhook'
     | '/api/public/reports/summary'
+    | '/api/public/telemetry/runtime-error'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1232,6 +1270,7 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RuntimeErrorsRoute: typeof RuntimeErrorsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
@@ -1272,6 +1311,7 @@ export interface RootRouteChildren {
   ApiPublicConfigMaintenanceRoute: typeof ApiPublicConfigMaintenanceRoute
   ApiPublicConfigRulesRoute: typeof ApiPublicConfigRulesRoute
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
+  ApiPublicHooksDeployHealthRoute: typeof ApiPublicHooksDeployHealthRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
   ApiPublicHooksLeadNeglectRoute: typeof ApiPublicHooksLeadNeglectRoute
@@ -1292,6 +1332,7 @@ export interface RootRouteChildren {
   ApiPublicOsEventsRoute: typeof ApiPublicOsEventsRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   ApiPublicReportsSummaryRoute: typeof ApiPublicReportsSummaryRoute
+  ApiPublicTelemetryRuntimeErrorRoute: typeof ApiPublicTelemetryRuntimeErrorRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1522,6 +1563,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/runtime-errors': {
+      id: '/runtime-errors'
+      path: '/runtime-errors'
+      fullPath: '/runtime-errors'
+      preLoaderRoute: typeof RuntimeErrorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sales-intel': {
@@ -1804,6 +1852,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDownloadApkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/deploy-health': {
+      id: '/api/public/hooks/deploy-health'
+      path: '/api/public/hooks/deploy-health'
+      fullPath: '/api/public/hooks/deploy-health'
+      preLoaderRoute: typeof ApiPublicHooksDeployHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/drive-backup': {
       id: '/api/public/hooks/drive-backup'
       path: '/api/public/hooks/drive-backup'
@@ -1944,6 +1999,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReportsSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/telemetry/runtime-error': {
+      id: '/api/public/telemetry/runtime-error'
+      path: '/api/public/telemetry/runtime-error'
+      fullPath: '/api/public/telemetry/runtime-error'
+      preLoaderRoute: typeof ApiPublicTelemetryRuntimeErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/webhook': {
       id: '/api/public/whatsapp/webhook'
       path: '/api/public/whatsapp/webhook'
@@ -2008,6 +2070,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RuntimeErrorsRoute: RuntimeErrorsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
   ServiceBillAlertRoute: ServiceBillAlertRoute,
@@ -2049,6 +2112,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicConfigMaintenanceRoute: ApiPublicConfigMaintenanceRoute,
   ApiPublicConfigRulesRoute: ApiPublicConfigRulesRoute,
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
+  ApiPublicHooksDeployHealthRoute: ApiPublicHooksDeployHealthRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,
   ApiPublicHooksLeadNeglectRoute: ApiPublicHooksLeadNeglectRoute,
@@ -2069,6 +2133,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicOsEventsRoute: ApiPublicOsEventsRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   ApiPublicReportsSummaryRoute: ApiPublicReportsSummaryRoute,
+  ApiPublicTelemetryRuntimeErrorRoute: ApiPublicTelemetryRuntimeErrorRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

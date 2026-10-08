@@ -624,6 +624,13 @@
       "when": 1791423024962,
       "tag": "0088_booking_hq_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1791434186596,
+      "tag": "0089_runtime_error_monitoring",
+      "breakpoints": true
     }
   ]
 }

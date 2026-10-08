@@ -17,6 +17,7 @@ import { InstallAppButton } from "@/components/crm/InstallAppButton";
 import { AgentSelector } from "@/components/crm/AgentSelector";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { OfflineSyncBar } from "@/components/crm/OfflineSyncBar";
+import { RuntimeAlertWatcher } from "@/components/crm/RuntimeAlertWatcher";
 
 
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export const NAV = [
   { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },
+  { to: "/runtime-errors", label: "রানটাইম এরর", scopes: ["authority"] },
   { to: "/ingest", label: "Ingest Check", scopes: ["authority"] },
   { to: "/migration", label: "Migration Checklist", scopes: ["authority"] },
   { to: "/migration-export", label: "Migration Export", scopes: ["authority"] },
@@ -242,6 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {scope !== "none" && <PostCallReportGate />}
       {scope === "agent" && <AgentBriefingGate />}
 
+      {scope === "authority" && <RuntimeAlertWatcher />}
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
     </div>
   );

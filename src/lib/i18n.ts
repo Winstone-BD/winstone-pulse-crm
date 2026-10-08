@@ -45,6 +45,7 @@ export const NAV_LABELS: Record<string, { bn: string; en: string }> = {
   "/inventory": { bn: "ইনভেন্টরি", en: "Inventory" },
   "/reports": { bn: "রিপোর্ট", en: "Reports" },
   "/system": { bn: "আইটি কনসোল", en: "IT Console" },
+  "/runtime-errors": { bn: "রানটাইম এরর", en: "Runtime Errors" },
   "/ingest": { bn: "ইনজেস্ট চেক", en: "Ingest Check" },
   "/migration": { bn: "মাইগ্রেশন চেকলিস্ট", en: "Migration Checklist" },
   "/migration-export": { bn: "মাইগ্রেশন এক্সপোর্ট", en: "Migration Export" },
