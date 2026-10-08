@@ -82,3 +82,5 @@
 - [ ] Top 3 profile photos not showing — investigate
 - [ ] Walk Staff Portal with real data (HQ)
 - [ ] Publish
+- [ ] Booking admin page: HQ approve/reject before OS (needs hold step before relay)
+- [ ] Deep security scan on live build
