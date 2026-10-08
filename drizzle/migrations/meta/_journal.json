@@ -617,6 +617,13 @@
       "when": 1791380705999,
       "tag": "0087_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1791423024962,
+      "tag": "0088_booking_hq_approval",
+      "breakpoints": true
     }
   ]
 }

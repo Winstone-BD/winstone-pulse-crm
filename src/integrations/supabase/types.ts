@@ -480,6 +480,7 @@ export type Database = {
         Row: {
           agent_id: string | null
           amount_usd: number | null
+          approval_status: string
           area: string | null
           booked_at: string
           created_at: string
@@ -488,6 +489,9 @@ export type Database = {
           lead_id: string
           notes: string | null
           project: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           updated_at: string
           updated_by: string | null
@@ -495,6 +499,7 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           amount_usd?: number | null
+          approval_status?: string
           area?: string | null
           booked_at?: string
           created_at?: string
@@ -503,6 +508,9 @@ export type Database = {
           lead_id: string
           notes?: string | null
           project?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
@@ -510,6 +518,7 @@ export type Database = {
         Update: {
           agent_id?: string | null
           amount_usd?: number | null
+          approval_status?: string
           area?: string | null
           booked_at?: string
           created_at?: string
@@ -518,6 +527,9 @@ export type Database = {
           lead_id?: string
           notes?: string | null
           project?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
           updated_by?: string | null
