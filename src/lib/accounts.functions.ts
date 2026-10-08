@@ -487,6 +487,21 @@ export const updateStaffAccount = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Direct security notice to one agent (web bell + Android notices). Never contains the link. */
+async function notifyAgentSecurity(profileId: string, title: string, body: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: notice, error } = await supabaseAdmin
+    .from("it_notices")
+    .insert({ title, body, severity: "urgent", audience_type: "accounts", author_label: "IT Security" })
+    .select("id")
+    .single();
+  if (error || !notice) {
+    console.error("security notice failed", error);
+    return;
+  }
+  await supabaseAdmin.from("it_notice_recipients").insert({ notice_id: notice.id, profile_id: profileId });
+}
+
 /**
  * IT issues a one-time password reset link for one agent. The link is a
  * single-use recovery link from the auth service (expires automatically); it
@@ -545,6 +560,11 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
       actorLabel: caller.profile?.name ?? "Authority PIN",
       metadata: { employeeId: profile.employee_id },
     });
+    await notifyAgentSecurity(
+      profile.id,
+      "পাসওয়ার্ড রিসেট লিংক তৈরি হয়েছে",
+      `IT আপনার অ্যাকাউন্টের জন্য একটি পাসওয়ার্ড রিসেট লিংক তৈরি করেছে (${new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} ঢাকা)। আপনি না চাইলে এখনই HQ/IT-কে জানান।`,
+    );
     return { link: actionLink, name: profile.name };
   });
 
@@ -556,5 +576,17 @@ export const clearMustChangePassword = createServerFn({ method: "POST" })
     const { data } = await supabaseAdmin.auth.admin.getUserById(context.userId);
     const meta = { ...(data?.user?.app_metadata ?? {}), must_change_password: false };
     await supabaseAdmin.auth.admin.updateUserById(context.userId, { app_metadata: meta });
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (profile) {
+      await notifyAgentSecurity(
+        profile.id,
+        "আপনার পাসওয়ার্ড বদলানো হয়েছে",
+        `আপনার অ্যাকাউন্টের পাসওয়ার্ড ${new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} (ঢাকা)-এ বদলানো হয়েছে। আপনি না করে থাকলে এখনই HQ/IT-কে জানান।`,
+      );
+    }
     return { ok: true };
   });
