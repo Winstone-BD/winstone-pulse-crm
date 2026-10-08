@@ -181,3 +181,97 @@ export const listPitchLeads = createServerFn({ method: "POST" })
       if (!rows || rows.length < 1000) return out;
     }
   });
+
+/**
+ * HQ booking review queue. New bookings wait as "pending" and are relayed to
+ * Winstone OS only after HQ/IT approves (the DB trigger queues the signed
+ * event on approval). Decisions are final and audited.
+ */
+export const listBookingReviews = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
+  .handler(async ({ data }) => {
+    const { resolveCaller, requireAuthority } = await import("@/lib/access.server");
+    requireAuthority(await resolveCaller(data.adminToken ?? null));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("bookings")
+      .select(
+        "id, lead_id, agent_id, project, area, amount_usd, booked_at, status, notes, created_by, approval_status, reviewed_by, reviewed_at, review_note, leads(name), profiles(name, employee_id)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) throw new Error("বুকিং পড়া যায়নি");
+    const ids = (rows ?? []).filter((r) => r.approval_status === "approved").map((r) => r.id);
+    const { data: ev } = ids.length
+      ? await supabaseAdmin
+          .from("sync_events")
+          .select("entity_id, status, event_type, processed_at")
+          .eq("entity_type", "booking")
+          .in("entity_id", ids)
+      : { data: [] };
+    const relay = new Map<string, string>();
+    for (const e of ev ?? []) if (e.event_type === "crm_to_os_booking.created") relay.set(e.entity_id!, e.status);
+    return (rows ?? []).map((r) => ({
+      id: r.id,
+      leadName: (r.leads as { name: string | null } | null)?.name ?? null,
+      agentName: (r.profiles as { name: string | null } | null)?.name ?? null,
+      agentCode: (r.profiles as { employee_id: string | null } | null)?.employee_id ?? null,
+      project: r.project,
+      area: r.area,
+      amountUsd: r.amount_usd,
+      bookedAt: r.booked_at,
+      status: r.status,
+      notes: r.notes,
+      createdBy: r.created_by,
+      approval: r.approval_status,
+      reviewedBy: r.reviewed_by,
+      reviewedAt: r.reviewed_at,
+      reviewNote: r.review_note,
+      relayStatus: relay.get(r.id) ?? null,
+    }));
+  });
+
+export const reviewBooking = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    z
+      .object({
+        adminToken: Token,
+        id: z.string().uuid(),
+        decision: z.enum(["approved", "rejected"]),
+        note: z.string().trim().max(500).optional().nullable(),
+      })
+      .refine((v) => v.decision === "approved" || (v.note ?? "").length >= 3, {
+        message: "বাতিলের কারণ লিখুন",
+      })
+      .parse(i),
+  )
+  .handler(async ({ data }) => {
+    const { resolveCaller, requireAuthority } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    requireAuthority(caller);
+    const actor = caller.readOnly ? "HQ" : "IT Console";
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("bookings")
+      .update({
+        approval_status: data.decision,
+        reviewed_by: actor,
+        reviewed_at: new Date().toISOString(),
+        review_note: data.note || null,
+        updated_by: actor,
+      })
+      .eq("id", data.id)
+      .eq("approval_status", "pending")
+      .select("id");
+    if (error || !rows?.length) throw new Error("এই বুকিং আগেই রিভিউ হয়েছে বা পাওয়া যায়নি");
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({
+      action: data.decision === "approved" ? "booking_approved" : "booking_rejected",
+      entityType: "booking",
+      entityId: data.id,
+      actorProfileId: null,
+      actorLabel: actor,
+      metadata: { note: data.note ?? null },
+    });
+    return { ok: true };
+  });
