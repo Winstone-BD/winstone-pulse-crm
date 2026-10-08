@@ -79,6 +79,8 @@ export type AuditAction =
   | "os_booking_sync_requeued"
   | "booking_created"
   | "booking_status_changed"
+  | "booking_approved"
+  | "booking_rejected"
   | "agent_login_failed"
   | "agent_login_locked"
   | "github_issue_created"

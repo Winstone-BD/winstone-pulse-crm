@@ -14,6 +14,7 @@ import { Route as AgentActivityRouteImport } from './routes/agent-activity'
 import { Route as ArchitectRouteImport } from './routes/architect'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BookingReviewRouteImport } from './routes/booking-review'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
@@ -30,6 +31,7 @@ import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LeadhubRouteImport } from './routes/leadhub'
+import { Route as LiveLeadsRouteImport } from './routes/live-leads'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
@@ -129,6 +131,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookingReviewRoute = BookingReviewRouteImport.update({
+  id: '/booking-review',
+  path: '/booking-review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachRoute = CoachRouteImport.update({
   id: '/coach',
   path: '/coach',
@@ -207,6 +214,11 @@ const InventoryRoute = InventoryRouteImport.update({
 const LeadhubRoute = LeadhubRouteImport.update({
   id: '/leadhub',
   path: '/leadhub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveLeadsRoute = LiveLeadsRouteImport.update({
+  id: '/live-leads',
+  path: '/live-leads',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManualRoute = ManualRouteImport.update({
@@ -601,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -617,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
@@ -697,6 +711,7 @@ export interface FileRoutesByTo {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -713,6 +728,7 @@ export interface FileRoutesByTo {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
@@ -794,6 +810,7 @@ export interface FileRoutesById {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -810,6 +827,7 @@ export interface FileRoutesById {
   '/ingest': typeof IngestRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
+  '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
@@ -892,6 +910,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -908,6 +927,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/live-leads'
     | '/manual'
     | '/mcp'
     | '/migration'
@@ -988,6 +1008,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -1004,6 +1025,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/live-leads'
     | '/manual'
     | '/mcp'
     | '/migration'
@@ -1084,6 +1106,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -1100,6 +1123,7 @@ export interface FileRouteTypes {
     | '/ingest'
     | '/inventory'
     | '/leadhub'
+    | '/live-leads'
     | '/manual'
     | '/mcp'
     | '/migration'
@@ -1181,6 +1205,7 @@ export interface RootRouteChildren {
   ArchitectRoute: typeof ArchitectRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
+  BookingReviewRoute: typeof BookingReviewRoute
   CoachRoute: typeof CoachRoute
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
@@ -1197,6 +1222,7 @@ export interface RootRouteChildren {
   IngestRoute: typeof IngestRoute
   InventoryRoute: typeof InventoryRoute
   LeadhubRoute: typeof LeadhubRoute
+  LiveLeadsRoute: typeof LiveLeadsRoute
   ManualRoute: typeof ManualRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
@@ -1309,6 +1335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/booking-review': {
+      id: '/booking-review'
+      path: '/booking-review'
+      fullPath: '/booking-review'
+      preLoaderRoute: typeof BookingReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach': {
       id: '/coach'
       path: '/coach'
@@ -1419,6 +1452,13 @@ declare module '@tanstack/react-router' {
       path: '/leadhub'
       fullPath: '/leadhub'
       preLoaderRoute: typeof LeadhubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-leads': {
+      id: '/live-leads'
+      path: '/live-leads'
+      fullPath: '/live-leads'
+      preLoaderRoute: typeof LiveLeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manual': {
@@ -1941,6 +1981,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectRoute: ArchitectRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
+  BookingReviewRoute: BookingReviewRoute,
   CoachRoute: CoachRoute,
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
@@ -1957,6 +1998,7 @@ const rootRouteChildren: RootRouteChildren = {
   IngestRoute: IngestRoute,
   InventoryRoute: InventoryRoute,
   LeadhubRoute: LeadhubRoute,
+  LiveLeadsRoute: LiveLeadsRoute,
   ManualRoute: ManualRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,

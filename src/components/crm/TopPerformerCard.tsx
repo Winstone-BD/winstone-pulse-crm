@@ -289,12 +289,15 @@ export function TopPerformerCard() {
       ) : otherAgents.some((a) => a.score > 0) ? (
         <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-surface px-3">
           {otherAgents.map((agent) => (
-            <li key={agent.agentId} className="grid gap-1 py-3">
-              <p className="break-words text-sm font-semibold">
-                #{agent.rank} {agent.name} <span className="tabular text-xs text-primary">· স্কোর {agent.score}</span>
-              </p>
-              <p className="text-xs text-muted-foreground">{agent.reason}</p>
-              <p className="text-xs text-warning">{agent.gap}</p>
+            <li key={agent.agentId} className="flex items-start gap-3 py-3">
+              <BoardAvatar name={agent.name} photoUrl={agent.photoUrl} className="size-10 shrink-0" />
+              <div className="grid min-w-0 gap-1">
+                <p className="break-words text-sm font-semibold">
+                  #{agent.rank} {agent.name} <span className="tabular text-xs text-primary">· স্কোর {agent.score}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">{agent.reason}</p>
+                <p className="text-xs text-warning">{agent.gap}</p>
+              </div>
             </li>
           ))}
         </ul>
