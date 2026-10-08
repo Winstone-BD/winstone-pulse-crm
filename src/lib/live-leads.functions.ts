@@ -86,5 +86,5 @@ export const liveLeads = createServerFn({ method: "POST" })
     }
     for (const [d, set] of calledSeen) map.get(d)!.called = set.size;
     const days = [...map.values()];
-    return { generatedAt: new Date().toISOString(), days, status: statusCounts, pool: pool.count ?? 0, today: days[days.length - 1] };
+    return { generatedAt: new Date().toISOString(), days, status: statusCounts, pool: pool.count ?? 0, today: days[days.length - 1]! };
   });
