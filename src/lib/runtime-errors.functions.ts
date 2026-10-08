@@ -67,7 +67,7 @@ export const setRuntimeIssueStatus = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const caller = await authority(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const who = caller.profile?.full_name ?? caller.label ?? "HQ/IT";
+    const who = caller.label ?? (caller.userId ? `user:${caller.userId}` : "HQ/IT");
     const patch =
       data.status === "resolved"
         ? { status: "resolved", resolved_at: new Date().toISOString(), resolved_by: who, resolution_note: data.note ?? null }
