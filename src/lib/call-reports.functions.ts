@@ -93,6 +93,15 @@ export const openMyReport = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("id, assigned_to")
+      .eq("id", data.leadId)
+      .maybeSingle();
+    if (!lead) throw new Error("লিড পাওয়া যায়নি");
+    // Only the lead's owner may open a report for it — never someone else's lead.
+    if (lead.assigned_to !== me.id) throw new Error("এই লিড আপনার তালিকায় নেই");
     const { openCallReport } = await import("@/lib/call-reports.server");
     const report = await openCallReport({
       leadId: data.leadId,

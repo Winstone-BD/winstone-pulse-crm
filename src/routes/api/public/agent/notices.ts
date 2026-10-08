@@ -13,7 +13,10 @@ export const Route = createFileRoute("/api/public/agent/notices")({
           .select("notice_id, read_at")
           .eq("profile_id", caller.profile.id)
           .limit(50);
-        if (error) return json({ error: error.message }, 500);
+        if (error) {
+          console.error("notices lookup failed", error);
+          return json({ error: "Notices unavailable" }, 500);
+        }
         const ids = (deliveries ?? []).map((row) => row.notice_id);
         if (!ids.length) return json({ notices: [] });
         const { data: notices, error: noticeError } = await supabaseAdmin
@@ -21,7 +24,10 @@ export const Route = createFileRoute("/api/public/agent/notices")({
           .select("id, title, body, severity, author_label, published_at, expires_at")
           .in("id", ids)
           .order("published_at", { ascending: false });
-        if (noticeError) return json({ error: noticeError.message }, 500);
+        if (noticeError) {
+          console.error("notices lookup failed", noticeError);
+          return json({ error: "Notices unavailable" }, 500);
+        }
         const now = Date.now();
         return json({ notices: (notices ?? []).filter((row) => !row.expires_at || Date.parse(row.expires_at) > now) });
       },
