@@ -50,9 +50,10 @@ const TABS = [
 
 const RELAY_BN: Record<string, string> = {
   queued: "OS-এ পাঠানোর অপেক্ষায়",
-  processing: "পাঠানো হচ্ছে",
-  processed: "OS গ্রহণ করেছে",
+  sending: "পাঠানো হচ্ছে",
+  sent: "OS গ্রহণ করেছে",
   failed: "পাঠানো ব্যর্থ — আবার চেষ্টা হবে",
+  dead: "পাঠানো যায়নি — IT দেখবে",
 };
 
 function Queue() {
