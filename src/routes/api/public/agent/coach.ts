@@ -53,7 +53,10 @@ export const Route = createFileRoute("/api/public/agent/coach")({
                 .maybeSingle(),
           supabaseAdmin.from("app_config").select("data").eq("id", "default").maybeSingle(),
         ]);
-        if (profileRes.error) return json({ error: profileRes.error.message }, 500);
+        if (profileRes.error) {
+          console.error("coach profile lookup failed", profileRes.error);
+          return json({ error: "Coach unavailable" }, 500);
+        }
         if (!profileRes.data) return json({ error: "Unknown agent" }, 404);
         if (!parseConfig(configRes.data?.data ?? {}).permissions.agentCanUseAiCoach) {
           return json({ error: "AI Coach is switched off by IT" }, 403);
