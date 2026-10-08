@@ -14,6 +14,7 @@ import { Route as AgentActivityRouteImport } from './routes/agent-activity'
 import { Route as ArchitectRouteImport } from './routes/architect'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BookingReviewRouteImport } from './routes/booking-review'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
@@ -128,6 +129,11 @@ const AuditReportRoute = AuditReportRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingReviewRoute = BookingReviewRouteImport.update({
+  id: '/booking-review',
+  path: '/booking-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -607,6 +613,7 @@ export interface FileRoutesByFullPath {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -704,6 +711,7 @@ export interface FileRoutesByTo {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -802,6 +810,7 @@ export interface FileRoutesById {
   '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
+  '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
@@ -901,6 +910,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -998,6 +1008,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -1095,6 +1106,7 @@ export interface FileRouteTypes {
     | '/architect'
     | '/audit-report'
     | '/auth'
+    | '/booking-review'
     | '/coach'
     | '/credits'
     | '/customers'
@@ -1193,6 +1205,7 @@ export interface RootRouteChildren {
   ArchitectRoute: typeof ArchitectRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
+  BookingReviewRoute: typeof BookingReviewRoute
   CoachRoute: typeof CoachRoute
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
@@ -1320,6 +1333,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking-review': {
+      id: '/booking-review'
+      path: '/booking-review'
+      fullPath: '/booking-review'
+      preLoaderRoute: typeof BookingReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coach': {
@@ -1961,6 +1981,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectRoute: ArchitectRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
+  BookingReviewRoute: BookingReviewRoute,
   CoachRoute: CoachRoute,
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
