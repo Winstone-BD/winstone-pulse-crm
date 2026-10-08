@@ -76,11 +76,11 @@
 - [x] Reconnect Google Drive in new workspace
 - [x] QR code on agent login cards
 - [x] One-time password reset link flow (IT Console) + forced change on first login
-- [ ] Live lead dashboard (HQ, LeadHub, team leaders)
+- [x] Live lead dashboard (HQ, LeadHub, team leaders)
 - [ ] Deep code review: booking relay + Staff Portal
-- [ ] Marked test booking to OS
-- [ ] Top 3 profile photos not showing — investigate
-- [ ] Walk Staff Portal with real data (HQ)
+- [x] Marked test booking to OS
+- [x] Top 3 profile photos not showing — investigate
+- [x] Walk Staff Portal with real data (HQ)
 - [ ] Publish
-- [ ] Booking admin page: HQ approve/reject before OS (needs hold step before relay)
+- [x] Booking admin page: HQ approve/reject before OS (needs hold step before relay)
 - [ ] Deep security scan on live build
