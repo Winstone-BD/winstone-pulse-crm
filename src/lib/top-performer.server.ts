@@ -353,7 +353,9 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
   const photoPathById = new Map(
     (agentsRes.data ?? []).map((a) => [a.id, a.photo_path] as const),
   );
-  const photoPaths = topThree
+  // With no qualifier, the board lists the top three scorers instead — they get photos too.
+  const shown = topThree.length ? topThree : otherAgents.filter(isActive).slice(0, 3);
+  const photoPaths = shown
     .map((l) => photoPathById.get(l.agentId))
     .filter((p): p is string => Boolean(p));
   if (photoPaths.length) {
@@ -361,7 +363,7 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
       .from("staff-photos")
       .createSignedUrls(photoPaths, 3600);
     const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
-    for (const l of topThree) {
+    for (const l of shown) {
       const p = photoPathById.get(l.agentId);
       if (p) l.photoUrl = urlByPath.get(p) ?? null;
     }
