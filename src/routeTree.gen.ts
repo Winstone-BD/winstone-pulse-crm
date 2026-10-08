@@ -41,6 +41,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RuntimeErrorsRouteImport } from './routes/runtime-errors'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
@@ -266,6 +267,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RuntimeErrorsRoute = RuntimeErrorsRouteImport.update({
+  id: '/runtime-errors',
+  path: '/runtime-errors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalesIntelRoute = SalesIntelRouteImport.update({
@@ -654,6 +660,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -754,6 +761,7 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -855,6 +863,7 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
@@ -957,6 +966,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1057,6 +1067,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1157,6 +1168,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/reports'
     | '/reset-password'
+    | '/runtime-errors'
     | '/sales-intel'
     | '/security'
     | '/service-bill-alert'
@@ -1258,6 +1270,7 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RuntimeErrorsRoute: typeof RuntimeErrorsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
@@ -1550,6 +1563,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/runtime-errors': {
+      id: '/runtime-errors'
+      path: '/runtime-errors'
+      fullPath: '/runtime-errors'
+      preLoaderRoute: typeof RuntimeErrorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sales-intel': {
@@ -2050,6 +2070,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RuntimeErrorsRoute: RuntimeErrorsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
   ServiceBillAlertRoute: ServiceBillAlertRoute,
