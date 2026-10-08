@@ -3,8 +3,8 @@
  * page, the HQ and IT Console reference cards and the downloadable PDF are
  * all generated from this content — never keep a second copy.
  */
-export const MANUAL_VERSION = "1.2.0";
-export const MANUAL_UPDATED = "2026-09-30";
+export const MANUAL_VERSION = "1.3.0";
+export const MANUAL_UPDATED = "2026-10-08";
 export const MANUAL_PDF_PATH = "/winstone-system-manual.pdf";
 
 export type ManualSection = { id: string; title: string; body: string[] };
@@ -12,11 +12,18 @@ export type ManualSection = { id: string; title: string; body: string[] };
 export const MANUAL_SECTIONS: ManualSection[] = [
   {
     id: "purpose",
-    title: "1. System purpose and architecture",
+    title: "1. System architecture — Introduction",
     body: [
-      "Winstone Connect is a Bengali-first, SIM-first tele-sales CRM for Winstone Properties. Agents call from their own SIM through the Winstone Connect Android app; every call, report and follow-up syncs to one central database.",
-      "Flow: Lead sources → LeadHub Nexus (import, phone normalization, duplicate detection) → Canonical Lead Database (unassigned) → LeadHub quantity assignment → Agent → Call → Post-call report (facts) → CRM decides score, category, priority and next action → Follow-up → Site visit → Booking.",
-      "Principle: Agent records facts, CRM makes decisions, LeadHub owns routing. The server and database are the only source of truth; the screens only display it.",
+      "System architecture is the discipline of turning digital activity into an operating system.",
+      "A system is not simply a website, dashboard, application, or collection of features. It is an interconnected operational infrastructure where data, workflows, automation, AI, people, permissions, and business rules work together toward measurable outcomes.",
+      "Core philosophy: \"Growth is infrastructure.\"",
+      "Architecture model: BUSINESS → DATA → WORKFLOWS → AUTOMATION → AI → OPERATIONS → ANALYTICS → DECISION → IMPROVEMENT.",
+      "The purpose of this architecture is to reduce manual dependency, create repeatable processes, maintain a single source of truth, make every action traceable, connect people and systems, automate routine operations, keep humans in control of critical decisions, measure outcomes continuously, and scale without proportionally increasing operational complexity.",
+      "Core architecture principles: 01 — System First. 02 — Composable. 03 — Auditable. 04 — Data as the Source of Truth. 05 — AI as an Operating Layer. 06 — Human Control. 07 — State Over Screens. 08 — History Is Permanent.",
+      "State transitions and auditable history are the backbone. A lead is never a row on a screen; it is a state moving through a permanent, traceable path: Lead → Assigned → Contacted → Qualified → Follow-up → Opportunity → Site Visit → Booking → Revenue. Every transition is recorded with who, when and why — history is append-only and cannot be rewritten.",
+      "Winstone Connect is the operating proof of this philosophy inside the TrendFlux ecosystem: a Bengali-first, SIM-first tele-sales CRM where agents call from their own SIM through the Winstone Connect Android app and every call, report and follow-up syncs to one central database. Agent records facts, CRM makes decisions, LeadHub owns routing. The server and database are the only source of truth; the screens only display it.",
+      "Final positioning: Digital Experience → Data → Systems → AI → Operations → Ecosystem.",
+      "Not a website built around a business. A system built to operate the business.",
     ],
   },
   {
@@ -171,6 +178,7 @@ export const MANUAL_SECTIONS: ManualSection[] = [
     id: "changelog",
     title: "18. Version and changelog",
     body: [
+      "1.3.0 (2026-10-08): Introduction rewritten as the canonical System Architecture manifesto — core philosophy, architecture model, eight principles, state-transition backbone and TrendFlux ecosystem positioning.",
       "1.2.0 (2026-09-30): Sales Intelligence module — AI Sales Brief, Smart Pitchbook, verified Market Facts with versioning, permanent Pitch History in Lead 360, deterministic Pitch Effectiveness, filtered CSV/PDF export.",
       "1.1.0 (2026-09-30): Contact-close reason enforced in the database and written to permanent lead history; Other note stored and shown; follow-up cancel/old-new values logged and deletes blocked; agent self-claim retired; 9:05 gate on all agent actions; Lead 360 filters (source, requirement, reason, event type) with totals, paging and filtered CSV.",
       "1.0.0 (2026-09-30): Handover release — sidebar sub-pages for HQ/Desk/IT, Lead 360 with full permanent history, structured follow-up and contact-close reasons, append-only history tables, briefing gate on report submission, home-page daily Top 3.",
