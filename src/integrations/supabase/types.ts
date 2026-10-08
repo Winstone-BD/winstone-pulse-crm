@@ -3042,6 +3042,92 @@ export type Database = {
           },
         ]
       }
+      runtime_error_issues: {
+        Row: {
+          fingerprint: string
+          first_seen: string
+          id: string
+          kind: string
+          last_seen: string
+          message: string
+          occurrences: number
+          reopened_count: number
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          routes: string[]
+          source: string
+          status: string
+        }
+        Insert: {
+          fingerprint: string
+          first_seen?: string
+          id?: string
+          kind: string
+          last_seen?: string
+          message: string
+          occurrences?: number
+          reopened_count?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          routes?: string[]
+          source?: string
+          status?: string
+        }
+        Update: {
+          fingerprint?: string
+          first_seen?: string
+          id?: string
+          kind?: string
+          last_seen?: string
+          message?: string
+          occurrences?: number
+          reopened_count?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          routes?: string[]
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      runtime_error_occurrences: {
+        Row: {
+          browser: string | null
+          detail: string | null
+          id: number
+          issue_id: string
+          occurred_at: string
+          route: string
+        }
+        Insert: {
+          browser?: string | null
+          detail?: string | null
+          id?: never
+          issue_id: string
+          occurred_at?: string
+          route: string
+        }
+        Update: {
+          browser?: string | null
+          detail?: string | null
+          id?: never
+          issue_id?: string
+          occurred_at?: string
+          route?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "runtime_error_occurrences_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "runtime_error_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_bill_review_attempts: {
         Row: {
           actor_email: string | null
