@@ -37,9 +37,31 @@ export const Route = createFileRoute("/api/public/hooks/service-billing")({
           });
         }
 
-        // Retired: the monthly bill is now the $46.29 USD maintenance system,
-        // evaluated on every request by maintenance.server.ts.
-        return Response.json({ ok: true, retired: true });
+        // Daily (10:00 Dhaka) maintenance reminders for HQ/IT: renewal day
+        // (12th) and each grace day (13th, 14th) while payment is not verified.
+        // Deduped per period+day; never pays or approves anything.
+        const m = await import("@/lib/maintenance.server");
+        const state = await m.maintenanceAccess();
+        const day = Number(
+          new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Dhaka", day: "numeric" }).format(new Date()),
+        );
+        if (state.paymentStatus === "verified" || state.locked || day < 12 || day > 14) {
+          return Response.json({ ok: true, sent: false, day, payment: state.paymentStatus });
+        }
+        const lock = new Date(state.lockAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" });
+        const msg: Record<number, [string, string]> = {
+          12: ["আজ রক্ষণাবেক্ষণ রিন্যুয়াল দিন", "কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি $46.29 USD আজ (১২ তারিখ) রিন্যুয়াল। ১৪ তারিখ ২৩:৫৯ পর্যন্ত গ্রেস।"],
+          13: ["রক্ষণাবেক্ষণ ফি — গ্রেস সময় চলছে", "$46.29 USD এখনো যাচাই হয়নি। গ্রেস শেষ হবে ১৪ তারিখ ২৩:৫৯ (ঢাকা)।"],
+          14: ["আজ গ্রেসের শেষ দিন — রাত ১২টায় লক", "$46.29 USD যাচাই না হলে আজ রাত ২৩:৫৯-এর পর CRM লক হবে।"],
+        };
+        const [title, body] = msg[day]!;
+        const sent = await m.notifyOnce(
+          `maintenance_reminder_${state.period}_d${day}`,
+          day === 12 ? "warning" : "critical",
+          title,
+          `${body} লক সময়: ${lock} (ঢাকা)। পেমেন্ট অবস্থা: ${state.paymentStatus}। IT Console-এ পেমেন্ট রেফারেন্স দিন।`,
+        );
+        return Response.json({ ok: true, sent, day });
       },
     },
   },
