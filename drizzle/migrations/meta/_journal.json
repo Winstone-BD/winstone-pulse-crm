@@ -631,6 +631,13 @@
       "when": 1791434186596,
       "tag": "0089_runtime_error_monitoring",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1791658901928,
+      "tag": "0090_booking_os_trigger_on_approval",
+      "breakpoints": true
     }
   ]
 }
