@@ -210,7 +210,12 @@ export const listBookingReviews = createServerFn({ method: "POST" })
           .in("entity_id", ids)
       : { data: [] };
     const relay = new Map<string, string>();
-    for (const e of ev ?? []) if (e.event_type === "crm_to_os_booking.created") relay.set(e.entity_id!, e.status);
+    const relayAt = new Map<string, string | null>();
+    for (const e of ev ?? [])
+      if (e.event_type === "crm_to_os_booking.created") {
+        relay.set(e.entity_id!, e.status);
+        relayAt.set(e.entity_id!, e.processed_at);
+      }
     return (rows ?? []).map((r) => ({
       id: r.id,
       leadName: (r.leads as { name: string | null } | null)?.name ?? null,
@@ -228,6 +233,7 @@ export const listBookingReviews = createServerFn({ method: "POST" })
       reviewedAt: r.reviewed_at,
       reviewNote: r.review_note,
       relayStatus: relay.get(r.id) ?? null,
+      relayAt: relayAt.get(r.id) ?? null,
     }));
   });
 

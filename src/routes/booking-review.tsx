@@ -136,9 +136,24 @@ function Queue() {
                 <p className="text-xs text-muted-foreground">
                   {r.reviewedBy ?? "—"} · {r.reviewedAt ? new Date(r.reviewedAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }) : ""}
                   {r.reviewNote ? ` · ${r.reviewNote}` : ""}
-                  {r.approval === "approved" ? ` · ${RELAY_BN[r.relayStatus ?? ""] ?? "OS অবস্থা অজানা"}` : ""}
                 </p>
               )}
+              {r.approval === "approved" ? (
+                <p
+                  className={`w-fit rounded-md border px-2 py-1 text-xs font-medium ${
+                    r.relayStatus === "sent"
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : r.relayStatus === "failed" || r.relayStatus === "dead"
+                        ? "border-destructive/40 bg-destructive/10 text-destructive"
+                        : "border-border bg-muted text-muted-foreground"
+                  }`}
+                >
+                  Winstone OS: {RELAY_BN[r.relayStatus ?? ""] ?? "এখনো পাঠানো হয়নি"}
+                  {r.relayStatus === "sent" && r.relayAt
+                    ? ` · ${new Date(r.relayAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} (ঢাকা)`
+                    : ""}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
