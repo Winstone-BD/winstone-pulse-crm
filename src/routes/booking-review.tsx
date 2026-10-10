@@ -154,9 +154,6 @@ function Queue() {
                     : ""}
                 </p>
               ) : null}
-              {false ? (
-                <p>
-              )}
             </li>
           ))}
         </ul>
