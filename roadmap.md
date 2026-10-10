@@ -72,8 +72,8 @@
 
 - [x] 3-day lead neglect warnings + auto-return to LeadHub pool + HQ dispute log (needs rule: may a returned lead be re-given, since worked numbers are blocked from fresh assignment)
 
-- [ ] Reconnect GitHub API in new workspace — NOT linked (no GITHUB_API_KEY secret); target repo for code sync: https://github.com/Winstone-BD/winstone-crm-v01.git
-- [ ] Reconnect Google Drive in new workspace — NOT linked (no GOOGLE_DRIVE_API_KEY secret)
+- [x] Reconnect GitHub API in new workspace — linked "Zahid's GitHub API" (gateway-backed; scopes read:user + repo). Verified read of Winstone-BD/winstone-os and Winstone-BD/winstone-crm-v01, both private, HTTP 200. Issue creation NOT test-fired (would leave an undeletable issue in the org repo). Code sync to winstone-crm-v01 still needs the user's own workspace Git settings action.
+- [x] Reconnect Google Drive in new workspace — linked "Zahid's Google Drive" (gateway-backed; drive.file + drive.appdata + drive.readonly). Verified the saved archive folder "Winstone CRM" and the "2026" recordings folder exist, wrote a probe file into the archive and removed it (HTTP 204).
 - [x] QR code on agent login cards
 - [x] One-time password reset link flow (IT Console) + forced change on first login
 - [x] Live lead dashboard (HQ, LeadHub, team leaders)
