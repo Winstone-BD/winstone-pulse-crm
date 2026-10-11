@@ -76,6 +76,11 @@ export const summarizeDocument = createServerFn({ method: "POST" })
       throw new Error("ফাইলটি অনেক বড় — ৮ মেগাবাইটের কম ফাইল দিন");
     }
 
+    const cache = await import("@/lib/summary-cache.server");
+    const hash = await cache.contentHash(data.dataBase64);
+    const hit = await cache.getCachedSummary<DocSummary>("upload", hash);
+    if (hit) return { ...DocSummaryOutput.parse(hit.summary), cachedAt: hit.createdAt as string | null };
+
     const mime = data.mimeType.toLowerCase();
     const lowerName = data.fileName.toLowerCase();
     const isImage = mime.startsWith("image/");
@@ -163,7 +168,8 @@ export const summarizeDocument = createServerFn({ method: "POST" })
       metadata: { title: summary.title, agents: summary.agents.map((a) => a.name) },
     });
 
-    return summary;
+    await cache.putCachedSummary("upload", hash, summary, "google/gemini-3.8-flash", caller.profile?.name ?? "অজানা");
+    return { ...summary, cachedAt: null as string | null };
   });
 
 const DocSummaryOutput = z.object({

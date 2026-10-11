@@ -14,7 +14,7 @@ const MIME_ACCEPT = ".pdf,.docx,.xlsx,.pptx,.txt,.csv,.json,.png,.jpg,.jpeg,.web
 export function DocSummaryPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
   const summarize = useServerFn(summarizeDocument);
-  const [summary, setSummary] = useState<DocSummary | null>(null);
+  const [summary, setSummary] = useState<(DocSummary & { cachedAt?: string | null }) | null>(null);
 
   const run = useMutation({
     mutationFn: async (file: File) => {
@@ -90,6 +90,11 @@ export function DocSummaryPanel() {
           <div>
             <h3 className="text-base font-semibold">{summary.title}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{summary.overview}</p>
+            {summary.cachedAt ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                সংরক্ষিত সারসংক্ষেপ ({new Date(summary.cachedAt).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}) — নতুন চার্জ হয়নি
+              </p>
+            ) : null}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">

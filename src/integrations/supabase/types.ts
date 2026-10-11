@@ -206,6 +206,36 @@ export type Database = {
           },
         ]
       }
+      ai_summary_cache: {
+        Row: {
+          content_hash: string
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          model: string
+          summary: Json
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          model: string
+          summary: Json
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          model?: string
+          summary?: Json
+        }
+        Relationships: []
+      }
       ai_usage_events: {
         Row: {
           actor_profile_id: string | null

@@ -90,7 +90,7 @@ function startLive(queryClient: ReturnType<typeof useQueryClient>) {
   const channel = supabase
     .channel(`crm-snapshot-${crypto.randomUUID()}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, invalidate)
-    .on("postgres_changes", { event: "*", schema: "public", table: "call_recordings" }, invalidate)
+    .on("postgres_changes", { event: "*", schema: "public", table: "call_recordings" }, invalidateReports)
     .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, invalidate)
     .on("postgres_changes", { event: "*", schema: "public", table: "call_reports" }, invalidateReports)
     .on("postgres_changes", { event: "*", schema: "public", table: "follow_up_events" }, invalidateReports)
