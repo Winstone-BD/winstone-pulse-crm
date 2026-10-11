@@ -3,3 +3,4 @@
 - Market News writes only via market-news.server.ts; auto items keep source_url + retrieved_excerpt and pass groundedAgainst; rows unpublished, never deleted — why: AI must never invent news.
 - site_visits is server-only (site-visits.functions.ts via siCaller); never deleted, lead link immutable, cancel via status — why: visit history must stay trustworthy.
 - Sales Copilot reads/builds in sales-intel.server.ts (copilotResponse); pure rules live in sales-copilot.rules.ts; AI numbers must come from cited facts or lead context (parseCopilotAi) — why: no invented prices, one grounded path.
+- Project catalog (project_catalog), sales updates and discussion notes are server-only via projects.functions.ts; only HQ/IT edit catalog/owner notes, agents log on own leads, updates/notes append-only — why: HQ owns prices, sales history stays trustworthy.

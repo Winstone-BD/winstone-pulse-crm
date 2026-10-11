@@ -2860,6 +2860,159 @@ export type Database = {
         }
         Relationships: []
       }
+      project_catalog: {
+        Row: {
+          created_at: string
+          down_payment: string | null
+          extra_charges: string | null
+          id: string
+          installment_plan: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          parking_charge: string | null
+          price_per_sqft: number | null
+          status: string
+          total_price: string | null
+          unit_sizes: string | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          down_payment?: string | null
+          extra_charges?: string | null
+          id?: string
+          installment_plan?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          parking_charge?: string | null
+          price_per_sqft?: number | null
+          status?: string
+          total_price?: string | null
+          unit_sizes?: string | null
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          down_payment?: string | null
+          extra_charges?: string | null
+          id?: string
+          installment_plan?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          parking_charge?: string | null
+          price_per_sqft?: number | null
+          status?: string
+          total_price?: string | null
+          unit_sizes?: string | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      project_discussion_notes: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_id: string | null
+          note: string
+          party: string
+          project_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_id?: string | null
+          note: string
+          party: string
+          project_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_id?: string | null
+          note?: string
+          party?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_discussion_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_discussion_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_sales_updates: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          interest: string
+          lead_id: string
+          note: string | null
+          offered_price: number | null
+          project_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          interest: string
+          lead_id: string
+          note?: string | null
+          offered_price?: number | null
+          project_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          interest?: string
+          lead_id?: string
+          note?: string | null
+          offered_price?: number | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_sales_updates_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_sales_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_deliveries: {
         Row: {
           created_at: string
