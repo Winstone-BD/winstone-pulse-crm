@@ -46,6 +46,8 @@ import { TeamSupportPanel } from "@/components/crm/TeamSupportPanel";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
+import { DeskTabBar } from "@/components/crm/desk/DeskTabBar";
+import { TodayHero } from "@/components/crm/desk/TodayHero";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
@@ -349,16 +351,33 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="hq-luxe grid gap-4 rounded-3xl p-3 sm:p-5">
+      <div className="hq-luxe grid gap-4 rounded-3xl p-3 pb-24 sm:p-5 md:pb-5">
+        <DeskTabBar tab={tab} onChange={setTab} />
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
-          <AccountabilityBanner />
-          <LeadDeadlineBanner />
+          <TodayHero name={account?.profile?.name ?? null} />
+
+          <section aria-label="সতর্কবার্তা" className="space-y-2">
+            <AccountabilityBanner />
+            <LeadDeadlineBanner />
+            <MyNeglectNotice />
+            <VisitRequestsPanel />
+            <SiteVisitReminder />
+          </section>
+
           <OfficialNewsStrip />
-          <VisitRequestsPanel />
-          <SiteVisitReminder />
-          <MyProfileCard />
-          <MyPhoneSetup />
+
+          <details className="group card-elevated overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              প্রোফাইল ও ফোন সেটআপ
+              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="space-y-4 border-t border-border p-3 sm:p-4">
+              <MyProfileCard />
+              <MyPhoneSetup />
+            </div>
+          </details>
+
           <SalesChartsDashboard scope="agent" />
 
           <DeskCommandCenter
@@ -398,8 +417,6 @@ function DeskPage() {
             </div>
           </details>
         )}
-
-        <MyNeglectNotice />
 
         <CommandAgentPanel surface="desk" />
 
