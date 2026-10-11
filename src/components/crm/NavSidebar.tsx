@@ -258,7 +258,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
                   Winstone Pulse
                 </span>
                 <span className="block truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-$1Premium Real Estate CRM
+Premium Real Estate CRM
                 </span>
               </span>
             </span>
