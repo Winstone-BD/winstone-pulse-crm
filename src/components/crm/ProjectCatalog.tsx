@@ -69,7 +69,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
   const qc = useQueryClient();
   const save = useServerFn(saveProject);
   const [f, setF] = useState<Record<string, string | undefined>>(() =>
-    Object.fromEntries(["name", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
+    Object.fromEntries(["name", "image_url", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
   );
   const [status, setStatus] = useState(initial?.status ?? "active");
   const m = useMutation({
@@ -79,7 +79,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
       if (ppsf != null && !Number.isFinite(ppsf)) throw new Error("বর্গফুট মূল্য সংখ্যা হতে হবে");
       return save({ data: { adminToken, id: initial?.id ?? null, name: f["name"] ?? "", status: status as "active" | "archived", price_per_sqft: ppsf,
         location: s("location"), unit_sizes: s("unit_sizes"), total_price: s("total_price"), down_payment: s("down_payment"),
-        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes") } });
+        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes"), image_url: s("image_url") } });
     },
     onSuccess: () => { toast.success("সংরক্ষিত"); qc.invalidateQueries({ queryKey: ["project-catalog"] }); onDone(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "ব্যর্থ"),
@@ -92,6 +92,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
           <Input inputMode={k === "price_per_sqft" ? "decimal" : undefined} value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
         </label>
       ))}
+      <label className="text-xs sm:col-span-2">ছবির লিংক / Image URL<Input value={f["image_url"] ?? ""} onChange={(e) => setF({ ...f, image_url: e.target.value })} placeholder="https://…" /></label>
       <label className="text-xs">Status
         <select className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="active">active</option><option value="archived">archived</option>
