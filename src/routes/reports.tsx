@@ -30,13 +30,13 @@ import {
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "Custom Reports — Winstone Connect" },
+      { title: "Custom Reports — Winstone CRM" },
       {
         name: "description",
         content:
           "Filterable tele-sales performance reports: dial and connect trends, lead funnel, source mix, agent scorecards and CSV export.",
       },
-      { property: "og:title", content: "Custom Reports — Winstone Connect" },
+      { property: "og:title", content: "Custom Reports — Winstone CRM" },
       {
         property: "og:description",
         content: "Charts, filters and CSV export for call activity, lead funnel and agent output.",

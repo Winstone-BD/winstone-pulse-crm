@@ -55,16 +55,16 @@ export const Route = createFileRoute("/desk")({
   validateSearch: sectionSearch,
   head: () => ({
     meta: [
-      { title: "আমার ডেস্ক — Winstone Connect" },
+      { title: "আমার ডেস্ক — Winstone CRM" },
       {
         name: "description",
         content:
           "নিজের লিড তালিকা, কল রেকর্ড, হোয়াটসঅ্যাপ ইনবক্স আর নতুন লিড জমা দেওয়ার জায়গা — সব এক ডেস্কে।",
       },
-      { property: "og:title", content: "আমার ডেস্ক — Winstone Connect" },
+      { property: "og:title", content: "আমার ডেস্ক — Winstone CRM" },
       {
         property: "og:description",
-        content: "এক চাপে কল, হোয়াটসঅ্যাপ কথা আর নিজের লিড — Winstone Connect এজেন্ট ডেস্ক।",
+        content: "এক চাপে কল, হোয়াটসঅ্যাপ কথা আর নিজের লিড — Winstone CRM এজেন্ট ডেস্ক।",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

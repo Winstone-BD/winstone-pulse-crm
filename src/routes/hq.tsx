@@ -48,13 +48,13 @@ export const Route = createFileRoute("/hq")({
   validateSearch: sectionSearch,
   head: () => ({
     meta: [
-      { title: "Control Board — Tele-Sales CRM OS" },
+      { title: "Control Board — Winstone CRM" },
       {
         name: "description",
         content:
           "Live agent radar, call leaderboard and AI call intelligence for enterprise tele-sales teams.",
       },
-      { property: "og:title", content: "Control Board — Tele-Sales CRM OS" },
+      { property: "og:title", content: "Control Board — Winstone CRM" },
       {
         property: "og:description",
         content:

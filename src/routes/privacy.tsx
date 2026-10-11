@@ -3,16 +3,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Winstone Connect" },
+      { title: "Privacy Policy — Winstone CRM" },
       {
         name: "description",
         content:
-          "Winstone Connect privacy policy: how lead, call and WhatsApp data is collected, used, stored and protected.",
+          "Winstone CRM privacy policy: how lead, call and WhatsApp data is collected, used, stored and protected.",
       },
-      { property: "og:title", content: "Privacy Policy — Winstone Connect" },
+      { property: "og:title", content: "Privacy Policy — Winstone CRM" },
       {
         property: "og:description",
-        content: "How Winstone Connect handles tele-sales data, recordings and user information.",
+        content: "How Winstone CRM handles tele-sales data, recordings and user information.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -26,7 +26,7 @@ function PrivacyPage() {
     <div className="min-h-screen bg-background px-4 py-12 sm:px-6">
       <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-10">
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back to Winstone Connect
+          ← Back to Winstone CRM
         </Link>
         <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">Effective date: 10 September 2026</p>
@@ -35,7 +35,7 @@ function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">1. Information we collect</h2>
             <p className="mt-2 text-muted-foreground">
-              Winstone Connect collects lead contact details (name, phone number, company, notes),
+              Winstone CRM collects lead contact details (name, phone number, company, notes),
               call recordings, WhatsApp interaction logs, and agent activity timestamps. All data is
               entered by authorised users or ingested automatically from connected agent devices.
             </p>
@@ -92,7 +92,7 @@ function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">7. Contact</h2>
             <p className="mt-2 text-muted-foreground">
-              For privacy-related questions, contact the Winstone Connect administrator at{" "}
+              For privacy-related questions, contact the Winstone CRM administrator at{" "}
               <a
                 className="text-primary underline underline-offset-2 hover:text-primary/80"
                 href="mailto:support@winstonebd.com"

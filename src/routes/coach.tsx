@@ -29,13 +29,13 @@ import { useAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/coach")({
   head: () => ({
     meta: [
-      { title: "AI Sales Coach — Winstone Connect" },
+      { title: "AI Sales Coach — Winstone CRM" },
       {
         name: "description",
         content:
           "Real-time coaching built from each agent's own call transcripts and WhatsApp logs: what is working, what is slipping and the next calls to make.",
       },
-      { property: "og:title", content: "AI Sales Coach — Winstone Connect" },
+      { property: "og:title", content: "AI Sales Coach — Winstone CRM" },
       {
         property: "og:description",
         content:

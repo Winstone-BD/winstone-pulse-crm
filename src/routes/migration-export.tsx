@@ -20,9 +20,9 @@ import {
 export const Route = createFileRoute("/migration-export")({
   head: () => ({
     meta: [
-      { title: "Migration Export Center — Winstone Connect" },
+      { title: "Migration Export Center — Winstone CRM" },
       { name: "description", content: "Read-only CRM1 → CRM2 data export bundle for IT." },
-      { property: "og:title", content: "Migration Export Center — Winstone Connect" },
+      { property: "og:title", content: "Migration Export Center — Winstone CRM" },
       { property: "og:description", content: "Read-only migration bundle with manifest and checksums." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

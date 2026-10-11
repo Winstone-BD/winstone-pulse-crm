@@ -22,13 +22,13 @@ import { useMyAccount } from "@/lib/session";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Winstone Connect — Tele-Sales Operating System" },
+      { title: "Winstone CRM & Sales Operating System" },
       {
         name: "description",
         content:
-          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone Connect CRM, the same data on every device.",
+          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone CRM and Sales Operating System, the same data on every device.",
       },
-      { property: "og:title", content: "Winstone Connect — Tele-Sales Operating System" },
+      { property: "og:title", content: "Winstone CRM & Sales Operating System" },
       {
         property: "og:description",
         content: "One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
@@ -72,15 +72,15 @@ function EntryHall() {
             className="size-24 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-28"
           />
           <h1 className="mt-6 text-4xl font-black tracking-tight text-foreground sm:text-6xl">
-            Winstone Connect
+            Winstone CRM
           </h1>
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary sm:text-xs">
-            Tele-Sales Operating System
+            Sales Operating System
           </p>
           <span aria-hidden className="mt-6 h-px w-24 bg-primary/60" />
           <h2 className="mt-8 text-2xl font-bold tracking-tight sm:text-3xl">Choose Your Workspace</h2>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Select the mode you are using — the same CRM opens on every device.
+            Select the mode you are using — the same Winstone CRM opens on every device.
           </p>
         </header>
 
