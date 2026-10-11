@@ -28,7 +28,10 @@ export function MarketNewsFeed({ compact = false, manage = false }: { compact?: 
   });
   const items = q.data?.pages.flatMap((p) => p.items) ?? [];
   const isHq = q.data?.pages[0]?.scope === "authority";
-  const shown = compact ? items.slice(0, 3) : items;
+  // Official Winstone news (Knowledge Hub) from the last 14 days is pinned first.
+  const fresh = (n: Item) => n.origin === "official" && Date.now() - Date.parse(n.created_at) < 14 * 86_400_000;
+  const ordered = [...items.filter(fresh), ...items.filter((n) => !fresh(n))];
+  const shown = compact ? ordered.slice(0, 3) : ordered;
 
   return (
     <div className="space-y-3">
@@ -88,10 +91,12 @@ function NewsCard({ n, compact, manage }: { n: Item; compact: boolean; manage: b
   const points = Array.isArray(n.key_points) ? n.key_points : [];
 
   return (
-    <article className={`rounded-2xl border border-border bg-card p-4 shadow-sm ${n.status !== "published" ? "opacity-60" : ""}`}>
+    <article className={`rounded-2xl border bg-card p-4 shadow-sm ${n.origin === "official" ? "border-accent-foreground/30 ring-1 ring-accent-foreground/20" : "border-border"} ${n.status !== "published" ? "opacity-60" : ""}`}>
       <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[11px]">
         <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{newsCategoryLabel(n.category)}</span>
-        {n.origin === "auto" ? (
+        {n.origin === "official" ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground"><Megaphone className="size-3" />Winstone অফিসিয়াল</span>
+        ) : n.origin === "auto" ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"><Sparkles className="size-3" />AI সংক্ষেপ</span>
         ) : (
           <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5"><Megaphone className="size-3" />HQ</span>
