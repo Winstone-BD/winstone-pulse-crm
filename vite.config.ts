@@ -4,6 +4,7 @@
 //     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+import fs from "node:fs";
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
@@ -18,10 +19,31 @@ const BROWSER_ASYNC_HOOKS = path.resolve(
   import.meta.dirname,
   "src/lib/browser-async-hooks-stub.js",
 );
+const BROWSER_ASYNC_HOOKS_SRC = fs.readFileSync(BROWSER_ASYNC_HOOKS, "utf8");
 
-// Replace node:async_hooks with a no-op store, but only for browser code. The
-// server must keep the real implementation — TanStack Start stores the request
-// context in it, so aliasing it there would break every server function.
+// TanStack Start's storage context runs `new AsyncLocalStorage()` at module load.
+// Vite externalises node:async_hooks for the browser to an empty warning proxy, so
+// the constructor is undefined: the throw "AsyncLocalStorage is not a constructor"
+// kills the server-function client before it can read the session, and every page
+// silently renders signed out with no boards or widgets. Serve a no-op store to
+// browser code only — the server keeps the real implementation, which stores the
+// request context every server function depends on.
+const asyncHooksStub = {
+  name: "browser-async-hooks-stub",
+  setup(build) {
+    build.onResolve({ filter: /^node:async_hooks$/ }, () => ({
+      path: "node:async_hooks",
+      namespace: "async-hooks-stub",
+    }));
+    build.onLoad({ filter: /.*/, namespace: "async-hooks-stub" }, () => ({
+      contents: BROWSER_ASYNC_HOOKS_SRC,
+      loader: "js",
+    }));
+  },
+};
+
+// Same swap for the client build, which goes through Vite's plugin container
+// rather than esbuild. `options.ssr` keeps the server on the real module.
 function browserAsyncHooksStub() {
   return {
     name: "browser-async-hooks-stub",
@@ -40,6 +62,10 @@ export default defineConfig({
     // function ID" after a restart: Vite discovered these deps late on every cold
     // start, re-optimized and force-reloaded, invalidating chunk hashes that open
     // tabs still referenced. Pre-bundling them up front removes that reload.
+    //
+    // react-start's /client entry is deliberately NOT listed: pre-bundling it drags
+    // the storage-context module (and its node:async_hooks import) into a browser
+    // chunk, where the shim above is the only thing keeping it alive.
     optimizeDeps: {
       include: [
         "@tanstack/history",
@@ -49,19 +75,9 @@ export default defineConfig({
         "@tanstack/router-core/ssr/server",
         "h3-v2",
         "seroval",
-        // The HTML shell hydrates through react-start's default-entry client.tsx,
-        // which imports these directly. If any is discovered late, its pre-bundle
-        // hash (?v=) changes mid-session and the open tab's entry import fails ->
-        // blank screen. Only the /client subpath is browser code: the package root
-        // also exports server utilities that must not enter the browser bundle.
-        "@tanstack/react-start/client",
-        "react",
-        "react-dom/client",
       ],
       esbuildOptions: {
-        // The dep pre-bundle runs through esbuild, not Vite's plugin container, so
-        // the alias above has to be repeated here for it to take effect in dev.
-        alias: { "node:async_hooks": BROWSER_ASYNC_HOOKS },
+        plugins: [asyncHooksStub],
       },
     },
     resolve: {
