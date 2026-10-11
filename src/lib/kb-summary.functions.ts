@@ -45,6 +45,11 @@ export const kbArticleSummary = createServerFn({ method: "POST" })
       throw new Error("আর্টিকেলের লেখা খুব ছোট — সামারি বানানোর মতো যথেষ্ট লেখা নেই");
     }
 
+    const cache = await import("@/lib/summary-cache.server");
+    const hash = await cache.contentHash(article.title, article.body_markdown);
+    const hit = await cache.getCachedSummary<string>("kb", hash);
+    if (hit) return { summary: hit.summary, cachedAt: hit.createdAt as string | null };
+
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("AI সার্ভিস এখন উপলব্ধ নেই");
 
@@ -90,5 +95,6 @@ export const kbArticleSummary = createServerFn({ method: "POST" })
       metadata: { title: article.title },
     });
 
-    return { summary };
+    await cache.putCachedSummary("kb", hash, summary, MODEL, caller.profile?.name ?? "Support");
+    return { summary, cachedAt: null as string | null };
   });
