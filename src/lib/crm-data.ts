@@ -38,6 +38,8 @@ export const snapshotQueryFor = (scope: { token: string | null }) =>
     // Each poll re-reads the whole floor, so keep it rare (was 45s — the top DB cost).
     refetchInterval: 180_000,
     refetchIntervalInBackground: false,
+    // Hidden tabs skip live reloads; catch up once when the user comes back.
+    refetchOnWindowFocus: true,
     staleTime: 60_000,
   });
 
