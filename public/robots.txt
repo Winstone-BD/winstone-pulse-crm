@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://crm1.winstonebd.com/sitemap.xml
+Sitemap: https://crm.winstonebd.com/sitemap.xml
