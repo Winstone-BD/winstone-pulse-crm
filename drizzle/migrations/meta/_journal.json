@@ -701,6 +701,13 @@
       "when": 1791739498740,
       "tag": "0099_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1791742744402,
+      "tag": "0100_ai_summary_cache",
+      "breakpoints": true
     }
   ]
 }
