@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "prebuild": "node scripts/check-build-tool-pin.mjs",
+    "prebuild": "node scripts/check-build-tool-pin.mjs && node scripts/check-dashboard-colors.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsgo --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "check:colors": "node scripts/check-dashboard-colors.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

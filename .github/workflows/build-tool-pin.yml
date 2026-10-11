@@ -19,3 +19,10 @@ jobs:
         run: |
           npm install --no-save vitest
           npx vitest run tests/build-config-pin.test.ts
+
+  dashboard-colors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dashboards use semantic colour tokens only
+        run: node scripts/check-dashboard-colors.mjs
