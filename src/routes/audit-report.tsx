@@ -6,9 +6,9 @@ const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 export const Route = createFileRoute("/audit-report")({
   validateSearch: (s: Record<string, unknown>): { q?: string; result?: string; item?: string } => ({
-    q: str(s.q) || undefined,
-    result: str(s.result) || undefined,
-    item: str(s.item) || (typeof s.item === "number" ? String(s.item) : undefined),
+    q: str(s["q"]) || undefined,
+    result: str(s["result"]) || undefined,
+    item: str(s["item"]) || (typeof s["item"] === "number" ? String(s["item"]) : undefined),
   }),
   head: () => ({
     meta: [
