@@ -28,9 +28,9 @@ const BROWSER_ASYNC_HOOKS_SRC = fs.readFileSync(BROWSER_ASYNC_HOOKS, "utf8");
 // silently renders signed out with no boards or widgets. Serve a no-op store to
 // browser code only — the server keeps the real implementation, which stores the
 // request context every server function depends on.
-const asyncHooksStub = {
+const asyncHooksStub: { name: string; setup(build: any): void } = {
   name: "browser-async-hooks-stub",
-  setup(build) {
+  setup(build: any) {
     build.onResolve({ filter: /^node:async_hooks$/ }, () => ({
       path: "node:async_hooks",
       namespace: "async-hooks-stub",
