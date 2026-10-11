@@ -83,3 +83,18 @@ describe("cited answers", () => {
     expect(finalizeCitedAnswer({ answer: "ok", covered: true }, [{ url: "https://winstonebd.com/faq" }]).sources).toHaveLength(1);
   });
 });
+
+import { hmacHex, verifyOsRequest } from "@/lib/os-bridge";
+describe("signed event verification (before parsing)", () => {
+  const secret = "test-secret-not-real";
+  const body = JSON.stringify({ event_id: "e", event_type: "site_visit.requested", occurred_at: "2026-10-11T10:00:00Z", payload: {} });
+  const now = 1_791_720_000;
+  it("accepts valid, rejects tampered, stale and replayed-old timestamps", async () => {
+    const sig = await hmacHex(secret, `${now}.${body}`);
+    const base = { secret, rawBody: body, timestamp: String(now), signature: `sha256=${sig}`, idempotencyKey: "hub_r1_key", nowSeconds: now };
+    expect(await verifyOsRequest(base)).toBeNull();
+    expect(await verifyOsRequest({ ...base, rawBody: body + " " })).toBe("invalid_signature");
+    expect(await verifyOsRequest({ ...base, nowSeconds: now + 301 })).toBe("stale_timestamp");
+    expect(await verifyOsRequest({ ...base, signature: null })).toBe("missing_signature");
+  });
+});
