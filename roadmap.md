@@ -108,3 +108,8 @@
 - [ ] Run skipped photo checks once staff signed in; confirm HQ audit entry
 - [ ] Build-tool guard: block preview start if not 2.25.2
 - [ ] Status report: preview crash, build-tool root cause, recovery steps
+- [ ] Verify new leads appear in list promptly after refresh throttle
+- [ ] Compare one day's lead list vs call list before/after; report DB load drop
+- [ ] Per-call lead report auto-update alongside board
+- [ ] AI summaries: cache server-side, charge only first generation
+- [ ] Review reference images/video; assess modern dashboard redesign
