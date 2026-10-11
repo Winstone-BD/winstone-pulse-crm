@@ -12,6 +12,7 @@
 
 export type AuditAction =
   | "project_catalog_import"
+  | "project_photos_viewed"
   | "account_approved"
   | "account_rejected"
   | "role_changed"

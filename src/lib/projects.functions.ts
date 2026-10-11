@@ -24,6 +24,28 @@ async function ctx(token: string | null | undefined) {
   return { c, db: supabaseAdmin };
 }
 
+/**
+ * HQ audit: who saw project photos and when. At most one row per viewer per
+ * 30 minutes (page refreshes would otherwise flood the log). Best-effort.
+ */
+async function logPhotoView(
+  db: Awaited<ReturnType<typeof ctx>>["db"],
+  c: { scope: string; agentId: string | null; actor: string },
+  names: string[],
+) {
+  const since = new Date(Date.now() - 30 * 60_000).toISOString();
+  let recent = db.from("audit_logs").select("id").eq("action", "project_photos_viewed").gte("created_at", since).limit(1);
+  recent = c.agentId ? recent.eq("actor_profile_id", c.agentId) : recent.is("actor_profile_id", null).eq("actor_label", c.actor);
+  const { data } = await recent;
+  if (data?.length) return;
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({
+    action: "project_photos_viewed", entityType: "project_catalog", entityId: null,
+    actorProfileId: c.agentId, actorLabel: c.actor,
+    metadata: { scope: c.scope, photo_count: names.length, projects: names.slice(0, 50), link_lifetime_seconds: 3600 },
+  });
+}
+
 export const listProjects = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
   .handler(async ({ data }) => {
@@ -44,6 +66,8 @@ export const listProjects = createServerFn({ method: "POST" })
       const { data: s } = await supabaseAdmin.storage.from("project-photos").createSignedUrl(path, 3600);
       p.image_url = s?.signedUrl ?? null;
     }));
+    const shown = projects.filter((p) => p.image_url?.includes("/object/sign/project-photos/"));
+    if (shown.length) await logPhotoView(supabaseAdmin, c, shown.map((p) => p.name)).catch(() => undefined);
     return { canEdit: c.scope === "authority", projects };
   });
 
