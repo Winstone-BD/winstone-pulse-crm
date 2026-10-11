@@ -15,7 +15,7 @@ import urllib.request
 from playwright.async_api import async_playwright
 
 BASE = "http://localhost:8080"
-PAGES = ["/", "/desk", "/hq", "/live-leads", "/news", "/site-visits"]
+PAGES = ["/projects", "/", "/desk", "/hq", "/live-leads", "/news", "/site-visits"]
 LOG = "/tmp/dev-server-logs/dev-server.log"
 BAD_LOG = ("Invalid server function ID", "optimized dependencies changed")
 
