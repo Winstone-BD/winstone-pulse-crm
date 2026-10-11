@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { fullDateTime } from "@/lib/crm-format";
 import { addLeadNote, deleteLeadNote, listLeadNotes, updateLeadNote } from "@/lib/lead-notes.functions";
 import { useAdminToken } from "@/lib/local-session";
+import { useT } from "@/lib/i18n";
 
 /** ব্যক্তিগত নোট — separate from call reports; author + timestamps kept. */
-export function LeadNotesPanel({ leadId }: { leadId: string }) {
+export function LeadNotesPanel({ leadId, compact = false }: { leadId: string; compact?: boolean }) {
+  const t = useT();
   const adminToken = useAdminToken();
   const qc = useQueryClient();
   const key = ["lead-notes", leadId, adminToken ? "pin" : "session"];
@@ -22,7 +24,7 @@ export function LeadNotesPanel({ leadId }: { leadId: string }) {
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
 
-  const { data: notes = [], isPending } = useQuery({
+  const { data: notes = [], isPending, isError, refetch } = useQuery({
     queryKey: key,
     queryFn: () => list({ data: { adminToken, leadId } }),
   });
@@ -46,7 +48,7 @@ export function LeadNotesPanel({ leadId }: { leadId: string }) {
   });
 
   return (
-    <section className="space-y-3 rounded-xl border bg-card p-4">
+    <section className={compact ? "space-y-3" : "space-y-3 rounded-xl border bg-card p-4"}>
       <h3 className="flex items-center gap-2 text-sm font-semibold">
         <NotebookPen className="size-4 text-primary" /> ব্যক্তিগত নোট / Personal Notes
       </h3>
@@ -55,6 +57,7 @@ export function LeadNotesPanel({ leadId }: { leadId: string }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={4000}
+          aria-label={t({ bn: "লিডের ব্যক্তিগত নোট", en: "Lead personal note" })}
           placeholder="সম্পর্ক, পরিচয়, লোকেশন বা জরুরি তথ্য লিখুন…"
           className="min-h-20"
         />
@@ -62,7 +65,7 @@ export function LeadNotesPanel({ leadId }: { leadId: string }) {
           {addM.isPending ? <Loader2 className="size-4 animate-spin" /> : null} নোট যোগ করুন
         </Button>
       </div>
-      {isPending ? (
+      {isError ? <div role="alert" className="text-xs text-destructive">{t({ bn: "নোট আনা যায়নি—আবার চেষ্টা করুন।", en: "Notes could not be loaded. Try again." })}<Button variant="ghost" size="sm" onClick={() => void refetch()}>{t({ bn: "আবার চেষ্টা", en: "Retry" })}</Button></div> : isPending ? (
         <p className="text-xs text-muted-foreground">নোট আনা হচ্ছে…</p>
       ) : notes.length === 0 ? (
         <p className="text-xs text-muted-foreground">এখনো কোনো ব্যক্তিগত নোট নেই।</p>
