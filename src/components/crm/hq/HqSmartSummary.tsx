@@ -62,7 +62,7 @@ type Props = {
   profiles: Profile[];
   leads: Lead[];
   calls: CallRecording[];
-  messages: Parameters<typeof buildAgentStats>[3];
+  messages: WhatsappMessage[];
   onSelectAgent?: (agentId: string) => void;
 };
 
