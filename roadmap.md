@@ -2,6 +2,10 @@
 
 ## Active
 
+- [ ] Replace sideways desk navigation with a colour-accented, non-scrolling section picker.
+- [ ] Bring saved notes and prior reports/history into pre-call and active call workspace using existing authorised paths.
+- [ ] Add real mute/speaker/end controls where supported; identify native-device prerequisites and verify without fake calls.
+
 - [x] Phone-like agent calling panel — centered customer identity, round secondary controls, large call button; existing gates preserved. Signed-in visual check blocked: no requesting-user staff session available.
 
 0. **Knowledge Hub link** — Done in CRM: hub project pages + citations in answers, official news highlighted/pinned + Desk strip, website visit requests (confirm/dismiss). Waits on Hub sending `site_visit.requested`.
