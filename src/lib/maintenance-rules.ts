@@ -81,9 +81,10 @@ export function decide(input: RuleInput): { locked: boolean; stage: Stage } {
   }
   const lockAt = new Date(input.lockAt).getTime();
   if (now >= lockAt) return { locked: true, stage: "locked" };
-  const days = (lockAt - now) / 86_400_000;
-  if (days <= 1) return { locked: false, stage: "due_today" };
-  if (days <= 3) return { locked: false, stage: "soon" };
+  const msToLock = lockAt - now;
+  if (msToLock <= 24 * 3_600_000) return { locked: false, stage: "due_today" };
+  // Red starts the evening before renewal: 11th 17:00 Dhaka (79h before the lock).
+  if (msToLock <= RED_WARNING_HOURS * 3_600_000) return { locked: false, stage: "soon" };
   if (days <= BILLING_DAY - NOTICE_DAY) return { locked: false, stage: "upcoming" };
   return { locked: false, stage: "clear" };
 }
