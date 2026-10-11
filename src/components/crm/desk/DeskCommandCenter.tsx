@@ -20,6 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
+import { LeadCallControls } from "@/components/crm/desk/LeadCallControls";
 import { FollowUpResolveActions } from "@/components/crm/FollowUpResolveActions";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { WebCallButton } from "@/components/crm/WebCallButton";
@@ -680,7 +681,7 @@ export function DeskCommandCenter({
             <div className="mt-3 max-h-[520px] overflow-y-auto">
               <ul
                 id="agent-lead-queue-results"
-                className="space-y-2"
+                 className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2"
                 aria-label={`${QUEUE_LABELS[filter]} লিড, ${SORT_LABELS[sort]}, ${bn(rows.length)} ফল`}
                 aria-describedby="lead-queue-help"
               >
@@ -690,14 +691,15 @@ export function DeskCommandCenter({
                     <li
                       key={lead.id}
                       className={cn(
-                        "rounded-xl border p-2.5 transition-colors",
+                         "min-w-0 rounded-2xl border bg-card p-4 transition-colors",
                         selected?.id === lead.id
                           ? "border-primary/40 bg-primary/5"
-                          : "border-border/70 bg-surface-2/40 hover:bg-surface-2",
+                           : "border-border/70 hover:border-primary/30",
                       )}
                     >
-                      <button
+                      <Button
                         type="button"
+                         variant="ghost"
                          ref={(node) => {
                            queueItemRefs.current[lead.id] = node;
                          }}
@@ -710,17 +712,20 @@ export function DeskCommandCenter({
                          }}
                          aria-current={selected?.id === lead.id ? "true" : undefined}
                          aria-label={`${lead.name}, ${lead.phone_number}, ${STATUS_LABELS[lead.status] ?? lead.status}${lead.temperature ? `, ${lead.temperature}` : ""}. লিড ৩৬০ খুলুন`}
-                         className="block w-full min-w-0 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          className="block h-auto w-full min-w-0 whitespace-normal rounded-lg p-0 text-center hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                        <div className="relative min-w-0 pb-2">
+                          <span aria-hidden="true" className="mx-auto mb-3 grid size-14 place-items-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
+                            {Array.from(lead.name.trim())[0] ?? "—"}
+                          </span>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{lead.name}</p>
-                            <p className="tabular truncate text-[11px] text-muted-foreground">
+                            <p className="break-words text-base font-semibold">{lead.name}</p>
+                            <p className="mt-1 break-all font-mono text-base font-medium text-foreground">
                               {lead.phone_number}
-                              {lead.address ? ` · ${lead.address}` : ""}
                             </p>
+                             {lead.address && <p className="mt-1 truncate text-xs text-muted-foreground">{lead.address}</p>}
                           </div>
-                          <span className="flex shrink-0 flex-col items-end text-[10px] text-muted-foreground">
+                          <span className="mt-2 flex min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
                             <span className="tabular">#{lead.serial_no ?? "—"}</span>
                             {lead.reference_by ? (
                               <span
@@ -732,7 +737,7 @@ export function DeskCommandCenter({
                             ) : null}
                           </span>
                         </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <div className="mb-3 mt-1.5 flex flex-wrap items-center justify-center gap-1.5">
                           <span
                             className={cn(
                               "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
@@ -759,33 +764,15 @@ export function DeskCommandCenter({
                               সময় পেরিয়েছে / Overdue
                             </span>
                           )}
-                          <span className="tabular ml-auto text-[10px] text-muted-foreground">
+                          <span className="w-full text-[10px] text-muted-foreground">
                             {lead.last_call_at
                               ? relativeTime(lead.last_call_at)
                               : `${bn(lead.call_attempts)} বার চেষ্টা`}
                           </span>
                         </div>
-                      </button>
-                      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
-                        <WebCallButton
-                          leadId={lead.id}
-                          phone={lead.phone_number}
-                          label="কল"
-                          className="h-9 min-w-0 text-sm"
-                         ariaLabel={`${lead.name}-কে কল করুন`}
-                        />
-                        <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" ariaLabel={`${lead.name}-কে হোয়াটসঅ্যাপ করুন`} />
-                        <CallbackLogButton leadId={lead.id} label="" ariaLabel={`${lead.name}-এর কলব্যাক রিপোর্ট করুন`} />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="col-span-2 h-9 px-2 text-[11px] sm:col-span-1"
-                          onClick={() => setDossierId(lead.id)}
-                          aria-label={`${lead.name}-এর পুরো লিড বিস্তারিত খুলুন`}
-                        >
-                          বিস্তারিত
-                        </Button>
-                      </div>
+                      </Button>
+                      <LeadCallControls leadId={lead.id} phone={lead.phone_number} name={lead.name}
+                        onDetails={() => setDossierId(lead.id)} />
                       {canResolveFollowUp(lead) && (
                         <FollowUpResolveActions
                           leadId={lead.id}
