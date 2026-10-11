@@ -69,7 +69,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
   const qc = useQueryClient();
   const save = useServerFn(saveProject);
   const [f, setF] = useState<Record<string, string | undefined>>(() =>
-    Object.fromEntries(["name", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
+    Object.fromEntries(["name", "image_url", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
   );
   const [status, setStatus] = useState(initial?.status ?? "active");
   const m = useMutation({
@@ -79,7 +79,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
       if (ppsf != null && !Number.isFinite(ppsf)) throw new Error("বর্গফুট মূল্য সংখ্যা হতে হবে");
       return save({ data: { adminToken, id: initial?.id ?? null, name: f["name"] ?? "", status: status as "active" | "archived", price_per_sqft: ppsf,
         location: s("location"), unit_sizes: s("unit_sizes"), total_price: s("total_price"), down_payment: s("down_payment"),
-        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes") } });
+        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes"), image_url: s("image_url") } });
     },
     onSuccess: () => { toast.success("সংরক্ষিত"); qc.invalidateQueries({ queryKey: ["project-catalog"] }); onDone(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "ব্যর্থ"),
@@ -92,6 +92,7 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
           <Input inputMode={k === "price_per_sqft" ? "decimal" : undefined} value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
         </label>
       ))}
+      <label className="text-xs sm:col-span-2">ছবির লিংক / Image URL<Input value={f["image_url"] ?? ""} onChange={(e) => setF({ ...f, image_url: e.target.value })} placeholder="https://…" /></label>
       <label className="text-xs">Status
         <select className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="active">active</option><option value="archived">archived</option>
@@ -163,7 +164,9 @@ export function ProjectCatalogPanel() {
       {q.data && !q.data.projects.length ? <p className="text-sm text-muted-foreground">{t(L.empty)}</p> : null}
       <div className="grid gap-3 md:grid-cols-2">
         {(q.data?.projects ?? []).map((p) => (
-          <article key={p.id} className="rounded-xl border border-border p-3 text-sm">
+          <article key={p.id} className="overflow-hidden rounded-xl border border-border text-sm">
+            {p.image_url ? <img src={p.image_url} alt={p.name} loading="lazy" className="aspect-[16/9] w-full object-cover" /> : null}
+            <div className="p-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold">{p.name}{p.status === "archived" ? <span className="ml-2 text-xs text-muted-foreground">(archived)</span> : null}</h3>
@@ -178,6 +181,7 @@ export function ProjectCatalogPanel() {
             </dl>
             <Button size="sm" variant="link" className="px-0" onClick={() => setOpen(open === p.id ? null : p.id)}>{t(L.notes)}</Button>
             {open === p.id ? <NotesBlock project={p} canEdit={canEdit} /> : null}
+            </div>
           </article>
         ))}
       </div>
@@ -225,6 +229,7 @@ export function LeadProjectSales({ leadId }: { leadId: string }) {
             <option value="">{t(L.pick)}</option>
             {active.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {chosen?.image_url ? <img src={chosen.image_url} alt={chosen.name} loading="lazy" className="aspect-[16/9] w-full rounded-md object-cover" /> : null}
           {chosen ? (
             <dl className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-md bg-muted/50 p-2 text-xs">
               {FIELDS.filter(([k]) => chosen[k] != null && chosen[k] !== "").map(([k, lbl]) => (

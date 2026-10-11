@@ -2869,6 +2869,7 @@ export type Database = {
           down_payment: string | null
           extra_charges: string | null
           id: string
+          image_url: string | null
           installment_plan: string | null
           location: string | null
           name: string
@@ -2886,6 +2887,7 @@ export type Database = {
           down_payment?: string | null
           extra_charges?: string | null
           id?: string
+          image_url?: string | null
           installment_plan?: string | null
           location?: string | null
           name: string
@@ -2903,6 +2905,7 @@ export type Database = {
           down_payment?: string | null
           extra_charges?: string | null
           id?: string
+          image_url?: string | null
           installment_plan?: string | null
           location?: string | null
           name?: string
