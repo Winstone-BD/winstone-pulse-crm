@@ -16,6 +16,7 @@ import {
 import { MessageCircle, Phone, PhoneCall, Users, Flame, CheckCircle2 } from "lucide-react";
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { relativeTime } from "@/lib/crm-format";
+import { ErrorState } from "@/components/crm/DataState";
 
 const dhakaKey = (iso: string) =>
   new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
@@ -53,7 +54,7 @@ const PRESETS: { id: Preset; label: string }[] = [
  * A date-range filter (Dhaka dates) scopes every KPI, chart and list.
  */
 export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
-  const { leads, calls, messages, isPending } = useSnapshot();
+  const { leads, calls, messages, isPending, isError, refetch } = useSnapshot();
   const [preset, setPreset] = useState<Preset>("14");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -195,13 +196,18 @@ export function SalesChartsDashboard({ scope }: { scope: "hq" | "agent" }) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {isError && <ErrorState onRetry={refetch} />}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" aria-busy={isPending}>
         {tiles.map((t) => (
-          <div key={t.label} className="card-elevated min-w-0 p-3">
+          <div key={t.label} role="group" aria-label={t.label} className="card-elevated min-w-0 p-3">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <t.icon className="size-3.5 shrink-0" /> <span className="truncate">{t.label}</span>
             </div>
-            <div className="mt-1 text-xl font-semibold tabular-nums">{isPending ? "—" : t.value}</div>
+            {isPending ? (
+              <div className="mt-2 h-6 w-12 animate-pulse rounded bg-muted" aria-hidden />
+            ) : (
+              <div className="mt-1 text-xl font-semibold tabular-nums">{isError ? "—" : t.value}</div>
+            )}
           </div>
         ))}
       </div>

@@ -13,6 +13,7 @@ import {
   type LeadPeriod,
 } from "@/components/crm/LeadQuickFilter";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
+import { ErrorState, LeadStatusBadge } from "@/components/crm/DataState";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ const STATUS_STYLES: Record<string, string> = {
  * so end-of-day it is obvious who still has to be contacted again.
  */
 export function LeadTable() {
-  const { leads, profiles, calls, messages, events, isPending } = useSnapshot();
+  const { leads, profiles, calls, messages, events, isPending, isError, refetch } = useSnapshot();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("pending");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
@@ -182,7 +183,8 @@ export function LeadTable() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
-  if (isPending) return <SnapshotSkeleton />;
+  if (isPending) return <div aria-busy="true" aria-label="লিড লোড হচ্ছে"><SnapshotSkeleton /></div>;
+  if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
     <section className="space-y-3">
@@ -314,7 +316,7 @@ export function LeadTable() {
         );
       })}
       {rows.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <p role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           এই ফিল্টারে কোনো লিড নেই
         </p>
       )}
@@ -380,14 +382,7 @@ function LeadRows({
                     গ্রেড {lead.grade}
                   </span>
                 )}
-                <span
-                  className={cn(
-                    "rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-                    STATUS_STYLES[lead.status],
-                  )}
-                >
-                  {STATUS_LABELS[lead.status] ?? lead.status}
-                </span>
+                <LeadStatusBadge status={lead.status} />
                 <span className="tabular ml-auto text-[11px] text-muted-foreground">
                   {shortDate(lead.classified_at ?? lead.last_call_at ?? lead.created_at)}
                 </span>
@@ -426,7 +421,7 @@ function LeadRows({
           </li>
         ))}
         {rows.length === 0 && (
-          <li className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          <li role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             এই তালিকায় এখন কোনো লিড নেই
           </li>
         )}
@@ -481,17 +476,7 @@ function LeadRows({
                   {extras.get(lead.id)?.requirement ?? "—"}
                 </td>
                 <td className="px-3 py-2.5">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
-                      STATUS_STYLES[lead.status],
-                    )}
-                  >
-                    {(lead.status === "contacted" || lead.status === "closed") && (
-                      <CheckCircle2 className="size-3" />
-                    )}
-                    {STATUS_LABELS[lead.status] ?? lead.status}
-                  </span>
+                  <LeadStatusBadge status={lead.status} />
                 </td>
                 <td className="px-3 py-2.5 text-xs">
                   <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />

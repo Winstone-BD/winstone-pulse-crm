@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays } from "lucide-react";
+import { AlertTriangle, CalendarDays, Clock } from "lucide-react";
+import { relativeTime } from "@/lib/crm-format";
 import { useMemo, useState } from "react";
 
 import { WebCallButton } from "@/components/crm/WebCallButton";
@@ -141,7 +142,8 @@ export function FollowUpWeek() {
           .filter((section) => section.items.length > 0)
           .map((section) => (
             <div key={section.key} className="space-y-2">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${section.overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                {section.overdue ? <AlertTriangle className="size-3.5" aria-hidden /> : <Clock className="size-3.5" aria-hidden />}
                 {section.label}
                 <span className="tabular">({section.items.length})</span>
               </p>
@@ -149,7 +151,7 @@ export function FollowUpWeek() {
                 {section.items.map((event) => (
                   <li
                     key={event.id}
-                    className="w-full max-w-full overflow-hidden rounded-xl border border-border p-3"
+                    className={`w-full max-w-full overflow-hidden rounded-xl border p-3 ${section.overdue ? "border-destructive/30 border-l-4 border-l-destructive bg-destructive/5" : "border-border"}`}
                   >
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                       <div className="min-w-0">
@@ -161,14 +163,20 @@ export function FollowUpWeek() {
                         </p>
                         <p className="tabular text-xs text-muted-foreground">
                           {shortDate(event.scheduled_at)} ·{" "}
-                          {new Date(event.scheduled_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          <time dateTime={event.scheduled_at}>
+                            {new Date(event.scheduled_at).toLocaleTimeString("bn-BD", {
+                              timeZone: "Asia/Dhaka",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </time>
+                          {" · "}
+                          {relativeTime(event.scheduled_at)}
                         </p>
                       </div>
                       {section.overdue && (
-                        <Badge className="shrink-0 bg-destructive/15 text-destructive">
+                        <Badge className="shrink-0 gap-1 bg-destructive/15 text-destructive">
+                          <AlertTriangle className="size-3" aria-hidden />
                           সময় পার
                         </Badge>
                       )}
