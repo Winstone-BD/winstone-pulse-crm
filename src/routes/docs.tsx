@@ -57,6 +57,9 @@ function DocsIndexPage() {
           <p className="text-xs text-muted-foreground sm:text-sm">
             সিস্টেম ব্যবহারের নির্দেশিকা। প্রকাশিত পাতাগুলো সবাই পড়তে পারেন।
           </p>
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            এখানে লিড কাজ, কল রিপোর্ট জমা, ফলো-আপ, বুকিং অনুরোধ ও দৈনিক পারফরম্যান্স সংক্রান্ত নির্দেশিকা পাওয়া যায়। বিষয় অনুযায়ী সাজানো পাতা খুঁজতে উপরের সার্চ ব্যবহার করুন।
+          </p>
         </header>
 
         <div className="relative">

@@ -64,6 +64,9 @@ function HelpCentre() {
             </Link>
             .
           </p>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            Find answers about signing in, your account, using the CRM and getting help from the Winstone team. If an answer isn't here yet, the support assistant can open a ticket for you.
+          </p>
           <div className="relative mx-auto mt-6 max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
