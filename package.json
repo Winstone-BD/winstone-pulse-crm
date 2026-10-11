@@ -4,6 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "test:restart": "python3 scripts/restart-recovery-check.py",
     "dev": "vite dev",
     "prebuild": "node scripts/check-build-tool-pin.mjs && node scripts/check-dashboard-colors.mjs",
     "build": "vite build",
