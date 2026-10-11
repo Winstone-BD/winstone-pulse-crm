@@ -14,11 +14,13 @@ describe("social moderation (Method A)", () => {
   });
 
   it("agent id comes from the session and every agent write passes the briefing gate", () => {
-    // The only zod-declared agentId is the HQ report's filter parameter; agent
-    // write schemas must never accept an identity from the browser.
-    const agentSchemas = ["const Activity = Base.extend({", "Base.extend({ id: z.string().uuid() })", "Activity.extend({ name:"]
-      .map((start) => { const i = src.indexOf(start); return i < 0 ? "" : src.slice(i, src.indexOf("});", i)); });
-    for (const schema of agentSchemas) expect(schema).not.toContain("agentId");
+    // Agent write schemas must never accept an identity from the browser; the
+    // only zod-declared agentId is the HQ report's filter parameter.
+    const activityIdx = src.indexOf("const Activity = Base.extend({");
+    const activityBlock = src.slice(activityIdx, src.indexOf("\n});", activityIdx));
+    expect(activityBlock).not.toContain("agentId");
+    expect(src).not.toMatch(/Activity\.extend\(\{ name[\s\S]*?agentId/);
+    expect(src).toMatch(/voidSocialActivity[\s\S]{0,200}Base\.extend\(\{ id: z\.string\(\)\.uuid\(\) \}\)/);
     expect(src).toMatch(/assertBriefingForCaller\(c\.caller\)/);
     for (const fn of ["logSocialActivity", "voidSocialActivity", "convertSocialToLead"]) {
       expect(src).toMatch(new RegExp(`${fn}[\\s\\S]*?agentCtx\\(`));
