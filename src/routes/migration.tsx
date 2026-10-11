@@ -31,13 +31,13 @@ import {
 export const Route = createFileRoute("/migration")({
   head: () => ({
     meta: [
-      { title: "মাইগ্রেশন চেকলিস্ট — Winstone CRM" },
+      { title: "মাইগ্রেশন চেকলিস্ট — Winstone Pulse" },
       {
         name: "description",
         content:
           "পুরনো CRM থেকে নতুন CRM-এ ডেটা আনার সিদ্ধান্ত, target নেই এমন field এবং ঝুঁকি এক জায়গায় ট্র্যাক করার বোর্ড।",
       },
-      { property: "og:title", content: "মাইগ্রেশন চেকলিস্ট — Winstone CRM" },
+      { property: "og:title", content: "মাইগ্রেশন চেকলিস্ট — Winstone Pulse" },
       {
         property: "og:description",
         content: "V1 → V2 ডেটা মাইগ্রেশনের সিদ্ধান্ত, ফাঁক ও ঝুঁকির অগ্রগতি বোর্ড।",

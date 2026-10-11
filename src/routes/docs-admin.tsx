@@ -15,12 +15,12 @@ import { useAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/docs-admin")({
   head: () => ({
     meta: [
-      { title: "ডকুমেন্টেশন ব্যবস্থাপনা — Winstone CRM" },
+      { title: "ডকুমেন্টেশন ব্যবস্থাপনা — Winstone Pulse" },
       {
         name: "description",
         content: "Winstone CRM-এর নির্দেশিকা পাতা তৈরি, সম্পাদনা ও প্রকাশ করার কনসোল।",
       },
-      { property: "og:title", content: "ডকুমেন্টেশন ব্যবস্থাপনা — Winstone CRM" },
+      { property: "og:title", content: "ডকুমেন্টেশন ব্যবস্থাপনা — Winstone Pulse" },
       {
         property: "og:description",
         content: "খসড়া থেকে প্রকাশ পর্যন্ত নির্দেশিকা পাতার নিয়ন্ত্রণ।",

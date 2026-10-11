@@ -26,9 +26,9 @@ import { type LoadRecord, readLoads } from "@/lib/load-perf";
 export const Route = createFileRoute("/diagnostics")({
   head: () => ({
     meta: [
-      { title: "Page-load diagnostics — Winstone CRM" },
+      { title: "Page-load diagnostics — Winstone Pulse" },
       { name: "description", content: "Staff-only review of failed page loads and automatic reloads on this device." },
-      { property: "og:title", content: "Page-load diagnostics — Winstone CRM" },
+      { property: "og:title", content: "Page-load diagnostics — Winstone Pulse" },
       { property: "og:description", content: "Failed page loads and automatic reload records for staff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

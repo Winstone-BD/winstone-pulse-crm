@@ -10,13 +10,13 @@ import { listPublishedDocs } from "@/lib/docs.functions";
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Winstone CRM ডকুমেন্টেশন" },
+      { title: "Winstone Pulse ডকুমেন্টেশন" },
       {
         name: "description",
         content:
           "Winstone CRM ব্যবহারের নির্দেশিকা — এজেন্ট ডেস্ক, কল রিপোর্ট, ফলো-আপ ও এইচকিউ।",
       },
-      { property: "og:title", content: "Winstone CRM ডকুমেন্টেশন" },
+      { property: "og:title", content: "Winstone Pulse ডকুমেন্টেশন" },
       {
         property: "og:description",
         content: "এজেন্ট, কোঅর্ডিনেটর ও এইচকিউ-এর জন্য ধাপে ধাপে নির্দেশিকা।",

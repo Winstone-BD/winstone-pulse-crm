@@ -18,12 +18,12 @@ import { useAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/docs-admin_/editor/$slug")({
   head: () => ({
     meta: [
-      { title: "পাতা সম্পাদনা — Winstone CRM ডকুমেন্টেশন" },
+      { title: "পাতা সম্পাদনা — Winstone Pulse ডকুমেন্টেশন" },
       {
         name: "description",
         content: "নির্দেশিকা পাতা লিখুন, প্রিভিউ দেখুন এবং প্রকাশ করুন।",
       },
-      { property: "og:title", content: "পাতা সম্পাদনা — Winstone CRM ডকুমেন্টেশন" },
+      { property: "og:title", content: "পাতা সম্পাদনা — Winstone Pulse ডকুমেন্টেশন" },
       { property: "og:description", content: "খসড়া লিখুন, প্রিভিউ দেখুন, প্রকাশ করুন।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

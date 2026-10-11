@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service — Winstone CRM" },
+      { title: "Terms of Service — Winstone Pulse" },
       {
         name: "description",
         content:
           "Terms of Service for Winstone CRM: access conditions, acceptable use, data ownership and liability.",
       },
-      { property: "og:title", content: "Terms of Service — Winstone CRM" },
+      { property: "og:title", content: "Terms of Service — Winstone Pulse" },
       {
         property: "og:description",
         content:

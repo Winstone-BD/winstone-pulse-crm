@@ -22,9 +22,9 @@ import {
 export const Route = createFileRoute("/runtime-errors")({
   head: () => ({
     meta: [
-      { title: "Runtime Errors & Deployment Health — Winstone CRM" },
+      { title: "Runtime Errors & Deployment Health — Winstone Pulse" },
       { name: "description", content: "HQ/IT review of recent crashes, affected pages, live-site health checks and resolution status." },
-      { property: "og:title", content: "Runtime Errors & Deployment Health — Winstone CRM" },
+      { property: "og:title", content: "Runtime Errors & Deployment Health — Winstone Pulse" },
       { property: "og:description", content: "Recent crashes, affected routes and resolution status for HQ and IT." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

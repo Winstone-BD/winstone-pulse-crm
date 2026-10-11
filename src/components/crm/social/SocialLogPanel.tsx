@@ -61,6 +61,12 @@ export function SocialLogPanel() {
             <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka", dateStyle: "short", timeStyle: "short" })}</span></div>
           <p className="text-xs text-muted-foreground">{t({ bn: "উৎস", en: "Source" })}: {r.source ?? t({ bn: "উল্লেখ নেই", en: "Not recorded" })} · {r.replies} {t({ bn: "উত্তর", en: "replies" })}</p>
           {r.leadId && <p className="text-xs">{t({ bn: "লিড", en: "Lead" })}: {r.leadName ?? "—"} · <span className="font-semibold">{t({ bn: "ফলাফল", en: "Outcome" })}: {outcome(r)}</span></p>}
+          {r.leadId && <details className="mt-1"><summary className="cursor-pointer text-xs font-medium text-primary">{t({ bn: "স্ট্যাটাস ইতিহাস", en: "Status history" })} ({r.history.length})</summary>
+            {!r.history.length ? <p className="mt-1 text-xs text-muted-foreground">{t({ bn: "লিড তৈরির পর কোনো পরিবর্তন রেকর্ড হয়নি", en: "No changes recorded since creation" })}</p>
+              : <ol className="mt-1 space-y-1 border-l border-border pl-3 text-xs">{r.history.map((h, i) => <li key={i}>
+                <span className="text-muted-foreground">{new Date(h.at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka", dateStyle: "short", timeStyle: "short" })}</span>{" · "}
+                <span className="font-medium">{h.label}</span>: {h.from ? `${h.from} → ` : ""}{h.to ?? "—"}{h.by ? ` · ${h.by}` : ""}</li>)}</ol>}
+          </details>}
         </li>)}</ul>}
   </details>;
 }

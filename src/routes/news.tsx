@@ -11,9 +11,9 @@ import { siWhoAmI } from "@/lib/sales-intel.functions";
 export const Route = createFileRoute("/news")({
   head: () => ({
     meta: [
-      { title: "Market News — Winstone CRM" },
+      { title: "Market News — Winstone Pulse" },
       { name: "description", content: "Bangladesh real-estate market news for Winstone agents and HQ: AI summaries with source links plus HQ announcements." },
-      { property: "og:title", content: "Market News — Winstone CRM" },
+      { property: "og:title", content: "Market News — Winstone Pulse" },
       { property: "og:description", content: "Source-attributed real-estate news and HQ announcements for the sales floor." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

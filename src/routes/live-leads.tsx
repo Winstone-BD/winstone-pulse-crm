@@ -14,9 +14,9 @@ import { liveLeads } from "@/lib/live-leads.functions";
 export const Route = createFileRoute("/live-leads")({
   head: () => ({
     meta: [
-      { title: "Live Lead Dashboard — Winstone CRM" },
+      { title: "Live Lead Dashboard — Winstone Pulse" },
       { name: "description", content: "Leads by day — added, assigned, called and status — updating as call reports arrive." },
-      { property: "og:title", content: "Live Lead Dashboard — Winstone CRM" },
+      { property: "og:title", content: "Live Lead Dashboard — Winstone Pulse" },
       { property: "og:description", content: "Daily lead flow and status mix for HQ, LeadHub and team leaders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

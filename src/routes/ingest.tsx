@@ -24,13 +24,13 @@ import { useAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/ingest")({
   head: () => ({
     meta: [
-      { title: "Ingest Validation — Winstone CRM" },
+      { title: "Ingest Validation — Winstone Pulse" },
       {
         name: "description",
         content:
           "Check the phone app's data pipes: endpoint health, payload validation and the data problems worth fixing before the floor goes live.",
       },
-      { property: "og:title", content: "Ingest Validation — Winstone CRM" },
+      { property: "og:title", content: "Ingest Validation — Winstone Pulse" },
       {
         property: "og:description",
         content: "Validate call recording, WhatsApp and lead payloads against the live rules.",

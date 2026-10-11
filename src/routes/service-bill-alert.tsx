@@ -18,12 +18,12 @@ export const Route = createFileRoute("/service-bill-alert")({
   loader: ({ context }) => context.queryClient.ensureQueryData(billQuery),
   head: () => ({
     meta: [
-      { title: "Service Bill Alert — Winstone CRM" },
+      { title: "Service Bill Alert — Winstone Pulse" },
       {
         name: "description",
         content: "Winstone CRM IT service bill awaiting authorized human review.",
       },
-      { property: "og:title", content: "Service Bill Alert — Winstone CRM" },
+      { property: "og:title", content: "Service Bill Alert — Winstone Pulse" },
       { property: "og:description", content: "Review-only Winstone IT service bill notice." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

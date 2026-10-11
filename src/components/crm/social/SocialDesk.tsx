@@ -43,7 +43,7 @@ export function SocialDesk() {
   const [phone, setPhone] = useState("");
 
   const reset = () => { setLink(""); setNote(""); setCount(1); setName(""); setPhone(""); setLead(false); };
-  const base = () => ({ adminToken, kind, pageId: pageId || null, link: link.trim() || null, note: note.trim() || null, replyCount: count });
+  const base = () => ({ adminToken, kind, pageId, link: link.trim() || null, note: note.trim() || null, replyCount: count });
   const save = useMutation({
     mutationFn: async () => lead ? leadFn({ data: { ...base(), name, phone } }) : logFn({ data: base() }),
     onSuccess: (r) => {
@@ -80,9 +80,9 @@ export function SocialDesk() {
           <Button key={k} type="button" variant={kind === k ? "default" : "outline"} aria-pressed={kind === k} onClick={() => setKind(k)} className="h-auto min-h-11 whitespace-normal px-2 text-xs">{t(KIND_LABEL[k])}</Button>)}
       </fieldset>
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="grid gap-1 text-xs font-medium">{t({ bn: "পেজ / গ্রুপ", en: "Page / group" })}
-          <select value={pageId} onChange={(e) => setPageId(e.target.value)} className="h-10 rounded-md border border-input bg-background px-2 text-sm">
-            <option value="">{t({ bn: "— বেছে নিন (ঐচ্ছিক) —", en: "— optional —" })}</option>
+        <label className="grid gap-1 text-xs font-medium">{t({ bn: "পেজ / গ্রুপ *", en: "Page / group *" })}
+          <select required aria-required="true" aria-invalid={!pageId} value={pageId} onChange={(e) => setPageId(e.target.value)} className="h-10 rounded-md border border-input bg-background px-2 text-sm">
+            <option value="">{t({ bn: "— বেছে নিন (বাধ্যতামূলক) —", en: "— required —" })}</option>
             {pages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select></label>
         <label className="grid gap-1 text-xs font-medium">{t({ bn: "কতগুলো উত্তর", en: "Replies" })}
@@ -98,7 +98,9 @@ export function SocialDesk() {
         <Input required placeholder={t({ bn: "ক্রেতার নাম", en: "Buyer name" })} value={name} onChange={(e) => setName(e.target.value)} />
         <Input required type="tel" inputMode="tel" placeholder="01XXXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} />
       </div>}
-      <Button type="submit" disabled={save.isPending} className="h-12">{save.isPending ? "…" : t({ bn: "সংরক্ষণ করুন", en: "Save" })}</Button>
+      {!pages.length && <p role="alert" className="text-xs text-destructive">{t({ bn: "HQ এখনো কোনো পেজ/গ্রুপ যোগ করেনি — তাই কাজ জমা দেওয়া যাবে না।", en: "HQ has not added any page/group yet — work cannot be submitted." })}</p>}
+      {pages.length > 0 && !pageId && <p className="text-xs text-destructive">{t({ bn: "জমা দিতে পেজ বা গ্রুপ বেছে নিন", en: "Choose a page or group to submit" })}</p>}
+      <Button type="submit" disabled={save.isPending || !pageId} className="h-12">{save.isPending ? "…" : t({ bn: "সংরক্ষণ করুন", en: "Save" })}</Button>
     </form>
 
     <SocialTemplates templates={setup.data?.templates ?? []} />
