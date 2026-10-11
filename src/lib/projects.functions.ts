@@ -14,7 +14,7 @@ export const PARTIES = ["client", "land_owner", "flat_seller"] as const;
 export type CatalogProject = {
   id: string; name: string; location: string | null; status: string; price_per_sqft: number | null;
   unit_sizes: string | null; total_price: string | null; down_payment: string | null; installment_plan: string | null;
-  parking_charge: string | null; extra_charges: string | null; notes: string | null; updated_by: string; updated_at: string;
+  parking_charge: string | null; extra_charges: string | null; notes: string | null; image_url: string | null; updated_by: string; updated_at: string;
 };
 
 async function ctx(token: string | null | undefined) {
@@ -47,7 +47,7 @@ export const saveProject = createServerFn({ method: "POST" })
       location: txt(200), status: z.enum(["active", "archived"]).default("active"),
       price_per_sqft: z.number().nonnegative().max(10_000_000).nullish().transform((v) => v ?? null),
       unit_sizes: txt(300), total_price: txt(300), down_payment: txt(300), installment_plan: txt(500),
-      parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000),
+      parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000), image_url: txt(500),
     }).parse(i),
   )
   .handler(async ({ data }) => {
@@ -141,7 +141,7 @@ const importRow = z.object({
   location: txt(200), status: z.enum(["active", "archived"]).default("active"),
   price_per_sqft: z.number().nonnegative().max(10_000_000).nullish().transform((v) => v ?? null),
   unit_sizes: txt(300), total_price: txt(300), down_payment: txt(300), installment_plan: txt(500),
-  parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000),
+  parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000), image_url: txt(500),
 });
 
 /** Insert new projects, update existing ones matched by name (case-insensitive). Never deletes. */
