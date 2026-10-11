@@ -30,6 +30,11 @@ describe.each(periods)("maintenance calendar %s (Asia/Dhaka)", (period) => {
   it("notice starts on the 9th 00:00", () => {
     expect(stage("09", "00:00:00").stage).toBe("upcoming");
   });
+  it("amber until the 11th 16:59:59, red from the 11th 17:00", () => {
+    expect(stage("11", "16:59:59").stage).toBe("upcoming");
+    expect(stage("11", "17:00:00")).toEqual({ locked: false, stage: "soon" });
+    expect(stage("12", "00:00:00")).toEqual({ locked: false, stage: "soon" });
+  });
   it("still open on the 14th 23:59:59", () => {
     expect(stage("14", "23:59:59")).toEqual({ locked: false, stage: "due_today" });
   });
