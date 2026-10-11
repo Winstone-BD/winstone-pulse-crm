@@ -171,6 +171,70 @@ export const socialReport = createServerFn({ method: "POST" })
     );
   });
 
+export type SocialLogRow = {
+  id: string; createdAt: string; agentId: string; agentName: string; kind: string;
+  source: string | null; link: string | null; replies: number; note: string | null;
+  leadId: string | null; leadName: string | null; leadStatus: string | null; visited: boolean; booked: boolean;
+};
+
+/** HQ/IT: filtered social work log (agent + Dhaka date range) with source page/group and real lead outcomes. */
+export const socialLog = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => Base.extend({
+    agentId: z.string().uuid().nullable().optional(),
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  }).parse(i))
+  .handler(async ({ data }): Promise<SocialLogRow[]> => {
+    const { db } = await authorityCtx(data.adminToken);
+    const since = new Date(`${data.from}T00:00:00+06:00`).toISOString();
+    const until = new Date(new Date(`${data.to}T00:00:00+06:00`).getTime() + 86_400_000).toISOString();
+    let q = db.from("social_activity_logs")
+      .select("id, agent_id, kind, page_id, link, note, reply_count, lead_id, created_at")
+      .is("voided_at", null).gte("created_at", since).lt("created_at", until)
+      .order("created_at", { ascending: false }).limit(5000);
+    if (data.agentId) q = q.eq("agent_id", data.agentId);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    const agentIds = [...new Set(list.map((r) => r.agent_id))];
+    const pageIds = [...new Set(list.map((r) => r.page_id).filter(Boolean))] as string[];
+    const leadIds = [...new Set(list.map((r) => r.lead_id).filter(Boolean))] as string[];
+    const empty = Promise.resolve({ data: [] as never[] });
+    const [{ data: people }, { data: pages }, { data: leads }, { data: visits }, { data: bookings }] = await Promise.all([
+      agentIds.length ? db.from("profiles").select("id, name").in("id", agentIds) : empty,
+      pageIds.length ? db.from("social_pages").select("id, name").in("id", pageIds) : empty,
+      leadIds.length ? db.from("leads").select("id, name, status").in("id", leadIds) : empty,
+      leadIds.length ? db.from("site_visits").select("lead_id").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("bookings").select("lead_id").in("lead_id", leadIds) : empty,
+    ]);
+    const pn = new Map((people ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
+    const sn = new Map((pages ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
+    const ln = new Map((leads ?? []).map((l: { id: string; name: string | null; status: string | null }) => [l.id, l]));
+    const vs = new Set((visits ?? []).map((v: { lead_id: string | null }) => v.lead_id));
+    const bs = new Set((bookings ?? []).map((v: { lead_id: string | null }) => v.lead_id));
+    return list.map((r) => {
+      const l = r.lead_id ? ln.get(r.lead_id) : undefined;
+      return {
+        id: r.id, createdAt: r.created_at, agentId: r.agent_id, agentName: pn.get(r.agent_id) ?? "—", kind: r.kind,
+        source: r.page_id ? sn.get(r.page_id) ?? null : null, link: r.link, replies: r.reply_count, note: r.note,
+        leadId: r.lead_id, leadName: l?.name ?? null, leadStatus: l?.status ?? null,
+        visited: Boolean(r.lead_id && vs.has(r.lead_id)), booked: Boolean(r.lead_id && bs.has(r.lead_id)),
+      };
+    });
+  });
+
+/** CSV with a BOM so Excel opens Bengali text correctly. */
+export function socialLogCsv(rows: SocialLogRow[]): string {
+  const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const head = ["date_dhaka", "agent", "kind", "source_page_group", "link", "replies", "lead", "lead_status", "site_visit", "booking", "note"];
+  const body = rows.map((r) => [
+    new Date(new Date(r.createdAt).getTime() + 6 * 3_600_000).toISOString().slice(0, 16).replace("T", " "),
+    r.agentName, r.kind, r.source, r.link, r.replies, r.leadName, r.leadStatus,
+    r.leadId ? (r.visited ? "yes" : "no") : "", r.leadId ? (r.booked ? "yes" : "no") : "", r.note,
+  ].map(esc).join(","));
+  return "\uFEFF" + [head.join(","), ...body].join("\r\n");
+}
+
 export const saveSocialPage = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Base.extend({
     id: z.string().uuid().nullable().optional(), name: z.string().trim().min(1).max(120),
