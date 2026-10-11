@@ -242,8 +242,8 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
         </button>
       </SheetTrigger>
       <SheetContent
-        side="left"
-        className="w-72 max-w-[85vw] overflow-y-auto bg-background p-0 sm:max-w-[85vw]"
+        side="bottom"
+        className="max-h-[85dvh] w-full overflow-y-auto bg-background p-0"
       >
         <SheetHeader className="m-0 border-b border-border px-4 py-4 text-left">
           <SheetTitle asChild>

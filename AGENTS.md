@@ -34,4 +34,5 @@
 - Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
 - Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
-- Agent queue phone-style controls compose existing WebCallButton, WhatsAppAction and CallbackLogButton — why: presentation changes must not create alternative calling or reporting paths.
+- Agent call UI reuses existing call/report controls and scoped notes/history via CallLeadContext; browser SIM controls are phone-only — why: no alternate gates or fictitious telephony.
+- Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
