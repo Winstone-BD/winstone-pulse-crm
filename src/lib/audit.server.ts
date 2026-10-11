@@ -11,6 +11,7 @@
  */
 
 export type AuditAction =
+  | "project_catalog_import"
   | "account_approved"
   | "account_rejected"
   | "role_changed"
