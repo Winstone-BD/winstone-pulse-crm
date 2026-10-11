@@ -30,6 +30,14 @@ export default defineConfig({
         "@tanstack/router-core/ssr/server",
         "h3-v2",
         "seroval",
+        // The HTML shell hydrates through react-start's default-entry client.tsx,
+        // which imports these three directly. If any is discovered late, its
+        // pre-bundle hash (?v=) changes mid-session and the open tab's entry
+        // import fails -> blank screen. Pre-bundle them on the very first crawl.
+        "@tanstack/react-start",
+        "@tanstack/react-start/client",
+        "react",
+        "react-dom/client",
       ],
     },
     resolve: {
