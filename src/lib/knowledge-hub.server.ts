@@ -74,7 +74,7 @@ export async function projectFactsForLead(c: SiCaller, leadId: string) {
       const slug = p.url.slice(`${HUB}/projects/`.length).split(/[/?#]/)[0] ?? "";
       const words = slug.split("-").filter((w) => w.length > 2 && w !== "winstone");
       const hit = words.length > 0 && words.every((w) => leadText.includes(w));
-      return hit ? { url: p.url, title: p.title.split("|")[0]!.split("—")[0]!.trim() || slug, excerpt: p.content.slice(0, 900), fetchedAt: p.fetched_at } : null;
+      return hit ? { url: p.url, title: (p.title ?? "").split("|")[0]!.split("—")[0]!.trim() || slug, excerpt: p.content.slice(0, 900), fetchedAt: p.fetched_at } : null;
     })
     .filter(Boolean)
     .slice(0, 3) as { url: string; title: string; excerpt: string; fetchedAt: string }[];
@@ -83,10 +83,7 @@ export async function projectFactsForLead(c: SiCaller, leadId: string) {
 
 /* ---------------- Website visit requests ---------------- */
 
-export type VisitRequestPayload = {
-  request_id: string; name: string; phone: string; project?: string | null;
-  preferred_date?: string | null; preferred_time?: string | null; visitors?: number | null; notes?: string | null;
-};
+export type VisitRequestPayload = import("@/lib/os-bridge").VisitRequested;
 
 export async function applyVisitRequested(key: string, p: VisitRequestPayload, phone: string) {
   const db = await admin();
@@ -111,7 +108,7 @@ export async function applyVisitRequested(key: string, p: VisitRequestPayload, p
     .update({ status: "processed", outcome, lead_id: leadId, processed_at: new Date().toISOString() } as never)
     .eq("idempotency_key", key);
   const { logAudit } = await import("@/lib/audit.server");
-  await logAudit({ action: "website_visit_requested", entityType: "lead", entityId: leadId, actorLabel: "Winstone Website", metadata: { request_id: p.request_id, outcome } });
+  await logAudit({ action: "os_event_received", entityType: "lead", entityId: leadId, actorLabel: "Winstone Website", metadata: { event_type: "site_visit.requested", request_id: p.request_id, outcome } });
   return { outcome, leadId };
 }
 
