@@ -24,8 +24,8 @@ export function SocialHqPanel() {
   const report = useQuery({ queryKey: ["social-report", range, adminToken], queryFn: () => reportFn({ data: { adminToken, range } }), enabled: Boolean(adminToken) });
   const setup = useQuery({ queryKey: ["social-setup", adminToken], queryFn: () => setupFn({ data: { adminToken } }), enabled: Boolean(adminToken) });
   const done = () => { toast.success(t({ bn: "সংরক্ষিত", en: "Saved" })); void qc.invalidateQueries({ queryKey: ["social-setup"] }); };
-  const page = useMutation({ mutationFn: (v: Parameters<typeof pageFn>[0]["data"]) => pageFn({ data: v }), onSuccess: done, onError: (e: Error) => toast.error(e.message) });
-  const tpl = useMutation({ mutationFn: (v: Parameters<typeof tplFn>[0]["data"]) => tplFn({ data: v }), onSuccess: done, onError: (e: Error) => toast.error(e.message) });
+  const page = useMutation({ mutationFn: (v: { adminToken: string | null; id?: string | null; name: string; kind: "page" | "group"; url: string | null; active: boolean }) => pageFn({ data: v }), onSuccess: done, onError: (e: Error) => toast.error(e.message) });
+  const tpl = useMutation({ mutationFn: (v: { adminToken: string | null; id?: string | null; title: string; body: string; active: boolean }) => tplFn({ data: v }), onSuccess: done, onError: (e: Error) => toast.error(e.message) });
   const [pName, setPName] = useState(""); const [pKind, setPKind] = useState<"page" | "group">("page"); const [pUrl, setPUrl] = useState("");
   const [tTitle, setTTitle] = useState(""); const [tBody, setTBody] = useState("");
   const rows = report.data ?? [];
