@@ -687,6 +687,13 @@
       "when": 1791732353448,
       "tag": "0097_lock_down_project_images_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1791732824897,
+      "tag": "0098_project_photos_private_read",
+      "breakpoints": true
     }
   ]
 }
