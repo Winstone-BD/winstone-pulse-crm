@@ -27,3 +27,4 @@
 - Pin @lovable.dev/vite-tanstack-config to 2.25.2 — why: 2.26.0 emits createRequire(import.meta.url) that crashes every page on the live Worker.
 - Bookings start `approval_status='pending'`; only HQ/IT approval (server-checked authority, decision final via trigger) queues the signed OS relay event — why: HQ gatekeeps what reaches Winstone OS.
 - Runtime crashes go to server-only runtime_error_issues/occurrences via POST /api/public/telemetry/runtime-error (sanitised, query strings dropped, same-origin); a resolved issue reopens when it recurs — why: one cross-device record HQ/IT can trust.
+- Knowledge Hub (winstonebd.com) data enters the CRM only as public pages (website_pages), verbatim official RSS news (market_news origin='official') and signed `site_visit.requested` events on /api/public/os/events into server-only website_visit_requests; a request becomes a site_visit only when the agent/HQ confirms it — why: no invented facts, one verified bridge.

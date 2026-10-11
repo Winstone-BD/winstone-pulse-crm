@@ -34,6 +34,7 @@ import { MyReports } from "@/components/crm/MyReports";
 import { NewLeadDialog } from "@/components/crm/NewLeadDialog";
 import { LeadImportDialog } from "@/components/crm/LeadImportDialog";
 import { LeadDeadlineBanner } from "@/components/crm/LeadDeadlineBanner";
+import { OfficialNewsStrip, VisitRequestsPanel } from "@/components/crm/KnowledgeHubCards";
 import { AccountabilityBanner, useMyAccountability } from "@/components/crm/AccountabilityBanner";
 import { LeadTable } from "@/components/crm/LeadTable";
 import { MobileLeadQueue } from "@/components/crm/MobileLeadQueue";
@@ -352,6 +353,8 @@ function DeskPage() {
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <AccountabilityBanner />
           <LeadDeadlineBanner />
+          <OfficialNewsStrip />
+          <VisitRequestsPanel />
           <SiteVisitReminder />
           <MyProfileCard />
           <MyPhoneSetup />

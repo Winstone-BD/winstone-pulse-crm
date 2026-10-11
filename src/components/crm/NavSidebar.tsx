@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
+import { useT } from "@/lib/i18n";
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -42,6 +43,10 @@ const ICONS: Record<string, LucideIcon> = {
   "/coach": Brain,
   "/leadhub": Network,
   "/hq": LayoutDashboard,
+  "/live-leads": Network,
+  "/booking-review": ShieldCheck,
+  "/staff-portal": Users,
+  "/runtime-errors": Server,
   "/inventory": Building2,
   "/projects": Building2,
   "/sales-intel": Lightbulb,
@@ -62,16 +67,16 @@ const ICONS: Record<string, LucideIcon> = {
   "/help": HelpCircle,
 };
 
-const GROUPS: { title: string; routes: string[] }[] = [
-  { title: "প্রধান", routes: ["/", "/desk", "/coach"] },
-  { title: "লিড ও বিক্রয়", routes: ["/leadhub", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/reports"] },
-  { title: "ম্যানেজমেন্ট", routes: ["/hq"] },
-  { title: "সাপোর্ট", routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
+const GROUPS: { title: { bn: string; en: string }; routes: string[] }[] = [
+  { title: { bn: "প্রধান", en: "Main" }, routes: ["/", "/desk", "/coach"] },
+  { title: { bn: "লিড ও বিক্রয়", en: "Leads & sales" }, routes: ["/leadhub", "/live-leads", "/booking-review", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/reports"] },
+  { title: { bn: "ম্যানেজমেন্ট", en: "Management" }, routes: ["/hq", "/staff-portal"] },
+  { title: { bn: "সাপোর্ট", en: "Support" }, routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {
-    title: "আইটি ও নিরাপত্তা",
-    routes: ["/system", "/security", "/ingest", "/migration", "/migration-export"],
+    title: { bn: "আইটি ও নিরাপত্তা", en: "IT & security" },
+    routes: ["/system", "/runtime-errors", "/security", "/ingest", "/migration", "/migration-export"],
   },
-  { title: "সহায়তা", routes: ["/docs", "/docs-admin", "/help"] },
+  { title: { bn: "সহায়তা", en: "Help" }, routes: ["/docs", "/docs-admin", "/help"] },
 ];
 
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -99,6 +104,7 @@ function NavContent({
   onNavigate?: () => void;
   collapsed?: boolean;
 }) {
+  const t = useT();
   const byRoute = new Map(items.map((i) => [i.to, i]));
   const path = useRouterState({ select: (st) => st.location.pathname });
   const activeS = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
@@ -108,9 +114,9 @@ function NavContent({
         const list = group.routes.map((r) => byRoute.get(r)).filter(Boolean) as Item[];
         if (list.length === 0) return null;
         return (
-          <div key={group.title} className="mb-5">
+          <div key={group.title.en} className="mb-5">
             <p hidden={collapsed} className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {group.title}
+              {t(group.title)}
             </p>
             <nav className="flex flex-col gap-0.5">
               {list.map((item) => {
@@ -125,7 +131,7 @@ function NavContent({
                     data-nav-link
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
-                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/60 hover:text-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm`}
+                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-transparent data-[status=active]:before:bg-accent-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm`}
                   >
                     <Icon className="size-4 shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
@@ -162,6 +168,7 @@ function NavContent({
 
 /** Grouped left navigator for desktop; collapsible to icons (Ctrl/⌘+B). */
 export function NavSidebar({ items }: { items: readonly Item[] }) {
+  const t = useT();
   const [collapsed, setCollapsed] = useState(false);
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -203,7 +210,7 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
         className={`${FOCUS} mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-muted-foreground hover:bg-accent/60 hover:text-foreground ${collapsed ? "justify-center" : ""}`}
       >
         {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-        {!collapsed && <span>ভাঁজ করুন</span>}
+        {!collapsed && <span>{t({ bn: "ভাঁজ করুন", en: "Collapse" })}</span>}
       </button>
       <NavContent items={items} collapsed={collapsed} />
     </aside>
