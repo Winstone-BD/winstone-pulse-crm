@@ -388,45 +388,45 @@
 /* Premium slim dark theme (HQ + Desk): neutral slate-black, hairline borders,
    no muddy brown wash, almost no drop shadow. Gold stays the one action colour. */
 .hq-luxe {
-  --background: oklch(0.16 0.008 260);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.2 0.008 260);
-  --card-foreground: oklch(0.96 0.004 85);
-  --popover: oklch(0.21 0.008 260);
-  --popover-foreground: oklch(0.96 0.004 85);
-  --primary: oklch(0.98 0 0);
-  --primary-foreground: oklch(0.16 0.008 260);
-  --secondary: oklch(0.25 0.008 260);
-  --secondary-foreground: oklch(0.93 0.005 85);
-  --muted: oklch(0.24 0.008 260);
-  --muted-foreground: oklch(0.72 0.01 260);
-  --accent: oklch(0.26 0.01 260);
-  --accent-foreground: oklch(0.94 0.02 85);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.98 0 0 / 60%);
-  --surface: oklch(0.18 0.008 260);
-  --surface-2: oklch(0.23 0.008 260);
-  --chart-1: oklch(0.95 0 0);
-  --chart-2: oklch(0.7 0.11 245);
-  --chart-3: oklch(0.74 0.15 155);
-  --chart-4: oklch(0.72 0.02 260);
-  --chart-5: oklch(0.66 0.19 25);
-  --shadow-card: 0 1px 0 oklch(1 0 0 / 4%) inset;
-  --shadow-card-hover: 0 1px 0 oklch(1 0 0 / 6%) inset, 0 8px 24px -16px oklch(0 0 0 / 60%);
+  /* Light corporate theme: off-white canvas, white cards, deep navy primary,
+     champagne-gold accent. Same token names, so every screen follows. */
+  --background: oklch(0.984 0.003 248);
+  --foreground: oklch(0.29 0.03 262);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.29 0.03 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.29 0.03 262);
+  --primary: oklch(0.27 0.07 256);
+  --primary-foreground: oklch(0.985 0.003 248);
+  --secondary: oklch(0.955 0.008 250);
+  --secondary-foreground: oklch(0.29 0.03 262);
+  --muted: oklch(0.965 0.006 250);
+  --muted-foreground: oklch(0.5 0.03 257);
+  --accent: oklch(0.95 0.035 85);
+  --accent-foreground: oklch(0.38 0.07 70);
+  --border: oklch(0.925 0.013 255);
+  --input: oklch(0.9 0.015 255);
+  --ring: oklch(0.45 0.12 256);
+  --surface: oklch(0.975 0.004 248);
+  --surface-2: oklch(0.96 0.006 250);
+  --chart-1: oklch(0.27 0.07 256);
+  --chart-2: oklch(0.55 0.15 250);
+  --chart-3: oklch(0.6 0.14 160);
+  --chart-4: oklch(0.72 0.14 75);
+  --chart-5: oklch(0.58 0.2 25);
+  --shadow-card: 0 1px 2px oklch(0.3 0.03 260 / 6%), 0 8px 24px -14px oklch(0.3 0.03 260 / 16%);
+  --shadow-card-hover: 0 1px 2px oklch(0.3 0.03 260 / 8%), 0 14px 32px -14px oklch(0.3 0.03 260 / 24%);
   background: var(--background);
   color: var(--foreground);
-  color-scheme: dark;
+  color-scheme: light;
 }
 .hq-luxe .card-elevated {
-  background: linear-gradient(160deg, color-mix(in oklab, var(--card) 82%, transparent), color-mix(in oklab, var(--card) 62%, transparent));
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: var(--card);
   border-color: var(--border);
   box-shadow: var(--shadow-card);
 }
 .hq-luxe .card-elevated:hover {
-  border-color: oklch(1 0 0 / 14%);
+  border-color: color-mix(in oklab, var(--primary) 18%, var(--border));
   box-shadow: var(--shadow-card-hover);
 }
 
@@ -481,16 +481,16 @@
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--kpi) 30%, transparent);
 }
 .kpi-line { color: color-mix(in oklab, var(--kpi) 70%, transparent); }
-.section-shell { box-shadow: 0 1px 0 oklch(1 0 0 / 4%) inset, 0 18px 40px -32px oklch(0 0 0 / 70%); }
+.section-shell { box-shadow: var(--shadow-card); }
 
 /* Glass panel: frosted surface with a soft top highlight. */
 .glass-panel {
   backdrop-filter: blur(18px) saturate(150%);
   -webkit-backdrop-filter: blur(18px) saturate(150%);
-  box-shadow: 0 1px 0 oklch(1 0 0 / 8%) inset, 0 18px 40px -28px oklch(0 0 0 / 70%);
+  box-shadow: var(--shadow-card);
 }
 .hq-luxe {
-  background-image: radial-gradient(60rem 30rem at 10% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%),
+  background-image: radial-gradient(60rem 30rem at 10% -10%, color-mix(in oklab, var(--primary) 5%, transparent), transparent 60%),
     radial-gradient(40rem 24rem at 100% 0%, color-mix(in oklab, var(--chart-4) 10%, transparent), transparent 60%);
 }
 
@@ -506,6 +506,7 @@
   --verified-ink: oklch(0.55 0.13 85);
 }
 .text-primary { color: var(--primary-ink); }
+.hq-luxe { --primary-ink: var(--primary); }
 .text-success, .text-live { color: var(--success-ink); }
 .text-warning { color: var(--warning-ink); }
 .text-idle { color: var(--idle-ink); }
@@ -515,7 +516,7 @@
 :where(.bg-ink, .bg-exec-navy, .dark) :is(.text-success, .text-live) { color: var(--success); }
 :where(.bg-ink, .bg-exec-navy, .dark) .text-warning { color: var(--warning); }
 /* Dark scopes keep the original bright text shades. */
-.hq-luxe, .dark, .bg-ink, .bg-exec-navy {
+.dark, .bg-ink, .bg-exec-navy {
   --primary-ink: var(--primary);
   --success-ink: var(--success);
   --warning-ink: var(--warning);
