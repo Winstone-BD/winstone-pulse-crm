@@ -17,12 +17,32 @@ import type { ReportBrief } from "@/lib/report-summary.server";
 export function MyReports() {
   const adminToken = useAdminToken();
   const fetchReports = useServerFn(myCallReports);
+  const fetchBrief = useServerFn(summarizeMyReport);
   const [editing, setEditing] = useState<EditableReport | null>(null);
+  const [briefs, setBriefs] = useState<Record<string, ReportBrief>>({});
+  const [briefBusy, setBriefBusy] = useState<string | null>(null);
+  const [briefError, setBriefError] = useState<Record<string, string>>({});
   const { data, isPending } = useQuery({
     queryKey: ["my-call-reports", adminToken ? "pin" : "session"],
     queryFn: () => fetchReports({ data: { adminToken } }),
     refetchInterval: 60_000,
   });
+
+  async function loadBrief(reportId: string) {
+    setBriefBusy(reportId);
+    setBriefError((prev) => ({ ...prev, [reportId]: "" }));
+    try {
+      const brief = await fetchBrief({ data: { adminToken, reportId } });
+      setBriefs((prev) => ({ ...prev, [reportId]: brief }));
+    } catch (error) {
+      setBriefError((prev) => ({
+        ...prev,
+        [reportId]: error instanceof Error ? error.message : "AI সারসংক্ষেপ এখন তৈরি করা যাচ্ছে না",
+      }));
+    } finally {
+      setBriefBusy(null);
+    }
+  }
 
   if (isPending) {
     return (
