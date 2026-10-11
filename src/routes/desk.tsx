@@ -47,6 +47,7 @@ import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
 import { DeskTabBar } from "@/components/crm/desk/DeskTabBar";
+import { SocialDesk } from "@/components/crm/social/SocialDesk";
 import { TodayHero } from "@/components/crm/desk/TodayHero";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
@@ -415,6 +416,9 @@ function DeskPage() {
         )}
 
         <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
+          <TabsContent value="social">
+            <SocialDesk />
+          </TabsContent>
           <TabsContent value="support">
             <TeamSupportPanel />
           </TabsContent>

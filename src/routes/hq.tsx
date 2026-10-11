@@ -38,6 +38,7 @@ import { MarketNewsFeed } from "@/components/crm/news/MarketNewsFeed";
 import { FactsBoard } from "@/components/crm/sales-intel/SalesIntelPanels";
 import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReviewPanel";
 import { NeglectDisputePanel } from "@/components/crm/LeadNeglectPanel";
+import { SocialHqPanel } from "@/components/crm/social/SocialHqPanel";
 import { ReportsBoard } from "@/routes/reports";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
@@ -296,6 +297,7 @@ function ControlBoard() {
                 <SystemManualCard />
                 <AccountabilityReviewPanel surface="hq" />
                 <NeglectDisputePanel />
+                <SocialHqPanel />
                 <FloorLockAdminPanel />
                 <ShiftSummaryPanel scope="hq" />
                 <CommandAgentPanel surface="hq" />

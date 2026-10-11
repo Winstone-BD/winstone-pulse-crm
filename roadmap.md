@@ -124,4 +124,4 @@
 - [ ] Measure DB lead-list load drop after publish (counters unchanged in preview)
 - [ ] Per-agent Google Calendar connection approval
 - [x] Regression test: simulated failed module import → notice, reload, fallback (bun run test:recovery)
-- [ ] Social media moderation tasks in CRM — user chose Method A (no Meta API; agents log replies + quick lead conversion); plan to finalise
+- [x] Social media moderation (Method A): desk Social section, HQ report, pages + reply templates

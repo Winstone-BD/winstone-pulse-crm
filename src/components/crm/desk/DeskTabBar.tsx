@@ -1,4 +1,4 @@
-import { CalendarClock, ChevronDown, Home, List, MessageCircle, PhoneCall, LayoutGrid, FileText, LifeBuoy } from "lucide-react";
+import { CalendarClock, ChevronDown, MessagesSquare, Home, List, MessageCircle, PhoneCall, LayoutGrid, FileText, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const ITEMS = [
   { tab: "whatsapp", label: { bn: "হোয়াটসঅ্যাপ", en: "WhatsApp" }, Icon: MessageCircle, tone: "text-success bg-success/10" },
   { tab: "calendar", label: { bn: "ফলো-আপ", en: "Follow-ups" }, Icon: CalendarClock, tone: "text-chart-4 bg-chart-4/10" },
   { tab: "reports", label: { bn: "রিপোর্ট", en: "Reports" }, Icon: FileText, tone: "text-chart-2 bg-chart-2/10" },
+  { tab: "social", label: { bn: "সোশ্যাল", en: "Social" }, Icon: MessagesSquare, tone: "text-primary bg-primary/10" },
   { tab: "support", label: { bn: "সাপোর্ট", en: "Support" }, Icon: LifeBuoy, tone: "text-destructive bg-destructive/10" },
 ] as const;
 
