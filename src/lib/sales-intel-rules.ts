@@ -233,7 +233,7 @@ export function pitchHistoryCsv(
   const dh = (iso: string) => new Date(Date.parse(iso) + 6 * 3600_000).toISOString().replace("T", " ").slice(0, 16);
   const filters = Object.entries(meta.filters).filter(([, v]) => v != null && v !== "").map(([k, v]) => `${k}=${v}`).join("; ") || "none";
   const lines = [
-    ["WINSTONE CRM — Pitch History", SI_DOC_VERSION],
+    ["WINSTONE PULSE — Pitch History", SI_DOC_VERSION],
     ["Generated (Asia/Dhaka)", dh(meta.generatedAt.toISOString())],
     ["Data scope", meta.scope],
     ["Filters", filters],
