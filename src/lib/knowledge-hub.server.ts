@@ -133,6 +133,10 @@ export async function listVisitRequests(c: SiCaller, opts: { leadId?: string | n
 
 export async function decideVisitRequest(c: SiCaller, input: { id: string; action: "confirm" | "dismiss"; visitAt?: string | null }) {
   if (c.readOnly) throw new Error("শুধু-দেখার অ্যাক্সেসে বদলানো যায় না");
+  if (c.scope === "agent" && c.agentId) {
+    const { assertAgentBriefing } = await import("@/lib/agent-briefing.server");
+    await assertAgentBriefing(c.agentId);
+  }
   const db = await admin();
   const { data: req } = await db.from("website_visit_requests").select("id, lead_id, project, notes, status").eq("id", input.id).maybeSingle();
   if (!req || !req.lead_id) throw new Error("অনুরোধ পাওয়া যায়নি");

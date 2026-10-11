@@ -94,7 +94,7 @@ export async function sha256Hex(text: string): Promise<string> {
 
 /* ---------------- Unified bridge envelope (RFC v2) ---------------- */
 
-export const OS_V2_EVENT_TYPES = ["lead_ingested"] as const;
+export const OS_V2_EVENT_TYPES = ["lead_ingested", "site_visit.requested"] as const;
 
 /** Polymorphic envelope. Detected by the presence of `payload` (legacy uses `data`). */
 export const osEnvelopeSchema = z
@@ -151,14 +151,37 @@ export function canonicalBdPhone(raw: string): string | null {
   return BD_CANONICAL.test(c) ? c : null;
 }
 
+/** Knowledge Hub (winstonebd.com) site-visit request — a request only, never a confirmed visit. */
+export const visitRequestedSchema = z
+  .object({
+    request_id: z.string().trim().min(1).max(200),
+    name: z.string().trim().min(1).max(120),
+    phone: z.string().trim().min(6).max(24),
+    project: z.string().trim().max(200).nullable().optional(),
+    preferred_date: z.string().trim().max(40).nullable().optional(),
+    preferred_time: z.string().trim().max(40).nullable().optional(),
+    visitors: z.number().int().min(1).max(50).nullable().optional(),
+    notes: z.string().trim().max(1000).nullable().optional(),
+  })
+  .strict();
+export type VisitRequested = z.infer<typeof visitRequestedSchema>;
+
 export type V2Parse =
   | { ok: true; kind: "lead_ingested"; envelope: OsEnvelope; lead: LeadIngested; phone: string }
+  | { ok: true; kind: "site_visit.requested"; envelope: OsEnvelope; visit: VisitRequested; phone: string }
   | { ok: false; status: 422; error: string; issues?: string[] };
 
 /** Envelope + discriminator + payload validation. All failures are 422 (non-retryable). */
 export function parseV2Envelope(raw: unknown): V2Parse {
   const env = osEnvelopeSchema.safeParse(raw);
   if (!env.success) return { ok: false, status: 422, error: "invalid_envelope", issues: env.error.issues.map((i) => i.path.join(".")) };
+  if (env.data.event_type === "site_visit.requested") {
+    const v = visitRequestedSchema.safeParse(env.data.payload);
+    if (!v.success) return { ok: false, status: 422, error: "invalid_payload", issues: v.error.issues.map((i) => i.path.join(".")) };
+    const vp = canonicalBdPhone(v.data.phone);
+    if (!vp) return { ok: false, status: 422, error: "invalid_phone", issues: ["phone"] };
+    return { ok: true, kind: "site_visit.requested", envelope: env.data, visit: v.data, phone: vp };
+  }
   if (env.data.event_type !== "lead_ingested") return { ok: false, status: 422, error: "unsupported_event_type" };
   const lead = leadIngestedSchema.safeParse(env.data.payload);
   if (!lead.success) return { ok: false, status: 422, error: "invalid_payload", issues: lead.error.issues.map((i) => i.path.join(".")) };

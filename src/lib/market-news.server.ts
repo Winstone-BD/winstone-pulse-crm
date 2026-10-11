@@ -149,9 +149,13 @@ export async function collectNews(actor: string) {
   const runId = run?.id as string;
   let fetched = 0, added = 0, skipped = 0;
   try {
+    // Official Winstone news from the Knowledge Hub: copied verbatim, no AI.
+    const { importOfficialNews } = await import("@/lib/knowledge-hub.server");
+    const official = await importOfficialNews(actor).catch(() => ({ fetched: 0, added: 0 }));
+    fetched += official.fetched; added += official.added;
     const all: RssItem[] = [];
     for (const q of NEWS_QUERIES) all.push(...(await fetchFeed(q).catch(() => [])));
-    fetched = all.length;
+    fetched += all.length;
     const seen = new Set<string>();
     const fresh = all.filter((it) => {
       const k = dedupeKey(it.title, it.sourceName);
@@ -166,7 +170,7 @@ export async function collectNews(actor: string) {
       for (const d of data ?? []) existing.add(d.dedupe_key as string);
     }
     const todo = fresh.filter((f) => !existing.has(dedupeKey(f.title, f.sourceName))).slice(0, paused?.length ? 1 : PER_RUN_CAP);
-    skipped = fetched - todo.length;
+    skipped = all.length - todo.length;
     const autoPublish = await getAutoPublish();
     if (todo.length) {
       const ai = await summarise(todo);
