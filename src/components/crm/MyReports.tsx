@@ -133,16 +133,50 @@ export function MyReports() {
                 {report.reason ? (
                   <p className="mt-1 text-xs text-muted-foreground">কারণ: {report.reason}</p>
                 ) : null}
-                {report.editable ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 gap-1.5"
-                    onClick={() => setEditing(report as EditableReport)}
-                  >
-                    <Pencil className="size-3.5" /> সংশোধন করুন
-                  </Button>
+                {briefs[report.id] ? (
+                  <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                      <Sparkles className="size-3.5" /> AI সারসংক্ষেপ
+                    </p>
+                    <p className="mt-1 text-sm">{briefs[report.id].brief}</p>
+                    {briefs[report.id].nextStep ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        পরবর্তী পদক্ষেপ: {briefs[report.id].nextStep}
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
+                {briefError[report.id] ? (
+                  <p className="mt-1 text-xs text-destructive">{briefError[report.id]}</p>
+                ) : null}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {report.status === "submitted" && !briefs[report.id] ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      disabled={briefBusy === report.id}
+                      onClick={() => loadBrief(report.id)}
+                    >
+                      {briefBusy === report.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="size-3.5" />
+                      )}
+                      AI সারসংক্ষেপ
+                    </Button>
+                  ) : null}
+                  {report.editable ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => setEditing(report as EditableReport)}
+                    >
+                      <Pencil className="size-3.5" /> সংশোধন করুন
+                    </Button>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
