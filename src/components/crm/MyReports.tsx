@@ -1,27 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, ClipboardList, Loader2, Pencil } from "lucide-react";
+import { CalendarClock, ClipboardList, Loader2, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { ReportEditDialog, type EditableReport } from "@/components/crm/ReportEditDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
-import { myCallReports } from "@/lib/call-reports.functions";
+import { myCallReports, summarizeMyReport } from "@/lib/call-reports.functions";
 import { clockTime, relativeTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
+import type { ReportBrief } from "@/lib/report-summary.server";
 
 /** The agent's own call reports and the follow-up work waiting for them. */
 export function MyReports() {
   const adminToken = useAdminToken();
   const fetchReports = useServerFn(myCallReports);
+  const fetchBrief = useServerFn(summarizeMyReport);
   const [editing, setEditing] = useState<EditableReport | null>(null);
+  const [briefs, setBriefs] = useState<Record<string, ReportBrief>>({});
+  const [briefBusy, setBriefBusy] = useState<string | null>(null);
+  const [briefError, setBriefError] = useState<Record<string, string>>({});
   const { data, isPending } = useQuery({
     queryKey: ["my-call-reports", adminToken ? "pin" : "session"],
     queryFn: () => fetchReports({ data: { adminToken } }),
     refetchInterval: 60_000,
   });
+
+  async function loadBrief(reportId: string) {
+    setBriefBusy(reportId);
+    setBriefError((prev) => ({ ...prev, [reportId]: "" }));
+    try {
+      const brief = await fetchBrief({ data: { adminToken, reportId } });
+      setBriefs((prev) => ({ ...prev, [reportId]: brief }));
+    } catch (error) {
+      setBriefError((prev) => ({
+        ...prev,
+        [reportId]: error instanceof Error ? error.message : "AI সারসংক্ষেপ এখন তৈরি করা যাচ্ছে না",
+      }));
+    } finally {
+      setBriefBusy(null);
+    }
+  }
 
   if (isPending) {
     return (
@@ -112,16 +133,53 @@ export function MyReports() {
                 {report.reason ? (
                   <p className="mt-1 text-xs text-muted-foreground">কারণ: {report.reason}</p>
                 ) : null}
-                {report.editable ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 gap-1.5"
-                    onClick={() => setEditing(report as EditableReport)}
-                  >
-                    <Pencil className="size-3.5" /> সংশোধন করুন
-                  </Button>
+                {(() => {
+                  const brief = briefs[report.id];
+                  return brief ? (
+                    <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                        <Sparkles className="size-3.5" /> AI সারসংক্ষেপ
+                      </p>
+                      <p className="mt-1 text-sm">{brief.brief}</p>
+                      {brief.nextStep ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          পরবর্তী পদক্ষেপ: {brief.nextStep}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null;
+                })()}
+                {briefError[report.id] ? (
+                  <p className="mt-1 text-xs text-destructive">{briefError[report.id]}</p>
                 ) : null}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {report.status === "submitted" && !briefs[report.id] ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      disabled={briefBusy === report.id}
+                      onClick={() => loadBrief(report.id)}
+                    >
+                      {briefBusy === report.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="size-3.5" />
+                      )}
+                      AI সারসংক্ষেপ
+                    </Button>
+                  ) : null}
+                  {report.editable ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => setEditing(report as EditableReport)}
+                    >
+                      <Pencil className="size-3.5" /> সংশোধন করুন
+                    </Button>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

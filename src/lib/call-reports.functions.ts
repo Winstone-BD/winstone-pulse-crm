@@ -496,6 +496,17 @@ export const myCallReports = createServerFn({ method: "POST" })
     };
   });
 
+/** Gemini brief for one of the agent's own submitted reports (cached per report). */
+export const summarizeMyReport = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    Base.extend({ reportId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const me = await agentOf(data.adminToken ?? null);
+    const { briefCallReport } = await import("@/lib/report-summary.server");
+    return briefCallReport(data.reportId, me.id);
+  });
+
 /** Field correction on an already submitted update, inside the 09:00–12:45 window. */
 export const editMyReport = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>

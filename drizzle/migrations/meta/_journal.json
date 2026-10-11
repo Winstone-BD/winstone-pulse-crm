@@ -645,6 +645,13 @@
       "when": 1791659714751,
       "tag": "0091_booking_from_converted_report",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1791708684686,
+      "tag": "0092_call_report_ai_brief",
+      "breakpoints": true
     }
   ]
 }
