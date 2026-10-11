@@ -113,8 +113,9 @@ export const Route = createFileRoute("/api/public/os/events")({
               }
             }
             if (v2.kind === "site_visit.requested") {
-              const { applyVisitRequested } = await import("@/lib/knowledge-hub.server");
+              const { applyVisitRequested, notifyVisitRequestAgent } = await import("@/lib/knowledge-hub.server");
               const vr = await applyVisitRequested(key, v2.visit, v2.phone);
+              await notifyVisitRequestAgent(vr.leadId, v2.visit.request_id).catch(() => undefined);
               return json(201, { ok: true, status: vr.outcome, lead_id: vr.leadId });
             }
             const r = await bridge.applyLeadIngested(key, v2.envelope, v2.lead, v2.phone);
