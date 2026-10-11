@@ -17,7 +17,7 @@ export type PreCallBrief = {
   aiAvailable: boolean;
 };
 
-const SYSTEM = `You are the AI pre-call assistant inside "Winstone Connect" for Winstone Properties Ltd (real estate, Bangladesh).
+const SYSTEM = `You are the AI pre-call assistant inside "Winstone CRM" for Winstone Properties Ltd (real estate, Bangladesh).
 You read ONE lead's real history (past call transcripts, AI summaries, submitted call reports, notes) and prepare the agent for the next phone call.
 Rules:
 - Write everything in Bengali (Bangla). Money is Bangladeshi Taka (৳).
