@@ -514,3 +514,12 @@
 :where(.bg-ink, .bg-exec-navy, .bg-primary, .bg-destructive, .dark) .text-primary { color: var(--primary); }
 :where(.bg-ink, .bg-exec-navy, .dark) :is(.text-success, .text-live) { color: var(--success); }
 :where(.bg-ink, .bg-exec-navy, .dark) .text-warning { color: var(--warning); }
+/* Dark scopes keep the original bright text shades. */
+:where(.hq-luxe, .dark, .bg-ink, .bg-exec-navy) {
+  --primary-ink: var(--primary);
+  --success-ink: var(--success);
+  --warning-ink: var(--warning);
+  --idle-ink: var(--idle);
+  --whatsapp-ink: var(--whatsapp);
+  --verified-ink: var(--verified);
+}
