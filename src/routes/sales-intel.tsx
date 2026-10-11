@@ -25,7 +25,7 @@ export const Route = createFileRoute("/sales-intel")({
   head: () => ({
     meta: [
       { title: "Sales Intelligence — Winstone Pulse" },
-      { name: "description", content: "AI Sales Brief, Smart Pitchbook, verified market facts, permanent pitch history and pitch effectiveness inside Winstone CRM." },
+      { name: "description", content: "AI Sales Brief, Smart Pitchbook, verified market facts, permanent pitch history and pitch effectiveness inside Winstone Pulse." },
       { property: "og:title", content: "Sales Intelligence — Winstone Pulse" },
       { property: "og:description", content: "Grounded sales briefs and objection handling from verified facts and real lead history." },
       { property: "og:type", content: "website" },

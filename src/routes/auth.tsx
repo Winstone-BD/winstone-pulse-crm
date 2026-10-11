@@ -26,12 +26,12 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sales agents sign in to their Winstone CRM desk, or create an account for approval.",
+          "Sales agents sign in to their Winstone Pulse desk, or create an account for approval.",
       },
       { property: "og:title", content: "Sign in — Winstone Pulse" },
       {
         property: "og:description",
-        content: "Sales Agent access to the Winstone CRM tele-sales floor.",
+        content: "Sales Agent access to the Winstone Pulse tele-sales floor.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

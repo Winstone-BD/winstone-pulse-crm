@@ -283,7 +283,7 @@ export function reportToCsv(report: ReportResult): string {
   blocks.push(
     toCsv(
       ["Report", "From", "To", "Agent", "Source", "Status"],
-      [["Winstone CRM performance", f.from, f.to, f.agentId, f.source, f.status]],
+      [["Winstone Pulse performance", f.from, f.to, f.agentId, f.source, f.status]],
     ),
   );
   blocks.push(

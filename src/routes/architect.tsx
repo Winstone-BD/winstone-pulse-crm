@@ -22,9 +22,9 @@ export const Route = createFileRoute("/architect")({
   head: () => ({
     meta: [
       { title: "System Architect Control Center — Winstone Pulse" },
-      { name: "description", content: "Restricted maintenance unlock control for the Winstone CRM System Architect." },
+      { name: "description", content: "Restricted maintenance unlock control for the Winstone Pulse System Architect." },
       { property: "og:title", content: "System Architect Control Center — Winstone Pulse" },
-      { property: "og:description", content: "Restricted maintenance unlock control for the Winstone CRM System Architect." },
+      { property: "og:description", content: "Restricted maintenance unlock control for the Winstone Pulse System Architect." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },

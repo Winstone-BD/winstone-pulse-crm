@@ -1,5 +1,5 @@
 /**
- * Canonical Winstone CRM taxonomy — one label and one tone per state, used by
+ * Canonical Winstone Pulse taxonomy — one label and one tone per state, used by
  * every screen. Map raw database values through these helpers; never invent a
  * page-specific label for the same state.
  */

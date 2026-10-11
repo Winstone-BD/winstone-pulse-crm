@@ -27,7 +27,7 @@ export function useLicense() {
 }
 
 /**
- * Winstone CRM Pro checkout card. Opens the Paddle overlay with a seat
+ * Winstone Pulse Pro checkout card. Opens the Paddle overlay with a seat
  * quantity; authority PIN holders can also open the billing portal.
  */
 export function ProPlanCard({ compact = false }: { compact?: boolean }) {
@@ -91,7 +91,7 @@ export function ProPlanCard({ compact = false }: { compact?: boolean }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-sm font-semibold">
-            <BadgeCheck className="size-4 text-primary" /> Winstone CRM Pro
+            <BadgeCheck className="size-4 text-primary" /> Winstone Pulse Pro
             {isSandbox && (
               <span className="rounded-full bg-pending/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-pending">
                 Test mode

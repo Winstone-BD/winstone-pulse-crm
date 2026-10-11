@@ -12,10 +12,10 @@ const SHOTS = [
 export const Route = createFileRoute("/handover")({
   head: () => ({
     meta: [
-      { title: "Client Handover & Feature Report — WINSTONE CRM" },
-      { name: "description", content: "A–Z client handover for WINSTONE CRM: implemented features, roles, daily checklist, troubleshooting and support." },
-      { property: "og:title", content: "WINSTONE CRM — Client Handover & Feature Report" },
-      { property: "og:description", content: "Implemented features, roles and daily operations of WINSTONE CRM." },
+      { title: "Client Handover & Feature Report — WINSTONE PULSE" },
+      { name: "description", content: "A–Z client handover for WINSTONE PULSE: implemented features, roles, daily checklist, troubleshooting and support." },
+      { property: "og:title", content: "WINSTONE PULSE — Client Handover & Feature Report" },
+      { property: "og:description", content: "Implemented features, roles and daily operations of WINSTONE PULSE." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -23,8 +23,8 @@ export const Route = createFileRoute("/handover")({
   }),
   component: () => (
     <DocPage
-      kicker="WINSTONE CRM"
-      title="WINSTONE CRM — Client Handover & Feature Report"
+      kicker="WINSTONE PULSE"
+      title="WINSTONE PULSE — Client Handover & Feature Report"
       meta={`Document ${DOC_VERSION} · Audit date ${AUDIT_DATE}`}
       pdf={HANDOVER_PDF_PATH}
       sections={HANDOVER_SECTIONS}

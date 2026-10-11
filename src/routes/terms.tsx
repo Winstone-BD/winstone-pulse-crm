@@ -7,13 +7,13 @@ export const Route = createFileRoute("/terms")({
       {
         name: "description",
         content:
-          "Terms of Service for Winstone CRM: access conditions, acceptable use, data ownership and liability.",
+          "Terms of Service for Winstone Pulse: access conditions, acceptable use, data ownership and liability.",
       },
       { property: "og:title", content: "Terms of Service — Winstone Pulse" },
       {
         property: "og:description",
         content:
-          "Access conditions, acceptable use and data responsibilities for Winstone CRM users.",
+          "Access conditions, acceptable use and data responsibilities for Winstone Pulse users.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -27,7 +27,7 @@ function TermsPage() {
     <div className="min-h-screen bg-background px-4 py-12 sm:px-6">
       <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-10">
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back to Winstone CRM
+          ← Back to Winstone Pulse
         </Link>
         <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">Terms of Service</h1>
         <p className="mt-2 text-sm text-muted-foreground">Effective date: 10 September 2026</p>
@@ -36,7 +36,7 @@ function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold">1. Acceptance of terms</h2>
             <p className="mt-2 text-muted-foreground">
-              By accessing or using Winstone CRM (the "Service"), you agree to be bound by these
+              By accessing or using Winstone Pulse (the "Service"), you agree to be bound by these
               Terms of Service. If you do not agree, do not use the Service.
             </p>
           </section>
@@ -44,7 +44,7 @@ function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold">2. Description of service</h2>
             <p className="mt-2 text-muted-foreground">
-              Winstone CRM is a tele-sales operations system that provides lead management,
+              Winstone Pulse is a tele-sales operations system that provides lead management,
               agent assignment, call/WhatsApp logging, audio transcription, AI coaching insights and
               billing summaries. The Service is provided on an "as is" and "as available" basis.
             </p>
@@ -75,7 +75,7 @@ function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold">5. Data ownership and confidentiality</h2>
             <p className="mt-2 text-muted-foreground">
-              You retain ownership of the customer and business data you enter. Winstone CRM
+              You retain ownership of the customer and business data you enter. Winstone Pulse
               processes and stores this data on your behalf. We will not use your data to train
               public models or disclose it to unauthorised third parties.
             </p>
@@ -93,7 +93,7 @@ function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold">7. Limitation of liability</h2>
             <p className="mt-2 text-muted-foreground">
-              To the fullest extent permitted by law, Winstone CRM and its developers are not
+              To the fullest extent permitted by law, Winstone Pulse and its developers are not
               liable for indirect, incidental or consequential damages arising from your use of the
               Service, including data loss, revenue loss or compliance penalties.
             </p>

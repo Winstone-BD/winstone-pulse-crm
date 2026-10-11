@@ -68,7 +68,7 @@ export const Route = createFileRoute("/desk")({
       { property: "og:title", content: "আমার ডেস্ক — Winstone Pulse" },
       {
         property: "og:description",
-        content: "এক চাপে কল, হোয়াটসঅ্যাপ কথা আর নিজের লিড — Winstone CRM এজেন্ট ডেস্ক।",
+        content: "এক চাপে কল, হোয়াটসঅ্যাপ কথা আর নিজের লিড — Winstone Pulse এজেন্ট ডেস্ক।",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

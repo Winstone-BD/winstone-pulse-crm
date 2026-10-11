@@ -88,13 +88,13 @@ fun SignInScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Winstone CRM & Sales Operating System",
+            "Winstone Pulse",
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             color = WinInk,
         )
         Text(
-            "Unified CRM Authentication\nSingle Source of Truth",
+            "The Premium Real Estate CRM\nFind. Build. Invest.",
             textAlign = TextAlign.Center,
             color = WinInkMuted,
             fontSize = 13.sp,

@@ -23,7 +23,7 @@ export function AboutLegalModal() {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>About Winstone CRM</DialogTitle>
+          <DialogTitle>About Winstone Pulse</DialogTitle>
           <DialogDescription>Legal notice and developer attribution</DialogDescription>
         </DialogHeader>
 

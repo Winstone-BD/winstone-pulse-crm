@@ -13,7 +13,7 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "নতুন পাসওয়ার্ড সেট করুন — Winstone Pulse" },
-      { name: "description", content: "Winstone CRM এজেন্টদের জন্য নিরাপদ নতুন পাসওয়ার্ড সেট করার পেজ।" },
+      { name: "description", content: "Winstone Pulse এজেন্টদের জন্য নিরাপদ নতুন পাসওয়ার্ড সেট করার পেজ।" },
       { property: "og:title", content: "নতুন পাসওয়ার্ড সেট করুন — Winstone Pulse" },
       { property: "og:description", content: "একবার ব্যবহারযোগ্য লিংক দিয়ে নিজের নতুন পাসওয়ার্ড সেট করুন।" },
       { property: "og:type", content: "website" },
