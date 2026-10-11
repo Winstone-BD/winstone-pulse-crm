@@ -57,15 +57,15 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   ),
   head: () => ({
     meta: [
-      { title: "Approve access · Winstone Connect" },
+      { title: "Approve access · Winstone CRM" },
       {
         name: "description",
-        content: "Approve or deny an AI assistant's access to the Winstone Connect CRM.",
+        content: "Approve or deny an AI assistant's access to the Winstone CRM.",
       },
-      { property: "og:title", content: "Approve access · Winstone Connect" },
+      { property: "og:title", content: "Approve access · Winstone CRM" },
       {
         property: "og:description",
-        content: "Approve or deny an AI assistant's access to the Winstone Connect CRM.",
+        content: "Approve or deny an AI assistant's access to the Winstone CRM.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -140,7 +140,7 @@ function Consent() {
 
   return (
     <Shell>
-      <h1 className="text-lg font-semibold">Connect {clientName} to Winstone Connect</h1>
+      <h1 className="text-lg font-semibold">Connect {clientName} to Winstone CRM</h1>
       <p className="text-sm text-muted-foreground">
         {clientName} will be able to read leads, call and WhatsApp history and floor activity, and
         add new leads — acting as you. Only approved email addresses can actually use these tools.

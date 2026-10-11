@@ -22,16 +22,16 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search) => SearchSchema.parse(search),
   head: () => ({
     meta: [
-      { title: "Sign in — Winstone Connect" },
+      { title: "Sign in — Winstone CRM" },
       {
         name: "description",
         content:
-          "Sales agents sign in to their Winstone Connect desk, or create an account for approval.",
+          "Sales agents sign in to their Winstone CRM desk, or create an account for approval.",
       },
-      { property: "og:title", content: "Sign in — Winstone Connect" },
+      { property: "og:title", content: "Sign in — Winstone CRM" },
       {
         property: "og:description",
-        content: "Sales Agent access to the Winstone Connect tele-sales floor.",
+        content: "Sales Agent access to the Winstone CRM tele-sales floor.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -107,7 +107,7 @@ function AuthPage() {
             className="size-11 rounded-full object-cover ring-1 ring-border"
           />
           <span>
-            <span className="block text-sm font-bold tracking-tight">Winstone Connect</span>
+            <span className="block text-sm font-bold tracking-tight">Winstone CRM</span>
             <span className="block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
               {ROLE_LABEL[role]}
             </span>

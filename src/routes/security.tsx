@@ -13,13 +13,13 @@ import { useMyAccount } from "@/lib/session";
 export const Route = createFileRoute("/security")({
   head: () => ({
     meta: [
-      { title: "PIN ও অ্যাক্সেস — Winstone Connect" },
+      { title: "PIN ও অ্যাক্সেস — Winstone CRM" },
       {
         name: "description",
         content:
           "Role-by-role access guide for Executive HQ, IT Console and Sales Agent, plus the encrypted PIN vault with rotation history.",
       },
-      { property: "og:title", content: "PIN ও অ্যাক্সেস — Winstone Connect" },
+      { property: "og:title", content: "PIN ও অ্যাক্সেস — Winstone CRM" },
       {
         property: "og:description",
         content: "Who unlocks what, how PINs are stored, and every rotation on record.",
