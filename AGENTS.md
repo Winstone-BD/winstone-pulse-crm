@@ -30,6 +30,8 @@
 - Knowledge Hub (winstonebd.com) data enters the CRM only as public pages (website_pages), verbatim official RSS news (market_news origin='official') and signed `site_visit.requested` events on /api/public/os/events into server-only website_visit_requests; a request becomes a site_visit only when the agent/HQ confirms it — why: no invented facts, one verified bridge.
 - Vite pre-bundles the TanStack router-core/seroval/h3-v2 deps in vite.config optimizeDeps.include — why: late discovery re-optimized on every cold start and broke open tabs (stale chunks / invalid server-fn IDs).
 - Restart recovery is regression-checked by scripts/restart-recovery-check.py (bun run test:restart; sandbox-only, kills local Vite) — why: blank screens after restarts must be caught by a real restart, not unit tests.
+- Module recovery coalesces concurrent failures and bounds each availability probe with a timeout — why: duplicate browser events and hanging requests must not loop reloads or strand a blank tab.
 - Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
 - Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
+- Agent queue phone-style controls compose existing WebCallButton, WhatsAppAction and CallbackLogButton — why: presentation changes must not create alternative calling or reporting paths.
