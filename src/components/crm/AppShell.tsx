@@ -91,10 +91,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
             <span className="hidden min-w-0 leading-tight min-[480px]:block">
               <span className="block truncate text-[13px] font-bold tracking-tight">
-                Winstone CRM
+                Winstone Pulse
               </span>
               <span className="hidden truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:block">
-                Sales OS
+                Premium Real Estate CRM
               </span>
             </span>
           </Link>
