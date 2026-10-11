@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, ClipboardList, Loader2, Pencil } from "lucide-react";
+import { CalendarClock, ClipboardList, Loader2, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { ReportEditDialog, type EditableReport } from "@/components/crm/ReportEditDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
-import { myCallReports } from "@/lib/call-reports.functions";
+import { myCallReports, summarizeMyReport } from "@/lib/call-reports.functions";
 import { clockTime, relativeTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
+import type { ReportBrief } from "@/lib/report-summary.server";
 
 /** The agent's own call reports and the follow-up work waiting for them. */
 export function MyReports() {
