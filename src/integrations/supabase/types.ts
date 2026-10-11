@@ -4531,6 +4531,75 @@ export type Database = {
         }
         Relationships: []
       }
+      website_visit_requests: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          decided_at: string | null
+          decided_by: string | null
+          hub_request_id: string
+          id: string
+          lead_id: string | null
+          notes: string | null
+          phone: string
+          preferred_date: string | null
+          preferred_time: string | null
+          project: string | null
+          site_visit_id: string | null
+          status: string
+          visitors: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          hub_request_id: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          phone: string
+          preferred_date?: string | null
+          preferred_time?: string | null
+          project?: string | null
+          site_visit_id?: string | null
+          status?: string
+          visitors?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          hub_request_id?: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          phone?: string
+          preferred_date?: string | null
+          preferred_time?: string | null
+          project?: string | null
+          site_visit_id?: string | null
+          status?: string
+          visitors?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_visit_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_visit_requests_site_visit_id_fkey"
+            columns: ["site_visit_id"]
+            isOneToOne: false
+            referencedRelation: "site_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_interactions: {
         Row: {
           agent_id: string | null
