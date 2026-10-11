@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getPreCallBrief } from "@/lib/precall.functions";
 import { getAdminToken } from "@/lib/local-session";
 import { clockTime } from "@/lib/crm-format";
+import { LeadProjectFacts } from "@/components/crm/KnowledgeHubCards";
 
 /** AI pre-call briefing: what to say on this lead's next call. */
 export function PreCallBriefCard({ leadId }: { leadId: string }) {

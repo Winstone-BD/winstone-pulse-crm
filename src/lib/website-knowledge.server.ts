@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { logAiUsage } from "@/lib/ai-usage.server";
+import { finalizeCitedAnswer, isHubPublicPage, NO_SOURCE_ANSWER } from "@/lib/knowledge-hub-rules";
 
 /**
  * Company website knowledge — the public Winstone Properties site is read into
@@ -105,13 +106,17 @@ async function fetchText(url: string): Promise<{ title: string; text: string } |
   if (!isAllowedWebsiteUrl(url)) return null;
   try {
     const response = await fetch(url, {
+      redirect: "manual",
       headers: { "User-Agent": "WinstoneCRM-KnowledgeReader/1.0" },
       signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) return null;
     const type = response.headers.get("content-type") ?? "";
     if (!type.includes("html") && !type.includes("text")) return null;
-    return htmlToText(await response.text());
+    if (Number(response.headers.get("content-length") ?? "0") > 1_000_000) return null;
+    const body = await response.text();
+    if (body.length > 1_000_000) return null;
+    return htmlToText(body);
   } catch {
     return null;
   }
@@ -169,7 +174,10 @@ export type RefreshResult = {
 export async function refreshWebsitePages(): Promise<RefreshResult> {
   const baseUrl = await websiteBaseUrl();
   const bases = [...new Set([baseUrl, HUB_URL])];
-  const urls = [...new Set((await Promise.all(bases.map((b) => discoverUrls(b)))).flat())];
+  // Hub (winstonebd.com): public /projects/*, /faq, /news/* pages only.
+  const urls = [...new Set((await Promise.all(bases.map((b) => discoverUrls(b)))).flat())].filter(
+    (u) => !u.startsWith(HUB_URL) || isHubPublicPage(u),
+  );
   let stored = 0;
   let failed = 0;
 
@@ -409,10 +417,7 @@ export async function answerFromWebsite(input: {
 
   if (used.length === 0 && driveUsed.length === 0) {
     return {
-      answer:
-        pages.length === 0
-          ? "ওয়েবসাইটের তথ্য এখনো CRM-এ পড়া হয়নি — আইটি কনসোল থেকে একবার রিফ্রেশ করতে হবে।"
-          : "এই প্রশ্নের উত্তর অনুমোদিত তথ্যে পাওয়া যায়নি। নিশ্চিত না হয়ে কিছু বলবেন না।",
+      answer: NO_SOURCE_ANSWER,
       covered: false,
       sources: [],
       documents: [],
@@ -444,10 +449,11 @@ export async function answerFromWebsite(input: {
     actorProfileId: input.actorProfileId ?? null,
   });
 
+  const gated = finalizeCitedAnswer(result, [...used.map((e) => e.source), ...driveUsed]);
   return {
-    answer: result.answer,
-    covered: result.covered,
-    sources: used.map((e) => e.source),
-    documents: driveUsed.map((e) => e.source),
+    answer: gated.answer,
+    covered: gated.covered,
+    sources: gated.covered ? used.map((e) => e.source) : [],
+    documents: gated.covered ? driveUsed.map((e) => e.source) : [],
   };
 }
