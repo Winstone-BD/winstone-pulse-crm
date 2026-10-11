@@ -9,6 +9,8 @@ export const MAINTENANCE_FEE_LABEL = "$46.29 USD";
 export const BILLING_DAY = 15;
 /** Payment notice starts on the 9th 00:00 Dhaka. */
 export const NOTICE_DAY = 9;
+/** Red warning starts the 11th 17:00 Dhaka — 79h before the 15th 00:00 lock. */
+export const RED_WARNING_HOURS = 79;
 export const MAX_UNLOCK_MINUTES = 24 * 60;
 export const UNLOCK_PRESET_HOURS = [1, 2, 4, 8, 12, 24] as const;
 export const ARCHITECT_EMAIL = "zhemon.sm123@gmail.com";
@@ -81,10 +83,11 @@ export function decide(input: RuleInput): { locked: boolean; stage: Stage } {
   }
   const lockAt = new Date(input.lockAt).getTime();
   if (now >= lockAt) return { locked: true, stage: "locked" };
-  const days = (lockAt - now) / 86_400_000;
-  if (days <= 1) return { locked: false, stage: "due_today" };
-  if (days <= 3) return { locked: false, stage: "soon" };
-  if (days <= BILLING_DAY - NOTICE_DAY) return { locked: false, stage: "upcoming" };
+  const msToLock = lockAt - now;
+  if (msToLock <= 24 * 3_600_000) return { locked: false, stage: "due_today" };
+  // Red starts the evening before renewal: 11th 17:00 Dhaka (79h before the lock).
+  if (msToLock <= RED_WARNING_HOURS * 3_600_000) return { locked: false, stage: "soon" };
+  if (msToLock <= (BILLING_DAY - NOTICE_DAY) * 86_400_000) return { locked: false, stage: "upcoming" };
   return { locked: false, stage: "clear" };
 }
 
