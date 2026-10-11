@@ -24,6 +24,7 @@ import { ExecutiveOverview } from "@/components/crm/hq/ExecutiveOverview";
 import { SalesCommandCenter } from "@/components/crm/hq/SalesCommandCenter";
 import { HqHeader } from "@/components/crm/hq/HqHeader";
 import { HqStatTiles } from "@/components/crm/hq/HqStatTiles";
+import { HqSmartSummary } from "@/components/crm/hq/HqSmartSummary";
 import { HqClassificationTiles } from "@/components/crm/hq/HqClassificationTiles";
 import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
@@ -207,6 +208,13 @@ function ControlBoard() {
             <MaintenanceProfileNotice />
             {tab === "overview" && (
               <div className="space-y-8">
+                <HqSmartSummary
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  messages={messages}
+                  onSelectAgent={setOpenAgentId}
+                />
                 <SalesChartsDashboard scope="hq" />
                 <SalesCommandCenter
                   profiles={profiles}
