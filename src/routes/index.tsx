@@ -22,13 +22,13 @@ import { useMyAccount } from "@/lib/session";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Winstone CRM & Sales Operating System" },
+      { title: "Winstone Pulse — The Premium Real Estate CRM" },
       {
         name: "description",
         content:
           "Choose your workspace: Android, Web / iOS or Desktop. One Winstone CRM and Sales Operating System, the same data on every device.",
       },
-      { property: "og:title", content: "Winstone CRM & Sales Operating System" },
+      { property: "og:title", content: "Winstone Pulse — The Premium Real Estate CRM" },
       {
         property: "og:description",
         content: "One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
