@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, CircleDot, Download, Link2, P
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { AllReportsButtons, FindingReportButton, PersistBar, RemediationTimeline } from "@/components/crm/audit/AuditRecords";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -59,6 +60,7 @@ export function AuditWorkspace({ q, result, item }: { q: string; result: string;
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Production Readiness Audit</h1>
           <div className="flex gap-2 print:hidden">
             <Button variant="outline" size="sm" asChild><a href={AUDIT_PDF_PATH} download><Download className="h-4 w-4" aria-hidden />PDF</a></Button>
+            <AllReportsButtons rows={rows} />
             <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" aria-hidden />Print</Button>
           </div>
         </div>
@@ -79,6 +81,7 @@ export function AuditWorkspace({ q, result, item }: { q: string; result: string;
             </div>
           ))}
         </dl>
+        <PersistBar total={counts.total} />
         {stale ? (
           <p role="status" className="mt-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -205,12 +208,13 @@ export function AuditWorkspace({ q, result, item }: { q: string; result: string;
                     <dt className="text-muted-foreground">Audit date</dt><dd>{AUDIT_DATE}</dd>
                     <dt className="text-muted-foreground">Version</dt><dd>{AUDIT_COMMIT}</dd>
                     <dt className="text-muted-foreground">Source</dt><dd>Audit report document {DOC_VERSION}</dd>
-                    <dt className="text-muted-foreground">Reviewer notes</dt><dd className="text-muted-foreground">Not recorded</dd>
                   </dl></section>
                 {resultKind(selected.result) !== "pass" && notVerified ? (
                   <p className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">See "{notVerified.title}" on this page for the limits of this result.</p>
                 ) : null}
-                <div className="flex gap-2">
+                <RemediationTimeline item={selected} />
+                <div className="flex flex-wrap gap-2">
+                  <FindingReportButton item={selected} />
                   <Button variant="outline" size="sm" onClick={() => copyLink(selected)}><Link2 className="h-4 w-4" aria-hidden />Copy link</Button>
                   <Button variant="ghost" size="sm" onClick={close}><X className="h-4 w-4" aria-hidden />Close</Button>
                 </div>

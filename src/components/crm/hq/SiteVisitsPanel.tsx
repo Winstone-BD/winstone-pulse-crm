@@ -6,7 +6,7 @@ import { BellRing } from "lucide-react";
 
 import { useSnapshot, type Lead } from "@/lib/crm-data";
 import { useAdminToken } from "@/lib/local-session";
-import { createSiteVisit, listSiteVisits, setSiteVisitStatus, SITE_VISIT_STATUSES } from "@/lib/site-visits.functions";
+import { addSiteVisitToTeamCalendar, createSiteVisit, listSiteVisits, setSiteVisitStatus, SITE_VISIT_STATUSES } from "@/lib/site-visits.functions";
 
 const LABEL: Record<string, string> = { scheduled: "নির্ধারিত", completed: "সম্পন্ন", cancelled: "বাতিল", no_show: "আসেননি" };
 const TONE: Record<string, string> = { scheduled: "text-primary", completed: "text-foreground", cancelled: "text-muted-foreground", no_show: "text-destructive" };
@@ -54,6 +54,7 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
   const create = useServerFn(createSiteVisit);
   const setStatus = useServerFn(setSiteVisitStatus);
   const visits = useSiteVisits();
+  const addCal = useServerFn(addSiteVisitToTeamCalendar);
   const refresh = () => qc.invalidateQueries({ queryKey: ["site-visits"] });
 
   const [open, setOpen] = useState(false);
@@ -85,6 +86,12 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
   const change = useMutation({
     mutationFn: (v: { id: string; status: (typeof SITE_VISIT_STATUSES)[number] }) => setStatus({ data: { adminToken, ...v } }),
     onSuccess: refresh,
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const toCalendar = useMutation({
+    mutationFn: (id: string) => addCal({ data: { adminToken, id } }),
+    onSuccess: (r) => { toast.success(r.already ? "আগেই টিম ক্যালেন্ডারে আছে" : "টিম ক্যালেন্ডারে যোগ হয়েছে"); refresh(); },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -146,10 +153,20 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
                   <span className="block truncate font-semibold">{leadById.get(v.lead_id)?.name ?? "লিড"}</span>
                   <span className="text-muted-foreground">{when(v.visit_at)}{v.project ? ` · ${v.project}` : ""}</span>
                 </span>
+                <span className="flex items-center gap-2">
+                {v.team_calendar_event_id ? (
+                  <span className="rounded-md border border-success/30 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success">✓ টিম ক্যালেন্ডারে</span>
+                ) : v.status === "scheduled" ? (
+                  <button type="button" disabled={toCalendar.isPending} onClick={() => toCalendar.mutate(v.id)}
+                    className="h-8 rounded-lg border border-border px-2 text-[11px] font-semibold hover:bg-muted disabled:opacity-50">
+                    {toCalendar.isPending && toCalendar.variables === v.id ? "যোগ হচ্ছে…" : "টিম ক্যালেন্ডারে যোগ"}
+                  </button>
+                ) : null}
                 <select aria-label="অবস্থা" className="h-8 rounded-lg border border-border bg-background px-2 text-xs" value={v.status}
                   disabled={change.isPending} onChange={(e) => change.mutate({ id: v.id, status: e.target.value as (typeof SITE_VISIT_STATUSES)[number] })}>
                   {SITE_VISIT_STATUSES.map((s) => <option key={s} value={s}>{LABEL[s]}</option>)}
                 </select>
+                </span>
               </li>
             ))}
           </ul>

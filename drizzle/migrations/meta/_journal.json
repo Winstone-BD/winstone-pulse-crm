@@ -694,6 +694,13 @@
       "when": 1791732824897,
       "tag": "0098_project_photos_private_read",
       "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1791739498740,
+      "tag": "0099_migration",
+      "breakpoints": true
     }
   ]
 }
