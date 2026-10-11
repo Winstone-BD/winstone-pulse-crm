@@ -5,10 +5,10 @@ import { MANUAL_PDF_PATH, MANUAL_SECTIONS, MANUAL_UPDATED, MANUAL_VERSION } from
 export const Route = createFileRoute("/manual")({
   head: () => ({
     meta: [
-      { title: "System Manual & Client Handover — Winstone Connect" },
-      { name: "description", content: "Complete A–Z operating manual for Winstone Connect CRM: roles, workflows, history, exports and security." },
-      { property: "og:title", content: "System Manual — Winstone Connect" },
-      { property: "og:description", content: "A–Z operating manual and client handover for Winstone Connect CRM." },
+      { title: "System Manual & Client Handover — Winstone CRM" },
+      { name: "description", content: "Complete A–Z operating manual for Winstone CRM: roles, workflows, history, exports and security." },
+      { property: "og:title", content: "System Manual — Winstone CRM" },
+      { property: "og:description", content: "A–Z operating manual and client handover for Winstone CRM." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -21,7 +21,7 @@ function ManualPage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 print:py-0">
       <header className="border-b border-border pb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Winstone Connect</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Winstone CRM</p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">System Manual &amp; Client Handover</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Manual version {MANUAL_VERSION} · Last updated {MANUAL_UPDATED}

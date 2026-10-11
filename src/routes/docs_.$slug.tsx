@@ -23,7 +23,7 @@ export const Route = createFileRoute("/docs_/$slug")({
       loaderData?.summary ||
       (loaderData?.title
         ? `${loaderData.title}: Winstone CRM ব্যবহারের ধাপে ধাপে নির্দেশিকা।`
-        : "Winstone Connect CRM-এর একটি নির্দেশিকা পাতা: ধাপে ধাপে ব্যবহারের নিয়ম।");
+        : "Winstone CRM-এর একটি নির্দেশিকা পাতা: ধাপে ধাপে ব্যবহারের নিয়ম।");
     const url = `https://crm.winstonebd.com/docs/${params.slug}`;
     return {
       meta: [
