@@ -14,11 +14,29 @@ describe("social moderation (Method A)", () => {
   });
 
   it("agent id comes from the session and every agent write passes the briefing gate", () => {
-    expect(src).not.toMatch(/agentId:\s*z\./);
+    // Agent write schemas must never accept an identity from the browser; the
+    // only zod-declared agentId is the HQ report's filter parameter.
+    const activityIdx = src.indexOf("const Activity = Base.extend({");
+    const activityBlock = src.slice(activityIdx, src.indexOf("\n});", activityIdx));
+    expect(activityBlock).not.toContain("agentId");
+    expect(src).toMatch(/Activity\.extend\(\{ name: z\.string\(\)\.trim\(\)\.min\(1\)\.max\(120\), phone: z\.string\(\)\.trim\(\)\.min\(6\)\.max\(40\) \}\)/);
+    expect(src).toMatch(/voidSocialActivity[\s\S]{0,200}Base\.extend\(\{ id: z\.string\(\)\.uuid\(\) \}\)/);
     expect(src).toMatch(/assertBriefingForCaller\(c\.caller\)/);
     for (const fn of ["logSocialActivity", "voidSocialActivity", "convertSocialToLead"]) {
       expect(src).toMatch(new RegExp(`${fn}[\\s\\S]*?agentCtx\\(`));
     }
+  });
+
+  it("page/group selection is mandatory so lead sources are never blank", () => {
+    expect(src).toMatch(/pageId: z\.string\(\{ required_error/);
+    expect(src).toMatch(/\.uuid\("পেজ বা গ্রুপ বেছে নিন"\)/);
+    for (const fn of ["logSocialActivity", "convertSocialToLead"]) {
+      expect(src).toMatch(new RegExp(`${fn}[\\s\\S]*?requireActivePage\\(db, data\\.pageId\\)`));
+    }
+    expect(src).toMatch(/!data \|\| !data\.active\).*পেজ বা গ্রুপ বেছে নিন/s);
+    const ui = readFileSync("src/components/crm/social/SocialDesk.tsx", "utf8");
+    expect(ui).toMatch(/disabled=\{save\.isPending \|\| !pageId\}/);
+    expect(ui).toMatch(/required aria-required="true"/);
   });
 
   it("never calls any Meta/Facebook API", () => {
