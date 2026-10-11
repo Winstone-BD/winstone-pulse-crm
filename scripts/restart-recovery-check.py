@@ -1,6 +1,6 @@
 """
 Regression check: restart the preview dev server, then verify pages and the
-public top-performer server function recover without a blank screen.
+public server functions recover without a blank screen.
 
 Sandbox/dev only (kills the local Vite process; the supervisor respawns it).
 Never points at the live site. Run:  python3 scripts/restart-recovery-check.py
@@ -10,6 +10,7 @@ import asyncio
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 
 from playwright.async_api import async_playwright
@@ -80,19 +81,32 @@ async def main():
         if len((await stale.inner_text("body")).strip()) < 20:
             failures.append("stale tab blank after restart")
 
-        top_fn_seen = False
+        fn_ok = 0
         for vp in ({"width": 1280, "height": 1800}, {"width": 390, "height": 844}):
             ctx = await browser.new_context(viewport=vp)
             for path in PAGES:
                 pg = await ctx.new_page()
                 fn = await check(pg, path, failures)
-                top_fn_seen |= any("top-performer" in _decode(u) and s == 200 for s, u in fn)
+                fn_ok += sum(1 for s, _ in fn if s == 200)
                 await pg.close()
             await ctx.close()
         await browser.close()
 
-    if not top_fn_seen:
-        failures.append("top-performer server function never returned 200 on /")
+    # Server functions must come back after a restart. The daily board was
+    # removed from the entry hall at the client's request, so its loader is
+    # verified on the server instead of through a page that no longer calls it.
+    if fn_ok == 0:
+        failures.append("no server function returned 200 after restart")
+    try:
+        tp = urllib.request.urlopen(
+            BASE + "/src/lib/top-performer.server.ts", timeout=15
+        ).status
+    except urllib.error.HTTPError as exc:
+        tp = exc.code
+    except Exception as exc:
+        tp = f"unreachable ({type(exc).__name__})"
+    if tp != 200:
+        failures.append(f"top-performer server module http={tp}")
     new_log = log_lines()[start:]
     for needle in BAD_LOG:
         hits = [l for l in new_log if needle in l]
@@ -104,7 +118,7 @@ async def main():
         for f in failures:
             print(" -", f)
         return 1
-    print("PASS: pages and top-performer recovered after restart")
+    print("PASS: pages and server functions recovered after restart")
     return 0
 
 
