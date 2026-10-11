@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
 import { PreCallBriefCard } from "@/components/crm/PreCallBriefCard";
 import { LeadNotesPanel } from "@/components/crm/LeadNotesPanel";
+import { LeadProjectFacts, VisitRequestsPanel } from "@/components/crm/KnowledgeHubCards";
 import { LeadReportsSection } from "@/components/crm/LeadReportsSection";
 import { ContactSuppressionNotice } from "@/components/crm/ContactSuppressionNotice";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
@@ -164,6 +165,9 @@ export function LeadDossier({
                   </div>
                 ) : null}
               </section>
+
+              <VisitRequestsPanel leadId={lead.id} />
+              <LeadProjectFacts leadId={lead.id} />
 
               <div id="lead-reports" className="scroll-mt-14">
                 <LeadReportsSection leadId={lead.id} />
