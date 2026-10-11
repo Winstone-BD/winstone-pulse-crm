@@ -90,12 +90,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
       },
-      { title: "Winstone CRM" },
+      { title: "Winstone CRM & Sales Operating System" },
       {
         name: "description",
         content: "উইনস্টোন টিমের কল, লিড ও রিপোর্ট — ফোনের হোম স্ক্রিন থেকেই চলবে।",
       },
-      { property: "og:title", content: "Winstone CRM" },
+      { property: "og:title", content: "Winstone CRM & Sales Operating System" },
       {
         property: "og:description",
         content: "উইনস্টোন টিমের কল, লিড ও রিপোর্ট — ফোনের হোম স্ক্রিন থেকেই চলবে।",

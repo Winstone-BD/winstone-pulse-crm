@@ -255,10 +255,10 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
               />
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-sm font-bold tracking-tight">
-                  Winstone Connect
+                  Winstone CRM
                 </span>
                 <span className="block truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  Tele-Sales OS
+                  Sales OS
                 </span>
               </span>
             </span>
