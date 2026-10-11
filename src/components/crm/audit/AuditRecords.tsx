@@ -130,7 +130,7 @@ function openReport(title: string, body: string) {
 export function FindingReportButton({ item }: { item: AuditItem }) {
   const rec = useAuditRecords();
   const evs = rec.data?.allowed ? eventsFor(rec.data.events, item) : null;
-  return <Button variant="outline" size="sm" onClick={() => openReport(`Audit finding ${itemNumber(item.item)} — Winstone CRM`, findingHtml(item, evs))}><FileText className="h-4 w-4" aria-hidden />Finding report</Button>;
+  return <Button variant="outline" size="sm" onClick={() => openReport(`Audit finding ${itemNumber(item.item)} — Winstone Pulse`, findingHtml(item, evs))}><FileText className="h-4 w-4" aria-hidden />Finding report</Button>;
 }
 
 export function AllReportsButtons({ rows }: { rows: AuditItem[] }) {
@@ -149,7 +149,7 @@ export function AllReportsButtons({ rows }: { rows: AuditItem[] }) {
   return (
     <>
       <Button variant="outline" size="sm" onClick={csv}><FileDown className="h-4 w-4" aria-hidden />CSV</Button>
-      <Button variant="outline" size="sm" onClick={() => openReport("Audit findings — Winstone CRM", rows.map((i) => findingHtml(i, all ? eventsFor(all, i) : null)).join(""))}><FileText className="h-4 w-4" aria-hidden />Findings report</Button>
+      <Button variant="outline" size="sm" onClick={() => openReport("Audit findings — Winstone Pulse", rows.map((i) => findingHtml(i, all ? eventsFor(all, i) : null)).join(""))}><FileText className="h-4 w-4" aria-hidden />Findings report</Button>
     </>
   );
 }

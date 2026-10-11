@@ -31,7 +31,7 @@ const Email = ({ title, detail, period, amount, stageLabel, reviewUrl }: Props) 
     <Preview>{title || "সার্ভিস বিল সংক্রান্ত জরুরি তথ্য"}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>Winstone CRM</Text>
+        <Text style={brand}>Winstone Pulse</Text>
         <Heading style={heading}>{title || "সার্ভিস বিল আপডেট"}</Heading>
         <Text style={text}>{detail || "বিস্তারিত IT কনসোলে দেখুন।"}</Text>
         <Section style={box}>
@@ -58,7 +58,7 @@ export const template = {
   subject: (data: Record<string, unknown>) =>
     typeof data["title"] === "string" && data["title"]
       ? data["title"]
-      : "Winstone CRM — সার্ভিস বিল আপডেট",
+      : "Winstone Pulse — সার্ভিস বিল আপডেট",
   displayName: "Service bill alert",
   previewData: {
     title: "2026-10 সার্ভিস বিল বকেয়া — $46.29 USD",

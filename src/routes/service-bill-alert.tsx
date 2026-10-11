@@ -21,7 +21,7 @@ export const Route = createFileRoute("/service-bill-alert")({
       { title: "Service Bill Alert — Winstone Pulse" },
       {
         name: "description",
-        content: "Winstone CRM IT service bill awaiting authorized human review.",
+        content: "Winstone Pulse IT service bill awaiting authorized human review.",
       },
       { property: "og:title", content: "Service Bill Alert — Winstone Pulse" },
       { property: "og:description", content: "Review-only Winstone IT service bill notice." },

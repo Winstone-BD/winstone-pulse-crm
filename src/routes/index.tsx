@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone CRM and Sales Operating System, the same data on every device.",
+          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone Pulse — The Premium Real Estate CRM, the same data on every device.",
       },
       { property: "og:title", content: "Winstone Pulse — The Premium Real Estate CRM" },
       {
@@ -71,16 +71,19 @@ function EntryHall() {
             alt="Winstone Properties Ltd."
             className="size-24 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-28"
           />
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-foreground sm:text-6xl">
-            Winstone CRM
+          <h1 className="mt-6 text-4xl font-black uppercase tracking-tight text-foreground sm:text-6xl">
+            Winstone Pulse
           </h1>
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary sm:text-xs">
-            Sales Operating System
+            The Premium Real Estate CRM
+          </p>
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground sm:text-xs">
+            Pulse — Find. Build. Invest.
           </p>
           <span aria-hidden className="mt-6 h-px w-24 bg-primary/60" />
           <h2 className="mt-8 text-2xl font-bold tracking-tight sm:text-3xl">Choose Your Workspace</h2>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Select the mode you are using — the same Winstone CRM opens on every device.
+            Select the mode you are using — the same Winstone Pulse opens on every device.
           </p>
         </header>
 

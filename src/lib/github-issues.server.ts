@@ -43,7 +43,7 @@ export async function openBookingFailureIssue(input: {
       body: JSON.stringify({
         title: `CRM booking sync failed: ${input.eventType.replace("crm_to_os_", "")} (${input.syncEventId.slice(0, 8)})`,
         body: [
-          "Winstone CRM could not deliver a booking event to Winstone OS and stopped retrying.",
+          "Winstone Pulse could not deliver a booking event to Winstone OS and stopped retrying.",
           "",
           `- Sync event: \`${input.syncEventId}\``,
           `- Booking id: \`${input.bookingId ?? "—"}\``,

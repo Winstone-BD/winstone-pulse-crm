@@ -14,7 +14,7 @@ export const Route = createFileRoute("/docs")({
       {
         name: "description",
         content:
-          "Winstone CRM ব্যবহারের নির্দেশিকা — এজেন্ট ডেস্ক, কল রিপোর্ট, ফলো-আপ ও এইচকিউ।",
+          "Winstone Pulse ব্যবহারের নির্দেশিকা — এজেন্ট ডেস্ক, কল রিপোর্ট, ফলো-আপ ও এইচকিউ।",
       },
       { property: "og:title", content: "Winstone Pulse ডকুমেন্টেশন" },
       {

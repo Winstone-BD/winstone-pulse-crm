@@ -1,4 +1,4 @@
-# Winstone CRM — নথিপত্র / Documentation index
+# Winstone Pulse — নথিপত্র / Documentation index
 
 বাংলা UI-র CRM, SIM-first কলিং (এজেন্টের নিজের সিম + অ্যান্ড্রয়েড অ্যাপ)।
 

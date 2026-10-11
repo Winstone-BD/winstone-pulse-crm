@@ -1,6 +1,6 @@
 import { MAINTENANCE_FEE_USD } from "@/lib/maintenance-rules";
 
-export const SERVICE_BILL_NAME = "Winstone CRM IT Service & Maintenance";
+export const SERVICE_BILL_NAME = "Winstone Pulse IT Service & Maintenance";
 export const SERVICE_BILL_ISSUER = "Winstone IT Team";
 export const SERVICE_BILL_STATUS = "Pending Review";
 

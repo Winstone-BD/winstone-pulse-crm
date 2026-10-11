@@ -29,8 +29,8 @@ export function buildHostingerServiceBillPayload(input: {
   return {
     to: [input.recipient],
     displayName: "Winstone IT Team",
-    subject: `Service-Bill Alert: ${input.stage} - Winstone CRM`,
-    text: `WINSTONE CRM — SERVICE BILL ALERT\n\nStatus: ${input.stage}\nAmount: ${MAINTENANCE_FEE_LABEL}\n\nThis notice requires authorized human review. It does not execute or approve a payment.${reviewLine}`,
+    subject: `Service-Bill Alert: ${input.stage} - Winstone Pulse`,
+    text: `WINSTONE PULSE — SERVICE BILL ALERT\n\nStatus: ${input.stage}\nAmount: ${MAINTENANCE_FEE_LABEL}\n\nThis notice requires authorized human review. It does not execute or approve a payment.${reviewLine}`,
   };
 }
 

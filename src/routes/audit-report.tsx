@@ -12,10 +12,10 @@ export const Route = createFileRoute("/audit-report")({
   }),
   head: () => ({
     meta: [
-      { title: "Production Readiness / Audit Report — WINSTONE CRM" },
-      { name: "description", content: "Implementation audit of WINSTONE CRM: checks, evidence, test results and operational items not covered." },
-      { property: "og:title", content: "WINSTONE CRM — Production Readiness / Audit Report" },
-      { property: "og:description", content: "Implementation audit results and evidence for WINSTONE CRM." },
+      { title: "Production Readiness / Audit Report — WINSTONE PULSE" },
+      { name: "description", content: "Implementation audit of WINSTONE PULSE: checks, evidence, test results and operational items not covered." },
+      { property: "og:title", content: "WINSTONE PULSE — Production Readiness / Audit Report" },
+      { property: "og:description", content: "Implementation audit results and evidence for WINSTONE PULSE." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },

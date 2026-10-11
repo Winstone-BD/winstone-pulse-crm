@@ -120,7 +120,7 @@ export async function buildMonthlySummaryPdf(month: string) {
   let page = doc.addPage([W, H]);
   let y = H - 50;
   const header = () => {
-    page.drawText(`Winstone CRM - Monthly call & follow-up summary - ${month}`, { x: 40, y, size: 15, font: bold });
+    page.drawText(`Winstone Pulse - Monthly call & follow-up summary - ${month}`, { x: 40, y, size: 15, font: bold });
     y -= 18;
     page.drawText(`Dhaka month. Generated ${new Date(Date.now() + DHAKA_MS).toISOString().slice(0, 16).replace("T", " ")} (Dhaka). Source: submitted call reports and follow-up records.`, { x: 40, y, size: 8.5, font, color: rgb(0.35, 0.35, 0.35) });
     y -= 26;

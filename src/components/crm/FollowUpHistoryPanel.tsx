@@ -158,7 +158,7 @@ export function FollowUpHistoryPanel() {
 <style>@page{size:A4 landscape;margin:10mm}body{font-family:'Noto Sans Bengali',sans-serif;font-size:9px;color:#111}
 h1{font-size:15px;margin:0 0 4px}p{margin:0 0 8px;color:#555}table{border-collapse:collapse;width:100%}
 th,td{border:1px solid #ccc;padding:3px 4px;text-align:left;vertical-align:top}th{background:#f1f1f1}tr{page-break-inside:avoid}</style></head>
-<body><h1>ফলো-আপ ইতিহাস — Winstone CRM</h1><p>${esc(filterText)} · লিড ${totals.leads} · ফলো-আপ ${totals.set} · যোগাযোগ ${totals.contacts} · বন্ধ ${totals.stopped}</p>
+<body><h1>ফলো-আপ ইতিহাস — Winstone Pulse</h1><p>${esc(filterText)} · লিড ${totals.leads} · ফলো-আপ ${totals.set} · যোগাযোগ ${totals.contacts} · বন্ধ ${totals.stopped}</p>
 <table><thead><tr>${COLUMNS.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>
 ${rows.map((r) => `<tr>${toCells(r).map((v) => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}
 </tbody></table><script>document.fonts.ready.then(()=>setTimeout(()=>print(),300))</script></body></html>`);

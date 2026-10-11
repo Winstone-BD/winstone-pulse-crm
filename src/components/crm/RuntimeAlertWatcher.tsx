@@ -38,7 +38,7 @@ export function RuntimeAlertWatcher() {
       });
       try {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          new Notification(`Winstone CRM — ${title}`, { body: r.message.slice(0, 140), tag: r.id });
+          new Notification(`Winstone Pulse — ${title}`, { body: r.message.slice(0, 140), tag: r.id });
         }
       } catch {
         /* notifications unsupported */

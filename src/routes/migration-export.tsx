@@ -118,7 +118,7 @@ function ExportCenter() {
       files["manifest.json"] = strToU8(
         JSON.stringify(
           {
-            kind: "winstone-crm-migration-bundle",
+            kind: "winstone-pulse-migration-bundle",
             mode: "READ_ONLY_EXPORT",
             source_project_id: SOURCE_PROJECT_ID,
             target_project_id: TARGET_PROJECT_ID,
@@ -140,7 +140,7 @@ function ExportCenter() {
       const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: "application/zip" }));
       const a = document.createElement("a");
       a.href = url;
-      a.download = `winstone-crm1-migration-${exportedAt.slice(0, 19).replace(/[:T]/g, "-")}.zip`;
+      a.download = `winstone-pulse-migration-${exportedAt.slice(0, 19).replace(/[:T]/g, "-")}.zip`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Migration bundle downloaded");

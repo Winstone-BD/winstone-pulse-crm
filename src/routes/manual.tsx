@@ -6,9 +6,9 @@ export const Route = createFileRoute("/manual")({
   head: () => ({
     meta: [
       { title: "System Manual & Client Handover — Winstone Pulse" },
-      { name: "description", content: "Complete A–Z operating manual for Winstone CRM: roles, workflows, history, exports and security." },
+      { name: "description", content: "Complete A–Z operating manual for Winstone Pulse: roles, workflows, history, exports and security." },
       { property: "og:title", content: "System Manual — Winstone Pulse" },
-      { property: "og:description", content: "A–Z operating manual and client handover for Winstone CRM." },
+      { property: "og:description", content: "A–Z operating manual and client handover for Winstone Pulse." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },

@@ -1,5 +1,5 @@
 /**
- * Monthly service bill for the Winstone CRM (৳4,000 per period).
+ * Monthly service bill for the Winstone Pulse (৳4,000 per period).
  *
  * One row per calendar period in public.service_invoices. The whole chain —
  * invoice raised, payment verified, service activated, ৳3,000 / ৳1,000 split,

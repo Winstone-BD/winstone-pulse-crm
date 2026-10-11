@@ -1,5 +1,5 @@
 /**
- * Winstone CRM offline shell.
+ * Winstone Pulse offline shell.
  *
  * Small and honest: navigations and static assets are served from a runtime
  * cache when the network is unavailable, so an agent can still open the CRM,

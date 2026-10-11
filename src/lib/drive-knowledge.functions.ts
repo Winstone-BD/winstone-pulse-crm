@@ -49,7 +49,7 @@ export const refreshDriveKnowledge = createServerFn({ method: "POST" })
     });
   });
 
-const SUMMARY_PROMPT = `তুমি Winstone CRM-এর অনুমোদিত ডকুমেন্ট তথ্যভাণ্ডারের একটি ডকুমেন্ট সারসংক্ষেপ করছো।
+const SUMMARY_PROMPT = `তুমি Winstone Pulse-এর অনুমোদিত ডকুমেন্ট তথ্যভাণ্ডারের একটি ডকুমেন্ট সারসংক্ষেপ করছো।
 নিয়ম:
 - শুধু দেওয়া লেখা ব্যবহার করবে; কোনো তথ্য, নাম বা সংখ্যা কল্পনা করবে না।
 - সর্বোচ্চ ৩ বাক্যে ডকুমেন্টে কী আছে তা লিখবে।

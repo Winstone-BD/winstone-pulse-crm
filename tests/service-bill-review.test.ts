@@ -19,7 +19,7 @@ describe("review-only service bill", () => {
   it("returns the exact safe JSON contract in USD", () => {
     expect(bill).toEqual({
       bill_id: "11111111-1111-4111-8111-111111111111",
-      service_name: "Winstone CRM IT Service & Maintenance",
+      service_name: "Winstone Pulse IT Service & Maintenance",
       amount: 46.29,
       currency: "USD",
       status: "Pending Review",

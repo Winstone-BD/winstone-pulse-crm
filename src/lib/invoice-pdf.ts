@@ -128,7 +128,7 @@ export function openInvoicePdf(invoice: PrintableInvoice, architect: PrintableAr
 <body>
   <div class="head">
     <div>
-      <h1>Winstone CRM — মাসিক সার্ভিস ইনভয়েস</h1>
+      <h1>Winstone Pulse — মাসিক সার্ভিস ইনভয়েস</h1>
       <p class="muted">পিরিয়ড ${escapeHtml(invoice.period)} · স্ট্যাটাস ${escapeHtml(STATUS_LABEL[invoice.status] ?? invoice.status)}</p>
     </div>
     <div class="amount">${escapeHtml(taka(invoice.amountBdt))}</div>

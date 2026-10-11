@@ -55,7 +55,7 @@ export function AuditWorkspace({ q, result, item }: { q: string; result: string;
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 print:py-0">
       <header className="border-b border-border pb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Winstone CRM · Audit</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Winstone Pulse · Audit</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Production Readiness Audit</h1>
           <div className="flex gap-2 print:hidden">

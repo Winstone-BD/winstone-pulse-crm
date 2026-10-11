@@ -45,7 +45,7 @@ fun SimCallControls() {
         }
         if (state.ringing) Button(onClick = { checked(WinstoneInCallService.answer()) }, modifier = Modifier.fillMaxWidth()) { Text("কল ধরুন") }
         Button(enabled = state.available, onClick = { checked(WinstoneInCallService.disconnect()) }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error), modifier = Modifier.fillMaxWidth()) { Text(if (state.ringing) "কল প্রত্যাখ্যান" else "কল কাটুন") }
-        if (!state.available) Text("ইন-অ্যাপ SIM নিয়ন্ত্রণের জন্য Winstone CRM-কে ডিফল্ট ফোন অ্যাপ করুন।", style = MaterialTheme.typography.bodySmall)
+        if (!state.available) Text("ইন-অ্যাপ SIM নিয়ন্ত্রণের জন্য Winstone Pulse-কে ডিফল্ট ফোন অ্যাপ করুন।", style = MaterialTheme.typography.bodySmall)
     }
 }
 

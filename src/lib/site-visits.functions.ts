@@ -104,7 +104,7 @@ export const addSiteVisitToTeamCalendar = createServerFn({ method: "POST" })
       headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": calKey, "Content-Type": "application/json" },
       body: JSON.stringify({
         summary: `সাইট ভিজিট — ${lead?.name ?? "লিড"}${v.project ? ` · ${v.project}` : ""}`,
-        description: `Winstone CRM কনফার্ম সাইট ভিজিট${agentName ? `\nএজেন্ট: ${agentName}` : ""}\nযোগ করেছেন: ${c.actor}`,
+        description: `Winstone Pulse কনফার্ম সাইট ভিজিট${agentName ? `\nএজেন্ট: ${agentName}` : ""}\nযোগ করেছেন: ${c.actor}`,
         start: { dateTime: start.toISOString(), timeZone: "Asia/Dhaka" },
         end: { dateTime: end.toISOString(), timeZone: "Asia/Dhaka" },
       }),
