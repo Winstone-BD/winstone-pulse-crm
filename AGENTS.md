@@ -31,3 +31,4 @@
 - Vite pre-bundles the TanStack router-core/seroval/h3-v2 deps in vite.config optimizeDeps.include — why: late discovery re-optimized on every cold start and broke open tabs (stale chunks / invalid server-fn IDs).
 - Restart recovery is regression-checked by scripts/restart-recovery-check.py (bun run test:restart; sandbox-only, kills local Vite) — why: blank screens after restarts must be caught by a real restart, not unit tests.
 - Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
+- Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
