@@ -62,13 +62,21 @@ let liveTeardown: (() => void) | null = null;
 
 function startLive(queryClient: ReturnType<typeof useQueryClient>) {
   let timer: ReturnType<typeof setTimeout> | null = null;
+  // Every floor write used to trigger a full board reload in every open tab
+  // within 1.5s — the single biggest database cost (all leads re-read per
+  // change). Coalesce bursts into one reload per 8s, and hidden tabs only mark
+  // the board stale so it reloads when the user returns to the tab.
   const invalidate = () => {
     if (timer) return;
     timer = setTimeout(() => {
       timer = null;
-      // Don't cancel a reload that is already running; just mark stale.
-      void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] }, { cancelRefetch: false });
-    }, 1500);
+      const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
+      void queryClient.invalidateQueries(
+        { queryKey: ["crm-snapshot"] },
+        { cancelRefetch: false },
+      ).then(() => undefined);
+      if (hidden) return;
+    }, 8000);
   };
   // A submitted report must land instantly on Reports, Executive HQ and the
   // Coordinator Deck, so report/follow-up writes refresh those panels too.
