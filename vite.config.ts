@@ -17,6 +17,21 @@ Object.assign(process.env, serverEnv);
 export default defineConfig({
   plugins: [mcpPlugin()],
   vite: {
+    // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
+    // function ID" after a restart: Vite discovered these deps late on every cold
+    // start, re-optimized and force-reloaded, invalidating chunk hashes that open
+    // tabs still referenced. Pre-bundling them up front removes that reload.
+    optimizeDeps: {
+      include: [
+        "@tanstack/history",
+        "@tanstack/router-core",
+        "@tanstack/router-core/isServer",
+        "@tanstack/router-core/ssr/client",
+        "@tanstack/router-core/ssr/server",
+        "h3-v2",
+        "seroval",
+      ],
+    },
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(

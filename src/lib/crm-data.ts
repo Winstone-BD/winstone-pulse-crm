@@ -113,7 +113,12 @@ export function useSnapshot() {
   const token = useAdminToken();
   const query = useQuery(snapshotQueryFor({ token }));
   useLiveCrmRefresh();
-  return { ...(query.data ?? EMPTY_SNAPSHOT), isPending: query.isPending };
+  return {
+    ...(query.data ?? EMPTY_SNAPSHOT),
+    isPending: query.isPending,
+    isError: query.isError && !query.data,
+    refetch: () => void query.refetch(),
+  };
 }
 
 export const CONNECTED_THRESHOLD_SECONDS = 10;

@@ -4,10 +4,11 @@ import { useMemo } from "react";
 import { CallEntry } from "@/components/crm/LeadDossier";
 import { MyPhoneLine } from "@/components/crm/MyPhoneSetup";
 import { useSnapshot } from "@/lib/crm-data";
+import { EmptyState, ErrorState, LoadingState } from "@/components/crm/DataState";
 
 /** Every recording synced for the agent's own calls, newest first. */
 export function MyCallLog() {
-  const { leads, calls, isPending } = useSnapshot();
+  const { leads, calls, isPending, isError, refetch } = useSnapshot();
 
   const ordered = useMemo(
     () =>
@@ -29,19 +30,25 @@ export function MyCallLog() {
         </p>
       </div>
 
-      {isPending && <p className="text-sm text-muted-foreground">কল লোড হচ্ছে…</p>}
+      {isPending && <LoadingState label="কল লোড হচ্ছে…" />}
+      {isError && <ErrorState onRetry={refetch} />}
 
-      {!isPending && ordered.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          এখনো কোনো কল রেকর্ড আসেনি। ফোন থেকে কল করলে সেটি এখানে দেখা যাবে।
-        </p>
+      {!isPending && !isError && ordered.length === 0 && (
+        <EmptyState>এখনো কোনো কল রেকর্ড আসেনি। ফোন থেকে কল করলে সেটি এখানে দেখা যাবে।</EmptyState>
       )}
 
       <div className="space-y-4">
-        {ordered.map((call) => {
+        {ordered.map((call, i) => {
           const lead = leads.find((l) => l.id === call.lead_id);
+          const day = dhakaDay(call.created_at);
+          const newDay = i === 0 || dhakaDay(ordered[i - 1]!.created_at) !== day;
           return (
             <div key={call.id} className="space-y-1.5">
+              {newDay && (
+                <h3 className="sticky top-0 z-10 -mx-1 border-b border-border bg-background/95 px-1 py-1 text-xs font-semibold text-muted-foreground">
+                  {day}
+                </h3>
+              )}
               <p className="text-xs text-muted-foreground">
                 লিড: <span className="font-medium text-foreground">{lead?.name ?? "অজানা"}</span>
                 {lead?.company ? ` · ${lead.company}` : ""}
@@ -53,4 +60,9 @@ export function MyCallLog() {
       </div>
     </section>
   );
+}
+
+/** Dhaka calendar date heading, e.g. "রবি, ১১ অক্টো ২০২৬". */
+function dhakaDay(iso: string) {
+  return new Date(iso).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
