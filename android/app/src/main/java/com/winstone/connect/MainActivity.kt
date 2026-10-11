@@ -71,9 +71,15 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (maintenance.active) {
+                    if (com.winstone.connect.telephony.WinstoneInCallService.controls.collectAsStateSafe().value.available) {
+                        com.winstone.connect.ui.SystemSimCallScreen()
+                    } else {
                     MaintenanceScreen(maintenance)
+                    }
                 } else if (phase != CallPhase.Idle) {
                     LiveCallScreen(phase = phase)
+                } else if (com.winstone.connect.telephony.WinstoneInCallService.controls.collectAsStateSafe().value.available) {
+                    com.winstone.connect.ui.SystemSimCallScreen()
                 } else if (state.employeeId.isNullOrBlank()) {
                     SignInScreen(
                         error = state.error,
