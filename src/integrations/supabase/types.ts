@@ -2430,6 +2430,7 @@ export type Database = {
           origin: string
           retrieved_excerpt: string | null
           sales_insight: string | null
+          source: string | null
           source_name: string | null
           source_published_at: string | null
           source_title: string | null
@@ -2452,6 +2453,7 @@ export type Database = {
           origin: string
           retrieved_excerpt?: string | null
           sales_insight?: string | null
+          source?: string | null
           source_name?: string | null
           source_published_at?: string | null
           source_title?: string | null
@@ -2474,6 +2476,7 @@ export type Database = {
           origin?: string
           retrieved_excerpt?: string | null
           sales_insight?: string | null
+          source?: string | null
           source_name?: string | null
           source_published_at?: string | null
           source_title?: string | null

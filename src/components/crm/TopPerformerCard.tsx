@@ -92,6 +92,12 @@ export function TopPerformerCard() {
     queryKey: ["top-performer-today"],
     queryFn: () => fetchBoard(),
     refetchInterval: 60_000,
+    // A poll that lands while the server is restarting gets a transient 500;
+    // retry quietly with backoff and keep the last good board on screen.
+    retry: 4,
+    retryDelay: (n) => Math.min(2_000 * 2 ** n, 15_000),
+    placeholderData: (prev) => prev,
+    throwOnError: false,
   });
 
   if (isLoading) return <div className="skeleton h-40 w-full" />;

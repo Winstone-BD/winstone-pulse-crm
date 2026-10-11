@@ -27,7 +27,7 @@ export async function importOfficialNews(actor: string) {
     const summary = (it.description || it.title).slice(0, 1200);
     const pub = it.publishedAt;
     const { error } = await db.from("market_news").insert({
-      origin: "official", status: "published", headline: it.title.slice(0, 200), summary, key_points: [],
+      origin: "official", source: "winstone_official", status: "published", headline: it.title.slice(0, 200), summary, key_points: [],
       category: "announcement", tags: ["winstone", "winstone_official"], source_name: "Winstone Properties (অফিসিয়াল)",
       source_url: it.link, source_title: it.title, retrieved_excerpt: `${it.title} ${it.description}`.slice(0, 2000),
       source_published_at: pub, dedupe_key: `official:${it.link}`.slice(0, 500), created_by: actor,
