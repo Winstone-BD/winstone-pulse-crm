@@ -48,7 +48,7 @@ function browserAsyncHooksStub() {
   return {
     name: "browser-async-hooks-stub",
     enforce: "pre",
-    resolveId(id, _importer, options) {
+    resolveId(id: string, _importer: string | undefined, options?: { ssr?: boolean }) {
       if (id === "node:async_hooks" && !options?.ssr) return BROWSER_ASYNC_HOOKS;
       return null;
     },
