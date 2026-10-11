@@ -87,7 +87,7 @@ export function decide(input: RuleInput): { locked: boolean; stage: Stage } {
   if (msToLock <= 24 * 3_600_000) return { locked: false, stage: "due_today" };
   // Red starts the evening before renewal: 11th 17:00 Dhaka (79h before the lock).
   if (msToLock <= RED_WARNING_HOURS * 3_600_000) return { locked: false, stage: "soon" };
-  if (days <= BILLING_DAY - NOTICE_DAY) return { locked: false, stage: "upcoming" };
+  if (msToLock <= (BILLING_DAY - NOTICE_DAY) * 86_400_000) return { locked: false, stage: "upcoming" };
   return { locked: false, stage: "clear" };
 }
 
