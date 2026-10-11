@@ -3657,6 +3657,124 @@ export type Database = {
           },
         ]
       }
+      social_activity_logs: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          link: string | null
+          note: string | null
+          page_id: string | null
+          reply_count: number
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id?: string | null
+          link?: string | null
+          note?: string | null
+          page_id?: string | null
+          reply_count?: number
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          link?: string | null
+          note?: string | null
+          page_id?: string | null
+          reply_count?: number
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_activity_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_activity_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_activity_logs_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "social_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_pages: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          url: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          url?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      social_reply_templates: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           buyer_email: string | null
