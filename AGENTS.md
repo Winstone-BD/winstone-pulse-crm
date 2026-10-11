@@ -36,4 +36,4 @@
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
-- Social media moderation is Method A: agents reply in Meta tools; CRM only logs work (append-only social_activity_logs, void not delete) and converts buyers via intakeLead as unassigned leads — why: no Meta API/credentials, LeadHub stays the only assignment path.
+- Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
