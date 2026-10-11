@@ -95,3 +95,4 @@
 
 - [ ] Run production build + restart test, verify build tool pinned 2.25.2
 - [ ] Google Calendar for agents (waiting on user: which kind)
+- [ ] Fill 15 projects details (waiting on user data; template given)
