@@ -98,3 +98,4 @@
 - [ ] Fill 15 projects details (waiting on user data; template given)
 - [ ] Lock down project-images storage bucket (user approved 2026-10-11)
 - [ ] Google Calendar: view-only agent panel + shared Winstone team calendar + per-agent own calendar (user chose all three 2026-10-11)
+- [ ] Ever-Call-Recorder (Shizuku two-sided recording) into Winstone Android app — waiting on user: confirm scope + licence
