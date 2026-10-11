@@ -35,7 +35,16 @@ export const listProjects = createServerFn({ method: "POST" })
     if (c.scope === "agent") q = q.eq("status", "active");
     const { data: rows, error } = await q;
     if (error) throw new Error("প্রজেক্ট তালিকা পড়া যায়নি");
-    return { canEdit: c.scope === "authority", projects: (rows ?? []) as CatalogProject[] };
+    const projects = (rows ?? []) as CatalogProject[];
+    // Private bucket: swap storage:project-photos/<path> for a short-lived signed URL.
+    // Only reachable after siCaller authenticated the caller; anonymous callers get [].
+    await Promise.all(projects.map(async (p) => {
+      if (!p.image_url?.startsWith("storage:project-photos/")) return;
+      const path = p.image_url.slice("storage:project-photos/".length);
+      const { data: s } = await supabaseAdmin.storage.from("project-photos").createSignedUrl(path, 3600);
+      p.image_url = s?.signedUrl ?? null;
+    }));
+    return { canEdit: c.scope === "authority", projects };
   });
 
 export const saveProject = createServerFn({ method: "POST" })
