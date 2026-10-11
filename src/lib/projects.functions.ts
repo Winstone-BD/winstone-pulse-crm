@@ -7,7 +7,7 @@ import { z } from "zod";
  * HQ/IT edit the catalog; agents read it and log updates only on their own leads.
  */
 const Token = z.string().nullable().optional();
-const txt = (n: number) => z.string().trim().max(n).optional().nullable();
+const txt = (n: number) => z.string().trim().max(n).nullish().transform((v) => v ?? null);
 export const INTERESTS = ["interested", "negotiating", "not_now"] as const;
 export const PARTIES = ["client", "land_owner", "flat_seller"] as const;
 
@@ -45,7 +45,7 @@ export const saveProject = createServerFn({ method: "POST" })
       id: z.string().uuid().optional().nullable(),
       name: z.string().trim().min(2).max(120),
       location: txt(200), status: z.enum(["active", "archived"]).default("active"),
-      price_per_sqft: z.number().nonnegative().max(10_000_000).optional().nullable(),
+      price_per_sqft: z.number().nonnegative().max(10_000_000).nullish().transform((v) => v ?? null),
       unit_sizes: txt(300), total_price: txt(300), down_payment: txt(300), installment_plan: txt(500),
       parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000),
     }).parse(i),

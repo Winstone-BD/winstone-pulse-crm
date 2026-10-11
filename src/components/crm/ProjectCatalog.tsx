@@ -43,17 +43,17 @@ const FIELDS: Array<[keyof CatalogProject, { bn: string; en: string }]> = [
   ["extra_charges", { bn: "অতিরিক্ত চার্জ", en: "Extra charges" }],
   ["notes", { bn: "অন্যান্য", en: "Other" }],
 ];
-const INTEREST_L: Record<string, { bn: string; en: string }> = {
+const INTEREST_L: Record<string, { bn: string; en: string } | undefined> = {
   interested: { bn: "আগ্রহী", en: "Interested" }, negotiating: { bn: "দরকষাকষি", en: "Negotiating" }, not_now: { bn: "এখন না", en: "Not now" },
 };
-const PARTY_L: Record<string, { bn: string; en: string }> = {
+const PARTY_L: Record<string, { bn: string; en: string } | undefined> = {
   client: { bn: "ক্লায়েন্ট", en: "Client" }, land_owner: { bn: "জমির মালিক", en: "Land owner" }, flat_seller: { bn: "ফ্ল্যাট বিক্রেতা", en: "Flat seller" },
 };
 const when = (iso: string) => new Date(iso).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const money = (n: number) => `৳${n.toLocaleString("en-IN")}`;
 
 function useT() {
-  const { lang } = useLang();
+  const lang = useLang();
   return (x: { bn: string; en: string }) => (lang === "en" ? x.en : x.bn);
 }
 
@@ -68,16 +68,16 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
   const adminToken = useAdminToken();
   const qc = useQueryClient();
   const save = useServerFn(saveProject);
-  const [f, setF] = useState<Record<string, string>>(() =>
+  const [f, setF] = useState<Record<string, string | undefined>>(() =>
     Object.fromEntries(["name", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
   );
   const [status, setStatus] = useState(initial?.status ?? "active");
   const m = useMutation({
     mutationFn: () => {
       const s = (k: string) => f[k]?.trim() || null;
-      const ppsf = f.price_per_sqft?.trim() ? Number(f.price_per_sqft) : null;
+      const ppsf = f["price_per_sqft"]?.trim() ? Number(f["price_per_sqft"]) : null;
       if (ppsf != null && !Number.isFinite(ppsf)) throw new Error("বর্গফুট মূল্য সংখ্যা হতে হবে");
-      return save({ data: { adminToken, id: initial?.id ?? null, name: f.name ?? "", status: status as "active" | "archived", price_per_sqft: ppsf,
+      return save({ data: { adminToken, id: initial?.id ?? null, name: f["name"] ?? "", status: status as "active" | "archived", price_per_sqft: ppsf,
         location: s("location"), unit_sizes: s("unit_sizes"), total_price: s("total_price"), down_payment: s("down_payment"),
         installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes") } });
     },
@@ -86,10 +86,10 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
   });
   return (
     <form className="grid gap-2 rounded-xl border border-border bg-muted/40 p-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); m.mutate(); }}>
-      <label className="text-xs sm:col-span-2">নাম / Name<Input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
+      <label className="text-xs sm:col-span-2">নাম / Name<Input required value={f["name"]} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
       {FIELDS.map(([k, lbl]) => (
         <label key={k} className="text-xs">{t(lbl)}
-          <Input inputMode={k === "price_per_sqft" ? "decimal" : undefined} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+          <Input inputMode={k === "price_per_sqft" ? "decimal" : undefined} value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
         </label>
       ))}
       <label className="text-xs">Status
@@ -127,7 +127,7 @@ function NotesBlock({ project, canEdit }: { project: CatalogProject; canEdit: bo
       <ul className="max-h-48 space-y-1 overflow-y-auto">
         {(q.data ?? []).map((n) => (
           <li key={n.id} className="rounded-md bg-muted/50 px-2 py-1 text-xs">
-            <span className="font-semibold">{t(PARTY_L[n.party] ?? PARTY_L.client!)}</span> · {n.created_by} · <span className="tabular text-muted-foreground">{when(n.created_at)}</span>
+            <span className="font-semibold">{t(PARTY_L[n.party] ?? PARTY_L["client"]!)}</span> · {n.created_by} · <span className="tabular text-muted-foreground">{when(n.created_at)}</span>
             <p className="whitespace-pre-wrap">{n.note}</p>
           </li>
         ))}
@@ -135,7 +135,7 @@ function NotesBlock({ project, canEdit }: { project: CatalogProject; canEdit: bo
       {canEdit ? (
         <form className="flex flex-col gap-1.5 sm:flex-row" onSubmit={(e) => { e.preventDefault(); if (note.trim().length >= 2) m.mutate(); }}>
           <select aria-label="party" className="h-9 rounded-md border border-input bg-background px-2 text-xs" value={party} onChange={(e) => setParty(e.target.value as typeof party)}>
-            <option value="land_owner">{t(PARTY_L.land_owner!)}</option><option value="flat_seller">{t(PARTY_L.flat_seller!)}</option>
+            <option value="land_owner">{t(PARTY_L["land_owner"]!)}</option><option value="flat_seller">{t(PARTY_L["flat_seller"]!)}</option>
           </select>
           <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="মালিকের সঙ্গে আলোচনা…" maxLength={1000} />
           <Button type="submit" size="sm" disabled={m.isPending}>{t(L.save)}</Button>
@@ -248,13 +248,13 @@ export function LeadProjectSales({ leadId }: { leadId: string }) {
           <ul className="max-h-56 space-y-1 overflow-y-auto text-xs">
             {updates.map((u) => (
               <li key={u.id} className="rounded-md bg-muted/50 px-2 py-1">
-                <span className="font-semibold">{name.get(u.project_id) ?? "—"}</span> · {t(INTEREST_L[u.interest] ?? INTEREST_L.interested!)}
+                <span className="font-semibold">{name.get(u.project_id) ?? "—"}</span> · {t(INTEREST_L[u.interest] ?? INTEREST_L["interested"]!)}
                 {u.offered_price != null ? <> · {money(Number(u.offered_price))}</> : null} · {u.created_by} · <span className="tabular text-muted-foreground">{when(u.created_at)}</span>
               </li>
             ))}
             {notes.map((n) => (
               <li key={n.id} className="rounded-md border border-border px-2 py-1">
-                <span className="font-semibold">{name.get(n.project_id) ?? "—"}</span> · {t(PARTY_L[n.party] ?? PARTY_L.client!)} · <span className="tabular text-muted-foreground">{when(n.created_at)}</span>
+                <span className="font-semibold">{name.get(n.project_id) ?? "—"}</span> · {t(PARTY_L[n.party] ?? PARTY_L["client"]!)} · <span className="tabular text-muted-foreground">{when(n.created_at)}</span>
                 <p className="whitespace-pre-wrap">{n.note}</p>
               </li>
             ))}
