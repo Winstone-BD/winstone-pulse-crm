@@ -92,3 +92,6 @@
 - [ ] Publish
 - [x] Booking admin page: HQ approve/reject before OS (needs hold step before relay)
 - [ ] Deep security scan on live build
+
+- [ ] Run production build + restart test, verify build tool pinned 2.25.2
+- [ ] Google Calendar for agents (waiting on user: which kind)
