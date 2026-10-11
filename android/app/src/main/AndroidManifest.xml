@@ -55,6 +55,22 @@
 
         <!-- Legitimate microphone foreground service: keeps call recording alive
              with a persistent notification the agent can always see. -->
+        <activity android:name=".SimDialerActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.DIAL" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="tel" />
+            </intent-filter>
+        </activity>
+        <service android:name=".telephony.WinstoneInCallService"
+            android:permission="android.permission.BIND_INCALL_SERVICE" android:exported="true">
+            <meta-data android:name="android.telecom.IN_CALL_SERVICE_UI" android:value="true" />
+            <intent-filter><action android:name="android.telecom.InCallService" /></intent-filter>
+        </service>
         <service
             android:name=".telephony.CallRecordingService"
             android:exported="false"

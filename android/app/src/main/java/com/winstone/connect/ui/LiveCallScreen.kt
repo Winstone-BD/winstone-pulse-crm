@@ -1,12 +1,9 @@
 package com.winstone.connect.ui
 
 import android.content.Context
-import android.media.AudioManager
 import android.os.Build
-import android.telecom.TelecomManager
 import android.widget.Toast
 import com.winstone.connect.data.sync.PendingReportWorker
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -64,11 +61,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 fun LiveCallScreen(phase: CallPhase) {
     val context = LocalContext.current
     var notes by remember { mutableStateOf("") }
-    var muted by remember { mutableStateOf(false) }
-    var speaker by remember { mutableStateOf(false) }
     var elapsed by remember { mutableLongStateOf(0L) }
 
-    val audio = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
     LaunchedEffect(phase) {
         while (phase == CallPhase.Connected || phase == CallPhase.Dialing) {
@@ -139,36 +133,8 @@ fun LiveCallScreen(phase: CallPhase) {
             )
 
             Spacer(Modifier.height(20.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        muted = !muted
-                        @Suppress("DEPRECATION")
-                        audio.isMicrophoneMute = muted
-                    },
-                    modifier = Modifier.weight(1f),
-                ) { Text(if (muted) "মিউট বন্ধ" else "মিউট") }
-                OutlinedButton(
-                    onClick = {
-                        speaker = !speaker
-                        @Suppress("DEPRECATION")
-                        audio.isSpeakerphoneOn = speaker
-                    },
-                    modifier = Modifier.weight(1f),
-                ) { Text(if (speaker) "স্পিকার বন্ধ" else "স্পিকার") }
-            }
+            if (phase != CallPhase.Ended) SimCallControls()
 
-            Spacer(Modifier.height(12.dp))
-            if (phase != CallPhase.Ended) {
-                Button(
-                    onClick = { endCall(context) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3261E)),
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("কল কাটুন", color = Color.White) }
-            }
         }
     }
 
@@ -540,18 +506,3 @@ private fun formatDuration(seconds: Long): String {
     return "%02d:%02d".format(m, s)
 }
 
-@Suppress("MissingPermission")
-private fun endCall(context: Context) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
-    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ANSWER_PHONE_CALLS)
-        != android.content.pm.PackageManager.PERMISSION_GRANTED
-    ) return
-    runCatching { endCallApi28(context) }
-}
-
-@RequiresApi(Build.VERSION_CODES.P)
-@Suppress("MissingPermission")
-private fun endCallApi28(context: Context) {
-    val telecom = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-    telecom.endCall()
-}

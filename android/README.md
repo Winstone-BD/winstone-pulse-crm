@@ -18,6 +18,20 @@ mandatory report to the existing CRM endpoints with retry.
 
 ## Companion app boundaries
 
+### SIM call controls
+
+The optional default-phone role binds `WinstoneInCallService` to Android Telecom.
+Mute/speaker state comes from `CallAudioState`; hang-up calls `Call.disconnect()`.
+There is no web JavaScript bridge, external telephony provider, new CRM ingest path,
+or automatic grant of the role. The agent enables it in the device status screen.
+System incoming calls can be answered or rejected before CRM sign-in and during
+maintenance; emergency calls are handled by Android Telecom/preloaded dialer.
+Existing call-log reconciliation and mandatory CRM reports remain unchanged.
+Rebuild/reinstall the APK, grant the default-phone role, and test actual handsets:
+incoming answer/reject, outgoing mute/unmute, earpiece/speaker/Bluetooth, hang-up,
+multiple calls, role revocation, sign-out, maintenance, and emergency dialer handoff.
+No actual call or APK build is implied by source-level regression checks.
+
 - The web CRM is the source of truth. This app never holds its own database, its own login system
   or its own copy of CRM logic.
 - Sign-in uses the existing CRM credentials endpoint and receives a per-device token bound to the

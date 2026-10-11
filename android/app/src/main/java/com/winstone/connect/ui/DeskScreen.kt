@@ -1021,6 +1021,13 @@ private fun StatusCards(state: DeskUiState) {
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         WinCard {
+            Text("ইন-অ্যাপ SIM কল নিয়ন্ত্রণ", fontWeight = FontWeight.Bold)
+            Text("মিউট, স্পিকার ও কল কাটার জন্য ডিফল্ট ফোন অ্যাপের অনুমতি প্রয়োজন। রেকর্ডিং সক্ষমতা আলাদা।", fontSize = 12.sp)
+            OutlinedButton(onClick = { (context as? Activity)?.let { requestSimDialerRole(it) } }) {
+                Text("ফোন অ্যাপের অনুমতি দিন")
+            }
+        }
+        WinCard {
             Text("ডিভাইস", fontWeight = FontWeight.Bold)
             Text("এজেন্ট: ${state.data?.agentName ?: "—"}", fontSize = 13.sp)
             Text("Employee ID: ${state.employeeId ?: "—"}", fontSize = 13.sp, color = WinInkMuted)
