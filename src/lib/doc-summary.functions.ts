@@ -37,7 +37,7 @@ Rules:
 - Never invent numbers, names, or actions that are not in the document.
 - If the document has no agent names, return one agent entry named "নথি" with general highlights.`;
 
-function stripFence(text: string): string {
+export function stripFence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed.startsWith("```")) return trimmed;
   return trimmed
@@ -65,9 +65,11 @@ async function activeAgentNames() {
 export const summarizeDocument = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => DocSummaryInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller, requireDispatch } = await import("@/lib/access.server");
+    const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    requireDispatch(caller);
+    // Any approved staff account (or a PIN session) may summarize an upload;
+    // the call is audited below with the actor's name.
+    if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
 
     const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
     if (bytes.byteLength > MAX_BYTES) {
