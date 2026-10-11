@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AppShell } from "@/components/crm/AppShell";
+import { ProjectCatalogPanel } from "@/components/crm/ProjectCatalog";
 import { Input } from "@/components/ui/input";
 import { useAdminToken } from "@/lib/local-session";
 import { getProjectReport } from "@/lib/project-reports.functions";
@@ -87,6 +88,7 @@ function ProjectsPage() {
           </div>
           <Link to="/inventory" className="text-sm text-primary hover:underline">প্রজেক্ট তালিকা পরিচালনা →</Link>
         </header>
+        <ProjectCatalogPanel />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {kpis.map((k) => (
