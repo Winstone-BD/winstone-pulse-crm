@@ -87,8 +87,8 @@ export const addSalesUpdate = createServerFn({ method: "POST" })
     const { leadForCaller } = await import("@/lib/sales-intel.server");
     const lead = await leadForCaller(db, c, data.leadId);
     if (c.scope === "agent") {
-      const { assertBriefingAcknowledged } = await import("@/lib/agent-briefing.server").catch(() => ({ assertBriefingAcknowledged: null as null | ((id: string) => Promise<void>) }));
-      if (assertBriefingAcknowledged) await assertBriefingAcknowledged(c.agentId!);
+      const { assertAgentBriefing } = await import("@/lib/agent-briefing.server");
+      await assertAgentBriefing(c.agentId!);
     }
     const { data: p } = await db.from("project_catalog").select("id").eq("id", data.projectId).eq("status", "active").maybeSingle();
     if (!p) throw new Error("প্রজেক্ট পাওয়া যায়নি");
