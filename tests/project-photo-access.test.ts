@@ -7,9 +7,11 @@ import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+import { staffAccessToken } from "./fixtures/staff-session";
+
 const url = process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"];
 const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
-const staffToken = process.env["LOVABLE_BROWSER_SUPABASE_ACCESS_TOKEN"];
+const staffToken = staffAccessToken();
 const BUCKET = "project-photos";
 const FILE = "01_-_Winstone_Dream_Park_Winstone_10.jpg";
 
@@ -62,10 +64,40 @@ describe.runIf(url && key)("project photos: signed-out visitor is refused", () =
   });
 });
 
-describe.runIf(url && key && staffToken)("project photos: signed-in CRM staff can read", () => {
-  it("downloads the photo with a staff session", async () => {
-    const { data, error } = await client(staffToken).storage.from(BUCKET).download(FILE);
+function tokenLifetime(signedUrl: string): number {
+  const t = new URL(signedUrl).searchParams.get("token") ?? "";
+  const p = JSON.parse(Buffer.from(t.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+  return p.exp - p.iat;
+}
+
+describe.runIf(url && key && staffToken)("project photos: signed-in CRM staff", () => {
+  const staff = client(staffToken!);
+  it("can download the photo", async () => {
+    const { data, error } = await staff.storage.from(BUCKET).download(FILE);
     expect(error).toBeNull();
     expect(data && data.size).toBeGreaterThan(1000);
+  });
+  it("a one-hour link is signed for exactly 3600 seconds", async () => {
+    const { data, error } = await staff.storage.from(BUCKET).createSignedUrl(FILE, 3600);
+    expect(error).toBeNull();
+    expect(tokenLifetime(data!.signedUrl)).toBe(3600);
+  });
+  it("a link stops working after it expires", async () => {
+    const { data, error } = await staff.storage.from(BUCKET).createSignedUrl(FILE, 2);
+    expect(error).toBeNull();
+    const before = await fetch(data!.signedUrl);
+    expect(before.ok).toBe(true);
+    await new Promise((r) => setTimeout(r, 4000));
+    const after = await fetch(data!.signedUrl);
+    expect(after.ok).toBe(false);
+  }, 15_000);
+});
+
+describe("project photo views are recorded for HQ", () => {
+  const src = readFileSync("src/lib/projects.functions.ts", "utf8");
+  it("listProjects writes a project_photos_viewed audit row with viewer and time", () => {
+    expect(src).toMatch(/logPhotoView\(supabaseAdmin, c,/);
+    expect(src).toMatch(/action: "project_photos_viewed"/);
+    expect(src).toMatch(/actorProfileId: c\.agentId, actorLabel: c\.actor/);
   });
 });
