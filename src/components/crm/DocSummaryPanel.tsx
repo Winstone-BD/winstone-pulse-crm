@@ -14,7 +14,7 @@ const MIME_ACCEPT = ".pdf,.docx,.xlsx,.pptx,.txt,.csv,.json,.png,.jpg,.jpeg,.web
 export function DocSummaryPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
   const summarize = useServerFn(summarizeDocument);
-  const [summary, setSummary] = useState<DocSummary | null>(null);
+  const [summary, setSummary] = useState<(DocSummary & { cachedAt?: string | null }) | null>(null);
 
   const run = useMutation({
     mutationFn: async (file: File) => {
