@@ -680,6 +680,13 @@
       "when": 1791715195709,
       "tag": "0096_project_catalog_image_url",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1791732353448,
+      "tag": "0097_lock_down_project_images_storage",
+      "breakpoints": true
     }
   ]
 }
