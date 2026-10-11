@@ -13,6 +13,7 @@ import { AgentBriefingGate } from "@/components/crm/AgentBriefingGate";
 
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NoticeBoardBell } from "@/components/crm/NoticeBoardBell";
+import { VisitRequestBell } from "@/components/crm/HubAlerts";
 import { InstallAppButton } from "@/components/crm/InstallAppButton";
 import { AgentSelector } from "@/components/crm/AgentSelector";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
@@ -119,6 +120,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             {scope !== "none" && <ReminderBell />}
 
             {scope !== "none" && <NoticeBoardBell />}
+
+            {scope === "agent" && <VisitRequestBell />}
 
             {scope !== "none" && <AnyNumberCallDialog />}
 

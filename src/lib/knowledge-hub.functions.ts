@@ -50,3 +50,12 @@ export const hubDecideVisitRequest = createServerFn({ method: "POST" })
     const { decideVisitRequest } = await import("@/lib/knowledge-hub.server");
     return decideVisitRequest(c, { id: data.id, action: data.action, visitAt: data.visitAt ?? null });
   });
+
+export const hubSyncStatusFn = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
+  .handler(async ({ data }) => {
+    const c = await caller(data.adminToken).catch(() => null);
+    if (!c || c.scope !== "authority") throw new Error("শুধু HQ/IT দেখতে পারে");
+    const { hubSyncStatus } = await import("@/lib/knowledge-hub.server");
+    return hubSyncStatus();
+  });
