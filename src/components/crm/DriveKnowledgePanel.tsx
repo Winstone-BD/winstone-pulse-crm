@@ -1,10 +1,15 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { FolderOpen, Loader2, RefreshCw } from "lucide-react";
+import { FolderOpen, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { driveKnowledge, refreshDriveKnowledge } from "@/lib/drive-knowledge.functions";
+import {
+  driveKnowledge,
+  refreshDriveKnowledge,
+  summarizeDriveDoc,
+} from "@/lib/drive-knowledge.functions";
 import { useAdminToken } from "@/lib/local-session";
 
 /**
@@ -16,6 +21,21 @@ export function DriveKnowledgePanel() {
   const adminToken = useAdminToken();
   const fetchStatus = useServerFn(driveKnowledge);
   const refresh = useServerFn(refreshDriveKnowledge);
+  const summarize = useServerFn(summarizeDriveDoc);
+  const [summaries, setSummaries] = useState<Record<string, string>>({});
+  const [summaryBusy, setSummaryBusy] = useState<string | null>(null);
+
+  async function loadSummary(fileId: string) {
+    setSummaryBusy(fileId);
+    try {
+      const result = await summarize({ data: { adminToken, fileId } });
+      setSummaries((prev) => ({ ...prev, [fileId]: result.summary }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "সামারি তৈরি করা গেল না");
+    } finally {
+      setSummaryBusy(null);
+    }
+  }
 
   const status = useQuery({
     queryKey: ["drive-knowledge", adminToken ? "pin" : "session"],
@@ -77,23 +97,48 @@ export function DriveKnowledgePanel() {
               </li>
             ))}
           </ul>
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {status.data.recent.map((doc) => (
-              <li key={doc.fileId} className="truncate text-xs">
-                {doc.webViewLink ? (
-                  <a
-                    href={doc.webViewLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline underline-offset-2"
-                  >
-                    {doc.name}
-                  </a>
-                ) : (
-                  doc.name
-                )}
-                {doc.folderName ? (
-                  <span className="text-muted-foreground"> · {doc.folderName}</span>
+              <li key={doc.fileId} className="text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate">
+                    {doc.webViewLink ? (
+                      <a
+                        href={doc.webViewLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2"
+                      >
+                        {doc.name}
+                      </a>
+                    ) : (
+                      doc.name
+                    )}
+                    {doc.folderName ? (
+                      <span className="text-muted-foreground"> · {doc.folderName}</span>
+                    ) : null}
+                  </span>
+                  {!summaries[doc.fileId] && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 shrink-0 gap-1 text-[11px]"
+                      disabled={summaryBusy === doc.fileId}
+                      onClick={() => loadSummary(doc.fileId)}
+                    >
+                      {summaryBusy === doc.fileId ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="size-3" />
+                      )}
+                      সামারি
+                    </Button>
+                  )}
+                </div>
+                {summaries[doc.fileId] ? (
+                  <p className="mt-1 rounded-md border border-primary/30 bg-primary/5 p-2 text-xs">
+                    {summaries[doc.fileId]}
+                  </p>
                 ) : null}
               </li>
             ))}

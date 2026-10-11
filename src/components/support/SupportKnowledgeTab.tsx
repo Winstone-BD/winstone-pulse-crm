@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { kbArticleSummary } from "@/lib/kb-summary.functions";
 import { useAdminToken } from "@/lib/local-session";
 import {
   deleteKbArticle,
@@ -34,6 +36,17 @@ export function SupportKnowledgeTab() {
   };
   const [form, setForm] = useState(empty);
   const [categoryName, setCategoryName] = useState("");
+  const fetchSummary = useServerFn(kbArticleSummary);
+
+  const aiSummary = useMutation({
+    mutationFn: (articleId: string) =>
+      fetchSummary({ data: { adminToken, articleId } }),
+    onSuccess: (result) => {
+      setForm((prev) => ({ ...prev, summary: result.summary }));
+      toast.success("AI সামারি ড্রাফট হয়েছে — দেখে Save করুন");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["support", "kb"] });
@@ -113,6 +126,11 @@ export function SupportKnowledgeTab() {
                   <p className="text-[11px] text-muted-foreground">
                     {article.status} · {article.view_count} views
                   </p>
+                  {article.summary ? (
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                      {article.summary}
+                    </p>
+                  ) : null}
                 </div>
                 {data.canEdit && (
                   <>
@@ -195,9 +213,27 @@ export function SupportKnowledgeTab() {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="kb-summary" className="text-xs">
-              Summary
-            </Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="kb-summary" className="text-xs">
+                Summary
+              </Label>
+              {form.id && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 gap-1 text-[11px]"
+                  disabled={aiSummary.isPending}
+                  onClick={() => aiSummary.mutate(form.id!)}
+                >
+                  {aiSummary.isPending ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-3" />
+                  )}
+                  AI সামারি
+                </Button>
+              )}
+            </div>
             <Input
               id="kb-summary"
               value={form.summary}
