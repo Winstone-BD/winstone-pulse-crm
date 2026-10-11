@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getPreCallBrief } from "@/lib/precall.functions";
 import { getAdminToken } from "@/lib/local-session";
 import { clockTime } from "@/lib/crm-format";
+import { LeadProjectFacts } from "@/components/crm/KnowledgeHubCards";
 
 /** AI pre-call briefing: what to say on this lead's next call. */
 export function PreCallBriefCard({ leadId }: { leadId: string }) {
@@ -19,6 +20,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
   const data = brief.data;
 
   return (
+    <>
     <section className="rounded-xl border border-primary/25 bg-primary/5 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-primary">
@@ -84,5 +86,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
         </div>
       )}
     </section>
+    <LeadProjectFacts leadId={leadId} />
+    </>
   );
 }

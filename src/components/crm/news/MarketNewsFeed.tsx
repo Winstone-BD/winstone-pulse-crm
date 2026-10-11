@@ -1,3 +1,4 @@
+import { pinOfficialFirst } from "@/lib/knowledge-hub-rules";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ExternalLink, EyeOff, Eye, Lightbulb, Pencil, RefreshCw, Sparkles, Megaphone } from "lucide-react";
@@ -29,8 +30,7 @@ export function MarketNewsFeed({ compact = false, manage = false }: { compact?: 
   const items = q.data?.pages.flatMap((p) => p.items) ?? [];
   const isHq = q.data?.pages[0]?.scope === "authority";
   // Official Winstone news (Knowledge Hub) from the last 14 days is pinned first.
-  const fresh = (n: Item) => n.origin === "official" && Date.now() - Date.parse(n.created_at) < 14 * 86_400_000;
-  const ordered = [...items.filter(fresh), ...items.filter((n) => !fresh(n))];
+  const ordered = pinOfficialFirst(items);
   const shown = compact ? ordered.slice(0, 3) : ordered;
 
   return (
