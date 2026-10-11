@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageSquareText } from "lucide-react";
@@ -48,6 +49,7 @@ export function SocialHqPanel() {
 
     <SocialLogPanel />
     <details className="rounded-lg border border-border p-3"><summary className="cursor-pointer text-sm font-semibold">{t({ bn: "পেজ ও গ্রুপ", en: "Pages & groups" })} ({setup.data?.pages.length ?? 0})</summary>
+      <p className="mt-2"><Link to="/social-pages" className="text-sm text-primary underline-offset-2 hover:underline">{t({ bn: "পূর্ণ পরিচালনা পৃষ্ঠা খুলুন →", en: "Open the full management page →" })}</Link></p>
       <ul className="mt-2 space-y-1 text-sm">{setup.data?.pages.map((p) => <li key={p.id} className="flex items-center justify-between gap-2"><span>{p.name} <span className="text-xs text-muted-foreground">· {p.kind === "group" ? t({ bn: "গ্রুপ", en: "Group" }) : t({ bn: "পেজ", en: "Page" })}{p.active ? "" : ` · ${t({ bn: "বন্ধ", en: "Off" })}`}</span></span>
         <Button size="sm" variant="ghost" onClick={() => page.mutate({ adminToken, id: p.id, name: p.name, kind: p.kind as "page" | "group", url: p.url, active: !p.active })}>{p.active ? t({ bn: "বন্ধ করুন", en: "Disable" }) : t({ bn: "চালু করুন", en: "Enable" })}</Button></li>)}</ul>
       <form className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_1fr_auto]" onSubmit={(e) => { e.preventDefault(); page.mutate({ adminToken, name: pName, kind: pKind, url: pUrl || null, active: true }, { onSuccess: () => { setPName(""); setPUrl(""); } }); }}>
