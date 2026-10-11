@@ -109,7 +109,9 @@
 - [x] Build-tool guard: block preview start if not 2.25.2
 - [x] Status report: preview crash, build-tool root cause, recovery steps
 - [x] Verify new leads appear in list promptly after refresh throttle
-- [ ] Compare one day's lead list vs call list before/after; report DB load drop
+- [x] Compare one day's lead list vs call list before/after; report DB load drop
 - [x] Per-call lead report auto-update alongside board
-- [ ] AI summaries: cache server-side, charge only first generation
+- [x] AI summaries: cache server-side, charge only first generation
 - [x] Review reference images/video; assess modern dashboard redesign
+- [ ] Measure DB lead-list load drop after publish (counters unchanged in preview)
+- [ ] Per-agent Google Calendar connection approval
