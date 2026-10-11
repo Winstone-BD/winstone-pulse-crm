@@ -716,7 +716,7 @@ export function DeskCommandCenter({
                       >
                         <div className="relative min-w-0 pb-2">
                           <span aria-hidden="true" className="mx-auto mb-3 grid size-14 place-items-center rounded-full bg-primary/10 text-xl font-semibold text-primary">
-                            {Array.from(lead.name.trim())[0] ?? "—"}
+                             {String(lead.name).trim().slice(0, 1) || "—"}
                           </span>
                           <div className="min-w-0">
                             <p className="break-words text-base font-semibold">{lead.name}</p>
