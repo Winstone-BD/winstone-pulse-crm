@@ -14,8 +14,27 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 const serverEnv = loadEnv(process.env["NODE_ENV"] || "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
+const BROWSER_ASYNC_HOOKS = path.resolve(
+  import.meta.dirname,
+  "src/lib/browser-async-hooks-stub.js",
+);
+
+// Replace node:async_hooks with a no-op store, but only for browser code. The
+// server must keep the real implementation — TanStack Start stores the request
+// context in it, so aliasing it there would break every server function.
+function browserAsyncHooksStub() {
+  return {
+    name: "browser-async-hooks-stub",
+    enforce: "pre",
+    resolveId(id, _importer, options) {
+      if (id === "node:async_hooks" && !options?.ssr) return BROWSER_ASYNC_HOOKS;
+      return null;
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [mcpPlugin()],
+  plugins: [mcpPlugin(), browserAsyncHooksStub()],
   vite: {
     // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
     // function ID" after a restart: Vite discovered these deps late on every cold
@@ -31,14 +50,19 @@ export default defineConfig({
         "h3-v2",
         "seroval",
         // The HTML shell hydrates through react-start's default-entry client.tsx,
-        // which imports these three directly. If any is discovered late, its
-        // pre-bundle hash (?v=) changes mid-session and the open tab's entry
-        // import fails -> blank screen. Pre-bundle them on the very first crawl.
-        "@tanstack/react-start",
+        // which imports these directly. If any is discovered late, its pre-bundle
+        // hash (?v=) changes mid-session and the open tab's entry import fails ->
+        // blank screen. Only the /client subpath is browser code: the package root
+        // also exports server utilities that must not enter the browser bundle.
         "@tanstack/react-start/client",
         "react",
         "react-dom/client",
       ],
+      esbuildOptions: {
+        // The dep pre-bundle runs through esbuild, not Vite's plugin container, so
+        // the alias above has to be repeated here for it to take effect in dev.
+        alias: { "node:async_hooks": BROWSER_ASYNC_HOOKS },
+      },
     },
     resolve: {
       alias: {
