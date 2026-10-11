@@ -610,7 +610,7 @@ export function DeskCommandCenter({
 
             <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_190px]">
               <div
-                className="flex min-w-0 gap-1.5 overflow-x-auto pb-1"
+                className="grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-3"
                 role="group"
                 aria-label="লিড কিউ ফিল্টার"
               >
@@ -621,7 +621,7 @@ export function DeskCommandCenter({
                     size="sm"
                     variant={filter === key ? "default" : "outline"}
                     onClick={() => setFilter(key)}
-                    className="h-9 shrink-0 rounded-full px-3 text-[11px]"
+                    className={cn("h-auto min-h-11 min-w-0 whitespace-normal rounded-lg px-2 text-[11px]", key === "pending" || key === "hot" ? "border-destructive/30" : key === "done" ? "border-success/30" : key === "follow_up" ? "border-chart-4/30" : "border-chart-2/30")}
                     aria-pressed={filter === key}
                     aria-controls="agent-lead-queue-results"
                   >
@@ -649,7 +649,7 @@ export function DeskCommandCenter({
               className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border/70 bg-surface-2/60 p-2 text-[11px]"
               aria-live="polite"
             >
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-0.5 pb-0.5">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 px-0.5 pb-0.5">
                 <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
                 <span className="shrink-0 text-muted-foreground">সক্রিয় / Active:</span>
                 <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
@@ -795,7 +795,7 @@ export function DeskCommandCenter({
 
           {/* Priority + performance */}
           <div className="grid gap-3 lg:grid-cols-2">
-            <div className="card-elevated p-4">
+            <div className="card-elevated border-t-2 border-t-destructive bg-destructive/5 p-4">
               <DualHeading
                 icon={<Flame className="size-4 text-destructive" />}
                 bnText="অগ্রাধিকার কেন্দ্র"
@@ -839,7 +839,7 @@ export function DeskCommandCenter({
               </ul>
             </div>
 
-            <div className="card-elevated p-4">
+            <div className="card-elevated border-t-2 border-t-success bg-success/5 p-4">
               <DualHeading
                 icon={<TrendingUp className="size-4 text-primary" />}
                 bnText="আমার পারফরম্যান্স (আজ)"

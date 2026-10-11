@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, PhoneOutgoing, Sparkles, Square } from "lucide-react";
+import { Loader2, PhoneOutgoing, Sparkles, Square, NotebookPen, MicOff, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +11,8 @@ import { getQuickBrief } from "@/lib/precall.functions";
 import { logAnyNumberCall, openMyReport, startMyCall } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { cn } from "@/lib/utils";
+import { CallLeadContext } from "@/components/crm/CallLeadContext";
+import { useT } from "@/lib/i18n";
 
 /**
  * Calling straight from the web CRM, with the same mandatory post-call report as
@@ -58,6 +60,8 @@ export function WebCallButton({
   name?: string | null;
   ariaLabel?: string;
 }) {
+  const t = useT();
+  const [contextOpen, setContextOpen] = useState(false);
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
   const begin = useServerFn(startMyCall);
@@ -70,14 +74,14 @@ export function WebCallButton({
   // Rules brief first (instant, no AI), AI line replaces it when ready.
   const rulesBrief = useQuery({
     queryKey: ["quick-brief", leadId, "rules"],
-    queryFn: () => quick({ data: { leadId: leadId!, token: adminToken, ai: false } }),
+    queryFn: () => { if (!leadId) throw new Error("Lead required"); return quick({ data: { leadId, token: adminToken, ai: false } }); },
     enabled: briefOpen && Boolean(leadId),
     staleTime: 60_000,
     retry: false,
   });
   const aiBrief = useQuery({
     queryKey: ["quick-brief", leadId, "ai"],
-    queryFn: () => quick({ data: { leadId: leadId!, token: adminToken, ai: true } }),
+    queryFn: () => { if (!leadId) throw new Error("Lead required"); return quick({ data: { leadId, token: adminToken, ai: true } }); },
     enabled: briefOpen && Boolean(leadId),
     staleTime: 5 * 60_000,
     retry: false,
@@ -156,6 +160,15 @@ export function WebCallButton({
     const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
     const ss = String(elapsed % 60).padStart(2, "0");
     return (
+      <div className="min-w-0 space-y-2">
+      <p role="status" className="text-xs text-muted-foreground">{t({ bn: "ডায়াল শুরু থেকে সময়", en: "Time since dial started" })} · {mm}:{ss}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" disabled><MicOff />{t({ bn: "মিউট · ফোনে", en: "Mute · on phone" })}</Button>
+        <Button variant="outline" disabled><Volume2 />{t({ bn: "স্পিকার · ফোনে", en: "Speaker · on phone" })}</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">{t({ bn: "SIM কলের মিউট, স্পিকার ও কল কাটা ফোনের কল-পর্দা থেকে করুন।", en: "Mute, speaker and hang-up for SIM calls are controlled on your phone call screen." })}</p>
+      {leadId && <Button variant="secondary" className="min-h-11 w-full" onClick={() => setContextOpen(true)}><NotebookPen />{t({ bn: "লিড · আগের নোট · ইতিহাস", en: "Lead · saved notes · history" })}</Button>}
+      <Dialog open={contextOpen} onOpenChange={setContextOpen}><DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{t({ bn: "কলের নোট ও ইতিহাস", en: "Call notes & history" })}</DialogTitle><DialogDescription>{t({ bn: "ব্যক্তিগত নোট", en: "Personal notes" })}</DialogDescription></DialogHeader>{leadId && <CallLeadContext leadId={leadId} />}</DialogContent></Dialog>
       <Button
         type="button"
         size="lg"
@@ -167,16 +180,17 @@ export function WebCallButton({
       >
         {end.isPending ? <Loader2 className="size-5 animate-spin" /> : <Square className="size-5" />}
         <span className="tabular">
-          কল শেষ · {mm}:{ss}
+          {t({ bn: "কল শেষ হয়েছে · রিপোর্ট খুলুন", en: "Call has ended · open report" })}
         </span>
       </Button>
+      </div>
     );
   }
 
   return (
     <>
     <Dialog open={briefOpen} onOpenChange={setBriefOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Sparkles className="size-4 text-primary" /> কলের আগে এক নজরে
@@ -184,6 +198,7 @@ export function WebCallButton({
           <DialogDescription className="sr-only">Pre-call brief</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 text-sm">
+          {leadId && <CallLeadContext leadId={leadId} />}
           {brief ? (
             <>
               <p className="font-medium text-foreground">{brief.line}</p>

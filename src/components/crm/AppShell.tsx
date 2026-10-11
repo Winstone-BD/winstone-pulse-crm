@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="hq-luxe min-h-screen">
       <header className="glass sticky top-0 z-40 border-b border-border">
-        <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-6">
+        <div className="mx-auto grid w-full max-w-[1600px] grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 sm:flex sm:min-h-14 sm:gap-4 sm:px-6">
           <div className="lg:hidden">
             <MobileNavDrawer items={nav} />
           </div>
@@ -100,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
 
-          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 overflow-x-auto [scrollbar-width:none] sm:gap-2 [&>*]:shrink-0">
+          <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-start gap-2 border-t border-border pt-2 sm:ml-auto sm:justify-end sm:border-0 sm:pt-0 [&>*]:shrink-0">
             <div role="group" aria-label="Language" className="inline-flex h-8 items-center rounded-full border border-border bg-card p-0.5 text-[11px] font-semibold">
               {(["bn", "en"] as const).map((l) => (
                 <button
