@@ -180,6 +180,7 @@ export function ProjectCatalogPanel() {
             </dl>
             <Button size="sm" variant="link" className="px-0" onClick={() => setOpen(open === p.id ? null : p.id)}>{t(L.notes)}</Button>
             {open === p.id ? <NotesBlock project={p} canEdit={canEdit} /> : null}
+            </div>
           </article>
         ))}
       </div>
@@ -227,6 +228,7 @@ export function LeadProjectSales({ leadId }: { leadId: string }) {
             <option value="">{t(L.pick)}</option>
             {active.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {chosen?.image_url ? <img src={chosen.image_url} alt={chosen.name} loading="lazy" className="aspect-[16/9] w-full rounded-md object-cover" /> : null}
           {chosen ? (
             <dl className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-md bg-muted/50 p-2 text-xs">
               {FIELDS.filter(([k]) => chosen[k] != null && chosen[k] !== "").map(([k, lbl]) => (
