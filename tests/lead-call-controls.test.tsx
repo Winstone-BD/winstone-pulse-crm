@@ -4,18 +4,18 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/crm/WebCallButton", () => ({
   WebCallButton: (props: { leadId: string; phone: string; label: string; className: string; ariaLabel: string }) =>
-    <button data-action="existing-call" data-lead={props.leadId} data-phone={props.phone} className={props.className} aria-label={props.ariaLabel}>{props.label}</button>,
+    React.createElement("button", { "data-action": "existing-call", "data-lead": props.leadId, "data-phone": props.phone, className: props.className, "aria-label": props.ariaLabel }, props.label),
 }));
 vi.mock("@/components/crm/CallbackLogButton", () => ({
-  CallbackLogButton: (props: { leadId: string; ariaLabel: string }) => <button data-action="existing-callback" data-lead={props.leadId} aria-label={props.ariaLabel} />,
+  CallbackLogButton: (props: { leadId: string; ariaLabel: string }) => React.createElement("button", { "data-action": "existing-callback", "data-lead": props.leadId, "aria-label": props.ariaLabel }),
 }));
 vi.mock("@/components/crm/WhatsAppAction", () => ({
-  WhatsAppAction: (props: { leadId: string; phone: string; ariaLabel: string }) => <button data-action="existing-whatsapp" data-lead={props.leadId} data-phone={props.phone} aria-label={props.ariaLabel} />,
+  WhatsAppAction: (props: { leadId: string; phone: string; ariaLabel: string }) => React.createElement("button", { "data-action": "existing-whatsapp", "data-lead": props.leadId, "data-phone": props.phone, "aria-label": props.ariaLabel }),
 }));
 import { LeadCallControls } from "@/components/crm/desk/LeadCallControls";
 
 describe("phone-style lead controls", () => {
-  const html = () => renderToStaticMarkup(<LeadCallControls leadId="unit-only" name="Test customer" phone="unit-phone" onDetails={() => {}} />);
+  const html = () => renderToStaticMarkup(React.createElement(LeadCallControls, { leadId: "unit-only", name: "Test customer", phone: "unit-phone", onDetails: () => {} }));
   it("delegates to the existing call, WhatsApp and callback paths", () => {
     const output = html();
     for (const action of ["existing-call", "existing-whatsapp", "existing-callback"]) {
