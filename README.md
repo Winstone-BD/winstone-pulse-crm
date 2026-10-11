@@ -1,4 +1,4 @@
-# Winstone CRM (WEB CRM WINSTONE)
+# Winstone Pulse (WEB CRM WINSTONE)
 
 বাংলা UI-র সেলস CRM — এজেন্টের নিজের সিমে কল, রেকর্ডিং সিঙ্ক, দৈনিক লিড বিতরণ, শিফট সারসংক্ষেপ, Executive HQ ও আইটি কনসোল।
 

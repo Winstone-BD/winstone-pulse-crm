@@ -14,14 +14,14 @@ export const Route = createFileRoute("/api/public/download/apk")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin.storage
           .from("app-downloads")
-          .download("winstone-crm.apk");
+          .download("winstone-pulse.apk");
         if (error || !data) {
           return new Response("App file is not available right now", { status: 404 });
         }
         return new Response(data, {
           headers: {
             "Content-Type": "application/vnd.android.package-archive",
-            "Content-Disposition": 'attachment; filename="winstone-crm.apk"',
+            "Content-Disposition": 'attachment; filename="winstone-pulse.apk"',
             "Cache-Control": "public, max-age=300",
           },
         });

@@ -1,4 +1,4 @@
-# Winstone Connect — Android Studio এ খুলে নিজের কী দিয়ে সাইন করা
+# Winstone Pulse Android app — Android Studio এ খুলে নিজের কী দিয়ে সাইন করা
 
 এই ফোল্ডারটি একটি সম্পূর্ণ Android Studio প্রজেক্ট। ভেতরে কোনো গোপন কী নেই — আপনি নিজের keystore দিয়ে সাইন করবেন।
 

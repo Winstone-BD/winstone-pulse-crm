@@ -80,7 +80,7 @@ export function InstallAppButton() {
           <>
             <a
               href={APK_URL}
-              download="winstone-connect.apk"
+              download="winstone-pulse.apk"
               className="flex items-center gap-2 rounded-md border p-3 hover:bg-muted"
             >
               <Smartphone className="size-4 shrink-0 text-primary" />

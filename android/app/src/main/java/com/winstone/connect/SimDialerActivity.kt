@@ -25,7 +25,7 @@ class SimDialerActivity : ComponentActivity() {
             var error by remember { mutableStateOf<String?>(null) }
             Surface(Modifier.fillMaxSize()) {
                 Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Winstone CRM · SIM", style = MaterialTheme.typography.headlineSmall)
+                    Text("Winstone Pulse · SIM", style = MaterialTheme.typography.headlineSmall)
                     OutlinedTextField(value = number, onValueChange = { number = it }, label = { Text("ফোন নম্বর") }, modifier = Modifier.fillMaxWidth())
                     Button(enabled = number.isNotBlank(), onClick = {
                         val telecom = getSystemService(TelecomManager::class.java)

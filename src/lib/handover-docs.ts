@@ -47,7 +47,7 @@ export const AUDIT_SECTIONS: DocSection[] = [
 ];
 
 export const HANDOVER_SECTIONS: DocSection[] = [
-  { id: "intro", title: "1. What WINSTONE CRM is", body: ["A Bengali-first tele-sales CRM for Winstone Properties. Agents call customers from their own phone SIM using the Winstone Connect Android app; every call, report and follow-up is saved centrally so HQ sees the real picture."] },
+  { id: "intro", title: "1. What WINSTONE PULSE is", body: ["A Bengali-first tele-sales CRM for Winstone Properties. Agents call customers from their own phone SIM using the Winstone Pulse Android app; every call, report and follow-up is saved centrally so HQ sees the real picture."] },
   { id: "roles", title: "2. Who uses it", body: [], table: [["User", "What they can do"], ["Agent", "Call own assigned leads, submit post-call reports, manage own follow-ups, see own performance"], ["Executive HQ", "See every lead, agent and call; Lead 360; exports; approve daily accountability"], ["IT Console", "Accounts, approvals, system health, app releases, notices, audit"], ["LeadHub Nexus", "Import leads and assign quantities to agents"]] },
   { id: "features", title: "3. Features and how to use them", body: [
     "Home — daily Top 3 performers after 5:30 PM with score breakdown; countdown before that.",

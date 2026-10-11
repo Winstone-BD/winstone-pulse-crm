@@ -170,7 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => {
                 const a = document.createElement("a");
                 a.href = APK_URL;
-                a.download = "winstone-connect.apk";
+                a.download = "winstone-pulse.apk";
                 document.body.appendChild(a);
                 a.click();
                 a.remove();

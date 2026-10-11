@@ -153,7 +153,7 @@ export async function buildRecordingDocLines(dateKey: string) {
 
 function docText(dateKey: string, lines: RecordingDocLine[]) {
   const head = [
-    `Winstone CRM · রেকর্ডিং তালিকা · ${dateKey}`,
+    `Winstone Pulse · রেকর্ডিং তালিকা · ${dateKey}`,
     `মোট কল: ${lines.length} · রেকর্ডিং জমা: ${lines.filter((l) => l.audioUrl).length}`,
     `তৈরি: ${new Date(Date.now() + DHAKA_OFFSET_MS).toISOString().slice(0, 19).replace("T", " ")} (ঢাকা)`,
     "",
