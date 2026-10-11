@@ -9,9 +9,9 @@ import { useSnapshot } from "@/lib/crm-data";
 export const Route = createFileRoute("/site-visits")({
   head: () => ({
     meta: [
-      { title: "Site Visits — Winstone CRM" },
+      { title: "Site Visits — Winstone Pulse" },
       { name: "description", content: "Schedule site visits on your own leads, get reminders and update each visit's status." },
-      { property: "og:title", content: "Site Visits — Winstone CRM" },
+      { property: "og:title", content: "Site Visits — Winstone Pulse" },
       { property: "og:description", content: "Agent site visit scheduling, reminders and status updates." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

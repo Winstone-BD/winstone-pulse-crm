@@ -25,9 +25,9 @@ export const Route = createFileRoute("/service-bill-unlock")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Secure Service Bill Review — Winstone CRM" },
+      { title: "Secure Service Bill Review — Winstone Pulse" },
       { name: "description", content: "Restricted human review of the Winstone IT service bill." },
-      { property: "og:title", content: "Secure Service Bill Review — Winstone CRM" },
+      { property: "og:title", content: "Secure Service Bill Review — Winstone Pulse" },
       {
         property: "og:description",
         content: "Authorized review-only access; no payment execution.",

@@ -59,13 +59,13 @@ export const Route = createFileRoute("/desk")({
   validateSearch: sectionSearch,
   head: () => ({
     meta: [
-      { title: "আমার ডেস্ক — Winstone CRM" },
+      { title: "আমার ডেস্ক — Winstone Pulse" },
       {
         name: "description",
         content:
           "নিজের লিড তালিকা, কল রেকর্ড, হোয়াটসঅ্যাপ ইনবক্স আর নতুন লিড জমা দেওয়ার জায়গা — সব এক ডেস্কে।",
       },
-      { property: "og:title", content: "আমার ডেস্ক — Winstone CRM" },
+      { property: "og:title", content: "আমার ডেস্ক — Winstone Pulse" },
       {
         property: "og:description",
         content: "এক চাপে কল, হোয়াটসঅ্যাপ কথা আর নিজের লিড — Winstone CRM এজেন্ট ডেস্ক।",

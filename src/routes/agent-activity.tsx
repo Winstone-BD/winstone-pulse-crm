@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/agent-activity")({
   head: () => ({
     meta: [
-      { title: "Agent activity — Winstone CRM" },
+      { title: "Agent activity — Winstone Pulse" },
       { name: "description", content: "Staff-only view of agent last login, pending backlog and Android sign-in." },
-      { property: "og:title", content: "Agent activity — Winstone CRM" },
+      { property: "og:title", content: "Agent activity — Winstone Pulse" },
       { property: "og:description", content: "Last login, backlog and Android status for each agent." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

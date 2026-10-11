@@ -17,8 +17,8 @@ export const Route = createFileRoute("/docs_/$slug")({
   },
   head: ({ params, loaderData }) => {
     const title = loaderData?.title
-      ? `${loaderData.title} — Winstone CRM ডকুমেন্টেশন`
-      : "নির্দেশিকা — Winstone CRM ডকুমেন্টেশন";
+      ? `${loaderData.title} — Winstone Pulse ডকুমেন্টেশন`
+      : "নির্দেশিকা — Winstone Pulse ডকুমেন্টেশন";
     const description =
       loaderData?.summary ||
       (loaderData?.title

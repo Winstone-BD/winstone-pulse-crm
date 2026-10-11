@@ -15,9 +15,9 @@ import { listBookingReviews, reviewBooking } from "@/lib/bookings.functions";
 export const Route = createFileRoute("/booking-review")({
   head: () => ({
     meta: [
-      { title: "Booking Review — Winstone CRM" },
+      { title: "Booking Review — Winstone Pulse" },
       { name: "description", content: "HQ reviews agent booking requests and approves or rejects them before they reach Winstone OS." },
-      { property: "og:title", content: "Booking Review — Winstone CRM" },
+      { property: "og:title", content: "Booking Review — Winstone Pulse" },
       { property: "og:description", content: "Approve or reject booking requests before they are sent to Winstone OS." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

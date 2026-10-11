@@ -14,9 +14,9 @@ import { staffPortal, type Overview } from "@/lib/staff-portal.functions";
 export const Route = createFileRoute("/staff-portal")({
   head: () => ({
     meta: [
-      { title: "HQ Staff Portal — Winstone CRM" },
+      { title: "HQ Staff Portal — Winstone Pulse" },
       { name: "description", content: "HQ-only read-only view of each agent's reports, score and assigned leads." },
-      { property: "og:title", content: "HQ Staff Portal — Winstone CRM" },
+      { property: "og:title", content: "HQ Staff Portal — Winstone Pulse" },
       { property: "og:description", content: "See any agent's reports, performance and leads without the Agent Desk." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -18,13 +18,13 @@ import { getAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/import")({
   head: () => ({
     meta: [
-      { title: "লিড ইমপোর্ট — Winstone CRM" },
+      { title: "লিড ইমপোর্ট — Winstone Pulse" },
       {
         name: "description",
         content:
           "CSV ফাইল থেকে লিড ইমপোর্ট করুন: আপলোড করুন, প্রিভিউ দেখে ঠিক করুন, তারপর এজেন্টদের মধ্যে ভাগ করে দিন।",
       },
-      { property: "og:title", content: "লিড ইমপোর্ট — Winstone CRM" },
+      { property: "og:title", content: "লিড ইমপোর্ট — Winstone Pulse" },
       {
         property: "og:description",
         content: "CSV আপলোড, প্রিভিউ ও ডেমো ফাইল দিয়ে লিড ইমপোর্ট যাচাই করুন।",

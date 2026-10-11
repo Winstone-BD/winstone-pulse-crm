@@ -14,9 +14,9 @@ import { useAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/inventory")({
   head: () => ({
     meta: [
-      { title: "ইনভেন্টরি — Winstone CRM" },
+      { title: "ইনভেন্টরি — Winstone Pulse" },
       { name: "description", content: "পোস্ট-কল রিপোর্টের Requirement তালিকা পরিচালনা করুন।" },
-      { property: "og:title", content: "ইনভেন্টরি — Winstone CRM" },
+      { property: "og:title", content: "ইনভেন্টরি — Winstone Pulse" },
       { property: "og:description", content: "পোস্ট-কল রিপোর্টের Requirement তালিকা।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

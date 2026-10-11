@@ -6,9 +6,9 @@ export const Route = createFileRoute("/voice-transcription")({
   component: VoiceTranscriptionPage,
   head: () => ({
     meta: [
-      { title: "Voice Transcription — Winstone CRM" },
+      { title: "Voice Transcription — Winstone Pulse" },
       { name: "description", content: "Record Bengali speech and get instant transcription" },
-      { property: "og:title", content: "Voice Transcription — Winstone CRM" },
+      { property: "og:title", content: "Voice Transcription — Winstone Pulse" },
       {
         property: "og:description",
         content: "Record Bengali speech and get instant transcription",

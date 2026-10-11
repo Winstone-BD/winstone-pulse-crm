@@ -73,7 +73,7 @@ export const listMySocial = createServerFn({ method: "POST" })
 
 const Activity = Base.extend({
   kind: z.enum(SOCIAL_KINDS),
-  pageId: z.string().uuid().nullable().optional(),
+  pageId: z.string({ required_error: "পেজ বা গ্রুপ বেছে নিন" }).uuid("পেজ বা গ্রুপ বেছে নিন"),
   link: Link.nullable().optional().or(z.literal("").transform(() => null)),
   note: z.string().trim().max(1000).nullable().optional(),
   replyCount: z.number().int().min(1).max(500).default(1),
@@ -83,6 +83,7 @@ export const logSocialActivity = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Activity.parse(i))
   .handler(async ({ data }) => {
     const { db, agentId } = await agentCtx(data.adminToken);
+    await requireActivePage(db, data.pageId);
     const { data: row, error } = await db.from("social_activity_logs").insert({
       agent_id: agentId, kind: data.kind, page_id: data.pageId ?? null, link: data.link ?? null,
       note: data.note || null, reply_count: data.replyCount,
@@ -104,6 +105,14 @@ export const voidSocialActivity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Every social entry must name a real, active HQ page/group so lead sources are never blank. */
+// deno-lint-ignore no-explicit-any
+async function requireActivePage(db: any, pageId: string): Promise<string> {
+  const { data } = await db.from("social_pages").select("name, active").eq("id", pageId).maybeSingle();
+  if (!data || !data.active) throw new Error("পেজ বা গ্রুপ বেছে নিন");
+  return data.name as string;
+}
+
 export const SOCIAL_LEAD_SOURCE: Record<SocialKind, string> = {
   inbox: "facebook_inbox", page_comment: "facebook_comment", group: "facebook_group",
 };
@@ -115,11 +124,12 @@ export const convertSocialToLead = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { db, agentId, caller } = await agentCtx(data.adminToken);
+    const pageName = await requireActivePage(db, data.pageId);
     const { intakeLead } = await import("@/lib/lead-intake.server");
     const r = await intakeLead({
       name: data.name, phoneNumber: data.phone, ownerId: null, source: SOCIAL_LEAD_SOURCE[data.kind],
       actorProfileId: agentId, actorLabel: caller.profile?.name ?? null,
-      notes: ["Facebook থেকে আগ্রহী ক্রেতা", data.note || null, data.link ? `লিংক: ${data.link}` : null].filter(Boolean).join("\n"),
+      notes: ["Facebook থেকে আগ্রহী ক্রেতা", `উৎস: ${pageName}`, data.note || null, data.link ? `লিংক: ${data.link}` : null].filter(Boolean).join("\n"),
     });
     const { error } = await db.from("social_activity_logs").insert({
       agent_id: agentId, kind: data.kind, page_id: data.pageId ?? null, link: data.link ?? null,
@@ -175,7 +185,9 @@ export type SocialLogRow = {
   id: string; createdAt: string; agentId: string; agentName: string; kind: string;
   source: string | null; link: string | null; replies: number; note: string | null;
   leadId: string | null; leadName: string | null; leadStatus: string | null; visited: boolean; booked: boolean;
+  history: SocialLeadEvent[];
 };
+export type SocialLeadEvent = { at: string; label: string; from: string | null; to: string | null; by: string | null };
 
 /** HQ/IT: filtered social work log (agent + Dhaka date range) with source page/group and real lead outcomes. */
 export const socialLog = createServerFn({ method: "POST" })
@@ -200,13 +212,27 @@ export const socialLog = createServerFn({ method: "POST" })
     const pageIds = [...new Set(list.map((r) => r.page_id).filter(Boolean))] as string[];
     const leadIds = [...new Set(list.map((r) => r.lead_id).filter(Boolean))] as string[];
     const empty = Promise.resolve({ data: [] as never[] });
-    const [{ data: people }, { data: pages }, { data: leads }, { data: visits }, { data: bookings }] = await Promise.all([
+    const [{ data: people }, { data: pages }, { data: leads }, { data: visits }, { data: bookings }, { data: changes }] = await Promise.all([
       agentIds.length ? db.from("profiles").select("id, name").in("id", agentIds) : empty,
       pageIds.length ? db.from("social_pages").select("id, name").in("id", pageIds) : empty,
       leadIds.length ? db.from("leads").select("id, name, status").in("id", leadIds) : empty,
-      leadIds.length ? db.from("site_visits").select("lead_id").in("lead_id", leadIds) : empty,
-      leadIds.length ? db.from("bookings").select("lead_id").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("site_visits").select("lead_id, created_at, status").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("bookings").select("lead_id, created_at, approval_status").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("lead_state_changes").select("lead_id, field, old_value, new_value, changed_by, changed_at")
+        .in("lead_id", leadIds).order("changed_at", { ascending: true }).limit(20000) : empty,
     ]);
+    const hist = new Map<string, SocialLeadEvent[]>();
+    const push = (id: string | null, e: SocialLeadEvent) => { if (!id) return; const a = hist.get(id) ?? []; a.push(e); hist.set(id, a); };
+    const byIds = [...new Set((changes ?? []).map((c: { changed_by: string | null }) => c.changed_by).filter(Boolean))] as string[];
+    const { data: changers } = byIds.length ? await db.from("profiles").select("id, name").in("id", byIds) : { data: [] as { id: string; name: string }[] };
+    const cn = new Map((changers ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
+    for (const c of (changes ?? []) as { lead_id: string; field: string; old_value: string | null; new_value: string | null; changed_by: string | null; changed_at: string }[])
+      push(c.lead_id, { at: c.changed_at, label: c.field, from: c.old_value, to: c.new_value, by: c.changed_by ? cn.get(c.changed_by) ?? null : null });
+    for (const v of (visits ?? []) as { lead_id: string | null; created_at: string; status: string | null }[])
+      push(v.lead_id, { at: v.created_at, label: "site_visit", from: null, to: v.status, by: null });
+    for (const b of (bookings ?? []) as { lead_id: string | null; created_at: string; approval_status: string | null }[])
+      push(b.lead_id, { at: b.created_at, label: "booking", from: null, to: b.approval_status, by: null });
+    for (const a of hist.values()) a.sort((x, y) => x.at.localeCompare(y.at));
     const pn = new Map((people ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
     const sn = new Map((pages ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
     const ln = new Map((leads ?? []).map((l: { id: string; name: string | null; status: string | null }) => [l.id, l]));
@@ -219,6 +245,7 @@ export const socialLog = createServerFn({ method: "POST" })
         source: r.page_id ? sn.get(r.page_id) ?? null : null, link: r.link, replies: r.reply_count, note: r.note,
         leadId: r.lead_id, leadName: l?.name ?? null, leadStatus: l?.status ?? null,
         visited: Boolean(r.lead_id && vs.has(r.lead_id)), booked: Boolean(r.lead_id && bs.has(r.lead_id)),
+        history: r.lead_id ? hist.get(r.lead_id) ?? [] : [],
       };
     });
   });

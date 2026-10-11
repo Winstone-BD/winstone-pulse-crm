@@ -49,13 +49,13 @@ export const Route = createFileRoute("/system")({
   validateSearch: sectionSearch,
   head: () => ({
     meta: [
-      { title: "System & Billing — Winstone CRM" },
+      { title: "System & Billing — Winstone Pulse" },
       {
         name: "description",
         content:
           "IT controller view: database health, ingestion endpoints, API key status and monthly telephony billing.",
       },
-      { property: "og:title", content: "System & Billing — Winstone CRM" },
+      { property: "og:title", content: "System & Billing — Winstone Pulse" },
       {
         property: "og:description",
         content: "Monthly call minutes, carrier cost estimates and ingestion endpoint health.",

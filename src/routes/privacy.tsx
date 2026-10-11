@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Winstone CRM" },
+      { title: "Privacy Policy — Winstone Pulse" },
       {
         name: "description",
         content:
           "Winstone CRM privacy policy: how lead, call and WhatsApp data is collected, used, stored and protected.",
       },
-      { property: "og:title", content: "Privacy Policy — Winstone CRM" },
+      { property: "og:title", content: "Privacy Policy — Winstone Pulse" },
       {
         property: "og:description",
         content: "How Winstone CRM handles tele-sales data, recordings and user information.",

@@ -14,12 +14,12 @@ import { getAdminToken } from "@/lib/local-session";
 export const Route = createFileRoute("/credits")({
   head: () => ({
     meta: [
-      { title: "ক্রেডিট বিল — Winstone CRM" },
+      { title: "ক্রেডিট বিল — Winstone Pulse" },
       {
         name: "description",
         content: "মাসভিত্তিক এআই ব্যবহার ও অনুমানিত লোভাবল ক্রেডিট খরচের রিপোর্ট।",
       },
-      { property: "og:title", content: "ক্রেডিট বিল — Winstone CRM" },
+      { property: "og:title", content: "ক্রেডিট বিল — Winstone Pulse" },
       { property: "og:description", content: "এআই কাজের মাসিক ক্রেডিট খরচের হিসাব।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

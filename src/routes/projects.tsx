@@ -16,9 +16,9 @@ import { listInventory } from "@/lib/inventory.functions";
 export const Route = createFileRoute("/projects")({
   head: () => ({
     meta: [
-      { title: "প্রজেক্ট ডিরেক্টরি — Winstone CRM" },
+      { title: "প্রজেক্ট ডিরেক্টরি — Winstone Pulse" },
       { name: "description", content: "প্রতিটি প্রজেক্টের লিড, কল, সাইট ভিজিট ও বুকিং চাহিদা এক নজরে।" },
-      { property: "og:title", content: "প্রজেক্ট ডিরেক্টরি — Winstone CRM" },
+      { property: "og:title", content: "প্রজেক্ট ডিরেক্টরি — Winstone Pulse" },
       { property: "og:description", content: "প্রজেক্টভিত্তিক বাস্তব চাহিদা ও বুকিং কনভার্সন।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
