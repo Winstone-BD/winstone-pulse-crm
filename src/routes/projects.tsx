@@ -6,7 +6,8 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AppShell } from "@/components/crm/AppShell";
-import { ProjectCatalogPanel } from "@/components/crm/ProjectCatalog";
+import { ProjectCatalogPanel, useProjects } from "@/components/crm/ProjectCatalog";
+import { ProjectImportPanel, ProjectSalesReport } from "@/components/crm/ProjectSalesTools";
 import { Input } from "@/components/ui/input";
 import { useAdminToken } from "@/lib/local-session";
 import { getProjectReport } from "@/lib/project-reports.functions";
@@ -89,6 +90,8 @@ function ProjectsPage() {
           <Link to="/inventory" className="text-sm text-primary hover:underline">প্রজেক্ট তালিকা পরিচালনা →</Link>
         </header>
         <ProjectCatalogPanel />
+        <HqImport />
+        <ProjectSalesReport />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {kpis.map((k) => (
@@ -198,4 +201,10 @@ function Stat({ v, l, accent }: { v: number | null; l: string; accent?: boolean 
       <p className="text-[11px] text-muted-foreground">{l}</p>
     </div>
   );
+}
+
+/** Bulk import is shown only when the server says the caller may edit the catalog. */
+function HqImport() {
+  const q = useProjects();
+  return q.data?.canEdit ? <ProjectImportPanel /> : null;
 }
