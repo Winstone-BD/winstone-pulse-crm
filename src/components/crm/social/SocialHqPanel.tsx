@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getSocialSetup, saveSocialPage, saveSocialTemplate, socialReport } from "@/lib/social.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { useT } from "@/lib/i18n";
+import { SocialLogPanel } from "./SocialLogPanel";
 
 /** HQ/IT: real per-agent social work counts, page/group list and approved replies. */
 export function SocialHqPanel() {
@@ -45,6 +46,7 @@ export function SocialHqPanel() {
           <tbody>{rows.map((r) => <tr key={r.agentId} className="border-t border-border tabular-nums"><td className="py-1.5 font-medium">{r.name}</td><td>{r.entries}</td><td>{r.replies}</td><td>{r.leads}</td><td>{r.visits}</td><td>{r.bookings}</td></tr>)}</tbody></table>
       </>}
 
+    <SocialLogPanel />
     <details className="rounded-lg border border-border p-3"><summary className="cursor-pointer text-sm font-semibold">{t({ bn: "পেজ ও গ্রুপ", en: "Pages & groups" })} ({setup.data?.pages.length ?? 0})</summary>
       <ul className="mt-2 space-y-1 text-sm">{setup.data?.pages.map((p) => <li key={p.id} className="flex items-center justify-between gap-2"><span>{p.name} <span className="text-xs text-muted-foreground">· {p.kind === "group" ? t({ bn: "গ্রুপ", en: "Group" }) : t({ bn: "পেজ", en: "Page" })}{p.active ? "" : ` · ${t({ bn: "বন্ধ", en: "Off" })}`}</span></span>
         <Button size="sm" variant="ghost" onClick={() => page.mutate({ adminToken, id: p.id, name: p.name, kind: p.kind as "page" | "group", url: p.url, active: !p.active })}>{p.active ? t({ bn: "বন্ধ করুন", en: "Disable" }) : t({ bn: "চালু করুন", en: "Enable" })}</Button></li>)}</ul>
