@@ -18,6 +18,8 @@ const MODEL = "openai/gpt-6-astra";
 const ENDPOINT = "https://ai.gateway.lovable.dev/v1/responses";
 const CONFIG_ID = "website_knowledge";
 export const DEFAULT_WEBSITE_URL = "https://winstone.lovable.app";
+/** Winstone Knowledge Hub — public project, FAQ and news pages, always read too. */
+export const HUB_URL = "https://winstonebd.com";
 const MAX_PAGES = 40;
 const PAGE_CHARS = 6000;
 
@@ -166,7 +168,8 @@ export type RefreshResult = {
 /** Read the public website into the CRM. Read-only against the website. */
 export async function refreshWebsitePages(): Promise<RefreshResult> {
   const baseUrl = await websiteBaseUrl();
-  const urls = await discoverUrls(baseUrl);
+  const bases = [...new Set([baseUrl, HUB_URL])];
+  const urls = [...new Set((await Promise.all(bases.map((b) => discoverUrls(b)))).flat())];
   let stored = 0;
   let failed = 0;
 
@@ -207,7 +210,7 @@ export async function storedPages(): Promise<StoredPage[]> {
     .from("website_pages")
     .select("url, title, content, fetched_at")
     .order("fetched_at", { ascending: false })
-    .limit(MAX_PAGES);
+    .limit(MAX_PAGES * 2);
   return (data ?? []).map((row) => ({
     url: row.url,
     title: row.title ?? row.url,
