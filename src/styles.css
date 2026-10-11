@@ -122,7 +122,7 @@
   --muted-foreground: oklch(0.45 0.012 80);
   --accent: oklch(0.94 0.04 85);
   --accent-foreground: oklch(0.25 0.03 80);
-  --destructive: oklch(0.62 0.2 25);
+  --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
   /* Soft warm hairlines on white */
   --border: oklch(0.9 0.01 85);
@@ -144,7 +144,7 @@
   --offline-foreground: oklch(0.95 0.008 85);
   --verified: oklch(0.8 0.13 85);
   --verified-foreground: oklch(0.2 0.02 85);
-  --critical: oklch(0.62 0.2 25);
+  --critical: oklch(0.55 0.2 25);
   --whatsapp: oklch(0.74 0.12 85);
   /* Single status set for the black + gold theme; all AA on --background */
   --warning: oklch(0.8 0.15 70);
@@ -493,3 +493,24 @@
   background-image: radial-gradient(60rem 30rem at 10% -10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 60%),
     radial-gradient(40rem 24rem at 100% 0%, color-mix(in oklab, var(--chart-4) 10%, transparent), transparent 60%);
 }
+
+/* WCAG AA: bright fill tokens are too light (<4.5:1) as text on white.
+   Unlayered so they beat Tailwind's layered text-* utilities; fills keep the
+   original bright shade. Dark ink panels keep the original bright text. */
+:root {
+  --primary-ink: oklch(0.55 0.13 80);
+  --success-ink: oklch(0.53 0.14 150);
+  --warning-ink: oklch(0.56 0.14 70);
+  --idle-ink: oklch(0.55 0.09 80);
+  --whatsapp-ink: oklch(0.55 0.12 85);
+  --verified-ink: oklch(0.55 0.13 85);
+}
+.text-primary { color: var(--primary-ink); }
+.text-success, .text-live { color: var(--success-ink); }
+.text-warning { color: var(--warning-ink); }
+.text-idle { color: var(--idle-ink); }
+.text-whatsapp { color: var(--whatsapp-ink); }
+.text-verified { color: var(--verified-ink); }
+:where(.bg-ink, .bg-exec-navy, .bg-primary, .bg-destructive, .dark) .text-primary { color: var(--primary); }
+:where(.bg-ink, .bg-exec-navy, .dark) :is(.text-success, .text-live) { color: var(--success); }
+:where(.bg-ink, .bg-exec-navy, .dark) .text-warning { color: var(--warning); }
