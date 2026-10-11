@@ -163,7 +163,9 @@ export function ProjectCatalogPanel() {
       {q.data && !q.data.projects.length ? <p className="text-sm text-muted-foreground">{t(L.empty)}</p> : null}
       <div className="grid gap-3 md:grid-cols-2">
         {(q.data?.projects ?? []).map((p) => (
-          <article key={p.id} className="rounded-xl border border-border p-3 text-sm">
+          <article key={p.id} className="overflow-hidden rounded-xl border border-border text-sm">
+            {p.image_url ? <img src={p.image_url} alt={p.name} loading="lazy" className="aspect-[16/9] w-full object-cover" /> : null}
+            <div className="p-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold">{p.name}{p.status === "archived" ? <span className="ml-2 text-xs text-muted-foreground">(archived)</span> : null}</h3>
