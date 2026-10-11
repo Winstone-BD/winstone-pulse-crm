@@ -150,3 +150,39 @@ export async function decideVisitRequest(c: SiCaller, input: { id: string; actio
   if (error) throw new Error("অনুরোধ আপডেট হয়নি");
   return { ok: true };
 }
+
+/** Tells the lead's assigned agent a website visit request arrived (push; in-app bell polls separately). */
+export async function notifyVisitRequestAgent(leadId: string | null, requestId: string) {
+  if (!leadId) return;
+  const db = await admin();
+  const { data: lead } = await db.from("leads").select("assigned_to").eq("id", leadId).maybeSingle();
+  const agent = (lead as { assigned_to: string | null } | null)?.assigned_to;
+  if (!agent) return;
+  const { sendPush } = await import("@/lib/push.server");
+  await sendPush({
+    eventKey: `site_visit_request:${requestId}`, kind: "site_visit_request", entityId: leadId, profileIds: [agent],
+    payload: { title: "নতুন সাইট ভিজিট অনুরোধ", body: "ওয়েবসাইট থেকে আপনার লিডে ভিজিট অনুরোধ এসেছে — নিশ্চিত বা বাতিল করুন", path: "/site-visits" },
+  }).catch(() => undefined);
+}
+
+/** HQ/IT sync health: timestamps and counts only — no secrets, no customer details. */
+export async function hubSyncStatus() {
+  const db = await admin();
+  const stuckBefore = new Date(Date.now() - 15 * 60_000).toISOString();
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const base = () => db.from("os_event_receipts" as never).select("id", { count: "exact", head: true }).eq("event_type" as never, "site_visit.requested" as never).gte("created_at" as never, since as never);
+  const [page, pages, news, failed, stuck, processed] = await Promise.all([
+    db.from("website_pages").select("fetched_at").order("fetched_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("website_pages").select("id", { count: "exact", head: true }),
+    db.from("market_news").select("created_at").eq("origin", "official").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    base().eq("status" as never, "failed" as never),
+    base().eq("status" as never, "received" as never).lt("created_at" as never, stuckBefore as never),
+    base().eq("status" as never, "processed" as never),
+  ]);
+  return {
+    lastPageSyncAt: (page.data as { fetched_at: string } | null)?.fetched_at ?? null,
+    pageCount: pages.count ?? 0,
+    lastNewsSyncAt: (news.data as { created_at: string } | null)?.created_at ?? null,
+    visitEvents30d: { processed: processed.count ?? 0, failed: failed.count ?? 0, stuck: stuck.count ?? 0 },
+  };
+}
