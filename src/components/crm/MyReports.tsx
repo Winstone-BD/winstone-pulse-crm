@@ -133,19 +133,22 @@ export function MyReports() {
                 {report.reason ? (
                   <p className="mt-1 text-xs text-muted-foreground">কারণ: {report.reason}</p>
                 ) : null}
-                {briefs[report.id] ? (
-                  <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                      <Sparkles className="size-3.5" /> AI সারসংক্ষেপ
-                    </p>
-                    <p className="mt-1 text-sm">{briefs[report.id].brief}</p>
-                    {briefs[report.id].nextStep ? (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        পরবর্তী পদক্ষেপ: {briefs[report.id].nextStep}
+                {(() => {
+                  const brief = briefs[report.id];
+                  return brief ? (
+                    <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                        <Sparkles className="size-3.5" /> AI সারসংক্ষেপ
                       </p>
-                    ) : null}
-                  </div>
-                ) : null}
+                      <p className="mt-1 text-sm">{brief.brief}</p>
+                      {brief.nextStep ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          পরবর্তী পদক্ষেপ: {brief.nextStep}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null;
+                })()}
                 {briefError[report.id] ? (
                   <p className="mt-1 text-xs text-destructive">{briefError[report.id]}</p>
                 ) : null}
