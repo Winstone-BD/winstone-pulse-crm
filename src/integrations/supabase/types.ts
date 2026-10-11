@@ -435,6 +435,48 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_findings: {
+        Row: {
+          audit_commit: string
+          audit_date: string
+          captured_at: string
+          captured_by: string
+          doc_version: string
+          evidence: string
+          finding_key: string
+          id: string
+          item_no: string
+          result: string
+          title: string
+        }
+        Insert: {
+          audit_commit: string
+          audit_date: string
+          captured_at?: string
+          captured_by: string
+          doc_version: string
+          evidence: string
+          finding_key: string
+          id?: string
+          item_no: string
+          result: string
+          title: string
+        }
+        Update: {
+          audit_commit?: string
+          audit_date?: string
+          captured_at?: string
+          captured_by?: string
+          doc_version?: string
+          evidence?: string
+          finding_key?: string
+          id?: string
+          item_no?: string
+          result?: string
+          title?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -473,6 +515,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_remediation_events: {
+        Row: {
+          action: string
+          actor_name: string
+          actor_scope: string
+          created_at: string
+          finding_key: string
+          id: string
+          note: string
+        }
+        Insert: {
+          action: string
+          actor_name: string
+          actor_scope: string
+          created_at?: string
+          finding_key: string
+          id?: string
+          note: string
+        }
+        Update: {
+          action?: string
+          actor_name?: string
+          actor_scope?: string
+          created_at?: string
+          finding_key?: string
+          id?: string
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_remediation_events_finding_key_fkey"
+            columns: ["finding_key"]
+            isOneToOne: false
+            referencedRelation: "audit_findings"
+            referencedColumns: ["finding_key"]
           },
         ]
       }
@@ -3491,6 +3571,9 @@ export type Database = {
           notes: string | null
           project: string | null
           status: string
+          team_calendar_added_at: string | null
+          team_calendar_added_by: string | null
+          team_calendar_event_id: string | null
           updated_at: string
           updated_by: string | null
           visit_at: string
@@ -3504,6 +3587,9 @@ export type Database = {
           notes?: string | null
           project?: string | null
           status?: string
+          team_calendar_added_at?: string | null
+          team_calendar_added_by?: string | null
+          team_calendar_event_id?: string | null
           updated_at?: string
           updated_by?: string | null
           visit_at: string
@@ -3517,6 +3603,9 @@ export type Database = {
           notes?: string | null
           project?: string | null
           status?: string
+          team_calendar_added_at?: string | null
+          team_calendar_added_by?: string | null
+          team_calendar_event_id?: string | null
           updated_at?: string
           updated_by?: string | null
           visit_at?: string
