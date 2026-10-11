@@ -37,10 +37,10 @@ export function parseHubFeed(body: string): HubNewsItem[] {
       const j = JSON.parse(trimmed) as unknown;
       const arr = Array.isArray(j) ? j : ((j as { items?: unknown[] }).items ?? []);
       raw = (arr as Record<string, unknown>[]).map((x) => ({
-        title: String(x.title ?? "").trim(),
-        link: String(x.url ?? x.link ?? "").trim(),
-        publishedAt: typeof x.published_at === "string" ? x.published_at : typeof x.date === "string" ? x.date : null,
-        description: String(x.summary ?? x.excerpt ?? "").trim(),
+        title: String(x["title"] ?? "").trim(),
+        link: String(x["url"] ?? x["link"] ?? "").trim(),
+        publishedAt: typeof x["published_at"] === "string" ? x["published_at"] : typeof x["date"] === "string" ? x["date"] : null,
+        description: String(x["summary"] ?? x["excerpt"] ?? "").trim(),
       }));
     } catch {
       return [];
@@ -93,4 +93,10 @@ export async function fetchHubText(url: string, allow: (u: string) => boolean = 
   } catch {
     return null;
   }
+}
+
+/** Visit requests a caller may see: HQ/IT authority all; an agent only requests on leads assigned to them. */
+export function visitRequestVisible(c: { scope: string; agentId?: string | null }, assignedTo: string | null | undefined): boolean {
+  if (c.scope === "authority") return true;
+  return !!c.agentId && assignedTo === c.agentId;
 }

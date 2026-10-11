@@ -5,7 +5,7 @@
  *  - website visit requests: signed bridge event; a request never becomes a
  *    site visit until the agent/HQ confirms it.
  */
-import { fetchHubText, HUB_NEWS_FEED, parseHubFeed } from "@/lib/knowledge-hub-rules";
+import { visitRequestVisible, fetchHubText, HUB_NEWS_FEED, parseHubFeed } from "@/lib/knowledge-hub-rules";
 import type { SiCaller } from "@/lib/sales-intel.server";
 
 const HUB = "https://winstonebd.com";
@@ -117,7 +117,7 @@ export async function listVisitRequests(c: SiCaller, opts: { leadId?: string | n
   type Row = NonNullable<typeof data>[number] & { leads: { name: string | null; assigned_to: string | null } | null };
   const rows = (data ?? []) as Row[];
   return rows
-    .filter((r) => c.scope === "authority" || r.leads?.assigned_to === c.agentId)
+    .filter((r) => visitRequestVisible(c, r.leads?.assigned_to))
     .map(({ leads, ...r }) => ({ ...r, lead_name: leads?.name ?? null }));
 }
 

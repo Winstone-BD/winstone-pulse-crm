@@ -98,3 +98,13 @@ describe("signed event verification (before parsing)", () => {
     expect(await verifyOsRequest({ ...base, signature: null })).toBe("missing_signature");
   });
 });
+
+import { visitRequestVisible } from "@/lib/knowledge-hub-rules";
+describe("visit request authorization", () => {
+  it("assigned agent yes, other agent no, HQ/IT yes, unassigned hidden from agents", () => {
+    expect(visitRequestVisible({ scope: "agent", agentId: "a1" }, "a1")).toBe(true);
+    expect(visitRequestVisible({ scope: "agent", agentId: "a2" }, "a1")).toBe(false);
+    expect(visitRequestVisible({ scope: "agent", agentId: null }, null)).toBe(false);
+    expect(visitRequestVisible({ scope: "authority" }, "a1")).toBe(true);
+  });
+});
