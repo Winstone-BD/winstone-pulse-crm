@@ -7,7 +7,7 @@
  * pretends a write reached the server — writes go through the local queue in
  * src/lib/offline-queue.ts and only sync when the network is back.
  */
-const CACHE = "winstone-shell-v2";
+const CACHE = "winstone-shell-v3";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => {
@@ -70,6 +70,15 @@ self.addEventListener("fetch", (event) => {
           if (response.ok) {
             const copy = response.clone();
             void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          } else if (response.status === 404 && url.pathname.startsWith("/assets/")) {
+            // A page from an older deployment asked for a file that no longer
+            // exists. Drop the cached pages so the recovery reload gets the
+            // current deployment instead of the stale offline copy.
+            void caches.open(CACHE).then(async (cache) => {
+              for (const key of await cache.keys()) {
+                if (!new URL(key.url).pathname.startsWith("/assets/")) await cache.delete(key);
+              }
+            });
           }
           return response;
         }),
