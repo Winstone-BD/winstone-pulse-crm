@@ -19,7 +19,7 @@ describe("social moderation (Method A)", () => {
     const activityIdx = src.indexOf("const Activity = Base.extend({");
     const activityBlock = src.slice(activityIdx, src.indexOf("\n});", activityIdx));
     expect(activityBlock).not.toContain("agentId");
-    expect(src).not.toMatch(/Activity\.extend\(\{ name[\s\S]*?agentId/);
+    expect(src).toMatch(/Activity\.extend\(\{ name: z\.string\(\)\.trim\(\)\.min\(1\)\.max\(120\), phone: z\.string\(\)\.trim\(\)\.min\(6\)\.max\(40\) \}\)/);
     expect(src).toMatch(/voidSocialActivity[\s\S]{0,200}Base\.extend\(\{ id: z\.string\(\)\.uuid\(\) \}\)/);
     expect(src).toMatch(/assertBriefingForCaller\(c\.caller\)/);
     for (const fn of ["logSocialActivity", "voidSocialActivity", "convertSocialToLead"]) {
