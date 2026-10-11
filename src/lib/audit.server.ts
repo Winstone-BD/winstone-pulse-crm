@@ -36,6 +36,8 @@ export type AuditAction =
   | "shift_summary_generated"
   | "shift_summary_hq_cleared"
   | "document_summarized"
+  | "kb_article_summarized"
+  | "drive_doc_summarized"
   | "do_not_contact_added"
   | "do_not_contact_removed"
   | "recording_doc_synced"
