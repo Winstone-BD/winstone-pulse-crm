@@ -21,6 +21,7 @@ const ACTION_LABEL: Record<string, string> = {
   device_registered: "ডিভাইস নিবন্ধন",
   recording_reprocessed: "রেকর্ডিং পুনঃবিশ্লেষণ",
   alert_acknowledged: "সতর্কতা দেখা হয়েছে",
+  project_photos_viewed: "প্রজেক্টের ছবি দেখা হয়েছে",
 };
 
 const ACTIONS = Object.keys(ACTION_LABEL);
