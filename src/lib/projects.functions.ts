@@ -133,3 +133,93 @@ export const addProjectNote = createServerFn({ method: "POST" })
     if (error) throw new Error("নোট সংরক্ষণ হয়নি");
     return { ok: true };
   });
+
+/* ---------------- Bulk import (HQ/IT only) ---------------- */
+
+const importRow = z.object({
+  name: z.string().trim().min(2).max(120),
+  location: txt(200), status: z.enum(["active", "archived"]).default("active"),
+  price_per_sqft: z.number().nonnegative().max(10_000_000).nullish().transform((v) => v ?? null),
+  unit_sizes: txt(300), total_price: txt(300), down_payment: txt(300), installment_plan: txt(500),
+  parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000),
+});
+
+/** Insert new projects, update existing ones matched by name (case-insensitive). Never deletes. */
+export const importProjects = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token, rows: z.array(z.unknown()).min(1).max(300) }).parse(i))
+  .handler(async ({ data }) => {
+    const { c, db } = await ctx(data.adminToken);
+    const { requireAdminWriter } = await import("@/lib/sales-intel.server");
+    requireAdminWriter(c);
+    const { data: existing, error: e0 } = await db.from("project_catalog").select("id, name");
+    if (e0) throw new Error("প্রজেক্ট তালিকা পড়া যায়নি");
+    const byName = new Map((existing ?? []).map((p) => [p.name.trim().toLowerCase(), p.id]));
+    const results: { row: number; name: string; outcome: "created" | "updated" | "error"; error?: string }[] = [];
+    const seen = new Set<string>();
+    for (const [idx, raw] of data.rows.entries()) {
+      const parsed = importRow.safeParse(raw);
+      const nm = String((raw as { name?: unknown })?.name ?? "").slice(0, 120);
+      if (!parsed.success) { results.push({ row: idx + 2, name: nm, outcome: "error", error: parsed.error.issues.map((i) => i.path.join(".")).join(", ") }); continue; }
+      const k = parsed.data.name.toLowerCase();
+      if (seen.has(k)) { results.push({ row: idx + 2, name: nm, outcome: "error", error: "duplicate_in_file" }); continue; }
+      seen.add(k);
+      const row = { ...parsed.data, updated_by: c.actor };
+      const id = byName.get(k);
+      const res = id ? await db.from("project_catalog").update(row).eq("id", id).select("id") : await db.from("project_catalog").insert(row).select("id");
+      if (res.error || !res.data?.length) results.push({ row: idx + 2, name: nm, outcome: "error", error: "save_failed" });
+      else results.push({ row: idx + 2, name: parsed.data.name, outcome: id ? "updated" : "created" });
+    }
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({ action: "project_catalog_import", entityType: "project_catalog", entityId: null, actorLabel: c.actor,
+      metadata: { created: results.filter((r) => r.outcome === "created").length, updated: results.filter((r) => r.outcome === "updated").length, errors: results.filter((r) => r.outcome === "error").length } }).catch(() => undefined);
+    return { results };
+  });
+
+/* ---------------- Sales update report ---------------- */
+
+const dateKey = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish();
+/** Dhaka-day bounds → UTC ISO. */
+const dhakaStart = (d: string) => new Date(`${d}T00:00:00+06:00`).toISOString();
+const dhakaEnd = (d: string) => new Date(new Date(`${d}T00:00:00+06:00`).getTime() + 86_400_000).toISOString();
+
+/** Agents see only their own updates; HQ/IT see all and can filter by agent. */
+export const salesUpdatesReport = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    z.object({
+      adminToken: Token, from: dateKey, to: dateKey,
+      projectId: z.string().uuid().nullish(), agentId: z.string().uuid().nullish(), interest: z.enum(INTERESTS).nullish(),
+    }).parse(i ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const { c, db } = await ctx(data.adminToken);
+    let q = db.from("project_sales_updates")
+      .select("id, lead_id, project_id, agent_id, interest, offered_price, note, created_by, created_at")
+      .order("created_at", { ascending: false }).limit(1000);
+    if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
+    else if (data.agentId) q = q.eq("agent_id", data.agentId);
+    if (data.projectId) q = q.eq("project_id", data.projectId);
+    if (data.interest) q = q.eq("interest", data.interest);
+    if (data.from) q = q.gte("created_at", dhakaStart(data.from));
+    if (data.to) q = q.lt("created_at", dhakaEnd(data.to));
+    const { data: rows, error } = await q;
+    if (error) throw new Error("রিপোর্ট পড়া যায়নি");
+    const list = rows ?? [];
+    const ids = (k: "lead_id" | "project_id" | "agent_id") => [...new Set(list.map((r) => r[k]).filter(Boolean) as string[])];
+    const [leads, projects, agents] = await Promise.all([
+      ids("lead_id").length ? db.from("leads").select("id, name").in("id", ids("lead_id")) : Promise.resolve({ data: [] }),
+      db.from("project_catalog").select("id, name").order("name"),
+      c.scope === "authority"
+        ? db.from("profiles").select("id, name").eq("role", "agent").order("name")
+        : db.from("profiles").select("id, name").eq("id", c.agentId!),
+    ]);
+    const nm = (arr: { id: string; name: string | null }[] | null | undefined) => new Map((arr ?? []).map((x) => [x.id, x.name ?? "—"]));
+    const L = nm(leads.data as never), P = nm(projects.data as never), A = nm(agents.data as never);
+    return {
+      scope: c.scope,
+      projects: (projects.data ?? []).map((p) => ({ id: p.id, name: p.name })),
+      agents: (agents.data ?? []).map((a) => ({ id: a.id, name: a.name ?? "—" })),
+      rows: list.map((r) => ({
+        ...r, lead_name: L.get(r.lead_id) ?? "—", project_name: P.get(r.project_id) ?? "—", agent_name: r.agent_id ? (A.get(r.agent_id) ?? "—") : "—",
+      })),
+    };
+  });
