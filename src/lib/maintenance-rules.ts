@@ -9,6 +9,8 @@ export const MAINTENANCE_FEE_LABEL = "$46.29 USD";
 export const BILLING_DAY = 15;
 /** Payment notice starts on the 9th 00:00 Dhaka. */
 export const NOTICE_DAY = 9;
+/** Red warning starts the 11th 17:00 Dhaka — 79h before the 15th 00:00 lock. */
+export const RED_WARNING_HOURS = 79;
 export const MAX_UNLOCK_MINUTES = 24 * 60;
 export const UNLOCK_PRESET_HOURS = [1, 2, 4, 8, 12, 24] as const;
 export const ARCHITECT_EMAIL = "zhemon.sm123@gmail.com";
