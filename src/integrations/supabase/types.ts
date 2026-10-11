@@ -791,6 +791,8 @@ export type Database = {
       call_reports: {
         Row: {
           agent_id: string | null
+          ai_brief: string | null
+          ai_brief_at: string | null
           ai_decision: string | null
           ai_suggestion: Json | null
           call_ended_at: string
@@ -829,6 +831,8 @@ export type Database = {
         }
         Insert: {
           agent_id?: string | null
+          ai_brief?: string | null
+          ai_brief_at?: string | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           call_ended_at?: string
@@ -867,6 +871,8 @@ export type Database = {
         }
         Update: {
           agent_id?: string | null
+          ai_brief?: string | null
+          ai_brief_at?: string | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           call_ended_at?: string
