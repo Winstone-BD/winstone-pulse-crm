@@ -5,9 +5,12 @@ import {
   buildAgentStats,
   CONNECTED_THRESHOLD_SECONDS,
   type AgentStats,
+  type CallRecording,
+  type Lead,
+  type Profile,
+  type WhatsappMessage,
 } from "@/lib/crm-data";
 import { leadOwner } from "@/lib/lead-owner";
-import type { CallRecording, Lead, Profile } from "@/lib/crm-types";
 
 /**
  * HQ smart day summary — derived entirely from the existing snapshot and the
