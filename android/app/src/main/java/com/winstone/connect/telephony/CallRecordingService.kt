@@ -35,7 +35,7 @@ class CallRecordingService : Service() {
         NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setContentTitle("কল রেকর্ড হচ্ছে")
-            .setContentText("Winstone Connect চলমান কলটি রেকর্ড করছে")
+            .setContentText("Winstone CRM চলমান কলটি রেকর্ড করছে")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()

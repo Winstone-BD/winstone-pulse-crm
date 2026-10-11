@@ -88,7 +88,7 @@ fun SignInScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Winstone Connect V2",
+            "Winstone CRM & Sales Operating System",
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             color = WinInk,
