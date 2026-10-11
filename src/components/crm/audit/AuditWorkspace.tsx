@@ -164,7 +164,7 @@ export function AuditWorkspace({ q, result, item }: { q: string; result: string;
         <h2 id="ref" className="text-lg font-semibold">Reference</h2>
         <div className="mt-2 divide-y divide-border rounded-lg border border-border">
           {reference.map((s) => (
-            <details key={s.id} open={openRef === s.id} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) setOpenRef(s.id); }} className="group print:[&]:open">
+            <details key={s.id} open={openRef === s.id} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) setOpenRef(s.id); }} className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
                 {s.title}<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
               </summary>
