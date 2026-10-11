@@ -99,3 +99,12 @@
 - [x] Lock down project-images storage (public read rule replaced with signed-in-only, migration 0097)
 - [ ] Google Calendar: view-only agent panel + shared Winstone team calendar + per-agent own calendar (user chose all three 2026-10-11)
 - [ ] Ever-Call-Recorder (Shizuku two-sided recording) into Winstone Android app — user chose: rewrite own Shizuku-style recorder (no GPL code copied); not started
+
+## Queue 2026-10-11 (late)
+- [ ] Team calendar: add confirmed site visit button (visit's agent + HQ/IT)
+- [ ] Per-agent Google Calendar connection (needs workspace Google OAuth client)
+- [ ] Audit: persisted findings + append-only remediation timeline (HQ/IT write)
+- [ ] Audit: per-finding report + all-findings report (CSV/print)
+- [ ] Run skipped photo checks once staff signed in; confirm HQ audit entry
+- [ ] Build-tool guard: block preview start if not 2.25.2
+- [ ] Status report: preview crash, build-tool root cause, recovery steps
