@@ -72,10 +72,9 @@ function startLive(queryClient: ReturnType<typeof useQueryClient>) {
       timer = null;
       const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
       void queryClient.invalidateQueries(
-        { queryKey: ["crm-snapshot"] },
+        { queryKey: ["crm-snapshot"], refetchType: hidden ? "none" : "active" },
         { cancelRefetch: false },
-      ).then(() => undefined);
-      if (hidden) return;
+      );
     }, 8000);
   };
   // A submitted report must land instantly on Reports, Executive HQ and the
