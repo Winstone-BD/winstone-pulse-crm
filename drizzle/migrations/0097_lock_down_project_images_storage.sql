@@ -1,0 +1,1 @@
+drop policy if exists "Public read project images" on storage.objects; create policy "Staff can read project images" on storage.objects for select to authenticated using (bucket_id = 'project-images');
