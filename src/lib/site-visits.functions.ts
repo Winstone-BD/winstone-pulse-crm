@@ -17,9 +17,9 @@ export const listSiteVisits = createServerFn({ method: "POST" })
     const c = await siCaller(data.adminToken).catch(() => null);
     if (!c) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null }> = [];
+    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null; team_calendar_event_id: string | null; team_calendar_added_at: string | null }> = [];
     for (let a = 0; ; a += 1000) {
-      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by");
+      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by, team_calendar_event_id, team_calendar_added_at");
       if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
       const { data: rows, error } = await q.order("visit_at", { ascending: false }).order("id").range(a, a + 999);
       if (error) throw new Error("সাইট ভিজিট পড়া যায়নি");
@@ -69,4 +69,55 @@ export const setSiteVisitStatus = createServerFn({ method: "POST" })
     const { data: rows, error } = await q.select("id");
     if (error || !rows?.length) throw new Error("অবস্থা বদলানো যায়নি");
     return { ok: true };
+  });
+
+/**
+ * Adds one confirmed (scheduled) site visit to the shared Winstone team Google
+ * Calendar. Only the visit's own agent or HQ/IT may do it; a visit is added at
+ * most once (event id stored on the row). No customer phone number is sent.
+ */
+export const addSiteVisitToTeamCalendar = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token, id: z.string().uuid() }).parse(i))
+  .handler(async ({ data }) => {
+    const { siCaller } = await import("@/lib/sales-intel.server");
+    const c = await siCaller(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, team_calendar_event_id").eq("id", data.id);
+    if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
+    const { data: v } = await q.maybeSingle();
+    if (!v) throw new Error("ভিজিট পাওয়া যায়নি বা আপনার অনুমতি নেই");
+    if (v.status !== "scheduled") throw new Error("শুধু নির্ধারিত (কনফার্ম) ভিজিট ক্যালেন্ডারে যোগ করা যায়");
+    if (v.team_calendar_event_id) return { ok: true, already: true };
+    const lovableKey = process.env["LOVABLE_API_KEY"];
+    const calKey = process.env["GOOGLE_CALENDAR_API_KEY"];
+    if (!lovableKey || !calKey) throw new Error("টিম ক্যালেন্ডার সংযুক্ত নেই");
+    const { data: lead } = await supabaseAdmin.from("leads").select("name").eq("id", v.lead_id).maybeSingle();
+    let agentName = "";
+    if (v.agent_id) {
+      const { data: p } = await supabaseAdmin.from("profiles").select("name").eq("id", v.agent_id).maybeSingle();
+      agentName = p?.name ?? "";
+    }
+    const start = new Date(v.visit_at);
+    const end = new Date(start.getTime() + 60 * 60_000);
+    const res = await fetch("https://connector-gateway.lovable.dev/google_calendar/calendar/v3/calendars/primary/events", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": calKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        summary: `সাইট ভিজিট — ${lead?.name ?? "লিড"}${v.project ? ` · ${v.project}` : ""}`,
+        description: `Winstone CRM কনফার্ম সাইট ভিজিট${agentName ? `\nএজেন্ট: ${agentName}` : ""}\nযোগ করেছেন: ${c.actor}`,
+        start: { dateTime: start.toISOString(), timeZone: "Asia/Dhaka" },
+        end: { dateTime: end.toISOString(), timeZone: "Asia/Dhaka" },
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`Team calendar insert failed [${res.status}]: ${body}`);
+      throw new Error(`ক্যালেন্ডারে যোগ হয়নি (${res.status})`);
+    }
+    const ev = (await res.json()) as { id?: string };
+    const { error } = await supabaseAdmin.from("site_visits")
+      .update({ team_calendar_event_id: ev.id ?? "unknown", team_calendar_added_at: new Date().toISOString(), team_calendar_added_by: c.actor })
+      .eq("id", v.id).is("team_calendar_event_id", null);
+    if (error) throw new Error("ক্যালেন্ডারে যোগ হয়েছে, কিন্তু রেকর্ড সংরক্ষণ হয়নি");
+    return { ok: true, already: false };
   });
