@@ -78,7 +78,7 @@ function NoticeBody({ s }: { s: Status }) {
     <div className="space-y-3 text-sm">
       <p>
         {s.locked
-          ? "Winstone CRM is temporarily unavailable because the monthly system maintenance payment is pending."
+          ? "Winstone Pulse is temporarily unavailable because the monthly system maintenance payment is pending."
           : "Your monthly system maintenance payment is due."}
       </p>
       <dl className="grid grid-cols-2 gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
