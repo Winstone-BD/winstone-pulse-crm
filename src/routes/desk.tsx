@@ -76,17 +76,6 @@ export const Route = createFileRoute("/desk")({
   component: DeskPage,
 });
 
-/** Desk sections, mapped to the existing tab values — no new routes. */
-const SECTION_RAIL = [
-  { tab: "leads", label: "লিড ড্যাশবোর্ড", hint: "আমার সব লিডের পূর্ণ তালিকা — নাম, ফোন, চাহিদা (যেমন 3 Bed), স্ট্যাটাস।" },
-  { tab: "queue", label: "কার্ড ভিউ", hint: "আজ কী কাজ বাকি — প্রতিটি লিড কার্ডে, সেখান থেকেই কল/হোয়াটসঅ্যাপ।" },
-  { tab: "calls", label: "কল রেকর্ড", hint: "ফোনের সিম থেকে আসা আসল কল — কত সময় কথা হলো, রিসিভ না মিসড।" },
-  { tab: "whatsapp", label: "হোয়াটসঅ্যাপ", hint: "কাস্টমারের সাথে হোয়াটসঅ্যাপ কথোপকথন।" },
-  { tab: "calendar", label: "ফলো-আপ", hint: "কোন কাস্টমারকে কবে আবার ফোন করতে হবে।" },
-  { tab: "reports", label: "আমার রিপোর্ট", hint: "কলের পর জমা দেওয়া রিপোর্টের ইতিহাস — যা কাজ শেষ করেছি।" },
-  { tab: "support", label: "টিম সাপোর্ট", hint: "সমস্যা হলে টিম লিডার/IT-কে জানানোর জায়গা।" },
-] as const;
-
 /** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
   const { leads, calls, messages } = useSnapshot();
@@ -352,7 +341,7 @@ function DeskPage() {
   return (
     <AppShell>
       <div className="hq-luxe grid gap-4 rounded-3xl p-3 pb-24 sm:p-5 md:pb-5">
-        <DeskTabBar tab={tab} onChange={setTab} />
+        <div className="sticky top-28 z-30 sm:top-16"><DeskTabBar tab={tab} onChange={setTab} /></div>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <TodayHero name={account?.profile?.name ?? null} />
@@ -426,38 +415,6 @@ function DeskPage() {
         )}
 
         <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
-          {/* Mobile: collapsible section menu */}
-          <details className="group rounded-xl border border-border bg-card lg:hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-              <span>{SECTION_RAIL.find((s) => s.tab === tab)?.label ?? "সেকশন"}</span>
-              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="flex flex-col gap-1 border-t border-border p-2">
-              {SECTION_RAIL.map((s) => (
-                <button
-                  key={s.tab}
-                  type="button"
-                  onClick={(e) => {
-                    setTab(s.tab);
-                    e.currentTarget.closest("details")?.removeAttribute("open");
-                  }}
-                  aria-current={tab === s.tab ? "page" : undefined}
-                  className={`rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${
-                    tab === s.tab
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  }`}
-                >
-                  <span className="block">{s.label}</span>
-                  <span className="block text-xs font-normal opacity-80">{s.hint}</span>
-                </button>
-              ))}
-            </div>
-          </details>
-          <p className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-            {SECTION_RAIL.find((s) => s.tab === tab)?.hint}
-          </p>
-          
           <TabsContent value="support">
             <TeamSupportPanel />
           </TabsContent>
