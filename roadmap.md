@@ -101,10 +101,15 @@
 - [ ] Ever-Call-Recorder (Shizuku two-sided recording) into Winstone Android app — user chose: rewrite own Shizuku-style recorder (no GPL code copied); not started
 
 ## Queue 2026-10-11 (late)
-- [ ] Team calendar: add confirmed site visit button (visit's agent + HQ/IT)
+- [x] Team calendar: add confirmed site visit button (visit's agent + HQ/IT)
 - [ ] Per-agent Google Calendar connection (needs workspace Google OAuth client)
-- [ ] Audit: persisted findings + append-only remediation timeline (HQ/IT write)
-- [ ] Audit: per-finding report + all-findings report (CSV/print)
+- [x] Audit: persisted findings + append-only remediation timeline (HQ/IT write)
+- [x] Audit: per-finding report + all-findings report (CSV/print)
 - [ ] Run skipped photo checks once staff signed in; confirm HQ audit entry
-- [ ] Build-tool guard: block preview start if not 2.25.2
-- [ ] Status report: preview crash, build-tool root cause, recovery steps
+- [x] Build-tool guard: block preview start if not 2.25.2
+- [x] Status report: preview crash, build-tool root cause, recovery steps
+- [x] Verify new leads appear in list promptly after refresh throttle
+- [ ] Compare one day's lead list vs call list before/after; report DB load drop
+- [x] Per-call lead report auto-update alongside board
+- [ ] AI summaries: cache server-side, charge only first generation
+- [x] Review reference images/video; assess modern dashboard redesign
