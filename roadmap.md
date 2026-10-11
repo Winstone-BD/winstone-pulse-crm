@@ -96,6 +96,6 @@
 - [ ] Run production build + restart test, verify build tool pinned 2.25.2
 - [ ] Google Calendar for agents (waiting on user: which kind)
 - [ ] Fill 15 projects details (waiting on user data; template given)
-- [ ] Lock down project-images storage bucket (user approved 2026-10-11)
+- [x] Lock down project-images storage (public read rule replaced with signed-in-only, migration 0097)
 - [ ] Google Calendar: view-only agent panel + shared Winstone team calendar + per-agent own calendar (user chose all three 2026-10-11)
-- [ ] Ever-Call-Recorder (Shizuku two-sided recording) into Winstone Android app — waiting on user: confirm scope + licence
+- [ ] Ever-Call-Recorder (Shizuku two-sided recording) into Winstone Android app — user chose: rewrite own Shizuku-style recorder (no GPL code copied); not started
