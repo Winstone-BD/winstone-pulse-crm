@@ -2,6 +2,8 @@
 
 ## Active
 
+- [ ] Phone-like agent calling panel — presentation only; preserve call/report gates and verify layout.
+
 0. **Knowledge Hub link** — Done in CRM: hub project pages + citations in answers, official news highlighted/pinned + Desk strip, website visit requests (confirm/dismiss). Waits on Hub sending `site_visit.requested`.
 0. **UI polish batch** — sidebar/top bar; dashboard KPI cards & charts states; lead list badges/states; follow-up & call screens. Frontend only.
 0. **Restart module-load blank screen** — verify/fix without changing the 2.25.2 pin.
