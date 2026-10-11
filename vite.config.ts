@@ -15,6 +15,21 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 const serverEnv = loadEnv(process.env["NODE_ENV"] || "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
+// Build-tool guard: refuse to start the preview/build on anything but the pinned
+// version (2.26.x crashes the live Worker; drifts to 2.25.3 have blanked previews).
+{
+  const PINNED_BUILD_TOOL = "2.25.2";
+  const installed = JSON.parse(
+    fs.readFileSync(path.resolve(import.meta.dirname, "node_modules/@lovable.dev/vite-tanstack-config/package.json"), "utf8"),
+  ).version as string;
+  if (installed !== PINNED_BUILD_TOOL) {
+    throw new Error(
+      `[build-tool guard] @lovable.dev/vite-tanstack-config is ${installed}, but only ${PINNED_BUILD_TOOL} is supported. ` +
+        `Set it back to ${PINNED_BUILD_TOOL} in package.json and reinstall. Preview start refused.`,
+    );
+  }
+}
+
 const BROWSER_ASYNC_HOOKS = path.resolve(
   import.meta.dirname,
   "src/lib/browser-async-hooks-stub.js",
