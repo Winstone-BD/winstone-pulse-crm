@@ -126,6 +126,38 @@ export type Database = {
           },
         ]
       }
+      agent_contribution_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          report_id: string
+          reviewer: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          report_id: string
+          reviewer: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          report_id?: string
+          reviewer?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_contribution_reviews_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "agent_daily_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_daily_contributions: {
         Row: {
           agent_id: string
