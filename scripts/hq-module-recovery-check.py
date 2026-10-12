@@ -34,7 +34,7 @@ async def main():
 
         # Only the HQ route module (not the document) is cut off.
         await page.route(re.compile(r"/src/routes/hq\.tsx"), hq_module)
-        page.on("console", lambda m: "winstone-recovery" in m.text and print(round(time.time()-T0,1), m.text[:250]))
+        page.on("console", lambda m: "winstone-recovery" in m.text and print(round(time.time()-T0,1), m.text[:120], len(loads)))
         loads = []
         page.on("load", lambda: loads.append(1))
 
