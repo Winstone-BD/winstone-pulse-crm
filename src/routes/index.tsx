@@ -155,14 +155,14 @@ function EntryHall() {
           </div>
         </header>
 
-        <h2 className="mt-16 text-center text-2xl font-bold tracking-tight sm:text-3xl">
+        <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
           Choose Your Workspace
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
           Select the mode you are using — the same Winstone Pulse opens on every device.
         </p>
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-3 sm:gap-6">
+        <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-6">
           <ModeCard
             illustration={<SmartphoneIllustration />}
             title="Android"
@@ -183,7 +183,7 @@ function EntryHall() {
           />
         </div>
 
-        <p className="mt-10 text-center text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
+        <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
           One CRM. One data layer. Every device.
         </p>
 
@@ -191,17 +191,17 @@ function EntryHall() {
 
         <h2
           id="workspace-signin"
-          className="mt-16 scroll-mt-6 text-center text-xl font-bold tracking-tight"
+          className="mt-10 scroll-mt-6 text-center text-xl font-bold tracking-tight"
         >
           Sign in to your workspace
         </h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
             description="Your own lead queue, call log, WhatsApp threads and AI coaching."
             primary={
-              <Button asChild className="flex-1">
+              <Button asChild className="btn-enter flex-1">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
@@ -221,7 +221,7 @@ function EntryHall() {
             title="LeadHub Nexus"
             description="Canonical lead database, imports, data quality and quantity assignment."
             primary={
-              <Button className="flex-1" onClick={() => openPin("/leadhub")}>
+              <Button className="btn-enter flex-1" onClick={() => openPin("/leadhub")}>
                 <Lock className="size-4" /> Unlock PIN
               </Button>
             }
@@ -232,7 +232,7 @@ function EntryHall() {
             title="Executive HQ"
             description="Live floor performance, leaderboards and ask-anything reports and charts."
             primary={
-              <Button className="flex-1" onClick={() => openPin("/hq")}>
+              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
                 <Lock className="size-4" /> Unlock PIN
               </Button>
             }
@@ -243,7 +243,7 @@ function EntryHall() {
             title="IT Console"
             description="System configuration, integrations, data health and account approvals."
             primary={
-              <Button className="flex-1" onClick={() => openPin("/system")}>
+              <Button className="btn-enter flex-1" onClick={() => openPin("/system")}>
                 <Lock className="size-4" /> Unlock PIN
               </Button>
             }
@@ -346,16 +346,16 @@ function ModeCard({
     <button
       type="button"
       onClick={onClick}
-      className="card-elevated group flex min-h-44 flex-col items-center gap-4 p-7 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:translate-y-0 active:shadow-sm"
+      className="card-elevated group flex min-w-0 flex-col items-center gap-2 p-3 text-center sm:min-h-44 sm:gap-4 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:translate-y-0 active:shadow-sm"
     >
-      <span className="text-foreground transition-transform duration-200 group-hover:scale-105">
+      <span className="origin-center scale-75 text-foreground transition-transform duration-200 group-hover:scale-90 sm:scale-100 sm:group-hover:scale-105">
         {illustration}
       </span>
       <span>
-        <span className="block text-xl font-bold tracking-tight">{title}</span>
-        <span className="mt-1 block text-sm text-muted-foreground">{subtitle}</span>
+        <span className="block text-sm font-bold tracking-tight sm:text-xl">{title}</span>
+        <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</span>
       </span>
-      <span className="mt-auto inline-flex h-11 items-center gap-1 rounded-full border border-primary/40 px-5 text-sm font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+      <span className="btn-enter mt-auto inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold sm:h-11 sm:px-5 sm:text-sm">
         Select <ChevronRight className="size-4" />
       </span>
     </button>

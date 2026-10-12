@@ -42,7 +42,7 @@ export function ReminderBell() {
       if (seen.current.has(key)) continue;
       seen.current.add(key);
       if (first) continue;
-      toast.warning(item.title, { description: item.detail, duration: 10_000 });
+      toast.warning(t({ bn: item.title, en: item.titleEn ?? item.title }), { description: t({ bn: item.detail, en: item.detailEn ?? item.detail }), duration: 10_000 });
     }
     if (first && reminders.length > 0) {
       toast.warning(t({ bn: `${reminders.length}টি রিমাইন্ডার অপেক্ষা করছে`, en: `${reminders.length} reminders waiting` }), {
