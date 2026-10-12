@@ -202,6 +202,9 @@ export function FollowUpWeek() {
                         />
                       </div>
                     )}
+                    {typeof event.note === "string" && event.note.startsWith("২য় বার ধরেননি") && (
+                      <SoftMessageBox name={event.customer_name ?? null} />
+                    )}
                   </li>
                 ))}
               </ul>
