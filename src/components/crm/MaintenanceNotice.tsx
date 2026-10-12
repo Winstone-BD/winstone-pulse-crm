@@ -19,7 +19,6 @@ import {
   dhakaMonthName,
   dhakaTime,
   deadlineLeftLabel,
-  isAmberWindow,
   nextRenewalDueAt,
   paymentDueLabel,
   subscriptionNoticeCopy,
