@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/crm/AppShell";
+import { PageHeader } from "@/components/crm/PageHeader";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,15 +124,16 @@ function ContributionsBoard() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">এজেন্ট অবদান রিপোর্ট</h1>
-          <p className="text-sm text-muted-foreground">৫:২০-এর রিপোর্ট — তারিখ ও এজেন্ট অনুযায়ী দেখুন এবং পর্যালোচনা করুন।</p>
-        </div>
-        <Button variant="outline" onClick={exportCsv} disabled={!reports.length} className="gap-1.5">
-          <Download className="size-4" /> CSV
-        </Button>
-      </header>
+      <PageHeader
+        icon={<Trophy className="size-5" />}
+        title="এজেন্ট অবদান রিপোর্ট"
+        description="৫:২০-এর রিপোর্ট — তারিখ ও এজেন্ট অনুযায়ী দেখুন এবং পর্যালোচনা করুন।"
+        actions={
+          <Button variant="outline" onClick={exportCsv} disabled={!reports.length} className="gap-1.5">
+            <Download className="size-4" /> CSV
+          </Button>
+        }
+      />
 
       <section className="grid gap-3 sm:grid-cols-3" aria-label="আজকের সারাংশ">
         <div className="card-elevated p-4">
