@@ -98,8 +98,23 @@ function AuthPage() {
     (!isSignup || name.trim().length >= 2);
 
   return (
-    <div className="theme-light grid-noise flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="card-elevated w-full max-w-md p-6">
+    <div className="theme-light grid min-h-dvh lg:grid-cols-2">
+      <aside className="hidden flex-col justify-between bg-secondary p-12 lg:flex">
+        <span className="text-sm font-semibold tracking-tight">WINSTONE PULSE</span>
+        <div>
+          <h2 className="text-5xl font-bold leading-tight tracking-tight">
+            Call smarter,
+            <br />
+            close more homes.
+          </h2>
+          <p className="mt-4 max-w-md text-lg text-muted-foreground">
+            The Premium Real Estate CRM for your sales floor. Find. Build. Invest.
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">© 2026 Winstone Properties Ltd.</p>
+      </aside>
+      <div className="flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md p-2 sm:p-6">
         <Link to="/" className="flex items-center gap-3">
           <img
             src={logoAsset.url}
@@ -120,7 +135,7 @@ function AuthPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {isSignup
             ? "A supervisor approves new accounts before the floor data opens up."
-            : "ফোন নম্বর, Employee ID অথবা ইমেইল — যেটা সহজ, সেটাই দিন।"}
+            : "Use your phone number, Employee ID or email."}
         </p>
 
         <div className="mt-5 space-y-3">
@@ -148,14 +163,14 @@ function AuthPage() {
             </>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="email">{isSignup ? "Email" : "ফোন / Employee ID / ইমেইল"}</Label>
+            <Label htmlFor="email">{isSignup ? "Email" : "Phone / Employee ID / Email"}</Label>
             <Input
               id="email"
               type={isSignup ? "email" : "text"}
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={isSignup ? "you@winstonebd.com" : "01805049668 বা WIN2601"}
+              placeholder={isSignup ? "you@winstonebd.com" : "01805049668 or WIN2601"}
             />
           </div>
 
@@ -208,6 +223,7 @@ function AuthPage() {
             </Link>
           </p>
         </div>
+    </div>
     </div>
     </div>
   );
