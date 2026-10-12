@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { matchCallShortcut, pickNextEligible, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
+import { useT } from "@/lib/i18n";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadCallControls } from "@/components/crm/desk/LeadCallControls";
@@ -261,6 +263,7 @@ export function DeskCommandCenter({
   const [sort, setSort] = useState<QueueSort>("priority");
   const [mobile360Open, setMobile360Open] = useState(false);
   const [callMode, setCallMode] = useState(false);
+  const t = useT();
   const [doneIds, setDoneIds] = useState<string[]>([]);
   const queueItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const mobile360HeadingRef = useRef<HTMLHeadingElement | null>(null);
@@ -438,10 +441,7 @@ export function DeskCommandCenter({
     const onSubmitted = (e: Event) => {
       const leadId = (e as CustomEvent<{ leadId: string | null }>).detail?.leadId;
       setDoneIds((prev) => (leadId ? [...prev, leadId] : prev));
-      const skip = new Set([...doneIds, leadId].filter(Boolean) as string[]);
-      const next = rowsRef.current.find(
-        (l) => !skip.has(l.id) && l.status !== "closed" && l.work_state !== "completed",
-      );
+      const next = pickNextEligible(rowsRef.current, [...doneIds, leadId].filter(Boolean) as string[]);
       if (next) {
         setSelectedId(next.id);
         toast.success(`পরের লিড: ${next.name}`);
@@ -450,6 +450,23 @@ export function DeskCommandCenter({
     window.addEventListener("winstone:report-submitted", onSubmitted);
     return () => window.removeEventListener("winstone:report-submitted", onSubmitted);
   }, [callMode, doneIds]);
+  // Alt+Shift+N: same selection rule as auto-advance. Blocked while any dialog
+  // (incl. the mandatory call report) is open, so it can never skip a pending report.
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!callMode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (matchCallShortcut(e) !== "next") return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      e.preventDefault();
+      const next = pickNextEligible(rowsRef.current, doneIds, selectedIdRef.current);
+      if (next) setSelectedId(next.id);
+      else toast.message("এই তালিকায় আর কোনো যোগ্য লিড নেই / No more eligible leads");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [callMode, doneIds]);
+  selectedIdRef.current = selected?.id ?? null;
   const stepLead = (dir: 1 | -1) => {
     const i = rows.findIndex((l) => l.id === selected?.id);
     const next = rows[Math.min(Math.max(i + dir, 0), rows.length - 1)];
@@ -613,6 +630,15 @@ export function DeskCommandCenter({
                 <PhoneCall className="size-3.5" /> {callMode ? "কল মোড বন্ধ" : "কল মোড চালু"}
               </Button>
             </div>
+            {callMode && (
+              <p className="mb-2 text-[11px] text-muted-foreground" aria-live="polite">
+                <span className="sr-only">Keyboard shortcuts: </span>
+                <kbd className="rounded border border-border bg-muted px-1 font-mono">Ctrl/⌘ + Enter</kbd>{" "}
+                {t(SHORTCUT_LABELS.save).split("—")[1]} ·{" "}
+                <kbd className="rounded border border-border bg-muted px-1 font-mono">Alt + Shift + N</kbd>{" "}
+                {t(SHORTCUT_LABELS.next).split("—")[1]}
+              </p>
+            )}
             {callMode && selected && (
               <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
                 <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
