@@ -66,6 +66,14 @@
   --color-gold: var(--gold);
   --color-gold-strong: var(--gold-strong);
   --color-charcoal: var(--charcoal);
+  /* Payment notice only: red is reserved for the subscription notice and its CTA. */
+  --color-pay-danger: var(--pay-danger);
+  --color-pay-danger-hover: var(--pay-danger-hover);
+  --color-pay-danger-bg: var(--pay-danger-bg);
+  --color-pay-danger-border: var(--pay-danger-border);
+  --color-pay-danger-ink: var(--pay-danger-ink);
+  --color-pay-danger-body: var(--pay-danger-body);
+  --color-pay-danger-fg: var(--pay-danger-fg);
   --font-display: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
@@ -614,6 +622,19 @@
 .group:hover .btn-enter {
   background-color: var(--enter-hover);
   color: var(--enter-foreground);
+}
+
+/* Subscription payment notice palette (exact spec): red CTA #DC2626, pressed #B91C1C,
+   notice canvas #FEF2F2, accent #FCA5A5, deadline ink bold dark red. Red is never used
+   for Executive HQ / IT Console actions — those stay deep green (.btn-enter). */
+:root {
+  --pay-danger: #dc2626;
+  --pay-danger-hover: #b91c1c;
+  --pay-danger-bg: #fef2f2;
+  --pay-danger-border: #fca5a5;
+  --pay-danger-ink: #7f1d1d;
+  --pay-danger-body: #4b5563;
+  --pay-danger-fg: #ffffff;
 }
 
 /* Executive minimal home theme: warm paper canvas, near-black ink, white flat
