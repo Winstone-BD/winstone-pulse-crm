@@ -134,3 +134,7 @@
 - [x] Desk honours from/to date range from Command Center tiles (chip + সরান)
 - [x] HQ /contributions page: filters, summary, review (append-only), CSV
 - [x] Reskin (mint/orange/teal, Outfit): tokens/sidebar/header → desk → HQ pages → entry/sign-in
+- [x] Support inbox keeps last tickets during failed polls
+- [x] Home: remove duplicate banner image under hero
+- [ ] Audit log (created/edited/archived, who, when) — awaiting plan approval
+- [ ] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
