@@ -13,6 +13,20 @@ from playwright.async_api import async_playwright
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://crm.winstonebd.com").rstrip("/")
 PAGES = ["/", "/auth", "/desk", "/hq", "/projects", "/news", "/live-leads", "/site-visits", "/insights"]
+# Render checks: each page must show its own markers (any one per group, either
+# language) and enough real controls -- proves it rendered, not just loaded.
+SHELL = [("বাংলা",), ("EN",)]  # language switch = app shell rendered (phone + desktop)
+EXPECT = {
+    "/": ([("Winstone Pulse",), ("FIND. BUILD. INVEST.", "Find. Build. Invest.")], 5),
+    "/auth": ([("Sign in", "সাইন ইন"), ("Employee ID", "phone", "ফোন")], 2),
+    "/desk": (SHELL + [("Sign in to your desk", "Today", "আজ", "ডেস্ক")], 5),
+    "/hq": (SHELL + [("এক্সিকিউটিভ এইচকিউ", "Executive HQ"), ("পিন", "PIN")], 5),
+    "/projects": (SHELL + [("প্রজেক্ট ডিরেক্টরি", "Project Directory", "Project catalog")], 5),
+    "/news": (SHELL + [("Market News", "মার্কেট নিউজ")], 5),
+    "/live-leads": (SHELL + [("লাইভ লিড", "Live Lead")], 5),
+    "/site-visits": (SHELL + [("সাইট ভিজিট", "Site Visit")], 5),
+    "/insights": (SHELL + [("AI Insights",), ("Real data only", "Ask Winstone AI")], 5),
+}
 FATAL = ("Importing a module script failed", "dynamically imported module",
          "Failed to fetch dynamically", "Hydration failed", "is not defined")
 
@@ -35,10 +49,15 @@ async def check(browser, path, width, failures):
         return
     blank = len(text) < 20
     fallback = "module" in text.lower() and "refresh" in text.lower() and len(text) < 400
-    print(f"{path} @{width}px: http={status} text={len(text)} errors={len(errors)}")
-    if status >= 500 or blank or fallback or errors:
-        failures.append(f"{path}@{width}: status={status} blank={blank} "
-                        f"fallback={fallback} errors={errors[:2]}")
+    groups, min_controls = EXPECT.get(path, (SHELL, 5))
+    missing = [g[0] for g in groups if not any(m in text for m in g)]
+    controls = await page.locator("button:visible, a:visible, input:visible").count()
+    few = controls < min_controls
+    print(f"{path} @{width}px: http={status} text={len(text)} controls={controls} "
+          f"missing={missing} errors={len(errors)}")
+    if status >= 500 or blank or fallback or errors or missing or few:
+        failures.append(f"{path}@{width}: status={status} blank={blank} fallback={fallback} "
+                        f"missing={missing} controls={controls} errors={errors[:2]}")
     await ctx.close()
 
 
@@ -55,7 +74,7 @@ async def main():
         for f in failures:
             print(" -", f)
         return 1
-    print(f"\nPASS: {len(PAGES)} pages x 2 sizes loaded cleanly on {BASE}")
+    print(f"\nPASS: {len(PAGES)} pages x 2 sizes rendered correctly on {BASE}")
     return 0
 
 
