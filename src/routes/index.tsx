@@ -85,14 +85,14 @@ function EntryHall() {
                 </p>
               </div>
             </div>
-            <h1 className="mt-6 font-hand text-4xl font-semibold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
+            <h1 className="mt-6 font-hand text-[2.6rem] font-semibold leading-[1.15] tracking-normal text-foreground sm:mt-8 sm:text-6xl sm:leading-[1.1] lg:text-7xl lg:leading-[1.05]">
 
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-2 font-hand text-2xl font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-4xl sm:tracking-tight">
+            <p className="mt-2 font-hand text-[1.65rem] font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-3xl lg:text-4xl">
               Close more deals, <span className="text-gold">less chaos.</span>
             </p>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base lg:mx-0">
+            <p className="mx-auto mt-4 max-w-md text-[15px] leading-[1.65] text-muted-foreground sm:mt-5 sm:text-base sm:leading-relaxed lg:text-[17px] lg:mx-0">
               The visual CRM that your sales team will actually love using. Drag, drop, and close —
               live sales monitoring, lead management, call activity, follow-up deadlines and team
               performance, all in one place.
@@ -100,7 +100,7 @@ function EntryHall() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start">
               <Button
                 size="lg"
-                className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+                className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -109,7 +109,7 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="w-full rounded-md px-5 text-base font-medium hover:-translate-y-px hover:border-foreground/40 hover:bg-muted active:translate-y-0 active:bg-muted/80 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100">
+              <Button asChild size="lg" variant="outline" className="w-full rounded-md px-5 text-base font-medium hover:-translate-y-px hover:border-foreground/40 hover:bg-muted active:translate-y-0 active:bg-muted/80 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
