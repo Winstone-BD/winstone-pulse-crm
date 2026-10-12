@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServiceBillAlert } from "@/lib/service-bill-review.functions";
 import { dhakaTime } from "@/lib/maintenance-rules";
 
-const billQuery = queryOptions({
+export const billQuery = queryOptions({
   queryKey: ["service-bill-alert"],
   queryFn: () => getServiceBillAlert(),
 });
