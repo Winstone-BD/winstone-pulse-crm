@@ -77,15 +77,15 @@ function EntryHall() {
                 className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
               />
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-gold sm:text-base">
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-gold sm:text-base">
                   Winstone Properties Ltd.
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
                   Find. Build. Invest.
                 </p>
               </div>
             </div>
-            <h1 className="mt-6 font-hand text-4xl font-bold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
+            <h1 className="mt-6 font-hand text-4xl font-semibold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
 
               Winstone <span className="text-gold">Pulse</span>
             </h1>
@@ -97,10 +97,10 @@ function EntryHall() {
               live sales monitoring, lead management, call activity, follow-up deadlines and team
               performance, all in one place.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-7 lg:justify-start">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start">
               <Button
                 size="lg"
-                className="min-w-36 rounded-md px-7 text-base font-bold hover:bg-charcoal"
+                className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -109,7 +109,7 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="min-w-36 rounded-md px-7 text-base font-semibold">
+              <Button asChild size="lg" variant="outline" className="w-full rounded-md px-5 text-base font-medium hover:-translate-y-px hover:border-foreground/40 hover:bg-muted active:translate-y-0 active:bg-muted/80 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
@@ -137,14 +137,14 @@ function EntryHall() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Pipeline Value
                 </p>
-                <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
-                <p className="text-xs font-bold text-gold">↑ Updated in real time</p>
+                <p className="text-lg font-semibold tracking-tight">Live, every second</p>
+                <p className="text-xs font-medium text-gold">↑ Updated in real time</p>
               </div>
               <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Follow-ups
                 </p>
-                <p className="text-lg font-extrabold tracking-tight">Never missed</p>
+                <p className="text-lg font-semibold tracking-tight">Never missed</p>
               </div>
             </div>
           </div>
@@ -343,7 +343,7 @@ function ModeCard({
         {illustration}
       </span>
       <span>
-        <span className="block text-sm font-bold tracking-tight sm:text-xl">{title}</span>
+        <span className="block text-sm font-semibold tracking-tight sm:text-lg">{title}</span>
         <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</span>
       </span>
       <span className="btn-enter mt-auto inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold sm:h-11 sm:px-5 sm:text-sm">
