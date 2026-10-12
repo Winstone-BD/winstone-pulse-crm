@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, ChevronDown, MapPin, Search, X } from "lucide-react";
+import { useT, useLang } from "@/lib/i18n";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -27,7 +28,9 @@ import { myLeadExtras } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
 import {
   DESK_BUCKET_LABEL,
+  DESK_BUCKET_LABEL_EN,
   GROUP_LABEL,
+  GROUP_LABEL_EN,
   followUpState,
   groupLeads,
   inBucket,
@@ -38,9 +41,10 @@ import {
 } from "@/lib/lead-groups";
 
 function FollowUpCell({ at }: { at: string | null }) {
+  const lang = useLang();
   const state = followUpState(at);
   if (state === "none") return <span className="text-muted-foreground">—</span>;
-  const when = new Date(at!).toLocaleString("bn-BD", {
+  const when = new Date(at!).toLocaleString(lang === "en" ? "en-GB" : "bn-BD", {
     timeZone: "Asia/Dhaka",
     day: "numeric",
     month: "short",
@@ -66,18 +70,18 @@ function FollowUpCell({ at }: { at: string | null }) {
 
 type Filter = "pending" | "follow_up" | "done" | "all";
 
-const FILTER_LABELS: Record<Filter, string> = {
-  pending: "কল বাকি",
-  follow_up: "আবার যোগাযোগ",
-  done: "কথা হয়েছে",
-  all: "সব লিড",
+const FILTER_LABELS: Record<Filter, { bn: string; en: string }> = {
+  pending: { bn: "কল বাকি", en: "Pending calls" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  done: { bn: "কথা হয়েছে", en: "Contacted" },
+  all: { bn: "সব লিড", en: "All leads" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "কল হয়নি",
-  contacted: "কথা হয়েছে",
-  follow_up: "আবার যোগাযোগ",
-  closed: "শেষ হয়েছে",
+const STATUS_LABELS: Record<string, { bn: string; en: string }> = {
+  pending: { bn: "কল হয়নি", en: "Not called" },
+  contacted: { bn: "কথা হয়েছে", en: "Contacted" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  closed: { bn: "শেষ হয়েছে", en: "Closed" },
 };
 
 const TEMP_STYLES: Record<string, string> = {

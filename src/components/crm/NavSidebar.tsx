@@ -257,6 +257,7 @@ function SidebarAccount({ collapsed }: { collapsed: boolean }) {
 
 /** Left-side navigation drawer for tablet and mobile widths. */
 export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {

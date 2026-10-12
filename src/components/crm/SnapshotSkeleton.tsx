@@ -51,6 +51,7 @@ function SlowLoadingCard({ onRetry, elapsed }: { onRetry: () => void; elapsed: n
 
 /** Shimmering placeholder shown while the live CRM snapshot loads. */
 export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows?: number }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [slow, setSlow] = useState(false);
   const [round, setRound] = useState(0);

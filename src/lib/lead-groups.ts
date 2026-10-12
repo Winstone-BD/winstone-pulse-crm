@@ -27,6 +27,13 @@ export const FOLLOW_UP_STATE_LABEL: Record<FollowUpState, string> = {
   none: "ফলো-আপ নেই",
 };
 
+export const FOLLOW_UP_STATE_LABEL_EN: Record<FollowUpState, string> = {
+  overdue: "Overdue",
+  due_today: "Today",
+  upcoming: "Upcoming",
+  none: "No follow-up",
+};
+
 export function followUpState(nextAt: string | null | undefined, now = Date.now()): FollowUpState {
   if (!nextAt) return "none";
   const at = new Date(nextAt).getTime();
@@ -70,6 +77,18 @@ export const DESK_BUCKET_LABEL: Record<DeskBucket, string> = {
   uncalled: "কল হয়নি",
   retry: "আবার চেষ্টা",
   follow_up: "ফলো-আপ",
+  hot: "Hot",
+  warm: "Warm",
+  cold: "Cold",
+  overdue: "OVERDUE",
+};
+
+export const DESK_BUCKET_LABEL_EN: Record<DeskBucket, string> = {
+  all: "All",
+  today: "Today",
+  uncalled: "Not called",
+  retry: "Retry",
+  follow_up: "Follow-up",
   hot: "Hot",
   warm: "Warm",
   cold: "Cold",
@@ -133,22 +152,41 @@ export const GROUP_LABEL: Record<GroupKey, string> = {
   date: "তারিখ",
 };
 
-function groupValue(lead: DeskLead, extras: DeskExtras | undefined, key: GroupKey, now: number) {
+export const GROUP_LABEL_EN: Record<GroupKey, string> = {
+  none: "No group",
+  status: "Status",
+  temperature: "Temperature",
+  source: "Source",
+  reference: "Reference",
+  requirement: "Project/requirement",
+  follow_up: "Follow-up status",
+  date: "Date",
+};
+
+function groupValue(
+  lead: DeskLead,
+  extras: DeskExtras | undefined,
+  key: GroupKey,
+  now: number,
+  lang: "bn" | "en" = "bn",
+) {
   switch (key) {
     case "none":
-      return "সব";
+      return lang === "en" ? "All" : "সব";
     case "status":
       return lead.status;
     case "temperature":
-      return lead.temperature ?? "অশ্রেণিভুক্ত";
+      return lead.temperature ?? (lang === "en" ? "Unclassified" : "অশ্রেণিভুক্ত");
     case "source":
-      return lead.source || "সোর্স নেই";
+      return lead.source || (lang === "en" ? "No source" : "সোর্স নেই");
     case "reference":
-      return lead.reference_by?.trim() || "রেফারেন্স নেই";
+      return lead.reference_by?.trim() || (lang === "en" ? "No reference" : "রেফারেন্স নেই");
     case "requirement":
-      return extras?.requirement || "চাহিদা জানা নেই";
+      return extras?.requirement || (lang === "en" ? "Requirement unknown" : "চাহিদা জানা নেই");
     case "follow_up":
-      return FOLLOW_UP_STATE_LABEL[followUpState(extras?.nextFollowUpAt, now)];
+      return (lang === "en" ? FOLLOW_UP_STATE_LABEL_EN : FOLLOW_UP_STATE_LABEL)[
+        followUpState(extras?.nextFollowUpAt, now)
+      ];
     case "date":
       return dhakaDay(lead.created_at);
   }
@@ -162,10 +200,11 @@ export function groupLeads<T extends DeskLead>(
   extras: Map<string, DeskExtras>,
   key: GroupKey,
   now = Date.now(),
+  lang: "bn" | "en" = "bn",
 ): LeadGroup<T>[] {
   const map = new Map<string, T[]>();
   for (const lead of leads) {
-    const g = groupValue(lead, extras.get(lead.id), key, now);
+    const g = groupValue(lead, extras.get(lead.id), key, now, lang);
     const list = map.get(g) ?? [];
     list.push(lead);
     map.set(g, list);
