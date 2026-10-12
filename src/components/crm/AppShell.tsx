@@ -5,7 +5,7 @@ import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
@@ -122,7 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link to="/" className="flex min-w-0 shrink items-center gap-2.5">
             <img
               src={logoAsset.url}
-              alt="Winstone Properties Ltd. logo"
+              alt="Winstone logo"
               className="size-8 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-border"
             />
             <span className="hidden min-w-0 leading-tight min-[480px]:block">

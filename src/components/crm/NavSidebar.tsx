@@ -35,7 +35,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "@/lib/i18n";
 import { useMyAccount, useSignOut } from "@/lib/session";
 import { LogOut } from "lucide-react";
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 type Item = { to: string; label: string };
@@ -294,7 +294,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
             <span className="flex items-center gap-2.5">
               <img
                 src={logoAsset.url}
-                alt="Winstone Properties Ltd. logo"
+                alt="Winstone logo"
                 className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
               />
               <span className="min-w-0 leading-tight">
