@@ -547,6 +547,8 @@ export async function submitCallReport(input: {
         classified_at: nowIso,
         classified_by: input.agentId,
         work_state: "completed",
+        // Customer answered: the 3-strike count stops.
+        unanswered_attempts: 0,
       })
       .eq("id", report.lead_id);
 
@@ -561,8 +563,8 @@ export async function submitCallReport(input: {
       classified_at: nowIso,
     });
   } else {
-    // Not received: the lead stays in the working queue for a retry call and is
-    // never silently completed.
+    // Not received: the lead stays with the same agent. A did-not-receive call
+    // is parked (snoozed / unresponsive) until its retry time; others retry now.
     await supabaseAdmin
       .from("leads")
       .update({
@@ -570,7 +572,9 @@ export async function submitCallReport(input: {
         outcome_category: category,
         notes,
         last_call_at: nowIso,
-        work_state: "pending",
+        work_state: cadence ? (cadence.stage === "unresponsive" ? "unresponsive" : "snoozed") : "pending",
+        ...(cadence ? { retry_after: cadence.retryAt, unanswered_attempts: cadence.attempt } : {}),
+        ...(received ? { unanswered_attempts: 0 } : {}),
       })
       .eq("id", report.lead_id);
   }
@@ -659,6 +663,32 @@ export async function submitCallReport(input: {
       .update({ status: "done", completed_at: nowIso, report_id: report.id, note: closeNote })
       .eq("lead_id", report.lead_id)
       .neq("status", "done");
+  }
+
+  // Did-not-receive: one follow-up on the same queue, owned by the same agent.
+  if (cadence) {
+    const stageNote =
+      cadence.stage === "unresponsive"
+        ? `Unresponsive Pool — ৩ বার ধরেননি; ${7} দিন পর Reactivation Queue`
+        : cadence.stage === "snooze_soft"
+          ? "২য় বার ধরেননি — সফট মেসেজ পাঠিয়ে আবার কল"
+          : "১ম বার ধরেননি — আবার কল";
+    await supabaseAdmin.from("follow_up_events").insert({
+      lead_id: report.lead_id,
+      agent_id: input.agentId,
+      report_id: report.id,
+      recording_id: report.recording_id,
+      customer_name: lead?.name ?? null,
+      phone_number: lead?.phone_number ?? report.phone_number,
+      category,
+      priority: followUpPriority,
+      note: stageNote,
+      reason_code: "call_later",
+      previous_call_id: report.recording_id ?? null,
+      scheduled_at: cadence.retryAt,
+      reminder_minutes: input.reminderMinutes ?? 30,
+      status: "upcoming",
+    });
   }
 
   const { logLeadEvent } = await import("@/lib/lead-events.server");
