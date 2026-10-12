@@ -480,7 +480,7 @@ export function PostCallReportGate() {
       if (draft["answers"] && typeof draft["answers"] === "object") {
         setAnswers(draft["answers"] as Partial<Record<EvaluationKey, boolean>>);
       }
-      toast.info(t({ bn: "আপনার অসমাপ্ত রিপোর্ট ফিরিয়ে আনা হয়েছে", en: "Your unfinished report was restored" }));
+      toast.info(lang === "bn" ? "আপনার অসমাপ্ত রিপোর্ট ফিরিয়ে আনা হয়েছে" : "Your unfinished report was restored");
     }
     draftReadyRef.current = detail.report.id;
     // eslint-disable-next-line react-hooks/exhaustive-deps
