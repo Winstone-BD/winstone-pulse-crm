@@ -20,6 +20,7 @@ export function useLang(): Lang {
   return useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
+      document.documentElement.lang = read();
       return () => listeners.delete(cb);
     },
     read,
