@@ -99,7 +99,7 @@ function AuditLog() {
         </select>
         <select aria-label="Action" className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={action} onChange={(e) => { setAction(e.target.value); setPage(0); }}>
           <option value="">All actions</option>
-          {["created", "edited", "archived", "restored"].map((a) => <option key={a} value={a}>{a[0].toUpperCase() + a.slice(1)}</option>)}
+          {["created", "edited", "archived", "restored"].map((a) => <option key={a} value={a}>{a.charAt(0).toUpperCase() + a.slice(1)}</option>)}
         </select>
         <Input placeholder="Record ID" aria-label="Record ID" value={recordId} onChange={(e) => { setRecordId(e.target.value); setPage(0); }} />
         <Button variant="outline" onClick={exportCsv} disabled={!rows.length}><Download className="size-4" /> CSV</Button>
@@ -243,7 +243,7 @@ function RestoreRecord({ dates }: { dates: string[] }) {
           {d.isPending ? <Loader2 className="size-4 animate-spin" /> : null} Compare
         </Button>
       </div>
-      {d.data && (!d.data.found || !d.data.exists ? (
+      {d.data ? (!d.data.found || !d.data.exists ? (
         <p className="text-sm text-warning">{!d.data.found ? "This record isn't in that backup." : "This record no longer exists."}</p>
       ) : !d.data.fields.length ? (
         <p className="text-sm text-success">No differences — the record matches the backup.</p>
@@ -271,7 +271,7 @@ function RestoreRecord({ dates }: { dates: string[] }) {
             {r.isPending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />} Restore {picked.length || ""} field{picked.length === 1 ? "" : "s"}
           </Button>
         </div>
-      ))}
+      )) : null}
     </section>
   );
 }

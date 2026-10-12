@@ -13,7 +13,7 @@ async function authority(adminToken?: string | null) {
 }
 async function logAccess(action: string, detail: Record<string, unknown>) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  await supabaseAdmin.from("record_audit_log").insert({ table_name: "crm_backups", record_id: String(detail.date ?? "-"), action, changes: detail });
+  await supabaseAdmin.from("record_audit_log").insert({ table_name: "crm_backups", record_id: String(detail['date'] ?? "-"), action, changes: detail as never });
 }
 
 export const listCrmBackups = createServerFn({ method: "POST" })

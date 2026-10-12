@@ -22,7 +22,7 @@ async function readAll(table: BackupTable) {
     rows.push(...((data ?? []) as Record<string, unknown>[]));
     if (!data || data.length < 1000) break;
   }
-  if (table === "profiles") for (const r of rows) delete r.legal_name;
+  if (table === "profiles") for (const r of rows) delete r['legal_name'];
   return rows;
 }
 
@@ -94,13 +94,13 @@ async function loadBackup(date: string) {
 
 export async function diffRecord(date: string, table: (typeof RESTORABLE)[number], id: string) {
   const backup = await loadBackup(date);
-  const old = backup.tables[table]?.find((r) => String(r.id) === id) ?? null;
+  const old = backup.tables[table]?.find((r) => String(r['id']) === id) ?? null;
   const { data: current } = await supabaseAdmin.from(table).select("*").eq("id", id).maybeSingle();
-  const fields: { field: string; backup: unknown; current: unknown; restorable: boolean }[] = [];
+  const fields: { field: string; backup: string; current: string; restorable: boolean }[] = [];
   if (old && current) {
     for (const k of Object.keys(old)) {
       const cur = (current as Record<string, unknown>)[k];
-      if (JSON.stringify(old[k]) !== JSON.stringify(cur)) fields.push({ field: k, backup: old[k], current: cur, restorable: !RESTORE_EXCLUDED.has(k) });
+      if (JSON.stringify(old[k]) !== JSON.stringify(cur)) fields.push({ field: k, backup: JSON.stringify(old[k] ?? null), current: JSON.stringify(cur ?? null), restorable: !RESTORE_EXCLUDED.has(k) });
     }
   }
   return { found: !!old, exists: !!current, fields };
@@ -108,7 +108,7 @@ export async function diffRecord(date: string, table: (typeof RESTORABLE)[number
 
 export async function restoreFields(date: string, table: (typeof RESTORABLE)[number], id: string, fields: string[], actor: string) {
   const backup = await loadBackup(date);
-  const old = backup.tables[table]?.find((r) => String(r.id) === id);
+  const old = backup.tables[table]?.find((r) => String(r['id']) === id);
   if (!old) throw new Error("Record not found in that backup");
   const patch: Record<string, unknown> = {};
   for (const f of fields) {
@@ -121,7 +121,7 @@ export async function restoreFields(date: string, table: (typeof RESTORABLE)[num
   if (error) throw new Error(error.message);
   await supabaseAdmin.from("record_audit_log").insert({
     table_name: table, record_id: id, action: "restored",
-    changes: { backup_date: date, fields, by: actor },
+    changes: { backup_date: date, fields, by: actor } as never,
   });
   return { restored: Object.keys(patch) };
 }
