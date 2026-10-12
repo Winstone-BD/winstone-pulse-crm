@@ -58,6 +58,9 @@ export async function agentBriefingStatus(
     title: "সকাল ৯:০৫-এর দৈনিক ব্রিফিং",
     detail:
       "আজকের কাজ শুরু করার আগে নিজের লিড, নির্ধারিত ফলো-আপ এবং বাধ্যতামূলক কল রিপোর্টের নিয়ম দেখে নিন। প্রতিটি কলের সঠিক ফলাফল ও ছয়টি মূল্যায়ন উত্তর সংরক্ষণ করুন।",
+    titleEn: "9:05 AM daily briefing",
+    detailEn:
+      "Before starting today's work, review your leads, scheduled follow-ups and the mandatory call-report rules. Save the correct outcome and all six assessment answers for every call.",
   };
 }
 

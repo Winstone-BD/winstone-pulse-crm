@@ -109,8 +109,8 @@ export function ReminderBell() {
                   <Clock className="mt-0.5 size-4 shrink-0 text-primary" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold">{item.title}</p>
-                  <p className="break-words text-xs text-muted-foreground">{item.detail}</p>
+                  <p className="text-xs font-semibold">{t({ bn: item.title, en: item.titleEn ?? item.title })}</p>
+                  <p className="break-words text-xs text-muted-foreground">{t({ bn: item.detail, en: item.detailEn ?? item.detail })}</p>
                   {item.kind === "follow_up" && item.priority ? (
                     <p className="mt-0.5 text-[10px] font-semibold text-primary">
                       {FOLLOW_UP_PRIORITY_LABEL[item.priority] ?? item.priority}
