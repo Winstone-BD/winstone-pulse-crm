@@ -18,6 +18,7 @@ import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
+import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -253,6 +254,9 @@ function EntryHall() {
             </Link>
           </p>
         )}
+
+        {/* The subscription notice lives here, in normal page flow below the content. */}
+        <MaintenanceFloorNotice className="pt-8" />
 
         <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-1.5">
