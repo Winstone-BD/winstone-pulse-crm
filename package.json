@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test:restart": "python3 scripts/restart-recovery-check.py",
+    "test:smoke": "python3 scripts/production-smoke-check.py",
     "test:recovery": "python3 scripts/module-recovery-check.py",
     "dev": "vite dev",
     "prebuild": "node scripts/check-build-tool-pin.mjs && node scripts/check-dashboard-colors.mjs",
@@ -91,7 +92,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.2",
+    "@lovable.dev/vite-tanstack-config": "2.25.3",
     "@types/node": "^22.16.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.0",
