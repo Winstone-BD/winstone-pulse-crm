@@ -31,6 +31,7 @@ function TempBadge({ t }: { t: string | null }) {
 }
 
 export function Ring({ pct }: { pct: number }) {
+  const t = useT();
   const r = 26, c = 2 * Math.PI * r;
   return (
     <svg viewBox="0 0 64 64" className="size-16 -rotate-90" role="img" aria-label={t({ bn: `আজ ${pct}% সম্পন্ন`, en: `${pct}% done today` })}>
