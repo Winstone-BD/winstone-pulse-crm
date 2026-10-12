@@ -442,7 +442,7 @@ function LiveTiles() {
             key={r.key}
             type="button"
             onClick={() => { setRange(r.key); setFrom(""); setTo(""); }}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-primary text-primary-foreground" : "bg-background/10 hover:bg-background/20"}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-gold text-foreground" : "bg-background/10 hover:bg-background/20"}`}
           >
             {r.label}
           </button>
@@ -473,7 +473,7 @@ function Tiles({
       {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => {
         const inner = (
           <>
-            <div className="h-1.5 w-8 rounded bg-primary/70" />
+            <div className="h-1.5 w-8 rounded bg-gold" />
             {values ? (
               <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
             ) : (
