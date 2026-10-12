@@ -151,3 +151,17 @@ export function isAmberWindow(now: Date = new Date()): boolean {
 export function dhakaMonthName(now: Date = new Date()): string {
   return new Date(now.getTime() + 6 * 3600_000).toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
 }
+
+/** Red window: 11th 17:00 through 14th 23:59 Dhaka. Display-only. */
+export function isRedWindow(now: Date = new Date()): boolean {
+  const d = new Date(now.getTime() + 6 * 3600_000);
+  const day = d.getUTCDate();
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return (day === 11 && mins >= 17 * 60) || day === 12 || day === 13 || day === 14;
+}
+
+/** Accurate label: "Payment Overdue" only after the 12th (due date) has passed in Dhaka. */
+export function paymentDueLabel(now: Date = new Date()): "Payment Due" | "Payment Overdue" {
+  const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
+  return day > 12 && day < 15 ? "Payment Overdue" : "Payment Due";
+}

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
-import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, nextRenewalDueAt, usd } from "@/lib/maintenance-rules";
+import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, isRedWindow, nextRenewalDueAt, paymentDueLabel, usd } from "@/lib/maintenance-rules";
 import { useLang, useT } from "@/lib/i18n";
 
 export function useMaintenance() {
@@ -241,6 +241,7 @@ export function MaintenanceGate() {
     );
   }
 
+  if (data.paymentStatus !== "verified" && !data.locked && isRedWindow()) return <UrgentRenewal period={data.period ?? ""} admin={data.exempt} paymentStatus={data.paymentStatus} />;
   if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <AmberReminderBanner period={data.period ?? ""} />;
   if (!needsNotice(data)) return null;
   const text =
@@ -330,5 +331,56 @@ function UpcomingInvoiceWidget() {
       <InvoiceDialog open={open} onOpenChange={setOpen} />
       <MaintenanceCountdown />
     </div>
+  );
+}
+
+/** Phase 2: persistent crimson banner (no dismiss) + once-per-session modal for HQ/IT authorities. */
+function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin: boolean; paymentStatus: string }) {
+  const [invoice, setInvoice] = useState(false);
+  const [modal, setModal] = useState(false);
+  const key = `billing-red-modal:${period}`;
+  useEffect(() => {
+    if (admin && sessionStorage.getItem(key) !== "1") {
+      sessionStorage.setItem(key, "1");
+      setModal(true);
+    }
+  }, [admin, key]);
+  const month = dhakaMonthName();
+  const statusText =
+    paymentStatus === "pending" ? "Verification Pending" : paymentDueLabel();
+  return (
+    <>
+      <div role="alert" className="fixed inset-x-0 bottom-0 z-[60] bg-destructive px-3 py-2 text-xs text-destructive-foreground sm:text-sm">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+          <p className="min-w-0 flex-1">
+            <b>Urgent Payment Notice</b> — Your {CRM_PLAN_NAME} subscription requires payment. The final access deadline is 15 {month} at 00:00 Asia/Dhaka. If the invoice remains unpaid and unverified, the subscribed workspace will be locked automatically.
+          </p>
+          <Button size="sm" variant="secondary" className="h-7" onClick={() => setInvoice(true)}>Complete Payment Immediately</Button>
+        </div>
+      </div>
+      <Dialog open={modal} onOpenChange={setModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <ShieldAlert className="size-5" /> Action Required: Subscription Renewal
+            </DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-1.5 text-sm">
+            <li>● Outstanding Balance: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including VAT</li>
+            <li>● Payment Due Date: <b>12 {month}</b></li>
+            <li>● Lock Deadline: <b>15 {month}, 00:00 Asia/Dhaka</b></li>
+            <li>● Payment Status: <b className="text-destructive">{statusText}</b></li>
+          </ul>
+          <p className="text-sm text-muted-foreground">Complete payment and ensure verification before the deadline.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button onClick={() => { setModal(false); setInvoice(true); }}>Pay Online</Button>
+            <Button variant="outline" asChild>
+              <a href="/system">Submit Transfer Receipt</a>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <InvoiceDialog open={invoice} onOpenChange={setInvoice} />
+    </>
   );
 }
