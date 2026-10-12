@@ -50,6 +50,12 @@ export function MyProfileCard() {
     mutationFn: () => save({ data: { name, phone, avatarHue: hue } }),
     onSuccess: () => {
       toast.success("Profile updated");
+      // Show the new name in the desk welcome right away; the refetch confirms it.
+      queryClient.setQueriesData({ queryKey: ["my-account"] }, (old: unknown) => {
+        const prev = old as { profile?: Record<string, unknown> | null } | null | undefined;
+        if (!prev?.profile) return old;
+        return { ...prev, profile: { ...prev.profile, name: name.trim(), phone, avatar_hue: hue } };
+      });
       setOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["my-account"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
@@ -79,7 +85,14 @@ export function MyProfileCard() {
             variant="secondary"
             size="sm"
             className="flex-1 sm:flex-none"
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => {
+              if (!open) {
+                setName(profile.name ?? "");
+                setPhone(profile.phone ?? "");
+                setHue(profile.avatar_hue ?? 200);
+              }
+              setOpen((v) => !v);
+            }}
           >
             <Palette className="size-4" /> Edit profile
           </Button>
@@ -107,7 +120,7 @@ export function MyProfileCard() {
       {open && (
         <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="my-name">Name</Label>
+            <Label htmlFor="my-name">Full name</Label>
             <Input id="my-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
