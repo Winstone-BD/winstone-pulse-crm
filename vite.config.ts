@@ -83,6 +83,11 @@ export default defineConfig({
     // chunk, where the shim above is the only thing keeping it alive.
     optimizeDeps: {
       include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "@tanstack/react-router",
         "@tanstack/history",
         "@tanstack/router-core",
         "@tanstack/router-core/isServer",
