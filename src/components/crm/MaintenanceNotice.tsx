@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
-import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, isRedWindow, nextRenewalDueAt, paymentDueLabel, usd } from "@/lib/maintenance-rules";
+import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, isRedWindow, nextRenewalDueAt, paymentDueLabel, subscriptionNoticeState, usd } from "@/lib/maintenance-rules";
 import { useLang, useT } from "@/lib/i18n";
 import { amberDismissed, dismissAmber, firstRedModalThisSession } from "@/lib/billing-dismiss";
 
@@ -242,8 +242,12 @@ export function MaintenanceGate() {
     );
   }
 
-  if (data.paymentStatus !== "verified" && !data.locked && isRedWindow()) return <UrgentRenewal period={data.period ?? ""} admin={data.exempt} paymentStatus={data.paymentStatus} />;
-  if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <AmberReminderBanner period={data.period ?? ""} />;
+  if (data.paymentStatus === "verified") return null; // verified → notice removed automatically
+  const notice = subscriptionNoticeState(data.paymentStatus, data.locked);
+  if (notice === "red") return <UrgentRenewal period={data.period ?? ""} admin={data.exempt} paymentStatus={data.paymentStatus} />;
+  if (notice === "blue") return <VerifyingBanner />;
+  if (notice === "amber") return <AmberReminderBanner period={data.period ?? ""} />;
+  if (!data.locked) return null;
   if (!needsNotice(data)) return null;
   const text =
     data.stage === "locked"
@@ -308,10 +312,9 @@ function AmberReminderBanner({ period }: { period: string }) {
       <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-warning/50 bg-warning/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
           <p className="min-w-0 flex-1">
-            <b className="text-warning">Subscription Reminder</b> — Your monthly invoice for {CRM_PLAN_NAME} ({usd(CRM_TOTAL_CENTS)} USD) is available. Payment is due on 12 {dhakaMonthName()}.
+            <b className="text-warning">Payment due soon</b> — {CRM_PLAN_NAME} · {usd(CRM_TOTAL_CENTS)} USD incl. VAT · due <b>12 {dhakaMonthName()}</b>
           </p>
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setOpen(true)}>View Invoice</Button>
-          <Button size="sm" className="h-7" onClick={() => setOpen(true)}>Pay Now</Button>
+          <Button size="sm" className="h-7" onClick={() => setOpen(true)}>Review invoice &amp; pay</Button>
           <Button size="sm" variant="ghost" className="h-7" aria-label="Dismiss reminder" onClick={() => { dismissAmber(period); setHidden(true); }}>✕</Button>
         </div>
       </div>
@@ -324,10 +327,10 @@ function UpcomingInvoiceWidget() {
   const [open, setOpen] = useState(false);
   return (
     <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
-      <p className="font-bold text-warning">Upcoming Invoice Due</p>
+      <p className="font-bold text-warning">Payment due soon</p>
       <p className="mt-1">Complete payment by 12 {dhakaMonthName()} to maintain uninterrupted access to your CRM pipelines and sales monitoring.</p>
       <p className="mt-1">Total Due: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including 15% VAT.</p>
-      <Button size="sm" className="mt-2" onClick={() => setOpen(true)}>Settle Invoice</Button>
+      <Button size="sm" className="mt-2" onClick={() => setOpen(true)}>Review invoice &amp; pay</Button>
       <InvoiceDialog open={open} onOpenChange={setOpen} />
       <MaintenanceCountdown />
     </div>
@@ -349,9 +352,9 @@ function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin
       <div role="alert" className="fixed inset-x-0 bottom-0 z-[60] bg-destructive px-3 py-2 text-xs text-destructive-foreground sm:text-sm">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
           <p className="min-w-0 flex-1">
-            <b>Urgent Payment Notice</b> — Your {CRM_PLAN_NAME} subscription requires payment. The final access deadline is 15 {month} at 00:00 Asia/Dhaka. If the invoice remains unpaid and unverified, the subscribed workspace will be locked automatically.
+            <b>Workspace suspension pending</b> — the {CRM_PLAN_NAME} invoice ({usd(CRM_TOTAL_CENTS)} USD) passed its 12 {month} due date and is not yet verified. Access pauses at <b>15 {month}, 00:00 Dhaka</b> unless payment is verified.
           </p>
-          <Button size="sm" variant="secondary" className="h-7" onClick={() => setInvoice(true)}>Complete Payment Immediately</Button>
+          <Button size="sm" variant="secondary" className="h-7" onClick={() => setInvoice(true)}>Review invoice &amp; pay</Button>
         </div>
       </div>
       <Dialog open={modal} onOpenChange={setModal}>
@@ -378,5 +381,16 @@ function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin
       </Dialog>
       <InvoiceDialog open={invoice} onOpenChange={setInvoice} />
     </>
+  );
+}
+
+/** Receipt submitted, awaiting architect verification: calm blue status, no action needed. */
+function VerifyingBanner() {
+  return (
+    <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-info/50 bg-info/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
+      <p className="mx-auto max-w-5xl">
+        <b className="text-info">Payment verification in progress</b> — your {CRM_PLAN_NAME} payment has been submitted and is being verified. No further action is needed.
+      </p>
+    </div>
   );
 }

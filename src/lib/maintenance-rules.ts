@@ -165,3 +165,18 @@ export function paymentDueLabel(now: Date = new Date()): "Payment Due" | "Paymen
   const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
   return day > 12 && day < 15 ? "Payment Overdue" : "Payment Due";
 }
+
+export type SubscriptionNoticeState = "amber" | "blue" | "red" | null;
+
+/**
+ * One calm notice per billing state (display-only, never changes enforcement):
+ * verified → no notice; receipt submitted → blue; unpaid on 9th–12th → amber;
+ * unpaid after the 12th due date until the 15th 00:00 lock → red.
+ */
+export function subscriptionNoticeState(paymentStatus: string | null | undefined, locked: boolean, now: Date = new Date()): SubscriptionNoticeState {
+  if (locked || paymentStatus === "verified") return null;
+  const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
+  if (day < 9 || day > 14) return null;
+  if (paymentStatus === "pending") return "blue";
+  return day <= 12 ? "amber" : "red";
+}
