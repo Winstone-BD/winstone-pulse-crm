@@ -2535,6 +2535,7 @@ export type Database = {
           id: string
           payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request: string | null
+          plan_code: string
           reason: string | null
           requested_at: string
           requested_by: string
@@ -2552,6 +2553,7 @@ export type Database = {
           id?: string
           payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request?: string | null
+          plan_code?: string
           reason?: string | null
           requested_at?: string
           requested_by: string
@@ -2569,6 +2571,7 @@ export type Database = {
           id?: string
           payment_status_at_request?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request?: string | null
+          plan_code?: string
           reason?: string | null
           requested_at?: string
           requested_by?: string
