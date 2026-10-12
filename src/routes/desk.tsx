@@ -54,6 +54,7 @@ import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";
 import { dhakaDay, plausibleSeconds } from "@/lib/lead-groups";
 import { useMyAccount, useSignOut } from "@/lib/session";
+import { DeskRangeChip, useDeskRange } from "@/lib/desk-range";
 
 export const Route = createFileRoute("/desk")({
   validateSearch: sectionSearch,
@@ -446,6 +447,7 @@ function DeskPage() {
             <WhatsappInbox />
           </TabsContent>
           <TabsContent value="calendar" className="space-y-4">
+            <FollowUpsInRange />
             <FollowUpWeek />
             <FollowUpCalendar />
           </TabsContent>
@@ -457,5 +459,38 @@ function DeskPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+/** Follow-up leads whose last change falls inside the Command Center date range. */
+function FollowUpsInRange() {
+  const range = useDeskRange();
+  const { leads } = useSnapshot();
+  if (!range.active) return null;
+  const rows = leads
+    .filter((l) => l.status === "follow_up" && range.inRange(l.updated_at))
+    .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
+  return (
+    <section className="card-elevated space-y-3 p-4" aria-label="তারিখের সীমার ফলো-আপ">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold">এই সময়ের ফলো-আপ · {rows.length.toLocaleString("bn-BD")}টি</h2>
+        <DeskRangeChip />
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">এই তারিখের মধ্যে কোনো ফলো-আপ লিড নেই।</p>
+      ) : (
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {rows.map((l) => (
+            <li key={l.id} className="rounded-xl border border-border bg-card p-3">
+              <p className="truncate font-semibold">{l.name}</p>
+              <p className="truncate text-xs tabular-nums text-muted-foreground">
+                {l.phone_number} · শেষ পরিবর্তন{" "}
+                {new Date(l.updated_at).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
