@@ -15,9 +15,9 @@ import {
   architectLogin,
   architectOverview,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
+import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-export const Route = createFileRoute("/architect")({
+export const Route = createFileRoute("/tech")({
   ssr: false,
   head: () => ({
     meta: [
@@ -72,7 +72,7 @@ function ArchitectPage() {
         <Button
           onClick={async () => {
             const r = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}/architect`,
+              redirect_uri: `${window.location.origin}/tech`,
               extraParams: { prompt: "select_account" },
             });
             if (r.error) toast.error(r.error.message);
@@ -158,6 +158,12 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
           ))}
         </tbody>
       </table>
+      <div className="card-elevated space-y-1 p-4 text-sm">
+        <p className="font-bold">Unlock pricing (15% VAT included)</p>
+        <p><b>CRM only — installation files:</b> {CRM_ONLY_FEE_LABEL}</p>
+        <p><b>Full operating system unlock:</b> {MAINTENANCE_FEE_LABEL}</p>
+        <p className="text-xs text-muted-foreground">Approvals on this page apply to the CRM part only. Keeping the whole operating system unlocked requires the full bill payment.</p>
+      </div>
       <PaymentReview session={session} status={state.paymentStatus} paymentRef={state.paymentRef} period={state.period} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />
       <h2 className="text-base font-semibold">Maintenance access requests</h2>
       {open.length === 0 && <p className="text-sm text-muted-foreground">No pending request.</p>}
