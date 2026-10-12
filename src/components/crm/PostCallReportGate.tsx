@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { clearReportDraft, loadReportDraft, saveReportDraft } from "@/lib/report-draft";
 import { toast } from "sonner";
 
 import { createSaveLatch, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
@@ -419,7 +420,9 @@ export function PostCallReportGate() {
   );
 
   const reportId = detail?.report?.id ?? null;
+  const draftReadyRef = useRef<string | null>(null);
   useEffect(() => {
+    draftReadyRef.current = null;
     setCategory("");
     setInterest("");
     setRequirement("");
@@ -446,8 +449,59 @@ export function PostCallReportGate() {
     setDirection(detail.recording?.call_direction === "incoming_callback" ? "incoming" : "outgoing");
     setCallState(detail.report.connected === false ? "no_answer" : "connected");
     setDuration(String(detail.report.duration_seconds ?? 0));
+    setFuReason(null);
+    setFuReasonNote("");
+    // Autosave recovery: refill what the agent had typed before a reload.
+    const draft = loadReportDraft(detail.report.id);
+    if (draft) {
+      const str = (k: string) => (typeof draft[k] === "string" ? (draft[k] as string) : null);
+      const set = (k: string, fn: (v: string) => void) => {
+        const v = str(k);
+        if (v !== null) fn(v);
+      };
+      set("direction", setDirection);
+      set("callState", setCallState);
+      set("duration", setDuration);
+      set("category", setCategory);
+      set("interest", setInterest);
+      set("requirement", setRequirement);
+      set("response", setResponse);
+      set("responseNote", setResponseNote);
+      set("nextAction", setNextAction);
+      set("nextActionNote", setNextActionNote);
+      set("when", setWhen);
+      set("fuReasonNote", setFuReasonNote);
+      set("noFuReason", setNoFuReason);
+      set("noFuNote", setNoFuNote);
+      set("grade", setGrade);
+      set("voiceNote", setVoiceNote);
+      if (draft["followMode"] === "set" || draft["followMode"] === "none") setFollowMode(draft["followMode"]);
+      if (typeof draft["fuReason"] === "string") setFuReason(draft["fuReason"] as FollowUpReasonCode);
+      if (draft["answers"] && typeof draft["answers"] === "object") {
+        setAnswers(draft["answers"] as Partial<Record<EvaluationKey, boolean>>);
+      }
+      toast.info(t({ bn: "আপনার অসমাপ্ত রিপোর্ট ফিরিয়ে আনা হয়েছে", en: "Your unfinished report was restored" }));
+    }
+    draftReadyRef.current = detail.report.id;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
+
+  // Autosave every change (debounced) so a reload never loses typed work.
+  useEffect(() => {
+    if (!reportId || draftReadyRef.current !== reportId) return;
+    const timer = setTimeout(() => {
+      saveReportDraft(reportId, {
+        direction, callState, duration, category, interest, requirement, response, responseNote,
+        nextAction, nextActionNote, followMode, when, fuReason, fuReasonNote, noFuReason, noFuNote,
+        answers, grade, voiceNote,
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [
+    reportId, direction, callState, duration, category, interest, requirement, response, responseNote,
+    nextAction, nextActionNote, followMode, when, fuReason, fuReasonNote, noFuReason, noFuNote,
+    answers, grade, voiceNote,
+  ]);
 
   const connected = callState === "connected";
   const suggestion = (detail?.suggestion ?? null) as Suggestion;
@@ -811,6 +865,7 @@ function ReportDialog({
       return { offline: false as const };
     },
     onSuccess: (result) => {
+      clearReportDraft(detail.report.id);
       toast.success(
         result.offline
           ? t({ bn: "ইন্টারনেট নেই — রিপোর্ট এই ফোনে সেভ হয়েছে, নেট ফিরলে নিজেই সার্ভারে যাবে", en: "No internet — the report is saved on this phone and will sync once you're back online" })
