@@ -515,6 +515,7 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
 
 /** IT-only preview of every notice state with a fabricated deadline. Display-only — never touches the real invoice. */
 export function NoticePreview() {
+  const [state, setState] = useState<"amber" | "blue" | "red" | "green">("amber");
   const month = dhakaMonthName();
   const lockAt = new Date(Date.now() + 7 * 24 * 3600_000).toISOString();
   const opts = {
@@ -524,33 +525,54 @@ export function NoticePreview() {
     lockClock: dhakaClockLabel(lockAt),
   };
   const msLeft = new Date(lockAt).getTime() - Date.now();
-  const deadline = (state: NoticeState) => ({
-    label: state === "blue" ? "Verification window" : "Payment deadline",
-    left: state === "blue" ? null : deadlineLeftLabel(msLeft),
+  const deadline = (s: NoticeState) => ({
+    label: s === "blue" ? "Verification window" : "Payment deadline",
+    left: s === "blue" ? null : deadlineLeftLabel(msLeft),
     date: dhakaDateLabel(lockAt),
     clock: dhakaClockLabel(lockAt),
   });
+  const tabs: { id: "amber" | "blue" | "red" | "green"; label: string }[] = [
+    { id: "amber", label: "Amber" },
+    { id: "blue", label: "Blue" },
+    { id: "red", label: "Red" },
+    { id: "green", label: "Green" },
+  ];
   return (
-    <div className="space-y-3">
-      {(["amber", "blue", "red"] as const).map((s) => {
-        const copy = subscriptionNoticeCopy(s, opts);
-        return (
-          <NoticeCard
-            key={s}
-            state={s}
-            title={copy.title}
-            body={copy.body}
-            cta={copy.cta}
-            deadline={deadline(s)}
-          />
-        );
-      })}
-      <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-        <span className="font-semibold text-primary">🟢 Subscription active</span>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Verified payment — after successful verification no notice is shown on the dashboard.
-        </p>
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Billing notice state">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={state === t.id}
+            onClick={() => setState(t.id)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              state === t.id
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
+      {state === "green" ? (
+        <div className="rounded-2xl border border-border bg-card p-3 text-sm">
+          <span className="font-semibold text-primary">🟢 Subscription active</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Verified payment — after successful verification no notice is shown on the dashboard.
+          </p>
+        </div>
+      ) : (
+        <NoticeCard
+          state={state}
+          title={subscriptionNoticeCopy(state, opts).title}
+          body={subscriptionNoticeCopy(state, opts).body}
+          cta={subscriptionNoticeCopy(state, opts).cta}
+          deadline={deadline(state)}
+        />
+      )}
     </div>
   );
 }
