@@ -52,3 +52,53 @@ describe("decimal-safe invoice", () => {
     expect(usd(CRM_TOTAL_CENTS)).toBe("$18.16");
   });
 });
+
+describe("notice card copy", () => {
+  const opts = { month: "October", totalLabel: "$18.16 USD", lockDate: "15 Oct 2026", lockClock: "00:00 (Asia/Dhaka)" };
+  it("red states the deadline and offers one payment action", () => {
+    const c = subscriptionNoticeCopy("red", opts);
+    expect(c.tone).toBe("red");
+    expect(c.cta).toBe("Review invoice & pay");
+    expect(c.body.join(" ")).toContain("15 Oct 2026 00:00 (Asia/Dhaka)");
+    expect(c.body.join(" ")).toContain("$18.16 USD");
+  });
+  it("amber keeps the same action but never claims suspension", () => {
+    const c = subscriptionNoticeCopy("amber", opts);
+    expect(c.title).toBe("Payment due soon");
+    expect(c.cta).toBe("Review invoice & pay");
+    expect(c.body.join(" ")).not.toContain("locked automatically");
+  });
+  it("blue asks for nothing", () => {
+    const c = subscriptionNoticeCopy("blue", opts);
+    expect(c.cta).toBeNull();
+    expect(c.title).toBe("Payment verification in progress");
+  });
+});
+
+describe("deadline chip", () => {
+  it("counts days, then hours, then minutes", () => {
+    expect(deadlineLeftLabel(6 * 86_400_000)).toBe("6 days left");
+    expect(deadlineLeftLabel(86_400_000)).toBe("1 day left");
+    expect(deadlineLeftLabel(86_400_000 + 1)).toBe("2 days left");
+    expect(deadlineLeftLabel(3 * 3_600_000)).toBe("3 hours left");
+    expect(deadlineLeftLabel(45 * 60_000)).toBe("45 minutes left");
+    expect(deadlineLeftLabel(0)).toBe("Deadline passed");
+  });
+  it("shows the lock instant in Dhaka time", () => {
+    const lock = new Date(Date.UTC(2026, 9, 14, 18, 0)).toISOString(); // 15 Oct 00:00 Dhaka
+    expect(dhakaDateLabel(lock)).toBe("15 Oct 2026");
+    expect(dhakaClockLabel(lock)).toBe("00:00 (Asia/Dhaka)");
+  });
+});
+
+describe("one notice per billing state", () => {
+  it("amber through the 12th, red only after it, blue once a receipt is in", () => {
+    expect(subscriptionNoticeState("unpaid", false, dhaka(2026, 10, 9, 0, 0))).toBe("amber");
+    expect(subscriptionNoticeState("unpaid", false, dhaka(2026, 10, 12, 23, 59))).toBe("amber");
+    expect(subscriptionNoticeState("unpaid", false, dhaka(2026, 10, 13, 0, 0))).toBe("red");
+    expect(subscriptionNoticeState("pending", false, dhaka(2026, 10, 13, 0, 0))).toBe("blue");
+    expect(subscriptionNoticeState("verified", false, dhaka(2026, 10, 13, 0, 0))).toBeNull();
+    expect(subscriptionNoticeState("unpaid", true, dhaka(2026, 10, 13, 0, 0))).toBeNull();
+    expect(subscriptionNoticeState("unpaid", false, dhaka(2026, 10, 8, 12, 0))).toBeNull();
+  });
+});
