@@ -65,10 +65,10 @@ export function WebsiteAnswerBox({
         <Input
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="গ্রাহকের প্রশ্ন লিখুন"
+          placeholder="Type the customer's question"
           className="h-9 text-sm"
         />
-        <Button type="submit" size="sm" className="h-9" disabled={run.isPending}>
+        <Button type="submit" aria-label="Ask" size="sm" className="h-9" disabled={run.isPending}>
           {run.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
         </Button>
       </form>
