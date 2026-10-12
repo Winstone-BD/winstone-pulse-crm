@@ -7,6 +7,7 @@ Run: bun run test:recovery:hq   (exit 0 = pass)
 """
 import asyncio
 import sys
+import re
 import time
 from playwright.async_api import async_playwright
 
@@ -32,7 +33,7 @@ async def main():
                 await route.continue_()
 
         # Only the HQ route module (not the document) is cut off.
-        await page.route("**/src/routes/hq*", hq_module)
+        await page.route(re.compile(r"/src/routes/hq\.tsx"), hq_module)
         loads = []
         page.on("load", lambda: loads.append(1))
 
