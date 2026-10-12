@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { acknowledgeMyBriefing, getMyBriefingStatus } from "@/lib/agent-briefing.functions";
 import { useAdminToken } from "@/lib/local-session";
+import { useT } from "@/lib/i18n";
 
 export function AgentBriefingGate() {
   const adminToken = useAdminToken();
+  const t = useT();
   const queryClient = useQueryClient();
   const getStatus = useServerFn(getMyBriefingStatus);
   const acknowledge = useServerFn(acknowledgeMyBriefing);
@@ -30,7 +32,7 @@ export function AgentBriefingGate() {
     mutationFn: () => acknowledge({ data: { adminToken } }),
     onSuccess: (next) => {
       queryClient.setQueryData(["agent-briefing-status"], next);
-      toast.success("আজকের ব্রিফিং স্বীকার করা হয়েছে");
+      toast.success(t({ bn: "আজকের ব্রিফিং স্বীকার করা হয়েছে", en: "Today's briefing acknowledged" }));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -46,18 +48,18 @@ export function AgentBriefingGate() {
           <span className="mx-auto grid size-12 place-items-center rounded-full bg-primary/10 text-primary sm:mx-0">
             <ShieldCheck className="size-6" />
           </span>
-          <AlertDialogTitle>{status.data?.title}</AlertDialogTitle>
+          <AlertDialogTitle>{status.data ? t({ bn: status.data.title, en: status.data.titleEn }) : null}</AlertDialogTitle>
           <AlertDialogDescription className="leading-6 text-foreground">
-            {status.data?.detail}
+            {status.data ? t({ bn: status.data.detail, en: status.data.detailEn }) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          এই নোটিশ স্বীকার না করা পর্যন্ত কোনো কল শুরু হবে না।
+          {t({ bn: "এই নোটিশ স্বীকার না করা পর্যন্ত কোনো কল শুরু হবে না।", en: "No call can start until you acknowledge this notice." })}
         </div>
         <AlertDialogFooter>
           <AlertDialogAction disabled={ack.isPending} onClick={() => ack.mutate()}>
             {ack.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-            বুঝেছি — কল শুরু করব
+            {t({ bn: "বুঝেছি — কল শুরু করব", en: "Got it — start calling" })}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

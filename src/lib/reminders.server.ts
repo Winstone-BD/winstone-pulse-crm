@@ -20,6 +20,9 @@ export type Reminder = {
   leadId: string | null;
   title: string;
   detail: string;
+  /** English copies for the English UI; the Bengali fields stay for pushes and older clients. */
+  titleEn: string;
+  detailEn: string;
   phone: string | null;
   dueAt: string;
   overdue: boolean;
@@ -35,6 +38,16 @@ const MAX_PUSH_PER_SWEEP = 6;
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
+}
+
+function enTime(iso: string): string {
+  return new Date(iso).toLocaleString("en-GB", {
+    timeZone: "Asia/Dhaka",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function bnTime(iso: string): string {
@@ -70,6 +83,8 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
       leadId: row.lead_id,
       title: "কলের রিপোর্ট জমা হয়নি",
       detail: `${lead?.name ?? row.phone_number ?? "কল"} — ${bnTime(row.created_at)}-এর কলের রিপোর্ট বাকি`,
+      titleEn: "Call report not submitted",
+      detailEn: `${lead?.name ?? row.phone_number ?? "Call"} — report pending for the call at ${enTime(row.created_at)}`,
       phone: row.phone_number,
       dueAt: row.created_at,
       overdue: true,
@@ -94,6 +109,10 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
       leadId: row.lead_id,
       title: nowMs > dueMs ? "ফলো-আপের সময় পার হয়েছে" : "ফলো-আপ কলের সময় হয়েছে",
       detail: `${row.customer_name ?? row.phone_number ?? "গ্রাহক"} — ${bnTime(row.scheduled_at)}${
+        row.note ? ` · ${row.note}` : ""
+      }`,
+      titleEn: nowMs > dueMs ? "Follow-up overdue" : "Follow-up call is due",
+      detailEn: `${row.customer_name ?? row.phone_number ?? "Customer"} — ${enTime(row.scheduled_at)}${
         row.note ? ` · ${row.note}` : ""
       }`,
       phone: row.phone_number,
