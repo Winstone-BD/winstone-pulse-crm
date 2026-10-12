@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
-import heroImage from "@/assets/pulse-hero.jpg";
+import heroImage from "@/assets/winstone-banner.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -131,24 +131,26 @@ function EntryHall() {
 
           <div className="relative mx-auto w-full max-w-xl">
             <img
-              src={heroImage}
-              alt="Winstone Pulse sales team reviewing the live pipeline"
-              width={1280}
-              height={960}
-              className="w-full rounded-3xl object-cover shadow-2xl ring-1 ring-primary/30"
+              src={heroImage.url}
+              alt="Winstone — Find. Build. Invest."
+              width={707}
+              height={240}
+              className="w-full rounded-3xl shadow-2xl ring-1 ring-primary/30"
             />
-            <div className="card-elevated absolute -left-3 top-6 hidden px-4 py-3 sm:block lg:-left-8">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Pipeline Value
-              </p>
-              <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
-              <p className="text-xs font-bold text-primary">↑ Updated in real time</p>
-            </div>
-            <div className="card-elevated absolute -bottom-4 right-3 px-4 py-3 sm:-bottom-6 sm:right-6">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Follow-ups
-              </p>
-              <p className="text-lg font-extrabold tracking-tight">Never missed</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="card-elevated px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Pipeline Value
+                </p>
+                <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
+                <p className="text-xs font-bold text-primary">↑ Updated in real time</p>
+              </div>
+              <div className="card-elevated px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Follow-ups
+                </p>
+                <p className="text-lg font-extrabold tracking-tight">Never missed</p>
+              </div>
             </div>
           </div>
         </header>
