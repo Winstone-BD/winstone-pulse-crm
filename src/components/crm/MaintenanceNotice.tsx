@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { CalendarClock, Check, ChevronRight, ChevronUp, Clock, FileText, Lock, LogIn, ShieldAlert } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { CalendarClock, Check, ChevronDown, ChevronRight, Clock, FileText, Lock, LogIn, ShieldAlert } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -274,6 +274,11 @@ const TONES: Record<NoticeState, Tone> = {
 };
 
 /** Ticks once a second so the notice countdown stays live. */
+/** Whether the visitor asked the system to reduce motion — used for programmatic scrolling. */
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
+
 function useNow(intervalMs = 1000): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
@@ -447,19 +452,40 @@ function RenewalModal({
 }
 
 /** One card per billing state. Dismissal is display-only and never touches the invoice. */
-function NoticeCardHost({ state, status, float }: { state: NoticeState; status: Status; float: boolean }) {
+function NoticeCardHost({
+  state,
+  status,
+  float,
+  floor,
+}: {
+  state: NoticeState;
+  status: Status;
+  /** Render inside the fixed bottom shell — for surfaces with no in-flow notice area. */
+  float: boolean;
+  /** Start collapsed to one line — used by the notice that lives in the page layout. */
+  floor: boolean;
+}) {
   const now = useNow();
   const [invoice, setInvoice] = useState(false);
   const [modal, setModal] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
   const period = status.period ?? "";
+  const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (state === "amber") setHidden(amberDismissed(period));
   }, [state, period]);
   useEffect(() => {
     if (state === "red" && status.exempt && firstRedModalThisSession(period)) setModal(true);
   }, [state, period, status.exempt]);
+  useEffect(() => {
+    if (!open || float) return;
+    // The card grows downward below the fold — keep it in sight when it opens.
+    const id = requestAnimationFrame(() =>
+      wrap.current?.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" }),
+    );
+    return () => cancelAnimationFrame(id);
+  }, [open, float]);
 
   const month = dhakaMonthName();
   const copy = subscriptionNoticeCopy(state, {
@@ -486,14 +512,14 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
       onClick={() => setOpen(true)}
       aria-expanded={false}
       className={cn(
-        "flex w-full items-center gap-2 rounded-full border py-1.5 pl-2 pr-3 text-left shadow-card backdrop-blur-sm transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]",
+        "flex w-full items-center gap-2 rounded-full border py-1.5 pl-2 pr-3 text-left shadow-card backdrop-blur-sm transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100",
         tone.card,
       )}
     >
       <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", tone.badgeInner)}>{badge}</span>
       <span className={cn("min-w-0 flex-1 truncate text-xs font-bold", tone.title)}>{copy.title}</span>
       {deadline.left && <span className={cn("shrink-0 text-[11px] font-semibold tabular-nums", tone.body)}>{deadline.left}</span>}
-      <ChevronUp className={cn("size-3.5 shrink-0", tone.body)} aria-hidden />
+      <ChevronDown className={cn("size-3.5 shrink-0", tone.body)} aria-hidden />
     </button>
   );
   const card = (
@@ -528,7 +554,7 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
   );
   const body = (
     <>
-      {!(float && (invoice || modal)) && (float && !open ? bar : card)}
+      {!(float && (invoice || modal)) && (floor && !open ? bar : card)}
       {state === "red" && status.exempt && (
         <RenewalModal
           open={modal}
@@ -544,6 +570,8 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
       <InvoiceDialog open={invoice} onOpenChange={setInvoice} />
     </>
   );
+  // In the page layout the notice is part of the flow: it sits below the content and never covers it.
+  if (!float && floor) return <div ref={wrap}>{body}</div>;
   return float ? <NoticeShell>{body}</NoticeShell> : <div className="mt-3">{body}</div>;
 }
 
@@ -611,13 +639,30 @@ export function NoticePreview() {
   );
 }
 
+/** In-flow notice for surfaces that own their layout — it sits under the page content, never over it. */
+export function MaintenanceFloorNotice({ className }: { className?: string }) {
+  const { data } = useMaintenance();
+  const path = useRouterState({ select: (r) => r.location.pathname });
+  useFloorNoticeHost();
+  if (!data || isOpenPath(path)) return null;
+  if (data.locked && !data.exempt) return null;
+  if (data.paymentStatus === "verified") return null;
+  const state = subscriptionNoticeState(data.paymentStatus, data.locked);
+  if (!state) return null;
+  return (
+    <div className={cn("mx-auto w-full max-w-3xl", className)}>
+      <NoticeCardHost state={state} status={data} float={false} floor />
+    </div>
+  );
+}
+
 /** Profile-card version: the same notice design, inline on Agent and Executive profiles. */
 export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
   if (!data) return null;
   if (data.paymentStatus !== "verified" && !data.locked) {
     const state = subscriptionNoticeState(data.paymentStatus, data.locked);
-    if (state) return <NoticeCardHost state={state} status={data} float={false} />;
+    if (state) return <NoticeCardHost state={state} status={data} float={false} floor={false} />;
   }
   if (!needsNotice(data)) return <MaintenanceCountdown />;
   return (
@@ -640,13 +685,45 @@ export function MaintenanceProfileNotice() {
 
 const OPEN_PATHS = ["/system", "/tech", "/auth", "/service-bill-alert", "/service-bill-unlock"];
 
+/** Surfaces that own an in-flow notice area (the app shell, the home page). The gate floats only when none do. */
+let floorHosts = 0;
+const floorListeners = new Set<() => void>();
+
+function useFloorNoticeHost() {
+  useEffect(() => {
+    floorHosts += 1;
+    floorListeners.forEach((l) => l());
+    return () => {
+      floorHosts -= 1;
+      floorListeners.forEach((l) => l());
+    };
+  }, []);
+}
+
+function useHasFloorNotice() {
+  return useSyncExternalStore(
+    (l) => {
+      floorListeners.add(l);
+      return () => floorListeners.delete(l);
+    },
+    () => floorHosts > 0,
+    () => false,
+  );
+}
+
+/** Paths where the CRM-wide notice stays silent (IT Console, architect page, sign-in, bill alerts). */
+function isOpenPath(path: string) {
+  return OPEN_PATHS.some((p) => path.startsWith(p));
+}
+
 /** CRM-wide notice card before the lock, full lock screen after it. */
 export function MaintenanceGate() {
   const t = useT();
   const { data } = useMaintenance();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  const hasFloorNotice = useHasFloorNotice();
   if (!data) return null;
-  if (OPEN_PATHS.some((p) => path.startsWith(p))) return null;
+  if (isOpenPath(path)) return null;
 
   if (data.locked && !data.exempt) {
     return (
@@ -667,7 +744,7 @@ export function MaintenanceGate() {
 
   if (data.paymentStatus === "verified") return null; // verified → notice removed automatically
   const notice = subscriptionNoticeState(data.paymentStatus, data.locked);
-  if (notice) return <NoticeCardHost state={notice} status={data} float />;
+  if (notice) return hasFloorNotice ? null : <NoticeCardHost state={notice} status={data} float floor />;
   if (!data.locked) return null;
   if (!needsNotice(data)) return null;
   const text =
