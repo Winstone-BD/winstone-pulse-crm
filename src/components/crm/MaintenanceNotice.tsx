@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { CalendarClock, Check, ChevronRight, Clock, FileText, Lock, LogIn, ShieldAlert } from "lucide-react";
+import { CalendarClock, Check, ChevronRight, ChevronUp, Clock, FileText, Lock, LogIn, ShieldAlert } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -452,6 +452,7 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
   const [invoice, setInvoice] = useState(false);
   const [modal, setModal] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [open, setOpen] = useState(false);
   const period = status.period ?? "";
   useEffect(() => {
     if (state === "amber") setHidden(amberDismissed(period));
@@ -469,32 +470,65 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
   });
   if (hidden) return <InvoiceDialog open={invoice} onOpenChange={setInvoice} />;
   const ms = now === null ? null : new Date(status.lockAt).getTime() - now;
+  const tone = TONES[state];
+  const badge =
+    state === "blue" ? <Check className="size-3" aria-hidden /> : state === "amber" ? <Clock className="size-3" aria-hidden /> : <span className="text-[11px] font-black leading-none">!</span>;
+  const deadline = {
+    label: state === "blue" ? "Verification window" : "Payment deadline",
+    left: state === "blue" || ms === null ? null : deadlineLeftLabel(ms),
+    date: dhakaDateLabel(status.lockAt),
+    clock: dhakaClockLabel(status.lockAt),
+  };
+  /** Slim one-line bar: tap to open the full card. Never covers page features. */
+  const bar = (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      aria-expanded={false}
+      className={cn(
+        "flex w-full items-center gap-2 rounded-full border py-1.5 pl-2 pr-3 text-left shadow-card backdrop-blur-sm transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]",
+        tone.card,
+      )}
+    >
+      <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", tone.badgeInner)}>{badge}</span>
+      <span className={cn("min-w-0 flex-1 truncate text-xs font-bold", tone.title)}>{copy.title}</span>
+      {deadline.left && <span className={cn("shrink-0 text-[11px] font-semibold tabular-nums", tone.body)}>{deadline.left}</span>}
+      <ChevronUp className={cn("size-3.5 shrink-0", tone.body)} aria-hidden />
+    </button>
+  );
   const card = (
-    <NoticeCard
-      state={state}
-      title={copy.title}
-      body={copy.body}
-      cta={copy.cta}
-      onCta={() => setInvoice(true)}
-      onDismiss={
-        state === "amber"
-          ? () => {
-              dismissAmber(period);
-              setHidden(true);
-            }
-          : undefined
-      }
-      deadline={{
-        label: state === "blue" ? "Verification window" : "Payment deadline",
-        left: state === "blue" || ms === null ? null : deadlineLeftLabel(ms),
-        date: dhakaDateLabel(status.lockAt),
-        clock: dhakaClockLabel(status.lockAt),
-      }}
-    />
+    <div className="space-y-1.5">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-expanded={true}
+          className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-muted-foreground transition hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Minimise ▾
+        </button>
+      </div>
+      <NoticeCard
+        state={state}
+        title={copy.title}
+        body={copy.body}
+        cta={copy.cta}
+        onCta={() => setInvoice(true)}
+        onDismiss={
+          state === "amber"
+            ? () => {
+                dismissAmber(period);
+                setHidden(true);
+              }
+            : undefined
+        }
+        deadline={deadline}
+      />
+    </div>
   );
   const body = (
     <>
-      {!(float && (invoice || modal)) && card}
+      {!(float && (invoice || modal)) && (float && !open ? bar : card)}
       {state === "red" && status.exempt && (
         <RenewalModal
           open={modal}
