@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MaintenanceCountdown } from "@/components/crm/MaintenanceNotice";
+import { MaintenanceCountdown, NoticePreview } from "@/components/crm/MaintenanceNotice";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -183,6 +183,12 @@ export function MaintenancePanel() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-semibold">Billing notice preview</p>
+        <p className="mb-2 text-xs text-muted-foreground">How each payment notice looks before publishing — amber, blue, red, and verified. Display-only; nothing here changes the real invoice.</p>
+        <NoticePreview />
       </div>
 
       <div>
