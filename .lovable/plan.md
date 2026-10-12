@@ -1,39 +1,38 @@
-# Plan: date-filtered tile links, HQ contribution review, and Pipeline-style reskin
+# Dealflow-style smart UI for Winstone Pulse (English first)
 
-## 1. Date range carries into the opened list
-- When you pick a range on the Command Center (আজ / ৭ / ৩০ দিন / custom dates) and click Leads, Calls or Follow-ups, the desk opens with that same range.
-- The desk shows a clear chip at the top, for example "১ অক্টো – ১২ অক্টো", with a "সরান" button to clear it.
-- Leads: leads added in the range. Calls: calls made in the range. Follow-ups: follow-up leads whose last change falls in the range.
-- The range is part of the page address, so it survives a refresh and can be shared with a colleague, who still sees only their own records.
+The reference video shows a clean "Dealflow" CRM. Its pages: Dashboard, Pipeline, Contacts, Companies, Activities, Tasks, Calendar, Forecast, Reports, Import/Export, Settings. It also has a top bar with search (⌘K), notifications and a theme toggle. Below is how each one maps to what Winstone Pulse already has, and what will be built. All data stays real and role-scoped. No business rules change and nothing is published.
 
-## 2. HQ page: agent daily contribution reports
-- A new page called "এজেন্ট অবদান রিপোর্ট", for HQ/IT only, linked from the HQ menu.
-- Filters: date range (presets plus custom), agent, and type ("যোগদান থেকে" or "দৈনিক").
-- Summary at the top: reports submitted vs expected today, agents who haven't submitted yet, and how many reports are within the word limit.
-- A table on desktop and cards on phones: agent, date, type, word and sentence count, and the full text in a side panel.
-- Review: HQ can mark a report "দেখা হয়েছে" and add a short note. The agent's original text can never be edited or deleted; each review is saved as a separate record.
-- CSV export of the filtered list (Bengali opens correctly in Excel).
+## Feature map
 
-## 3. New look in the style of "Sales Pipeline CRM", logic unchanged
-Yes, this is possible. Only the look changes. All rules, permissions, gates (9:05 briefing, 5:20 report, call reports, billing lock), LeadHub assignment, data and server checks stay exactly as they are.
+| Reference | Winstone Pulse today | Plan |
+|---|---|---|
+| Dashboard: "Welcome back", period chips, 4 stat cards with coloured left edge + icon, Recent Activity, Coming Soon | Desk "Today" hero, KPI strip, Next best call | Restyle to match: welcome line, This Week / This Month / This Quarter / All Time chips (reuse existing date range), stat cards with coloured edge + icon, "Coming up in 7 days" (follow-ups due) and "Recent activity" cards with friendly empty states |
+| Pipeline (kanban by stage) | Missing | **New "Pipeline" view** in My Desk: columns Pending → Contacted → Follow-up → Closed from the agent's own leads, with count badges and an empty state per column. Cards open Lead 360 / Call. **Read-only board, no drag-to-change-stage**: stage changes still happen only through call reports, so the report gate and history rules stay intact |
+| Contacts | My leads list | Restyle as "Contacts": search box, table on desktop, cards on phone |
+| Companies | No such data | **Skipped**: the CRM has no company records, and the plan won't invent any |
+| Activities | Call log + WhatsApp | Combine into one "Activities" timeline (calls, WhatsApp, lead events), filterable |
+| Tasks: To Do / Completed tabs, priority filter, empty state | Follow-ups | Restyle follow-ups as "Tasks": To Do / Completed tabs, search, filter by overdue/today/upcoming. New follow-ups still go through the existing follow-up flow (no new task table) |
+| Calendar | Follow-up calendar | Visual refresh only |
+| Forecast (revenue projection) | No deal values stored | **Replaced by "Outlook"**: real counts only (hot leads, follow-ups due per week, bookings pending approval). No money projection, because the CRM has no deal amounts |
+| Reports: stat cards + "Deals by Stage" / "Value by Stage" bars | Reports page + charts dashboard | Add a "Leads by stage" horizontal bar chart and the reference-style stat cards; translate all chart labels |
+| Import/Export | Lead import (HQ/agent) + CSV exports | Group under one "Import / Export" nav entry, where the role allows |
+| Top bar: search ⌘K, bell, theme | Bell + theme exist | **New ⌘K / Ctrl+K command palette**: jump to any page or search your own leads by name/number (only data you can already see) |
+| Sidebar: flat English list, Settings + Sign out at bottom | Grouped sidebar | Simplify the agent sidebar to the flat English list above. HQ/IT groups stay |
 
-What changes visually:
-- Colours: a calm light mint background for the sidebar and pages, a warm orange for main actions, and a dark teal for text and dark panels. There is a matching dark mode.
-- Font: Outfit (clean and rounded, like the reference) for English and numbers. Bengali keeps the current Bengali font so it stays readable.
-- Sidebar: mint panel with section labels (প্রধান, লিড ও বিক্রয়, …), rounded active item in orange, cleaner sub-items under "আমার ডেস্ক", and the user's avatar and sign-out at the bottom, like the reference. It collapses to icons and still works with the phone bottom menu.
-- Page header: one shared title block on every page (title, one-line description, action buttons on the right), as in the reference.
-- Cards, tables, badges and buttons: softer borders, more spacing, stage-style coloured badges (Hot/Warm/Cold, Pending/Follow-up/Closed).
-- The desk welcome banner, Command Center and HQ panels are restyled with the new colours.
+## Language
+- English is primary on every touched screen; Bengali remains the secondary switch.
+- Finish translating the leftovers: charts dashboard, agent overview, the app install card, top-bar buttons, lead list and call history.
 
-Rollout order, checked page by page:
-1. Colours, font, sidebar and page header (changes every page at once).
-2. Agent desk, lead queue and call panel.
-3. HQ, LeadHub, Reports and Social pages.
-4. Entry hall and sign-in pages.
+## Order of work
+1. Sidebar + top bar + ⌘K palette
+2. Dashboard restyle
+3. Pipeline board
+4. Contacts / Tasks / Activities restyle
+5. Reports bars + Outlook
+6. Translation leftovers
+7. Checks: typecheck, tests, phone/tablet/desktop screenshots signed in, build-tool pin
 
-Not copied from the reference: its pages (deals pipeline, companies, forecast), its sign-in system and its data. Only its visual style is used.
-
-## Technical details
-- Tile links: extend desk search params with optional `from`/`to` (YYYY-MM-DD, Dhaka). The lead list, call records and follow-up calendar sections filter client-side from the existing scoped snapshot, so agent and HQ scope rules stay unchanged.
-- HQ page: route `src/routes/contributions.tsx` (AppShell + RoleGate authority). Server functions in `src/lib/agent-contribution.functions.ts` use `resolveCaller` HQ/IT scope plus the service client loaded inside the handler. New append-only table `agent_contribution_reviews` (report_id, reviewer, note, created_at): server-only, RLS on with no client policies, and a mutation-block trigger.
-- Reskin: replace the oklch values in `src/styles.css` tokens (`--background`, `--primary`, `--sidebar-*`, badge and stage tokens) with the mint/orange/teal palette. Add Outfit via a `<link>` in `__root.tsx` and set `--font-sans`. Restyle `AppShell` sidebar markup and add a shared `PageHeader`. No server, query or route logic is edited. Run the existing tests and the build-tool pin check after each step.
+## Technical notes
+- Everything reads the existing scoped snapshot; there are no new tables and no migrations.
+- New views live as desk sections (`?s=pipeline`, `?s=tasks`, …), so existing role gates and the briefing/billing gates apply unchanged.
+- Shared `StatCard` / `EmptyState` components use only semantic colour tokens.
