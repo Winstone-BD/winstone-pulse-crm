@@ -123,37 +123,90 @@ export async function teamDailySummary(
   const { dhakaToday } = await import("@/lib/lead-pool.server");
   const today = dhakaToday();
 
+  const since = `${today}T00:00:00+06:00`;
   const { data: reports, error } = await supabaseAdmin
     .from("call_reports")
-    .select("agent_id, connected, duration_seconds")
-    .gte("created_at", `${today}T00:00:00+06:00`)
+    .select("agent_id, connected, duration_seconds, category, interest, summary")
+    .gte("created_at", since)
     .limit(5000);
   if (error) throw new Error(error.message);
+
+  const { data: fuEvents, error: fuErr } = await supabaseAdmin
+    .from("follow_up_events")
+    .select("agent_id, status, category, priority, customer_response, next_action, scheduled_at")
+    .or(`created_at.gte.${since},scheduled_at.gte.${since}`)
+    .lte("scheduled_at", `${today}T23:59:59+06:00`)
+    .limit(2000);
+  if (fuErr) throw new Error(fuErr.message);
 
   const { data: profiles } = await supabaseAdmin.from("profiles").select("id, name");
   const names = new Map((profiles ?? []).map((p) => [p.id, p.name] as const));
 
   const byAgent = new Map<string, TeamDayStats>();
+  const detail = new Map<
+    string,
+    { categories: Record<string, number>; interest: Record<string, number>; samples: string[]; followUps: Record<string, number>; nextActions: string[] }
+  >();
+  const d = (key: string) => {
+    let v = detail.get(key);
+    if (!v) {
+      v = { categories: {}, interest: {}, samples: [], followUps: {}, nextActions: [] };
+      detail.set(key, v);
+    }
+    return v;
+  };
+  const statRow = (key: string) =>
+    byAgent.get(key) ??
+    ({ agent: names.get(key) ?? "Unknown", reports: 0, connected: 0, talkMinutes: 0 } as TeamDayStats);
+
   for (const r of reports ?? []) {
     const key = r.agent_id ?? "unknown";
-    const row =
-      byAgent.get(key) ??
-      ({ agent: names.get(key) ?? "Unknown", reports: 0, connected: 0, talkMinutes: 0 } as TeamDayStats);
+    const row = statRow(key);
     row.reports += 1;
     if (r.connected) row.connected += 1;
     row.talkMinutes += Math.round((r.duration_seconds ?? 0) / 60);
     byAgent.set(key, row);
+    const x = d(key);
+    if (r.category) x.categories[r.category] = (x.categories[r.category] ?? 0) + 1;
+    if (r.interest) x.interest[r.interest] = (x.interest[r.interest] ?? 0) + 1;
+    const s = (r.summary ?? "").trim();
+    if (s && x.samples.length < 3) x.samples.push(s.slice(0, 160));
+  }
+  for (const f of fuEvents ?? []) {
+    const key = f.agent_id ?? "unknown";
+    if (!byAgent.has(key)) byAgent.set(key, statRow(key));
+    const x = d(key);
+    x.followUps[f.status] = (x.followUps[f.status] ?? 0) + 1;
+    const n = (f.next_action ?? "").trim();
+    if (n && x.nextActions.length < 3) x.nextActions.push(n.slice(0, 120));
   }
   const stats = [...byAgent.values()].sort((a, b) => b.reports - a.reports);
   if (!stats.length) return { summary: "", stats: [] };
 
+  const evidence = [...byAgent.entries()].map(([key, s]) => {
+    const x = d(key);
+    return {
+      agent: s.agent,
+      call_reports: s.reports,
+      connected: s.connected,
+      talk_minutes: s.talkMinutes,
+      report_categories: x.categories,
+      customer_interest: x.interest,
+      report_summaries: x.samples,
+      follow_ups_today_by_status: x.followUps,
+      follow_up_next_actions: x.nextActions,
+    };
+  });
+
   const out = await aiChatJson<{ summary?: string }>({
     system: `${COMMON}
-Task: summarise today's sales-floor activity for the HQ authority.
+Task: summarise today's sales-floor activity for the HQ authority, using ONLY the call reports and follow-up events provided.
 - Language: ${lang === "bn" ? "Bengali" : "English"}.
-- Maximum 6 short lines: overall picture, standout agent, who may need support, one coaching note.
+- Every number you mention must appear in the data. Do not guess reasons, deals, prices or customers not in the data.
+- If something is not in the data, do not mention it.
+- Maximum 6 short lines: overall picture, standout agent, who may need support (e.g. overdue/pending follow-ups), one coaching note drawn from the report summaries.
 Return: {"summary":"..."}`,
-    user: JSON.stringify({ date: today, agents: stats }),
+    user: JSON.stringify({ date: today, agents: evidence }),
   });
   const summary = (out.summary ?? "").trim();
   if (!summary) throw new Error("The AI could not summarise today — please retry");
