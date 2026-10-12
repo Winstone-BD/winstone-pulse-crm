@@ -135,17 +135,17 @@ function EntryHall() {
               alt="Winstone — Find. Build. Invest."
               width={1920}
               height={740}
-              className="w-full rounded-3xl shadow-2xl ring-1 ring-primary/30"
+              className="w-full rounded-xl border border-border"
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="card-elevated px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Pipeline Value
                 </p>
                 <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
-                <p className="text-xs font-bold text-primary">↑ Updated in real time</p>
+                <p className="text-xs font-bold text-gold">↑ Updated in real time</p>
               </div>
-              <div className="card-elevated px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Follow-ups
                 </p>
@@ -157,6 +157,7 @@ function EntryHall() {
 
         <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
           Choose Your Workspace
+          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
           Select the mode you are using — the same Winstone Pulse opens on every device.
@@ -194,6 +195,7 @@ function EntryHall() {
           className="mt-10 scroll-mt-6 text-center text-xl font-bold tracking-tight"
         >
           Sign in to your workspace
+          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
           <EntryCard
