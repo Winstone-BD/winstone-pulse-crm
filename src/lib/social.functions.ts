@@ -381,3 +381,51 @@ export const socialPageSummary = createServerFn({ method: "POST" })
         closed: ls.filter((id) => cs.has(id)).length, conversion: ls.length ? Math.round((bookingsN / ls.length) * 100) : 0 };
     }).sort((x, y) => y.leads - x.leads || y.entries - x.entries);
   });
+
+export type SocialPageDailyPoint = { date: string; leads: number; bookings: number; conversion: number };
+export type SocialPageDaily = { pageId: string; name: string; points: SocialPageDailyPoint[] };
+
+/** HQ/IT: per page/group, per Dhaka date — leads made and conversion (booked ÷ leads) for trend charts. */
+export const socialPageDaily = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => Base.extend({
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  }).parse(i))
+  .handler(async ({ data }): Promise<SocialPageDaily[]> => {
+    const { db } = await authorityCtx(data.adminToken);
+    const since = new Date(`${data.from}T00:00:00+06:00`).toISOString();
+    const until = new Date(new Date(`${data.to}T00:00:00+06:00`).getTime() + 86_400_000).toISOString();
+    const [{ data: pages, error: pe }, { data: rows, error }] = await Promise.all([
+      db.from("social_pages").select("id, name").order("name"),
+      db.from("social_activity_logs").select("page_id, lead_id, created_at")
+        .is("voided_at", null).not("lead_id", "is", null)
+        .gte("created_at", since).lt("created_at", until).limit(20000),
+    ]);
+    if (pe || error) throw new Error((pe ?? error)!.message);
+    const leadIds = [...new Set((rows ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+    const { data: bookings } = leadIds.length
+      ? await db.from("bookings").select("lead_id, approval_status").in("lead_id", leadIds)
+      : { data: [] as { lead_id: string | null; approval_status: string | null }[] };
+    const bs = new Set((bookings ?? []).filter((b) => b.approval_status !== "rejected").map((b) => b.lead_id));
+    const dhakaDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3_600_000).toISOString().slice(0, 10);
+    const byPage = new Map<string, Map<string, { leads: Set<string>; booked: Set<string> }>>();
+    for (const r of rows ?? []) {
+      if (!r.page_id || !r.lead_id) continue;
+      const day = dhakaDay(r.created_at);
+      const pm = byPage.get(r.page_id) ?? new Map();
+      const d = pm.get(day) ?? { leads: new Set<string>(), booked: new Set<string>() };
+      d.leads.add(r.lead_id);
+      if (bs.has(r.lead_id)) d.booked.add(r.lead_id);
+      pm.set(day, d);
+      byPage.set(r.page_id, pm);
+    }
+    return (pages ?? []).map((p) => {
+      const pm = byPage.get(p.id);
+      const points: SocialPageDailyPoint[] = pm
+        ? [...pm.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([date, d]) => ({
+            date, leads: d.leads.size, bookings: d.booked.size,
+            conversion: d.leads.size ? Math.round((d.booked.size / d.leads.size) * 100) : 0,
+          }))
+        : [];
+      return { pageId: p.id, name: p.name, points };
+    }).filter((p) => p.points.length > 0);
+  });
