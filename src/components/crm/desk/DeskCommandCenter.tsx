@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadCallControls } from "@/components/crm/desk/LeadCallControls";
