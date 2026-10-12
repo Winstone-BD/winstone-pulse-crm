@@ -340,7 +340,7 @@ function Tiles({ values }: { values: Record<string, number> | null }) {
         <div key={k} className="rounded-xl border border-background/15 bg-background/5 p-3">
           <div className="h-1.5 w-8 rounded bg-primary/70" />
           {values ? (
-            <p className="mt-2 text-2xl font-black tabular-nums">{values[k].toLocaleString("bn-BD")}</p>
+            <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
           ) : (
             <div className="mt-3 h-6 w-12 animate-pulse rounded bg-background/30" />
           )}
