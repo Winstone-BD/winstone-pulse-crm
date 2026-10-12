@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
-import heroImage from "@/assets/winstone-banner.png.asset.json";
+import heroImage from "@/assets/winstone-banner-v2.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
