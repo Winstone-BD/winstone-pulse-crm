@@ -13,7 +13,7 @@ import { dhakaDateOf, isFriday } from "@/lib/business-day";
 
 export type RetrySlot = "morning" | "afternoon" | "evening" | "custom";
 export type RetryMode = "plus2" | "plus3" | "custom";
-export type RetryPlanInput = { mode: RetryMode; slot: RetrySlot; time?: string | null; customAt?: string | null };
+export type RetryPlanInput = { mode: RetryMode; slot: RetrySlot; time?: string | null | undefined; customAt?: string | null | undefined };
 export type CadenceStage = "snooze" | "snooze_soft" | "unresponsive";
 
 export const SLOT_TIME: Record<Exclude<RetrySlot, "custom">, string> = {
