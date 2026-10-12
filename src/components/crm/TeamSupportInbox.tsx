@@ -52,9 +52,17 @@ export function TeamSupportInbox() {
 
   const query = useQuery({
     queryKey: ["team-support-inbox"],
-    queryFn: () => load({ data: { adminToken: getAdminToken() } }),
+    // A temporary failure throws so the last good tickets stay on screen
+    // while the next 15s poll retries.
+    queryFn: async () => {
+      const res = await load({ data: { adminToken: getAdminToken() } });
+      if (res.error === "unavailable") throw new Error("unavailable");
+      return res;
+    },
     refetchInterval: 15_000,
+    retry: 1,
   });
+  const staleNotice = query.isError && !!query.data;
 
   const tickets = query.data?.tickets ?? [];
   const replies = query.data?.replies ?? [];
