@@ -129,3 +129,5 @@
 
 - [x] HQ social: per page/group summary of leads, conversions, outcomes
 - [x] Social pages: audit log of who changed name/link/active and when
+- [x] Command Center date-range filter + clickable Leads/Calls/Follow-ups tiles
+- [x] 5:20 PM Dhaka agent contribution report popup (first: since joining; then daily; ≤5 sentences, ≤120 words)
