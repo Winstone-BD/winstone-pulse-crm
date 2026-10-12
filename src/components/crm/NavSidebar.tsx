@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Ticket,
   Trophy,
+  History,
   Users,
   type LucideIcon,
 } from "lucide-react";
