@@ -4,7 +4,13 @@
  */
 
 export const MAINTENANCE_FEE_USD = 46.29;
-export const MAINTENANCE_FEE_LABEL = "$46.29 USD";
+export const VAT_RATE = 0.15;
+/** Full operating-system unlock: $46.29 + 15% VAT ($6.94) = $53.23 USD. */
+export const MAINTENANCE_FEE_VAT_USD = 6.94;
+export const MAINTENANCE_FEE_TOTAL_USD = 53.23;
+export const MAINTENANCE_FEE_LABEL = "$46.29 USD + 15% VAT ($6.94) = $53.23 USD";
+/** CRM-only (installation files) unlock: $15.79 + 15% VAT ($2.37) = $18.16 USD. */
+export const CRM_ONLY_FEE_LABEL = "$15.79 USD + 15% VAT ($2.37) = $18.16 USD";
 /** Unpaid lock: 15th 00:00 Dhaka (grace period runs through the 14th 23:59). */
 export const BILLING_DAY = 15;
 /** Payment notice starts on the 9th 00:00 Dhaka. */
@@ -13,7 +19,7 @@ export const NOTICE_DAY = 9;
 export const RED_WARNING_HOURS = 79;
 export const MAX_UNLOCK_MINUTES = 24 * 60;
 export const UNLOCK_PRESET_HOURS = [1, 2, 4, 8, 12, 24] as const;
-export const ARCHITECT_EMAIL = "zhemon.sm123@gmail.com";
+export const ARCHITECT_EMAIL = "zhemongrowth@gmail.com";
 
 export type PaymentStatus = "unpaid" | "pending" | "verified";
 export type UnlockStatus = "none" | "requested" | "approved" | "denied" | "expired";

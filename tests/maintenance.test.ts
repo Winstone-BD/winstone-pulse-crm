@@ -58,14 +58,14 @@ describe("maintenance wiring", () => {
     "src/lib/maintenance.functions.ts",
     "src/components/crm/MaintenanceNotice.tsx",
     "src/components/crm/MaintenancePanel.tsx",
-    "src/routes/architect.tsx",
+    "src/routes/tech.tsx",
   ];
   it("shows only USD, never BDT", () => {
     expect(MAINTENANCE_FEE_LABEL).toBe("$46.29 USD");
     for (const f of files) expect(readFileSync(f, "utf8")).not.toMatch(/BDT|৳|4,?337/);
   });
   it("credential lives only on the server", () => {
-    for (const f of ["src/components/crm/MaintenanceNotice.tsx", "src/routes/architect.tsx"]) {
+    for (const f of ["src/components/crm/MaintenanceNotice.tsx", "src/routes/tech.tsx"]) {
       const src = readFileSync(f, "utf8");
       expect(src).not.toMatch(/ARCHITECT_UNLOCK_CREDENTIAL|localStorage|sessionStorage/);
     }

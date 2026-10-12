@@ -17,7 +17,7 @@ import {
 } from "@/lib/maintenance.functions";
 import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-export const Route = createFileRoute("/architect")({
+export const Route = createFileRoute("/tech")({
   ssr: false,
   head: () => ({
     meta: [
@@ -72,7 +72,7 @@ function ArchitectPage() {
         <Button
           onClick={async () => {
             const r = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}/architect`,
+              redirect_uri: `${window.location.origin}/tech`,
               extraParams: { prompt: "select_account" },
             });
             if (r.error) toast.error(r.error.message);

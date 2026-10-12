@@ -49,7 +49,7 @@
 | -------------------------------------------- | ------------------------------ | ---------------------------------- | ---------------------------------- |
 | আইটি কনসোল (PIN)                             | `/system`                      | `admin-gate.server.ts`             | `system_settings`                  |
 | অডিট ট্রেইল                                  | `/system`                      | `audit.server.ts`                  | `audit_log`                        |
-| মাসিক $46.29 maintenance lock + verification | `/hq`, `/system`, `/architect` | `maintenance.server.ts`            | `system_maintenance`               |
+| মাসিক $46.29 maintenance lock + verification | `/hq`, `/system`, `/tech` | `maintenance.server.ts`            | `system_maintenance`               |
 | বিল due/overdue অ্যালার্ট (অ্যাপ+পুশ+ইমেইল)  | cron                           | `service-billing-alerts.server.ts` | `system_alerts`, `push_deliveries` |
 | ক্রেডিট ব্যবহার রিপোর্ট                      | `/credits`                     | `credits-report.functions.ts`      | —                                  |
 | বার্ষিক সংরক্ষণ                              | `/system`                      | `YearArchivePanel`                 | —                                  |
