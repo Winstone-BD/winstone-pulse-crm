@@ -44,10 +44,10 @@ describe("maintenance lock rule", () => {
 
 describe("architect identity", () => {
   it("accepts only the verified Google account", () => {
-    expect(isArchitectIdentity({ email: "zhemon.sm123@gmail.com", emailConfirmed: true, providers: ["google"] })).toBe(true);
-    expect(isArchitectIdentity({ email: "zhemon.sm123@gmail.com", emailConfirmed: true, providers: ["email"] })).toBe(false);
+    expect(isArchitectIdentity({ email: "zhemongrowth@gmail.com", emailConfirmed: true, providers: ["google"] })).toBe(true);
+    expect(isArchitectIdentity({ email: "zhemongrowth@gmail.com", emailConfirmed: true, providers: ["email"] })).toBe(false);
     expect(isArchitectIdentity({ email: "someone@gmail.com", emailConfirmed: true, providers: ["google"] })).toBe(false);
-    expect(isArchitectIdentity({ email: "zhemon.sm123@gmail.com", emailConfirmed: false, providers: ["google"] })).toBe(false);
+    expect(isArchitectIdentity({ email: "zhemongrowth@gmail.com", emailConfirmed: false, providers: ["google"] })).toBe(false);
   });
 });
 
@@ -61,7 +61,7 @@ describe("maintenance wiring", () => {
     "src/routes/tech.tsx",
   ];
   it("shows only USD, never BDT", () => {
-    expect(MAINTENANCE_FEE_LABEL).toBe("$46.29 USD");
+    expect(MAINTENANCE_FEE_LABEL).toBe("$46.29 USD + 15% VAT ($6.94) = $53.23 USD");
     for (const f of files) expect(readFileSync(f, "utf8")).not.toMatch(/BDT|৳|4,?337/);
   });
   it("credential lives only on the server", () => {

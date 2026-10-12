@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentActivityRouteImport } from './routes/agent-activity'
-import { Route as ArchitectRouteImport } from './routes/architect'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookingReviewRouteImport } from './routes/booking-review'
@@ -52,6 +51,7 @@ import { Route as StaffPortalRouteImport } from './routes/staff-portal'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
 import { Route as SystemRouteImport } from './routes/system'
+import { Route as TechRouteImport } from './routes/tech'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TicketsRouteImport } from './routes/tickets'
 import { Route as VoiceTranscriptionRouteImport } from './routes/voice-transcription'
@@ -118,11 +118,6 @@ const IndexRoute = IndexRouteImport.update({
 const AgentActivityRoute = AgentActivityRouteImport.update({
   id: '/agent-activity',
   path: '/agent-activity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArchitectRoute = ArchitectRouteImport.update({
-  id: '/architect',
-  path: '/architect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditReportRoute = AuditReportRouteImport.update({
@@ -323,6 +318,11 @@ const SupportAdminRoute = SupportAdminRouteImport.update({
 const SystemRoute = SystemRouteImport.update({
   id: '/system',
   path: '/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TechRoute = TechRouteImport.update({
+  id: '/tech',
+  path: '/tech',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -636,7 +636,6 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
-  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -677,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
+  '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
@@ -738,7 +738,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
-  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -779,6 +778,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
+  '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
@@ -841,7 +841,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
-  '/architect': typeof ArchitectRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -882,6 +881,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
+  '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
@@ -945,7 +945,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent-activity'
-    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -986,6 +985,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/support-admin'
     | '/system'
+    | '/tech'
     | '/terms'
     | '/tickets'
     | '/voice-transcription'
@@ -1047,7 +1047,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agent-activity'
-    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1088,6 +1087,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/support-admin'
     | '/system'
+    | '/tech'
     | '/terms'
     | '/tickets'
     | '/voice-transcription'
@@ -1149,7 +1149,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agent-activity'
-    | '/architect'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1190,6 +1189,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/support-admin'
     | '/system'
+    | '/tech'
     | '/terms'
     | '/tickets'
     | '/voice-transcription'
@@ -1252,7 +1252,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentActivityRoute: typeof AgentActivityRoute
-  ArchitectRoute: typeof ArchitectRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
   BookingReviewRoute: typeof BookingReviewRoute
@@ -1293,6 +1292,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
   SystemRoute: typeof SystemRoute
+  TechRoute: typeof TechRoute
   TermsRoute: typeof TermsRoute
   TicketsRoute: typeof TicketsRoute
   VoiceTranscriptionRoute: typeof VoiceTranscriptionRoute
@@ -1366,13 +1366,6 @@ declare module '@tanstack/react-router' {
       path: '/agent-activity'
       fullPath: '/agent-activity'
       preLoaderRoute: typeof AgentActivityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/architect': {
-      id: '/architect'
-      path: '/architect'
-      fullPath: '/architect'
-      preLoaderRoute: typeof ArchitectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-report': {
@@ -1653,6 +1646,13 @@ declare module '@tanstack/react-router' {
       path: '/system'
       fullPath: '/system'
       preLoaderRoute: typeof SystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tech': {
+      id: '/tech'
+      path: '/tech'
+      fullPath: '/tech'
+      preLoaderRoute: typeof TechRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -2060,7 +2060,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentActivityRoute: AgentActivityRoute,
-  ArchitectRoute: ArchitectRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
   BookingReviewRoute: BookingReviewRoute,
@@ -2101,6 +2100,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,
   SystemRoute: SystemRoute,
+  TechRoute: TechRoute,
   TermsRoute: TermsRoute,
   TicketsRoute: TicketsRoute,
   VoiceTranscriptionRoute: VoiceTranscriptionRoute,
