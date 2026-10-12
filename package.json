@@ -7,6 +7,7 @@
     "test:restart": "python3 scripts/restart-recovery-check.py",
     "test:smoke": "python3 scripts/production-smoke-check.py",
     "test:recovery": "python3 scripts/module-recovery-check.py",
+    "test:recovery:hq": "python3 scripts/hq-module-recovery-check.py",
     "dev": "vite dev",
     "prebuild": "node scripts/check-build-tool-pin.mjs && node scripts/check-dashboard-colors.mjs",
     "build": "vite build",
