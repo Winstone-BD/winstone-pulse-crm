@@ -28,6 +28,7 @@ import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
 import { CarryOverLeads } from "@/components/crm/CarryOverLeads";
 import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
+import { ActivitiesView, OutlookView, PipelineBoard, TasksView } from "@/components/crm/desk/WorkViews";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
 import { FollowUpWeek } from "@/components/crm/FollowUpWeek";
@@ -363,6 +364,8 @@ function DeskPage() {
             <SiteVisitReminder />
           </section>
 
+          {tab === "today" && (
+            <>
           <OfficialNewsStrip />
 
           <details className="group card-elevated overflow-hidden">
@@ -390,6 +393,8 @@ function DeskPage() {
               </>
             }
           />
+            </>
+          )}
 
         {tab === "today" && (
           <div className="space-y-4 sm:space-y-6">
@@ -446,6 +451,18 @@ function DeskPage() {
                 />
               </>
             )}
+          </TabsContent>
+          <TabsContent value="pipeline">
+            {queueLocked ? <QueueLockedNote /> : <PipelineBoard />}
+          </TabsContent>
+          <TabsContent value="tasks">
+            <TasksView />
+          </TabsContent>
+          <TabsContent value="activities">
+            <ActivitiesView />
+          </TabsContent>
+          <TabsContent value="outlook">
+            <OutlookView />
           </TabsContent>
           <TabsContent value="calls">
             <MyCallLog />

@@ -2,6 +2,7 @@ import { Check, Copy, Download, QrCode, RefreshCw, ShieldAlert, ShieldCheck } fr
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useT, useLang } from "@/lib/i18n";
 
 const APK_PATH = "/api/public/download/apk";
 
@@ -20,6 +21,8 @@ type SmokeResult = {
  * automatic post-publish smoke test (APK availability + key CRM routes).
  */
 export function ApkInstallCard() {
+  const t = useT();
+  const lang = useLang();
   const [origin, setOrigin] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -57,11 +60,11 @@ export function ApkInstallCard() {
       const res = await fetch("/api/public/smoke", { headers: { accept: "application/json" } });
       setResult((await res.json()) as SmokeResult);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "পরীক্ষা চালানো যায়নি");
+      setError(err instanceof Error ? err.message : t({ bn: "পরীক্ষা চালানো যায়নি", en: "Could not run the check" }));
     } finally {
       setRunning(false);
     }
-  }, []);
+  }, [t]);
 
   // Automatic run: every load of the console (i.e. right after a publish) checks the live site.
   useEffect(() => {
@@ -77,7 +80,7 @@ export function ApkInstallCard() {
   return (
     <section className="space-y-3">
       <h2 className="flex items-center gap-2 text-lg font-semibold">
-        <QrCode className="size-4 text-primary" /> অ্যাপ ইনস্টল ও সিস্টেম পরীক্ষা
+        <QrCode className="size-4 text-primary" /> {t({ bn: "অ্যাপ ইনস্টল ও সিস্টেম পরীক্ষা", en: "App install & system check" })}
       </h2>
 
       <div className="grid gap-4 rounded-xl border bg-card p-4 md:grid-cols-[auto_1fr]">
@@ -85,39 +88,41 @@ export function ApkInstallCard() {
           {qr ? (
             <img
               src={qr}
-              alt="এজেন্ট অ্যাপ ডাউনলোড লিংকের QR কোড"
+              alt={t({ bn: "এজেন্ট অ্যাপ ডাউনলোড লিংকের QR কোড", en: "QR code for the agent app download link" })}
               className="size-40 rounded-lg border bg-background p-1"
               width={160}
               height={160}
             />
           ) : (
             <div className="flex size-40 items-center justify-center rounded-lg border text-xs text-muted-foreground">
-              QR তৈরি হচ্ছে…
+              {t({ bn: "QR তৈরি হচ্ছে…", en: "Generating QR…" })}
             </div>
           )}
           <p className="text-center text-xs text-muted-foreground">
-            ফোনের ক্যামেরা দিয়ে স্ক্যান করুন
+            {t({ bn: "ফোনের ক্যামেরা দিয়ে স্ক্যান করুন", en: "Scan with your phone's camera" })}
           </p>
         </div>
 
         <div className="min-w-0 space-y-3">
           <p className="text-sm text-muted-foreground">
-            QR স্ক্যান করলে সরাসরি এজেন্ট অ্যাপ ডাউনলোড শুরু হবে। ইনস্টলের পর CRM-এর ইমেইল ও
-            পাসওয়ার্ড দিয়ে লগইন করুন।
+            {t({
+              bn: "QR স্ক্যান করলে সরাসরি এজেন্ট অ্যাপ ডাউনলোড শুরু হবে। ইনস্টলের পর CRM-এর ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।",
+              en: "Scanning the QR starts the agent app download right away. After installing, sign in with your CRM email and password.",
+            })}
           </p>
           <code className="block truncate rounded-md bg-muted px-3 py-2 text-xs">{apkUrl}</code>
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm">
               <a href={APK_PATH}>
-                <Download className="size-4" /> ডাউনলোড
+                <Download className="size-4" /> {t({ bn: "ডাউনলোড", en: "Download" })}
               </a>
             </Button>
             <Button size="sm" variant="outline" onClick={() => void copy()}>
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {copied ? "কপি হয়েছে" : "লিংক কপি"}
+              {copied ? t({ bn: "কপি হয়েছে", en: "Copied" }) : t({ bn: "লিংক কপি", en: "Copy link" })}
             </Button>
             <Button size="sm" variant="outline" onClick={() => void runSmoke()} disabled={running}>
-              <RefreshCw className={`size-4 ${running ? "animate-spin" : ""}`} /> আবার পরীক্ষা
+              <RefreshCw className={`size-4 ${running ? "animate-spin" : ""}`} /> {t({ bn: "আবার পরীক্ষা", en: "Re-check" })}
             </Button>
           </div>
         </div>
@@ -131,19 +136,19 @@ export function ApkInstallCard() {
             ) : (
               <ShieldAlert className="size-4 text-warning" />
             )}
-            লাইভ সাইট পরীক্ষা
+            {t({ bn: "লাইভ সাইট পরীক্ষা", en: "Live site check" })}
           </h3>
           {result ? (
             <span className="text-xs text-muted-foreground">
-              {result.passed}/{result.total} ঠিক আছে ·{" "}
-              {new Date(result.checkedAt).toLocaleString("bn-BD")}
+              {t({ bn: `${result.passed}/${result.total} ঠিক আছে`, en: `${result.passed}/${result.total} passing` })} ·{" "}
+              {new Date(result.checkedAt).toLocaleString(lang === "en" ? "en-GB" : "bn-BD")}
             </span>
           ) : null}
         </div>
 
         {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
         {!result && running ? (
-          <p className="mt-2 text-xs text-muted-foreground">পরীক্ষা চলছে…</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t({ bn: "পরীক্ষা চলছে…", en: "Checking…" })}</p>
         ) : null}
 
         <ul className="mt-3 space-y-1.5">

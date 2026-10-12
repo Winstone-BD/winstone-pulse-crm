@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
-import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
+import { MobileNavDrawer, NavSidebar, NAV_ICONS } from "@/components/crm/NavSidebar";
+import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -39,22 +40,22 @@ export const NAV = [
   { to: "/coach", label: "AI Coach", scopes: ["authority", "coordinator", "agent"] },
   { to: "/leadhub", label: "LeadHub Nexus", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/hq", label: "Executive HQ", scopes: ["authority"] },
-  { to: "/contributions", label: "এজেন্ট অবদান রিপোর্ট", scopes: ["authority"] },
+  { to: "/contributions", label: "Agent Contributions", scopes: ["authority"] },
   { to: "/staff-portal", label: "Staff Portal", scopes: ["authority"] },
   { to: "/live-leads", label: "Live Leads", scopes: ["authority", "coordinator"] },
   { to: "/booking-review", label: "Booking Review", scopes: ["authority"] },
   { to: "/sales-intel", label: "Sales Intelligence", scopes: ["authority", "agent"] },
-  { to: "/news", label: "মার্কেট নিউজ", scopes: ["authority", "agent"] },
-  { to: "/site-visits", label: "সাইট ভিজিট", scopes: ["authority", "agent"] },
-  { to: "/projects", label: "প্রজেক্ট", scopes: ["authority", "coordinator", "agent"] },
-  { to: "/inventory", label: "ইনভেন্টরি", scopes: ["authority", "coordinator"] },
+  { to: "/news", label: "Market News", scopes: ["authority", "agent"] },
+  { to: "/site-visits", label: "Site Visits", scopes: ["authority", "agent"] },
+  { to: "/projects", label: "Projects", scopes: ["authority", "coordinator", "agent"] },
+  { to: "/inventory", label: "Inventory", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },
-  { to: "/runtime-errors", label: "রানটাইম এরর", scopes: ["authority"] },
+  { to: "/runtime-errors", label: "Runtime Errors", scopes: ["authority"] },
   { to: "/ingest", label: "Ingest Check", scopes: ["authority"] },
   { to: "/migration", label: "Migration Checklist", scopes: ["authority"] },
   { to: "/migration-export", label: "Migration Export", scopes: ["authority"] },
-  { to: "/security", label: "PIN ও অ্যাক্সেস", scopes: ["authority", "coordinator", "agent"] },
+  { to: "/security", label: "PIN & Access", scopes: ["authority", "coordinator", "agent"] },
   { to: "/docs", label: "Docs", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/docs-admin", label: "Docs Admin", scopes: ["authority", "coordinator"] },
   { to: "/inbox", label: "Support Inbox", scopes: ["authority", "coordinator", "agent"] },
@@ -67,6 +68,7 @@ export const NAV = [
 
 /** Light/dark switch: presentation only, remembered on this device. */
 function ThemeToggle() {
+  const t = useT();
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const on = localStorage.getItem("winstone.theme") === "dark";
@@ -88,8 +90,8 @@ function ThemeToggle() {
       type="button"
       onClick={flip}
       aria-pressed={dark}
-      aria-label={dark ? "লাইট মোড" : "ডার্ক মোড"}
-      title={dark ? "লাইট মোড" : "ডার্ক মোড"}
+      aria-label={dark ? t({ bn: "লাইট মোড", en: "Light mode" }) : t({ bn: "ডার্ক মোড", en: "Dark mode" })}
+      title={dark ? t({ bn: "লাইট মোড", en: "Light mode" }) : t({ bn: "ডার্ক মোড", en: "Dark mode" })}
       className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
     >
       {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
@@ -135,6 +137,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
           <div className="col-span-2 flex min-w-0 flex-wrap items-center justify-start gap-2 border-t border-border pt-2 sm:ml-auto sm:justify-end sm:border-0 sm:pt-0 [&>*]:shrink-0">
+            {scope !== "none" && <CommandPalette items={nav} icons={NAV_ICONS} />}
+
             <div role="group" aria-label="Language" className="inline-flex h-8 items-center rounded-full border border-border bg-card p-0.5 text-[11px] font-semibold">
               {(["bn", "en"] as const).map((l) => (
                 <button

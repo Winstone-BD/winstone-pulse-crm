@@ -1,9 +1,10 @@
-import { Flame, MessageCircle, Phone, Snowflake, Sun } from "lucide-react";
+import { Flame, Snowflake, Sun } from "lucide-react";
 import { useMemo } from "react";
 
 import { useLang, useT } from "@/lib/i18n";
 
 import { useSnapshot, type Lead } from "@/lib/crm-data";
+import { WebCallButton } from "@/components/crm/WebCallButton";
 
 const TEMP_RANK: Record<string, number> = { hot: 0, warm: 1, cold: 2 };
 
@@ -82,8 +83,6 @@ export function TodayHero({ name }: { name: string | null }) {
   const hot = leads.filter((l) => l.temperature === "hot" && l.work_state !== "completed").length;
   const followUps = leads.filter((l) => l.status === "follow_up").length;
   const pct = leads.length ? Math.round((done / leads.length) * 100) : 0;
-  const phone = next?.phone_number?.replace(/[^\d+]/g, "") ?? "";
-  const wa = phone.replace(/^\+/, "").replace(/^0/, "880");
   const first = (name ?? t({ bn: "এজেন্ট", en: "Agent" })).split(" ")[0];
   const today = new Date().toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", weekday: "long", day: "numeric", month: "long" });
 
@@ -107,7 +106,8 @@ export function TodayHero({ name }: { name: string | null }) {
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">{greeting(lang)} · {today}</p>
-            <h1 className="mt-1 truncate text-3xl font-black tracking-tight sm:text-4xl">{t({ bn: "স্বাগতম", en: "Welcome" })}, {first}</h1>
+            <h1 className="mt-1 break-words text-2xl font-black leading-tight tracking-tight sm:text-4xl">{t({ bn: `স্বাগতম, ${first}`, en: `Welcome back, ${first}` })}</h1>
+            <p className="mt-0.5 text-sm font-medium opacity-80">{t({ bn: "আজকের কাজের এক নজর দেখে নিন।", en: "Here's your day at a glance." })}</p>
             <p className="mt-1 text-sm opacity-70">{mood(pct, lang)}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <span className="rounded-full bg-background/10 px-3 py-1"><b className="tabular-nums">{bn(done)}</b> / {bn(leads.length)} {t({ bn: "শেষ", en: "done" })}</span>
@@ -118,29 +118,31 @@ export function TodayHero({ name }: { name: string | null }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-background/15 bg-background/5 p-4 backdrop-blur">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">{t({ bn: "পরবর্তী কল", en: "Next call" })}</p>
+        <div className="rounded-2xl border border-background/10 bg-background/5 p-3 backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted opacity-70">{t({ bn: "পরবর্তী কল (সংক্ষিপ্ত)", en: "Next call (quick glance)" })}</p>
           {isPending ? (
-            <div className="mt-2 h-14 animate-pulse rounded-lg bg-background/10" />
+            <div className="mt-2 h-12 animate-pulse rounded-lg bg-background/10 motion-reduce:animate-none" />
           ) : !next ? (
-            <p className="mt-2 text-sm opacity-70">{t({ bn: "আজকের সব লিড শেষ — দারুণ কাজ! নতুন লিড LeadHub থেকে আসবে।", en: "All of today's leads are done — great work! New leads will arrive from LeadHub." })}</p>
+            <p className="mt-2 text-xs opacity-70">{t({ bn: "আজকের সব লিড শেষ — দারুণ কাজ! নতুন লিড LeadHub থেকে আসবে।", en: "All of today's leads are done — great work! New leads will arrive from LeadHub." })}</p>
           ) : (
             <>
               <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-                <h2 className="truncate text-lg font-bold">{next.name}</h2>
+                <h2 className="truncate text-sm font-bold">{next.name}</h2>
                 <TempBadge t={next.temperature} />
               </div>
-              <p className="mt-0.5 truncate text-xs tabular-nums opacity-70">
+              <p className="mt-0.5 truncate text-[11px] tabular-nums opacity-70">
                 {next.phone_number}
                 {next.last_call_at ? ` · ${t({ bn: "শেষ কল", en: "Last call" })} ${new Date(next.last_call_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}` : ` · ${t({ bn: "এখনো কল হয়নি", en: "No call yet" })}`}
               </p>
-              <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-                <a href={`tel:${phone}`} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-sm transition-transform active:scale-95">
-                  <Phone className="size-4" aria-hidden />{t({ bn: "এখনই কল করুন", en: "Call now" })}
-                </a>
-                <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-background/20 px-3 text-sm font-semibold transition-transform active:scale-95">
-                  <MessageCircle className="size-4" aria-hidden />
-                </a>
+              <div className="mt-2 [&_button]:h-10 [&_button]:text-sm">
+                <WebCallButton
+                  leadId={next.id}
+                  phone={next.phone_number}
+                  name={next.name}
+                  label={t({ bn: "এখনই কল করুন", en: "Call now" })}
+                  ariaLabel={t({ bn: `${next.name}-কে কল করুন`, en: `Call ${next.name}` })}
+                  className="h-10 rounded-xl text-sm"
+                />
               </div>
             </>
           )}
