@@ -16,7 +16,8 @@ import {
   architectLogin,
   architectOverview,
 } from "@/lib/maintenance.functions";
-import { CRM_BASE_CENTS, CRM_PLAN_NAME, CRM_TOTAL_CENTS, CRM_VAT_CENTS, usd, CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
+import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
+import { downloadVoucher, printVoucher, type Voucher } from "@/lib/voucher";
 
 export const Route = createFileRoute("/tech")({
   ssr: false,
@@ -280,20 +281,17 @@ function AutoApprove({ session }: { session: string }) {
     setBusy(true);
     try {
       const done: string[] = [];
+      let voucher: Voucher | null = null;
       if (plan.paymentRef) {
-        await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}` } });
+        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}` } });
+        voucher = res.voucher ?? null;
         done.push("payment verified");
       }
       for (const r of plan.requests) {
         await architectDecision({ data: { session, requestId: r.id, approve: true, minutes: r.hours * 60, reason: "Confirmed by authorized architect" } });
         done.push("system unlocked");
       }
-      const at = new Date();
-      const voucher: Voucher | undefined = plan.paymentRef ? {
-        no: `WP-CRM-${plan.period.replace(/\D/g, "")}-${at.getTime().toString(36).toUpperCase()}`,
-        period: plan.period, ref: plan.paymentRef, at: dhakaTime(at.toISOString()),
-      } : undefined;
-      setResult({ ok: true, text: `President unlock approved — ${[...new Set(done)].join(" and ")}. Recorded in the approval log.`, ...(voucher ? { voucher } : {}) });
+      setResult({ ok: true, text: `President unlock approved — ${[...new Set(done)].join(" and ")}. Recorded in the approval log.${voucher ? " Receipt saved to payment history." : ""}`, ...(voucher ? { voucher } : {}) });
     } catch (e) {
       setResult({ ok: false, text: `Approval failed: ${(e as Error).message}` });
     } finally {
@@ -339,29 +337,15 @@ function AutoApprove({ session }: { session: string }) {
   );
 }
 
-type Voucher = { no: string; period: string; ref: string; at: string };
-
-function voucherHtml(v: Voucher) {
-  const esc = (x: string) => x.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-  const rows: [string, string][] = [["Voucher no.", v.no], ["Plan", CRM_PLAN_NAME], ["Billing period", v.period], ["Payment reference", v.ref],
-    ["Base", usd(CRM_BASE_CENTS)], ["VAT (15%)", usd(CRM_VAT_CENTS)], ["Total paid", `${usd(CRM_TOTAL_CENTS)} USD`], ["Status", "PAID — verified"], ["Verified at", `${v.at} (Asia/Dhaka)`]];
-  return `<!doctype html><meta charset="utf-8"><title>${esc(v.no)}</title><body style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:40px auto;color:#111"><h2>Payment receipt</h2><table style="width:100%;border-collapse:collapse">${rows.map(([k, val]) => `<tr><td style="padding:6px 0;color:#555">${k}</td><td style="text-align:right;font-weight:600">${esc(val)}</td></tr>`).join("")}</table><p style="margin-top:24px;font-size:12px;color:#666">Issued automatically when the system was unlocked by the authorized architect.</p></body>`;
-}
-
 /** Receipt issued the moment a payment is verified — download or print it as proof of full payment. */
 function VoucherCard({ v }: { v: Voucher }) {
-  const download = () => {
-    const url = URL.createObjectURL(new Blob([voucherHtml(v)], { type: "text/html" }));
-    const a = document.createElement("a"); a.href = url; a.download = `${v.no}.html`; a.click(); URL.revokeObjectURL(url);
-  };
-  const print = () => { const w = window.open("", "_blank"); if (!w) return; w.document.write(voucherHtml(v)); w.document.close(); w.print(); };
   return (
     <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm">
       <p className="font-semibold">Receipt {v.no}</p>
-      <p className="text-muted-foreground">{v.period} · {usd(CRM_TOTAL_CENTS)} USD paid · ref {v.ref}</p>
+      <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
-        <Button size="sm" variant="outline" onClick={download}>Download</Button>
-        <Button size="sm" variant="outline" onClick={print}>Print</Button>
+        <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
+        <Button size="sm" variant="outline" onClick={() => printVoucher(v)}>Print</Button>
       </div>
     </div>
   );

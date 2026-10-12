@@ -2836,6 +2836,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_vouchers: {
+        Row: {
+          base_cents: number
+          billing_period: string
+          created_at: string
+          currency: string
+          id: string
+          payment_ref: string
+          plan_code: string
+          total_cents: number
+          vat_cents: number
+          verified_at: string
+          verified_by: string
+          voucher_no: string
+        }
+        Insert: {
+          base_cents: number
+          billing_period: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_ref: string
+          plan_code?: string
+          total_cents: number
+          vat_cents: number
+          verified_at?: string
+          verified_by: string
+          voucher_no: string
+        }
+        Update: {
+          base_cents?: number
+          billing_period?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_ref?: string
+          plan_code?: string
+          total_cents?: number
+          vat_cents?: number
+          verified_at?: string
+          verified_by?: string
+          voucher_no?: string
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null

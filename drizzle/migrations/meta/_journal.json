@@ -757,6 +757,13 @@
       "when": 1791828484019,
       "tag": "0107_independent_plan_entitlements",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1791832488532,
+      "tag": "0108_create_payment_vouchers",
+      "breakpoints": true
     }
   ]
 }
