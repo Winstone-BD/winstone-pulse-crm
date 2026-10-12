@@ -8,6 +8,8 @@ export type AgentBriefingStatus = {
   policyVersion: string;
   title: string;
   detail: string;
+  titleEn: string;
+  detailEn: string;
 };
 
 export function dhakaBriefingClock(now: Date | number = Date.now()) {
