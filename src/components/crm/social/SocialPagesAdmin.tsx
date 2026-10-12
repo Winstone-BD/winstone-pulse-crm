@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { getSocialSetup, saveSocialPage } from "@/lib/social.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { useT } from "@/lib/i18n";
-import { SocialPageAuditLog, SocialPageSummaryTable } from "@/components/crm/social/SocialPageInsights";
+import { SocialPageAuditLog, SocialPageSummaryTable, SocialPageTrendChart } from "@/components/crm/social/SocialPageInsights";
 
 type PageRow = { id: string; name: string; kind: string; url: string | null; active: boolean };
 
@@ -127,6 +127,7 @@ export function SocialPagesAdmin() {
       )}
 
       <SocialPageSummaryTable />
+      <SocialPageTrendChart />
       <SocialPageAuditLog />
     </div>
   );
