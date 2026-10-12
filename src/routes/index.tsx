@@ -133,8 +133,8 @@ function EntryHall() {
             <img
               src={heroImage.url}
               alt="Winstone — Find. Build. Invest."
-              width={707}
-              height={240}
+              width={1920}
+              height={740}
               className="w-full rounded-3xl shadow-2xl ring-1 ring-primary/30"
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
