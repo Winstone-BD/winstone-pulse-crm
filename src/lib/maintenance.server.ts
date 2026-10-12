@@ -265,7 +265,7 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
 export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
   const state = await maintenanceAccess();
   const client = await db();
-  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
+  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status, base_cents, vat_cents, total_cents, currency").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
   if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
   const at = new Date().toISOString();
   const update = input.approve
@@ -277,6 +277,20 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
   await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
   if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
+  // Save a permanent receipt for this approval so it can be reopened from payment history.
+  let voucher: { no: string; period: string; ref: string; baseCents: number; vatCents: number; totalCents: number; currency: string; verifiedBy: string; at: string } | null = null;
+  if (input.approve) {
+    const no = `WP-CRM-${state.period.replace(/\D/g, "")}-${Date.now().toString(36).toUpperCase()}`;
+    const baseCents = row.base_cents ?? 1579;
+    const vatCents = row.vat_cents ?? 237;
+    const totalCents = row.total_cents ?? baseCents + vatCents;
+    const { error: vErr } = await client.from("payment_vouchers").upsert(
+      { voucher_no: no, plan_code: PLAN_CODE, billing_period: state.period, payment_ref: row.payment_ref, base_cents: baseCents, vat_cents: vatCents, total_cents: totalCents, currency: row.currency ?? "USD", verified_by: input.actor, verified_at: at },
+      { onConflict: "plan_code,billing_period" },
+    );
+    if (vErr) console.error("voucher save failed", vErr);
+    voucher = { no, period: state.period, ref: row.payment_ref, baseCents, vatCents, totalCents, currency: row.currency ?? "USD", verifiedBy: input.actor, at: dhakaTime(at) };
+  }
   await notifyOnce(
     `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${row.payment_ref}`,
     input.approve ? "info" : "critical",
