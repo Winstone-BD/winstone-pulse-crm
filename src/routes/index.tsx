@@ -65,7 +65,7 @@ function EntryHall() {
   };
 
   return (
-    <div className="theme-light min-h-screen bg-background">
+    <div className="theme-exec min-h-screen bg-background">
       <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
         <header className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <div className="text-center lg:text-left">
@@ -73,10 +73,10 @@ function EntryHall() {
               <img
                 src={logoAsset.url}
                 alt="Winstone logo"
-                className="size-14 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-16"
+                className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
               />
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-primary sm:text-base">
+                <p className="text-sm font-black uppercase tracking-wide text-gold sm:text-base">
                   Winstone Properties Ltd.
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
@@ -85,10 +85,10 @@ function EntryHall() {
               </div>
             </div>
             <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Winstone <span className="text-primary">Pulse</span>
+              Winstone <span className="text-gold">Pulse</span>
             </h1>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Close more deals, <span className="text-primary">less chaos.</span>
+              Close more deals, <span className="text-gold">less chaos.</span>
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
               The visual CRM that your sales team will actually love using. Drag, drop, and close —
@@ -98,7 +98,7 @@ function EntryHall() {
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Button
                 size="lg"
-                className="rounded-full px-7 text-base font-bold shadow-lg shadow-primary/30"
+                className="rounded-md px-7 text-base font-bold hover:bg-charcoal"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -107,7 +107,7 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full px-7 text-base font-semibold">
+              <Button asChild size="lg" variant="outline" className="rounded-md px-7 text-base font-semibold">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
@@ -120,7 +120,7 @@ function EntryHall() {
                 { icon: Smartphone, label: "Monitor Call Activity" },
               ].map(({ icon: Icon, label }) => (
                 <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25">
+                  <span className="grid size-8 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
                     <Icon className="size-4" />
                   </span>
                   {label}
@@ -135,17 +135,17 @@ function EntryHall() {
               alt="Winstone — Find. Build. Invest."
               width={1920}
               height={740}
-              className="w-full rounded-3xl shadow-2xl ring-1 ring-primary/30"
+              className="w-full rounded-xl border border-border"
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="card-elevated px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Pipeline Value
                 </p>
                 <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
-                <p className="text-xs font-bold text-primary">↑ Updated in real time</p>
+                <p className="text-xs font-bold text-gold">↑ Updated in real time</p>
               </div>
-              <div className="card-elevated px-4 py-3">
+              <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Follow-ups
                 </p>
@@ -157,6 +157,7 @@ function EntryHall() {
 
         <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
           Choose Your Workspace
+          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
           Select the mode you are using — the same Winstone Pulse opens on every device.
@@ -194,6 +195,7 @@ function EntryHall() {
           className="mt-10 scroll-mt-6 text-center text-xl font-bold tracking-tight"
         >
           Sign in to your workspace
+          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
           <EntryCard
@@ -253,7 +255,7 @@ function EntryHall() {
         {scope !== "none" && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already signed in —{" "}
-            <Link to="/desk" className="font-semibold text-primary hover:underline">
+            <Link to="/desk" className="font-semibold text-gold hover:underline">
               go to my desk
             </Link>
           </p>
@@ -262,7 +264,7 @@ function EntryHall() {
         <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-1.5">
             <LifeBuoy className="size-3.5" /> Need help?{" "}
-            <Link to="/support" className="font-semibold text-primary hover:underline">
+            <Link to="/support" className="font-semibold text-gold hover:underline">
               Contact IT HQ
             </Link>
           </p>
@@ -311,12 +313,8 @@ function EntryCard({
   secondary?: React.ReactNode;
 }) {
   return (
-    <section className="card-elevated group relative flex flex-col gap-3 overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/30">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-80"
-      />
-      <span className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25 transition-transform group-hover:scale-105">
+    <section className="group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-gold">
+      <span className="grid size-12 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
         {icon}
       </span>
       <div>
@@ -346,9 +344,9 @@ function ModeCard({
     <button
       type="button"
       onClick={onClick}
-      className="card-elevated group flex min-w-0 flex-col items-center gap-2 p-3 text-center sm:min-h-44 sm:gap-4 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:translate-y-0 active:shadow-sm"
+      className="group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <span className="origin-center scale-75 text-foreground transition-transform duration-200 group-hover:scale-90 sm:scale-100 sm:group-hover:scale-105">
+      <span className="origin-center scale-75 text-foreground sm:scale-100">
         {illustration}
       </span>
       <span>
@@ -365,8 +363,8 @@ function ModeCard({
 function SmartphoneIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Smartphone className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Smartphone className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
@@ -374,8 +372,8 @@ function SmartphoneIllustration() {
 function WebIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Globe className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Globe className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
@@ -383,8 +381,8 @@ function WebIllustration() {
 function DesktopIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Monitor className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Monitor className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
@@ -444,7 +442,7 @@ function LiveTiles() {
             key={r.key}
             type="button"
             onClick={() => { setRange(r.key); setFrom(""); setTo(""); }}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-primary text-primary-foreground" : "bg-background/10 hover:bg-background/20"}`}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-gold text-foreground" : "bg-background/10 hover:bg-background/20"}`}
           >
             {r.label}
           </button>
@@ -475,7 +473,7 @@ function Tiles({
       {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => {
         const inner = (
           <>
-            <div className="h-1.5 w-8 rounded bg-primary/70" />
+            <div className="h-1.5 w-8 rounded bg-gold" />
             {values ? (
               <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
             ) : (
@@ -501,10 +499,10 @@ function CommandCenterShowcase() {
   const { scope, isPending } = useMyAccount();
   const signedIn = !isPending && scope !== "none";
   return (
-    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
+    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-xl border border-border bg-card">
       <div className="grid lg:grid-cols-[1.1fr_1fr]">
         <div className="bg-foreground p-6 text-background sm:p-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-primary">Command Center</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-gold">Command Center</p>
           <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
           <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
           {signedIn ? <LiveTiles /> : <div className="mt-3"><Tiles values={null} /></div>}
@@ -527,12 +525,12 @@ function CommandCenterShowcase() {
           {SHOWCASE.map(({ icon: Icon, tag, title, body, to }) => (
             <li key={tag}>
               <Link to={to} className="group flex gap-4 p-5 transition-colors hover:bg-muted/50 sm:p-6">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold"><Icon className="size-5" /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary">{tag}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">{tag}</p>
                 <h3 className="mt-1 font-bold">{title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-gold">
                   খুলুন <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                 </p>
               </div>

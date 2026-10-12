@@ -62,6 +62,9 @@
   --color-exec-amber: var(--exec-amber);
   --color-exec-red: var(--exec-red);
   --color-exec-gold: var(--exec-gold);
+  --color-gold: var(--gold);
+  --color-gold-strong: var(--gold-strong);
+  --color-charcoal: var(--charcoal);
   --font-display: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
@@ -609,6 +612,48 @@
 .group:hover .btn-enter {
   background-color: var(--enter-hover);
   color: var(--enter-foreground);
+}
+
+/* Executive minimal home theme: warm paper canvas, near-black ink, white flat
+   cards, champagne-gold accents only. No gradients, no heavy shadows. */
+:root {
+  --gold: #c9a45c;
+  --gold-strong: #d4af37;
+  --charcoal: #171717;
+}
+.theme-exec {
+  --background: #f5f2ea;
+  --foreground: #0b0b0b;
+  --card: #ffffff;
+  --card-foreground: #0b0b0b;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0b;
+  --primary: #0b0b0b;
+  --primary-foreground: #f5f2ea;
+  --primary-ink: #0b0b0b;
+  --secondary: #efeadf;
+  --secondary-foreground: #0b0b0b;
+  --muted: #efece4;
+  --muted-foreground: #737170;
+  --accent: #f2ecdd;
+  --accent-foreground: #0b0b0b;
+  --border: #dbd9d2;
+  --input: #dbd9d2;
+  --ring: #c9a45c;
+  --surface: #faf8f2;
+  --surface-2: #efece4;
+  --shadow-card: none;
+  --shadow-card-hover: none;
+  background: var(--background);
+  color: var(--foreground);
+  color-scheme: light;
+}
+.theme-exec .card-elevated {
+  box-shadow: none;
+}
+.theme-exec .card-elevated:hover {
+  box-shadow: none;
+  border-color: var(--gold);
 }
 
 /* Bengali UI uses Hind Siliguri (matches the FinOS reference). */
