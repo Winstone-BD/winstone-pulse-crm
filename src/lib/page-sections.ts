@@ -44,7 +44,11 @@ export const PAGE_SECTIONS = {
 export type SectionRoute = keyof typeof PAGE_SECTIONS;
 export type SectionKey<R extends SectionRoute> = (typeof PAGE_SECTIONS)[R][number]["key"];
 
-export const sectionSearch = (s: Record<string, unknown>): { s?: string; lead?: string } => ({
+export const sectionSearch = (
+  s: Record<string, unknown>,
+): { s?: string; lead?: string; from?: string; to?: string } => ({
+  ...(typeof s["from"] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s["from"]) ? { from: s["from"] } : {}),
+  ...(typeof s["to"] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s["to"]) ? { to: s["to"] } : {}),
   ...(typeof s["s"] === "string" ? { s: s["s"] } : {}),
   ...(typeof s["lead"] === "string" && /^[0-9a-f-]{36}$/i.test(s["lead"]) ? { lead: s["lead"] } : {}),
 });
