@@ -98,7 +98,7 @@ function AuthPage() {
     (!isSignup || name.trim().length >= 2);
 
   return (
-    <div className="grid-noise flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="theme-light grid-noise flex min-h-screen items-center justify-center px-4 py-10">
       <div className="card-elevated w-full max-w-md p-6">
         <Link to="/" className="flex items-center gap-3">
           <img

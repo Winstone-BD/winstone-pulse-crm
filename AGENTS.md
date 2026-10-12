@@ -37,3 +37,6 @@
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
+- Agent contribution reports (agent_daily_contributions) and HQ reviews (agent_contribution_reviews) are server-only and append-only, accessed only via agent-contribution.functions.ts with resolveCaller scope checks — why: original reports and review history must stay trustworthy.
+- Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
+- Desk lists read an optional ?from=&to= (Dhaka, inclusive) via src/lib/desk-range.tsx and filter the already-scoped snapshot client-side — why: date filters never widen access.

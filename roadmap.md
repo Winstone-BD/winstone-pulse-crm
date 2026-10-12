@@ -131,6 +131,6 @@
 - [x] Social pages: audit log of who changed name/link/active and when
 - [x] Command Center date-range filter + clickable Leads/Calls/Follow-ups tiles
 - [x] 5:20 PM Dhaka agent contribution report popup (first: since joining; then daily; ≤5 sentences, ≤120 words)
-- [ ] Desk honours from/to date range from Command Center tiles (chip + সরান)
-- [ ] HQ /contributions page: filters, summary, review (append-only), CSV
-- [ ] Reskin (mint/orange/teal, Outfit): tokens/sidebar/header → desk → HQ pages → entry/sign-in
+- [x] Desk honours from/to date range from Command Center tiles (chip + সরান)
+- [x] HQ /contributions page: filters, summary, review (append-only), CSV
+- [x] Reskin (mint/orange/teal, Outfit): tokens/sidebar/header → desk → HQ pages → entry/sign-in
