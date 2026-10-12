@@ -357,6 +357,7 @@ function LeadRows({
   extras: Map<string, DeskExtras>;
   onOpen: (id: string) => void;
 }) {
+  const t = useT();
   const setOpenLeadId = onOpen;
   return (
     <>
@@ -393,7 +394,7 @@ function LeadRows({
                 )}
                 {lead.grade && (
                   <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[11px] font-semibold">
-                    গ্রেড {lead.grade}
+                    {t({ bn: "গ্রেড", en: "Grade" })} {lead.grade}
                   </span>
                 )}
                 <LeadStatusBadge status={lead.status} />
@@ -402,11 +403,11 @@ function LeadRows({
                 </span>
               </div>
               <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <dt className="text-muted-foreground">রেফারেন্স</dt>
+                <dt className="text-muted-foreground">{t({ bn: "রেফারেন্স", en: "Reference" })}</dt>
                 <dd className="truncate text-right">{lead.reference_by ?? "—"}</dd>
-                <dt className="text-muted-foreground">চাহিদা</dt>
+                <dt className="text-muted-foreground">{t({ bn: "চাহিদা", en: "Requirement" })}</dt>
                 <dd className="truncate text-right">{extras.get(lead.id)?.requirement ?? "—"}</dd>
-                <dt className="text-muted-foreground">পরের ফলো-আপ</dt>
+                <dt className="text-muted-foreground">{t({ bn: "পরের ফলো-আপ", en: "Next follow-up" })}</dt>
                 <dd className="text-right">
                   <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
                 </dd>
@@ -426,7 +427,7 @@ function LeadRows({
               <WebCallButton
                 leadId={lead.id}
                 phone={lead.phone_number}
-                label="কল"
+                label={t({ bn: "কল", en: "Call" })}
                 className="h-11 flex-1 text-base"
               />
               <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" />
@@ -436,7 +437,7 @@ function LeadRows({
         ))}
         {rows.length === 0 && (
           <li role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            এই তালিকায় এখন কোনো লিড নেই
+            {t({ bn: "এই তালিকায় এখন কোনো লিড নেই", en: "No leads in this list right now" })}
           </li>
         )}
       </ul>
@@ -445,15 +446,15 @@ function LeadRows({
         <table className="w-full min-w-[960px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              <th className="px-3 py-2.5 font-medium">ক্রমিক</th>
-              <th className="px-3 py-2.5 font-medium">নাম</th>
-              <th className="px-3 py-2.5 font-medium">ফোন নম্বর</th>
-              <th className="px-3 py-2.5 font-medium">রেফারেন্স</th>
-              <th className="px-3 py-2.5 font-medium">ঠিকানা</th>
-              <th className="px-3 py-2.5 font-medium">চাহিদা</th>
-              <th className="px-3 py-2.5 font-medium">অবস্থা</th>
-              <th className="px-3 py-2.5 font-medium">পরের ফলো-আপ</th>
-              <th className="px-3 py-2.5 text-right font-medium">কাজ</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ক্রমিক", en: "No." })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "নাম", en: "Name" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ফোন নম্বর", en: "Phone number" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "রেফারেন্স", en: "Reference" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ঠিকানা", en: "Address" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "চাহিদা", en: "Requirement" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "অবস্থা", en: "Status" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "পরের ফলো-আপ", en: "Next follow-up" })}</th>
+              <th className="px-3 py-2.5 text-right font-medium">{t({ bn: "কাজ", en: "Actions" })}</th>
             </tr>
           </thead>
           <tbody>
@@ -496,8 +497,8 @@ function LeadRows({
                   <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     {lead.last_call_at
-                      ? `শেষ কল ${relativeTime(lead.last_call_at)}`
-                      : `${lead.call_attempts} বার চেষ্টা`}
+                      ? t({ bn: `শেষ কল ${relativeTime(lead.last_call_at)}`, en: `Last call ${relativeTime(lead.last_call_at)}` })
+                      : t({ bn: `${lead.call_attempts} বার চেষ্টা`, en: `${lead.call_attempts} attempts` })}
                   </p>
                 </td>
                 <td className="px-3 py-2.5">
@@ -505,7 +506,7 @@ function LeadRows({
                     <WebCallButton
                       leadId={lead.id}
                       phone={lead.phone_number}
-                      label="কল"
+                      label={t({ bn: "কল", en: "Call" })}
                       className="h-9 flex-none text-sm"
                     />
                     <CallbackLogButton leadId={lead.id} label="" />
@@ -517,7 +518,7 @@ function LeadRows({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
-                  এই তালিকায় এখন কোনো লিড নেই
+                  {t({ bn: "এই তালিকায় এখন কোনো লিড নেই", en: "No leads in this list right now" })}
                 </td>
               </tr>
             )}
