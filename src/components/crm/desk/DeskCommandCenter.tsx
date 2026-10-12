@@ -1,5 +1,5 @@
 import { dhakaDay } from "@/lib/lead-groups";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   AlarmClock,
   CalendarClock,
@@ -173,6 +173,11 @@ export function DeskCommandCenter({
   const { account } = useMyAccount();
   const { leads, profiles, calls, messages, events, isPending } = useSnapshot();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // ?lead=<id> (from Pipeline / Tasks / search) selects that lead if it is in the caller's own snapshot.
+  const leadParam = useRouterState({ select: (st) => (st.location.search as Record<string, unknown>)["lead"] });
+  useEffect(() => {
+    if (typeof leadParam === "string") setSelectedId(leadParam);
+  }, [leadParam]);
   const [dossierId, setDossierId] = useState<string | null>(null);
   const [filter, setFilter] = useState<QueueFilter>("pending");
   const [search, setSearch] = useState("");
