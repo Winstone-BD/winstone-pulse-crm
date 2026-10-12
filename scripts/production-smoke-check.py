@@ -12,7 +12,7 @@ import sys
 from playwright.async_api import async_playwright
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://crm.winstonebd.com").rstrip("/")
-PAGES = ["/", "/login", "/desk", "/hq", "/projects", "/news", "/live-leads", "/site-visits", "/insights"]
+PAGES = ["/", "/auth", "/desk", "/hq", "/projects", "/news", "/live-leads", "/site-visits", "/insights"]
 FATAL = ("Importing a module script failed", "dynamically imported module",
          "Failed to fetch dynamically", "Hydration failed", "is not defined")
 
