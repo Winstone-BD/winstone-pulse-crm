@@ -255,7 +255,7 @@ function EntryHall() {
         {scope !== "none" && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already signed in —{" "}
-            <Link to="/desk" className="font-semibold text-primary hover:underline">
+            <Link to="/desk" className="font-semibold text-gold hover:underline">
               go to my desk
             </Link>
           </p>
@@ -264,7 +264,7 @@ function EntryHall() {
         <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-1.5">
             <LifeBuoy className="size-3.5" /> Need help?{" "}
-            <Link to="/support" className="font-semibold text-primary hover:underline">
+            <Link to="/support" className="font-semibold text-gold hover:underline">
               Contact IT HQ
             </Link>
           </p>
@@ -499,10 +499,10 @@ function CommandCenterShowcase() {
   const { scope, isPending } = useMyAccount();
   const signedIn = !isPending && scope !== "none";
   return (
-    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
+    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-xl border border-border bg-card">
       <div className="grid lg:grid-cols-[1.1fr_1fr]">
         <div className="bg-foreground p-6 text-background sm:p-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-primary">Command Center</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-gold">Command Center</p>
           <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
           <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
           {signedIn ? <LiveTiles /> : <div className="mt-3"><Tiles values={null} /></div>}
@@ -525,12 +525,12 @@ function CommandCenterShowcase() {
           {SHOWCASE.map(({ icon: Icon, tag, title, body, to }) => (
             <li key={tag}>
               <Link to={to} className="group flex gap-4 p-5 transition-colors hover:bg-muted/50 sm:p-6">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold"><Icon className="size-5" /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary">{tag}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">{tag}</p>
                 <h3 className="mt-1 font-bold">{title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-gold">
                   খুলুন <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                 </p>
               </div>
