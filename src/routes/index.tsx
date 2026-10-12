@@ -18,6 +18,7 @@ import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
+import { useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -315,12 +316,44 @@ function DesktopIllustration() {
 }
 
 const SHOWCASE = [
-  { icon: Headphones, tag: "Lead & Call Management", title: "প্রতিটি কল, এক জায়গায়", body: "নিজের SIM থেকে কল, তারপর রিপোর্ট — লিডের পুরো ইতিহাস কখনো হারায় না।" },
-  { icon: BarChart3, tag: "Live Sales Monitoring", title: "ফ্লোর লাইভ দেখুন", body: "নতুন লিড, কল আর ফলো-আপ কয়েক সেকেন্ডের মধ্যে HQ বোর্ডে আপডেট হয়।" },
-  { icon: Globe, tag: "Strategy & Forecasts", title: "তথ্য থেকে সিদ্ধান্ত", body: "সোশ্যাল পেজ, সাইট ভিজিট ও বুকিং — বাস্তব রিপোর্ট থেকে লক্ষ্য ও প্রবণতা।" },
+  { icon: Headphones, tag: "Lead & Call Management", title: "প্রতিটি কল, এক জায়গায়", to: "/desk", body: "নিজের SIM থেকে কল, তারপর রিপোর্ট — লিডের পুরো ইতিহাস কখনো হারায় না।" },
+  { icon: BarChart3, tag: "Live Sales Monitoring", title: "ফ্লোর লাইভ দেখুন", to: "/live-leads", body: "নতুন লিড, কল আর ফলো-আপ কয়েক সেকেন্ডের মধ্যে HQ বোর্ডে আপডেট হয়।" },
+  { icon: Globe, tag: "Strategy & Forecasts", title: "তথ্য থেকে সিদ্ধান্ত", to: "/reports", body: "সোশ্যাল পেজ, সাইট ভিজিট ও বুকিং — বাস্তব রিপোর্ট থেকে লক্ষ্য ও প্রবণতা।" },
 ] as const;
 
+function LiveTiles() {
+  const snap = useSnapshot();
+  const today = new Date().toDateString();
+  const values = {
+    Leads: snap.leads.length,
+    Calls: snap.calls.filter((c) => new Date(c.created_at).toDateString() === today).length,
+    "Follow-ups": snap.leads.filter((l) => l.status === "follow_up").length,
+  };
+  return <Tiles values={snap.isPending ? null : values} />;
+}
+
+function Tiles({ values }: { values: Record<string, number> | null }) {
+  const labels = { Leads: "মোট লিড", Calls: "আজকের কল", "Follow-ups": "ফলো-আপ" } as const;
+  return (
+    <div className="mt-6 grid grid-cols-3 gap-3">
+      {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => (
+        <div key={k} className="rounded-xl border border-background/15 bg-background/5 p-3">
+          <div className="h-1.5 w-8 rounded bg-primary/70" />
+          {values ? (
+            <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
+          ) : (
+            <div className="mt-3 h-6 w-12 animate-pulse rounded bg-background/30" />
+          )}
+          <p className="mt-1 text-[10px] uppercase tracking-widest opacity-60">{labels[k]}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function CommandCenterShowcase() {
+  const { scope, isPending } = useMyAccount();
+  const signedIn = !isPending && scope !== "none";
   return (
     <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
       <div className="grid lg:grid-cols-[1.1fr_1fr]">
@@ -328,15 +361,10 @@ function CommandCenterShowcase() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-primary">Command Center</p>
           <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
           <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
-          <div aria-hidden className="mt-6 grid grid-cols-3 gap-3">
-            {["Leads", "Calls", "Follow-ups"].map((k) => (
-              <div key={k} className="rounded-xl border border-background/15 bg-background/5 p-3">
-                <div className="h-2 w-10 rounded bg-primary/70" />
-                <div className="mt-3 h-4 w-14 rounded bg-background/30" />
-                <p className="mt-2 text-[10px] uppercase tracking-widest opacity-60">{k}</p>
-              </div>
-            ))}
-          </div>
+          {signedIn ? <LiveTiles /> : <Tiles values={null} />}
+          {!isPending && !signedIn && (
+            <p className="mt-2 text-xs opacity-60">লাইভ সংখ্যা দেখতে নিচে সাইন ইন করুন।</p>
+          )}
           <svg aria-hidden viewBox="0 0 300 90" className="mt-4 h-24 w-full">
             <defs>
               <linearGradient id="ccFill" x1="0" x2="0" y1="0" y2="1">
@@ -350,14 +378,19 @@ function CommandCenterShowcase() {
           <p className="mt-2 text-[10px] uppercase tracking-[0.3em] opacity-50">Pulse — Find. Build. Invest.</p>
         </div>
         <ul className="divide-y divide-border">
-          {SHOWCASE.map(({ icon: Icon, tag, title, body }) => (
-            <li key={tag} className="flex gap-4 p-5 sm:p-6">
+          {SHOWCASE.map(({ icon: Icon, tag, title, body, to }) => (
+            <li key={tag}>
+              <Link to={to} className="group flex gap-4 p-5 transition-colors hover:bg-muted/50 sm:p-6">
               <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary">{tag}</p>
                 <h3 className="mt-1 font-bold">{title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                  খুলুন <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </p>
               </div>
+              </Link>
             </li>
           ))}
         </ul>
