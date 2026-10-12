@@ -138,3 +138,4 @@
 - [x] Home: remove duplicate banner image under hero
 - [ ] Audit log (created/edited/archived, who, when) — awaiting plan approval
 - [ ] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
+- [ ] Reconnect Google Calendar in new workspace
