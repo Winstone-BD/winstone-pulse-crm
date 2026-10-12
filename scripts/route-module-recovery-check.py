@@ -3,7 +3,7 @@ Regression check for /hq: make the HQ page's own module fail to load (as after a
 preview restart), then let it serve again and confirm the tab recovers by itself
 into the real HQ screen — no blank page, no fallback screen.
 Local dev only; telemetry posts are stubbed so nothing is recorded.
-Run: bun run test:recovery:hq   (exit 0 = pass)
+Run: python3 scripts/route-module-recovery-check.py [--route desk] [--mobile]
 """
 import asyncio
 import sys
@@ -11,7 +11,14 @@ import re
 import time
 from playwright.async_api import async_playwright
 
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("--route", default="hq", help="route file name, e.g. hq, desk, insights")
+ap.add_argument("--mobile", action="store_true", help="use a 390x844 phone viewport")
+ARGS = ap.parse_args()
 BASE = "http://localhost:8080"
+ROUTE = ARGS.route.strip("/")
+VIEWPORT = {"width": 390, "height": 844} if ARGS.mobile else {"width": 1280, "height": 1800}
 BLOCK_SECONDS = 6
 
 
@@ -19,7 +26,7 @@ async def main():
     failures = []
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        ctx = await browser.new_context(viewport={"width": 1280, "height": 1800})
+        ctx = await browser.new_context(viewport=VIEWPORT, is_mobile=ARGS.mobile, has_touch=ARGS.mobile)
         page = await ctx.new_page()
         await page.route("**/api/public/telemetry/runtime-error", lambda r: r.fulfill(status=204))
 
@@ -33,14 +40,12 @@ async def main():
                 await route.continue_()
 
         # Only the HQ route module (not the document) is cut off.
-        await page.route(re.compile(r"/src/routes/hq\.tsx"), hq_module)
-        page.on("console", lambda m: "winstone-recovery" in m.text and print(round(time.time()-T0,1), m.text[:120], len(loads)))
+        await page.route(re.compile(r"/src/routes/" + re.escape(ROUTE) + r"\.tsx"), hq_module)
         loads = []
         page.on("load", lambda: loads.append(1))
 
-        global T0; T0 = time.time()
         blocked["until"] = time.time() + BLOCK_SECONDS
-        await page.goto(BASE + "/hq", wait_until="domcontentloaded", timeout=60_000)
+        await page.goto(BASE + "/" + ROUTE, wait_until="domcontentloaded", timeout=60_000)
 
         # Wait for recovery: notice/probing, then a reload once the module serves.
         deadline = time.time() + 45
@@ -61,12 +66,12 @@ async def main():
                     break
 
         if blocked["n"] == 0:
-            failures.append("HQ module was never requested while blocked (simulation did not trigger)")
+            failures.append(f"/{ROUTE} module was never requested while blocked (simulation did not trigger)")
         if not recovered and not failures:
-            failures.append("page did not recover into HQ content within 45s")
+            failures.append("page did not recover into page content within 45s")
         if recovered and len((await page.inner_text("body")).strip()) < 20:
             failures.append("blank page after recovery")
-        await page.screenshot(path="/tmp/hq-recovery.png")
+        await page.screenshot(path=f"/tmp/{ROUTE}-recovery{'-mobile' if ARGS.mobile else ''}.png")
         await browser.close()
 
     if failures:
@@ -74,7 +79,7 @@ async def main():
         for f in failures:
             print(" -", f)
         return 1
-    print(f"PASS: /hq module blocked {blocked['n']}x, tab reloaded and HQ rendered (no blank, no fallback)")
+    print(f"PASS [{VIEWPORT['width']}px]: /{ROUTE} module blocked {blocked['n']}x, tab reloaded and the page rendered (no blank, no fallback)")
     return 0
 
 
