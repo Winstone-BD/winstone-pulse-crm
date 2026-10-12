@@ -522,6 +522,62 @@ export function DeskCommandCenter({
         </div>
       </div>
 
+      {/* Next best action — the single highest-priority lead from the agent's own queue.
+          This is where calls start, so it is the most prominent card on the desk. */}
+      {priority[0] && (
+        <section
+          aria-labelledby="nba-heading"
+          className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/15 via-card to-card p-4 shadow-lg sm:p-5"
+        >
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md sm:size-14">
+                <PhoneCall className="size-6" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <p id="nba-heading" className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                  {t({ bn: "পরবর্তী সেরা কল", en: "Next best call" })}
+                </p>
+                <p className="mt-0.5 truncate text-xl font-extrabold tracking-tight sm:text-2xl">
+                  {priority[0].lead.name}
+                </p>
+                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="tabular-nums text-sm text-muted-foreground">{priority[0].lead.phone_number}</span>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                      priority[0].overdue
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : priority[0].lead.temperature === "hot"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {priority[0].overdue ? <AlarmClock className="size-3" aria-hidden /> : <Flame className="size-3" aria-hidden />}
+                    {priority[0].overdue
+                      ? t({ bn: "ফলো-আপের সময় পেরিয়েছে", en: "Follow-up overdue" })
+                      : priority[0].lead.temperature === "hot"
+                        ? t({ bn: "হট লিড — আগে কল করুন", en: "Hot lead — call first" })
+                        : t({ bn: "অগ্রাধিকার লিড", en: "Priority lead" })}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:flex md:items-center">
+              <WebCallButton
+                leadId={priority[0].lead.id}
+                phone={priority[0].lead.phone_number}
+                label={t({ bn: "এখনই কল করুন", en: "Call now" })}
+                className="h-12 px-6 text-base font-bold shadow-md"
+                ariaLabel={t({ bn: `${priority[0].lead.name}-কে কল করুন`, en: `Call ${priority[0].lead.name}` })}
+              />
+              <Button variant="outline" className="h-12" onClick={() => selectLead(priority[0]!.lead.id)}>
+                {t({ bn: "লিড ৩৬০", en: "Lead 360" })}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* KPI strip — every figure from the agent's own snapshot */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard
@@ -574,47 +630,6 @@ export function DeskCommandCenter({
           progress={stats.donePct}
         />
       </div>
-
-      {/* Next best action — the single highest-priority lead from the agent's own queue */}
-      {priority[0] && (
-        <div className="card-elevated grid min-w-0 gap-3 border-primary/25 bg-primary/5 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
-              পরবর্তী সেরা কাজ · Next best action
-            </p>
-            <p className="mt-0.5 truncate text-sm font-bold">
-              {priority[0].lead.name}{" "}
-              <span className="tabular text-xs font-normal text-muted-foreground">
-                {priority[0].lead.phone_number}
-              </span>
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {priority[0].overdue
-                ? "ফলো-আপের সময় পেরিয়েছে · Follow-up overdue"
-                : priority[0].lead.temperature === "hot"
-                  ? "হট লিড — আগে কল করুন · Hot lead, call first"
-                  : "অগ্রাধিকার লিড · Priority lead"}
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-            <WebCallButton
-              leadId={priority[0].lead.id}
-              phone={priority[0].lead.phone_number}
-              label="কল / Call"
-              className="h-9"
-              ariaLabel={`${priority[0].lead.name}-কে কল করুন`}
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-9"
-              onClick={() => selectLead(priority[0]!.lead.id)}
-            >
-              লিড ৩৬০ / Open
-            </Button>
-          </div>
-        </div>
-      )}
 
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-3">
