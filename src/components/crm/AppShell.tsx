@@ -10,6 +10,7 @@ import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
 import { PostCallReportGate } from "@/components/crm/PostCallReportGate";
 import { AgentBriefingGate } from "@/components/crm/AgentBriefingGate";
+import { AgentContributionGate } from "@/components/crm/AgentContributionGate";
 
 import { ReminderBell } from "@/components/crm/ReminderBell";
 import { NoticeBoardBell } from "@/components/crm/NoticeBoardBell";
@@ -246,6 +247,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           just the desk: a call that ended anywhere must be reported. */}
       {scope !== "none" && <PostCallReportGate />}
       {scope === "agent" && <AgentBriefingGate />}
+      {scope === "agent" && <AgentContributionGate />}
 
       {scope === "authority" && <RuntimeAlertWatcher />}
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} />
