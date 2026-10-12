@@ -74,8 +74,9 @@
   --color-pay-danger-ink: var(--pay-danger-ink);
   --color-pay-danger-body: var(--pay-danger-body);
   --color-pay-danger-fg: var(--pay-danger-fg);
-  --font-display: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-hand: "Caveat", "Segoe Script", cursive;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
