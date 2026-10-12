@@ -28,6 +28,7 @@ import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
 import { CarryOverLeads } from "@/components/crm/CarryOverLeads";
 import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
+import { ActivitiesView, OutlookView, PipelineBoard, TasksView } from "@/components/crm/desk/WorkViews";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
 import { FollowUpWeek } from "@/components/crm/FollowUpWeek";
@@ -446,6 +447,18 @@ function DeskPage() {
                 />
               </>
             )}
+          </TabsContent>
+          <TabsContent value="pipeline">
+            {queueLocked ? <QueueLockedNote /> : <PipelineBoard />}
+          </TabsContent>
+          <TabsContent value="tasks">
+            <TasksView />
+          </TabsContent>
+          <TabsContent value="activities">
+            <ActivitiesView />
+          </TabsContent>
+          <TabsContent value="outlook">
+            <OutlookView />
           </TabsContent>
           <TabsContent value="calls">
             <MyCallLog />
