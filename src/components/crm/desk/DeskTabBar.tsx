@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { tab: "today", label: { bn: "আজ", en: "Today" }, Icon: Home, tone: "text-chart-2 bg-chart-2/10" },
-  { tab: "leads", label: { bn: "লিড", en: "Leads" }, Icon: List, tone: "text-chart-2 bg-chart-2/10" },
+  { tab: "pipeline", label: { bn: "পাইপলাইন", en: "Pipeline" }, Icon: LayoutGrid, tone: "text-primary bg-primary/10" },
+  { tab: "leads", label: { bn: "লিড", en: "Contacts" }, Icon: List, tone: "text-chart-2 bg-chart-2/10" },
+  { tab: "tasks", label: { bn: "কাজ", en: "Tasks" }, Icon: CalendarClock, tone: "text-chart-4 bg-chart-4/10" },
+  { tab: "activities", label: { bn: "কার্যক্রম", en: "Activities" }, Icon: PhoneCall, tone: "text-success bg-success/10" },
+  { tab: "outlook", label: { bn: "আউটলুক", en: "Outlook" }, Icon: FileText, tone: "text-chart-2 bg-chart-2/10" },
   { tab: "queue", label: { bn: "কার্ড ভিউ", en: "Queue" }, Icon: LayoutGrid, tone: "text-primary bg-primary/10" },
   { tab: "calls", label: { bn: "কল", en: "Calls" }, Icon: PhoneCall, tone: "text-success bg-success/10" },
   { tab: "whatsapp", label: { bn: "হোয়াটসঅ্যাপ", en: "WhatsApp" }, Icon: MessageCircle, tone: "text-success bg-success/10" },
