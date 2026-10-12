@@ -135,7 +135,7 @@ function EntryHall() {
               alt="Winstone — Find. Build. Invest."
               width={1920}
               height={740}
-              className="w-full rounded-xl border border-border"
+              className="h-52 w-full rounded-xl border border-border object-cover object-left sm:h-auto sm:object-contain"
             />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-card px-4 py-3">
