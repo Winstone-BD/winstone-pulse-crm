@@ -208,6 +208,11 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           <TrendingUp className="size-4 text-primary" /> {t({ bn: "তারিখভিত্তিক লিড ও কনভার্সন চার্ট", en: "Daily leads & conversion chart" })}
         </h2>
         <div className="flex flex-wrap items-end gap-2 text-xs">
+          <div className="flex gap-1" role="group" aria-label={t({ bn: "দ্রুত তারিখসীমা", en: "Quick range" })}>
+            {[7, 30, 90].map((d) => (
+              <Button key={d} size="sm" variant="outline" onClick={() => setPreset(d)}>{d} {t({ bn: "দিন", en: "days" })}</Button>
+            ))}
+          </div>
           <label className="grid gap-0.5">{t({ bn: "পেজ/গ্রুপ", en: "Page/group" })}
             <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={pageId} onChange={(e) => setPageId(e.target.value)}>
               <option value="all">{t({ bn: "সব পেজ/গ্রুপ", en: "All pages/groups" })}</option>
@@ -216,6 +221,9 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           </label>
           <label className="grid gap-0.5">{t({ bn: "থেকে", en: "From" })}<Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
           <label className="grid gap-0.5">{t({ bn: "পর্যন্ত", en: "To" })}<Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <Button size="sm" variant="outline" onClick={exportCsv} disabled={!valid || !q.data}>
+            <FileDown className="size-4" /> {t({ bn: "CSV", en: "CSV" })}
+          </Button>
           <Button size="sm" variant="outline" onClick={exportPdf} disabled={!valid || exporting || !q.data}>
             <FileDown className="size-4" /> {exporting ? "…" : t({ bn: "PDF রিপোর্ট", en: "PDF report" })}
           </Button>
