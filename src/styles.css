@@ -593,3 +593,31 @@
   --warning-ink: var(--warning);
   color-scheme: dark;
 }
+
+/* Deep green "enter" actions: every button that opens a workspace. */
+:root {
+  --enter: oklch(0.36 0.09 160);
+  --enter-hover: oklch(0.3 0.08 160);
+  --enter-foreground: oklch(0.98 0.01 160);
+}
+.btn-enter {
+  background-color: var(--enter);
+  color: var(--enter-foreground);
+  border-color: transparent;
+}
+.btn-enter:hover,
+.group:hover .btn-enter {
+  background-color: var(--enter-hover);
+  color: var(--enter-foreground);
+}
+
+/* Bengali UI uses Hind Siliguri (matches the FinOS reference). */
+html[lang="bn"] body,
+html[lang="bn"] h1,
+html[lang="bn"] h2,
+html[lang="bn"] h3 {
+  font-family: "Hind Siliguri", var(--font-sans);
+}
+:lang(bn) {
+  font-family: "Hind Siliguri", var(--font-sans);
+}
