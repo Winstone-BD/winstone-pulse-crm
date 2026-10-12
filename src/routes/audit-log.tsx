@@ -44,7 +44,7 @@ const short = (v: unknown) => { const s = v == null ? "—" : typeof v === "stri
 const csv = (v: unknown) => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 function Page() {
-  const [tab, setTab] = useState<"log" | "backups">("log");
+  const [tab, setTab] = useState<"log" | "backups" | "ai">("log");
   return (
     <AppShell>
       <RoleGate surface="hq" allow={["authority"]} icon={<History className="size-7" />}
@@ -54,8 +54,9 @@ function Page() {
           <div className="flex gap-2">
             <Button variant={tab === "log" ? "default" : "outline"} size="sm" onClick={() => setTab("log")}><History className="size-4" /> Audit log</Button>
             <Button variant={tab === "backups" ? "default" : "outline"} size="sm" onClick={() => setTab("backups")}><DatabaseBackup className="size-4" /> Backups</Button>
+            <Button variant={tab === "ai" ? "default" : "outline"} size="sm" onClick={() => setTab("ai")}><Sparkles className="size-4" /> AI</Button>
           </div>
-          {tab === "log" ? <AuditLog /> : <Backups />}
+          {tab === "log" ? <AuditLog /> : tab === "backups" ? <Backups /> : <AiTeamSummary />}
         </div>
       </RoleGate>
     </AppShell>

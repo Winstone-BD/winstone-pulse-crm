@@ -402,6 +402,8 @@ function DeskPage() {
 
         <SmartInsightStrip scope="desk" />
 
+        <AiLeadPriority />
+
         <FollowUpAlarm />
 
         {!queueLocked && (
