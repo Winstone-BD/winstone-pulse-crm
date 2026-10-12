@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  CRM_BASE_CENTS, CRM_TOTAL_CENTS, CRM_VAT_CENTS, isAmberWindow, isRedWindow, paymentDueLabel, usd,
+  CRM_BASE_CENTS, CRM_TOTAL_CENTS, CRM_VAT_CENTS, deadlineLeftLabel, dhakaClockLabel, dhakaDateLabel,
+  isAmberWindow, isRedWindow, paymentDueLabel, subscriptionNoticeCopy, subscriptionNoticeState, usd,
 } from "@/lib/maintenance-rules";
 
 // Dhaka = UTC+6. Helper builds a UTC instant from a Dhaka wall-clock time.
