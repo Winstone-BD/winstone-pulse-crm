@@ -764,6 +764,13 @@
       "when": 1791832488532,
       "tag": "0108_create_payment_vouchers",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1791832684224,
+      "tag": "0109_lock_payment_vouchers",
+      "breakpoints": true
     }
   ]
 }
