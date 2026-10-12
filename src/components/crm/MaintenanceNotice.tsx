@@ -643,8 +643,13 @@ export function NoticePreview() {
 export function MaintenanceFloorNotice({ className }: { className?: string }) {
   const { data } = useMaintenance();
   const path = useRouterState({ select: (r) => r.location.pathname });
+  // The payment state can arrive from the restored query cache before hydration — render only after it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   useFloorNoticeHost();
-  if (!data || isOpenPath(path)) return null;
+  if (!mounted || !data || isOpenPath(path)) return null;
   if (data.locked && !data.exempt) return null;
   if (data.paymentStatus === "verified") return null;
   const state = subscriptionNoticeState(data.paymentStatus, data.locked);
