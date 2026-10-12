@@ -274,7 +274,8 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
   if (error) throw new Error("Could not record decision");
   clearMaintenanceCache();
-  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd } });
+  const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
+  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
   if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
   await notifyOnce(
     `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${row.payment_ref}`,
@@ -488,7 +489,8 @@ export async function architectDecide(input: {
     })
     .eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period);
   clearMaintenanceCache();
-  await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires });
+  const { data: payRow } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period).maybeSingle();
+  await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires, metadata: { approving_account: input.actor, approved_at: now.toISOString(), unlock_request_id: request.id, payment_ref: payRow?.payment_ref ?? null, payment_status: payRow?.payment_status ?? null } });
   await notifyOnce(`maintenance_restored_${request.billing_period}_${request.id}`, "info", "Workspace access restored", `Access restored for ${request.billing_period} by System Architect until ${dhakaTime(expires)} (Dhaka).`);
   return { ok: true, status: "approved" as const, expiresAt: expires };
 }
