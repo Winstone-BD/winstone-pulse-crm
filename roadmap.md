@@ -136,6 +136,6 @@
 - [x] Reskin (mint/orange/teal, Outfit): tokens/sidebar/header → desk → HQ pages → entry/sign-in
 - [x] Support inbox keeps last tickets during failed polls
 - [x] Home: remove duplicate banner image under hero
-- [ ] Audit log (created/edited/archived, who, when) — awaiting plan approval
-- [ ] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
+- [x] Audit log (created/edited/archived, who, when) — awaiting plan approval
+- [x] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
 - [ ] Reconnect Google Calendar in new workspace
