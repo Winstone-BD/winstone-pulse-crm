@@ -151,6 +151,20 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
       await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — maintenance unpaid", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Submit the payment reference in IT Console.`);
     }
   }
+  // Invoice milestones for management — one alert per invoice event (deduped by code).
+  if (row.payment_status !== "verified") {
+    const { isAmberWindow, isRedWindow } = await import("@/lib/maintenance-rules");
+    const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
+    if (day >= 9 && day < 15) {
+      await notifyOnce(`billing_invoice_available_${period}`, "info", "New invoice available", `WINSTONE PULSE : CRM invoice for ${period}: $18.16 USD incl. 15% VAT. Due on the 12th; lock deadline 15th 00:00 (Dhaka).`);
+    }
+    if (isRedWindow(now) || (!isAmberWindow(now) && day === 11)) {
+      await notifyOnce(`billing_due_approaching_${period}`, "warning", "Payment due date approaching", `Invoice ${period} ($18.16 USD) is due on the 12th. Payment status: ${row.payment_status}.`);
+    }
+    if (day >= 13 && day < 15) {
+      await notifyOnce(`billing_overdue_${period}`, "critical", "Invoice overdue", `Invoice ${period} ($18.16 USD) passed its 12th due date unpaid/unverified. Lock at 15th 00:00 (Dhaka).`);
+    }
+  }
   if (result.stage === "due_today") {
     await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Fee $46.29 USD.`);
   }
@@ -225,7 +239,7 @@ export async function submitPayment(input: { actor: string; paymentRef: string; 
   if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
-  await notify(`maintenance_payment_submitted_${state.period}_${Date.now()}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} ($46.29 USD). Awaiting System Architect verification.`);
+  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} ($46.29 USD). Awaiting System Architect verification.`);
   return { ok: true, already: false };
 }
 
@@ -258,8 +272,9 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   if (error) throw new Error("Could not record decision");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd } });
-  await notify(
-    `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${Date.now()}`,
+  if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
+  await notifyOnce(
+    `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${row.payment_ref}`,
     input.approve ? "info" : "critical",
     input.approve ? "Maintenance payment verified" : "Maintenance payment rejected",
     `${state.period} reference ${row.payment_ref}: ${input.approve ? "verified — no lock this month" : "rejected"}. Reason: ${input.reason}`,
@@ -469,5 +484,6 @@ export async function architectDecide(input: {
     .eq("billing_period", request.billing_period);
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires });
+  await notifyOnce(`maintenance_restored_${request.billing_period}_${request.id}`, "info", "Workspace access restored", `Access restored for ${request.billing_period} by System Architect until ${dhakaTime(expires)} (Dhaka).`);
   return { ok: true, status: "approved" as const, expiresAt: expires };
 }
