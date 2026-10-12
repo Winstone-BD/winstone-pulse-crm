@@ -345,7 +345,7 @@ function NoticeCard({
       role={state === "red" ? "alert" : "status"}
       className={cn("relative overflow-hidden rounded-2xl border pl-5 shadow-card backdrop-blur-sm", tone.card)}
     >
-      <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1.5", tone.stripe)} />
+      <span aria-hidden className={cn("absolute inset-y-px left-px w-1.5 rounded-l-[14px]", tone.stripe)} />
       {onDismiss && (
         <button
           type="button"
