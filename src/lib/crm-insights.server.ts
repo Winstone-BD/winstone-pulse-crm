@@ -53,7 +53,6 @@ export async function buildCrmInsights(agentId: string | null, lang: "bn" | "en"
     .from("leads")
     .select("id, name, status, temperature, last_call_at, call_count, retry_after")
     .neq("status", "closed")
-    .neq("work_state", "duplicate_skipped")
     .not("assigned_to", "is", null)
     .order("last_call_at", { ascending: true, nullsFirst: true })
     .limit(1000);
