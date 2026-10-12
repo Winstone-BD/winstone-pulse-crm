@@ -145,6 +145,11 @@ export function TeamSupportInbox() {
 
   return (
     <section className="card-elevated space-y-3 p-4">
+      {staleNotice && (
+        <p role="status" className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+          Connection hiccup — showing the last loaded tickets, retrying automatically.
+        </p>
+      )}
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
