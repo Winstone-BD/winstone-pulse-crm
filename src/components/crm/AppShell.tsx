@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
+import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
 import { MobileNavDrawer, NavSidebar } from "@/components/crm/NavSidebar";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
@@ -65,6 +65,38 @@ export const NAV = [
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
 
+/** Light/dark switch: presentation only, remembered on this device. */
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const on = localStorage.getItem("winstone.theme") === "dark";
+    setDark(on);
+    document.documentElement.classList.toggle("dark", on);
+  }, []);
+  const flip = () => {
+    const on = !dark;
+    setDark(on);
+    document.documentElement.classList.toggle("dark", on);
+    try {
+      localStorage.setItem("winstone.theme", on ? "dark" : "light");
+    } catch {
+      // storage blocked: switch still applies for this visit
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={flip}
+      aria-pressed={dark}
+      aria-label={dark ? "লাইট মোড" : "ডার্ক মোড"}
+      title={dark ? "লাইট মোড" : "ডার্ক মোড"}
+      className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
+    </button>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
@@ -116,6 +148,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               ))}
             </div>
+
+            <ThemeToggle />
 
             {adminToken && <AgentSelector />}
 

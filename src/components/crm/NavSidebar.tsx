@@ -33,6 +33,8 @@ import {
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { useT } from "@/lib/i18n";
+import { useMyAccount, useSignOut } from "@/lib/session";
+import { LogOut } from "lucide-react";
 import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -117,7 +119,7 @@ function NavContent({
         if (list.length === 0) return null;
         return (
           <div key={group.title.en} className="mb-5">
-            <p hidden={collapsed} className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <p hidden={collapsed} className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
               {t(group.title)}
             </p>
             <nav className="flex flex-col gap-0.5">
@@ -133,13 +135,13 @@ function NavContent({
                     data-nav-link
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
-                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-transparent data-[status=active]:before:bg-accent-foreground data-[status=active]:bg-primary data-[status=active]:text-primary-foreground data-[status=active]:shadow-sm`}
+                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-xl px-3 py-2 text-[13px] font-medium text-foreground/75 transition-all duration-200 hover:bg-card hover:text-foreground data-[status=active]:bg-primary data-[status=active]:font-semibold data-[status=active]:text-primary-foreground data-[status=active]:shadow-md`}
                   >
                     <Icon className="size-4 shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                   {!collapsed && subs && path === item.to && (
-                    <div className="ml-5 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+                    <div className="ml-5 mt-1.5 flex flex-col gap-0.5 border-l-2 border-primary/25 pl-2.5">
                       {subs.map((sub, i) => {
                         const on = activeS === sub.key || (!subs.some((x) => x.key === activeS) && i === 0);
                         return (
@@ -149,7 +151,7 @@ function NavContent({
                             search={{ s: sub.key } as never}
                             onClick={onNavigate}
                             data-nav-link
-                            className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+                            className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/70 hover:text-foreground"}`}
                           >
                             {sub.label}
                           </Link>
@@ -201,7 +203,7 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
       ref={ref}
       aria-label="প্রধান নেভিগেশন"
       onKeyDown={onNavKeys}
-      className={`sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-y-auto border-r border-border bg-card/60 py-4 backdrop-blur transition-[width] duration-200 lg:block ${collapsed ? "w-16 px-2" : "w-60 px-3"}`}
+      className={`sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 flex-col border-r border-border bg-sidebar py-4 transition-[width] duration-200 lg:flex ${collapsed ? "w-16 px-2" : "w-64 px-3"}`}
     >
       <button
         type="button"
@@ -214,8 +216,42 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
         {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         {!collapsed && <span>{t({ bn: "ভাঁজ করুন", en: "Collapse" })}</span>}
       </button>
-      <NavContent items={items} collapsed={collapsed} />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <NavContent items={items} collapsed={collapsed} />
+      </div>
+      <SidebarAccount collapsed={collapsed} />
     </aside>
+  );
+}
+
+/** Avatar + sign-out at the foot of the sidebar; same sign-out as the top bar. */
+function SidebarAccount({ collapsed }: { collapsed: boolean }) {
+  const { account, scope } = useMyAccount();
+  const signOut = useSignOut();
+  const t = useT();
+  if (scope === "none" || !account?.profile) return null;
+  const name = account.profile.name ?? "";
+  return (
+    <div className={`mt-3 flex items-center gap-2 border-t border-border pt-3 ${collapsed ? "flex-col" : ""}`}>
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary" aria-hidden>
+        {name.slice(0, 2)}
+      </span>
+      {!collapsed && (
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[13px] font-semibold">{name}</span>
+          <span className="block truncate text-[10px] text-muted-foreground">{account.profile.employee_id ?? ""}</span>
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={() => void signOut()}
+        aria-label={t({ bn: "সাইন আউট", en: "Sign out" })}
+        title={t({ bn: "সাইন আউট", en: "Sign out" })}
+        className={`${FOCUS} grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-card hover:text-foreground`}
+      >
+        <LogOut className="size-4" />
+      </button>
+    </div>
   );
 }
 
