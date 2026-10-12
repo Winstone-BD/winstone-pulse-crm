@@ -349,6 +349,14 @@ function LiveTiles() {
     start.setDate(start.getDate() - (days - 1));
     return t >= start.getTime();
   };
+  // Dhaka YYYY-MM-DD bounds handed to the desk lists.
+  const rangeDates = (): { from?: string; to?: string } => {
+    if (from || to) return { ...(from ? { from } : {}), ...(to ? { to } : {}) };
+    const days = RANGES.find((r) => r.key === range)!.days;
+    if (!days) return {};
+    const d = (ms: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka" }).format(new Date(ms));
+    return { from: d(Date.now() - (days - 1) * 86_400_000), to: d(Date.now()) };
+  };
   const values = {
     Leads: snap.leads.filter((l) => inRange(l.created_at)).length,
     Calls: snap.calls.filter((c) => inRange(c.created_at)).length,
@@ -371,14 +379,22 @@ function LiveTiles() {
         <span className="text-xs opacity-60">–</span>
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="শেষ তারিখ" className="rounded-md bg-background/10 px-2 py-1 text-xs" />
       </div>
-      <Tiles values={snap.isPending ? null : values} linked />
+      <Tiles values={snap.isPending ? null : values} linked range={rangeDates()} />
     </>
   );
 }
 
 const TILE_LINKS = { Leads: "leads", Calls: "calls", "Follow-ups": "calendar" } as const;
 
-function Tiles({ values, linked = false }: { values: Record<string, number> | null; linked?: boolean }) {
+function Tiles({
+  values,
+  linked = false,
+  range = {},
+}: {
+  values: Record<string, number> | null;
+  linked?: boolean;
+  range?: { from?: string; to?: string };
+}) {
   const labels = { Leads: "লিড", Calls: "কল", "Follow-ups": "ফলো-আপ" } as const;
   return (
     <div className="mt-3 grid grid-cols-3 gap-3">
@@ -396,7 +412,7 @@ function Tiles({ values, linked = false }: { values: Record<string, number> | nu
         );
         const cls = "block rounded-xl border border-background/15 bg-background/5 p-3";
         return linked ? (
-          <Link key={k} to="/desk" search={{ s: TILE_LINKS[k] }} className={`${cls} transition-colors hover:border-primary/60 hover:bg-background/10`}>
+          <Link key={k} to="/desk" search={{ s: TILE_LINKS[k], ...range }} className={`${cls} transition-colors hover:border-primary/60 hover:bg-background/10`}>
             {inner}
           </Link>
         ) : (

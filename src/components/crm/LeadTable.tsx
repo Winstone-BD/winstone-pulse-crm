@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildTimeline, useSnapshot } from "@/lib/crm-data";
+import { DeskRangeChip, useDeskRange } from "@/lib/desk-range";
 import { relativeTime, shortDate } from "@/lib/crm-format";
 import { cn } from "@/lib/utils";
 import { myLeadExtras } from "@/lib/call-reports.functions";
@@ -99,7 +100,11 @@ const STATUS_STYLES: Record<string, string> = {
  * so end-of-day it is obvious who still has to be contacted again.
  */
 export function LeadTable() {
-  const { leads, profiles, calls, messages, events, isPending, isError, refetch } = useSnapshot();
+  const snap = useSnapshot();
+  const range = useDeskRange();
+  // Date range from the Command Center: leads added within the range.
+  const leads = useMemo(() => snap.leads.filter((l) => range.inRange(l.created_at)), [snap.leads, range.from, range.to]);
+  const { profiles, calls, messages, events, isPending, isError, refetch } = snap;
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("pending");
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
@@ -191,6 +196,7 @@ export function LeadTable() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold tracking-tight">লিড ড্যাশবোর্ড</h2>
+          <DeskRangeChip />
           <p className="text-xs text-muted-foreground sm:text-sm">
             আজ {counts.pending}টি লিডে কল বাকি · {counts.follow_up}টিতে আবার যোগাযোগ করতে হবে ·{" "}
             {counts.done}টিতে কথা হয়ে গেছে

@@ -4,3 +4,10 @@
 - site_visits is server-only (site-visits.functions.ts via siCaller); never deleted, lead link immutable, cancel via status — why: visit history must stay trustworthy.
 - Sales Copilot reads/builds in sales-intel.server.ts (copilotResponse); pure rules live in sales-copilot.rules.ts; AI numbers must come from cited facts or lead context (parseCopilotAi) — why: no invented prices, one grounded path.
 - Project catalog (project_catalog), sales updates and discussion notes are server-only via projects.functions.ts; only HQ/IT edit catalog/owner notes, agents log on own leads, updates/notes append-only — why: HQ owns prices, sales history stays trustworthy.
+
+- Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.
+- Service-bill review may reveal details to an authenticated admin after a server-only PIN check, but never executes payment or grants financial approval — why: notification and financial execution must remain separate.
+- Runtime crashes go to server-only runtime_error_issues/occurrences via POST /api/public/telemetry/runtime-error (sanitised, query strings dropped, same-origin); a resolved issue reopens when it recurs — why: one cross-device record HQ/IT can trust.
+- AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
+- Agent contribution reports (agent_daily_contributions) and HQ reviews (agent_contribution_reviews) are server-only and append-only, accessed only via agent-contribution.functions.ts with resolveCaller scope checks — why: original reports and review history must stay trustworthy.
+- Desk lists read an optional ?from=&to= (Dhaka, inclusive) via src/lib/desk-range.tsx and filter the already-scoped snapshot client-side — why: date filters never widen access.

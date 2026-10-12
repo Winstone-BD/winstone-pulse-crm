@@ -15,6 +15,7 @@ import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookingReviewRouteImport } from './routes/booking-review'
 import { Route as CoachRouteImport } from './routes/coach'
+import { Route as ContributionsRouteImport } from './routes/contributions'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DeskRouteImport } from './routes/desk'
@@ -138,6 +139,11 @@ const BookingReviewRoute = BookingReviewRouteImport.update({
 const CoachRoute = CoachRouteImport.update({
   id: '/coach',
   path: '/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContributionsRoute = ContributionsRouteImport.update({
+  id: '/contributions',
+  path: '/contributions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreditsRoute = CreditsRouteImport.update({
@@ -640,6 +646,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
+  '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
@@ -742,6 +749,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
+  '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
@@ -845,6 +853,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
   '/coach': typeof CoachRoute
+  '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
   '/desk': typeof DeskRoute
@@ -949,6 +958,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/booking-review'
     | '/coach'
+    | '/contributions'
     | '/credits'
     | '/customers'
     | '/desk'
@@ -1051,6 +1061,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/booking-review'
     | '/coach'
+    | '/contributions'
     | '/credits'
     | '/customers'
     | '/desk'
@@ -1153,6 +1164,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/booking-review'
     | '/coach'
+    | '/contributions'
     | '/credits'
     | '/customers'
     | '/desk'
@@ -1256,6 +1268,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookingReviewRoute: typeof BookingReviewRoute
   CoachRoute: typeof CoachRoute
+  ContributionsRoute: typeof ContributionsRoute
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
   DeskRoute: typeof DeskRoute
@@ -1394,6 +1407,13 @@ declare module '@tanstack/react-router' {
       path: '/coach'
       fullPath: '/coach'
       preLoaderRoute: typeof CoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contributions': {
+      id: '/contributions'
+      path: '/contributions'
+      fullPath: '/contributions'
+      preLoaderRoute: typeof ContributionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/credits': {
@@ -2064,6 +2084,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookingReviewRoute: BookingReviewRoute,
   CoachRoute: CoachRoute,
+  ContributionsRoute: ContributionsRoute,
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
   DeskRoute: DeskRoute,

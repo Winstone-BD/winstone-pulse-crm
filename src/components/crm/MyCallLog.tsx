@@ -4,11 +4,15 @@ import { useMemo } from "react";
 import { CallEntry } from "@/components/crm/LeadDossier";
 import { MyPhoneLine } from "@/components/crm/MyPhoneSetup";
 import { useSnapshot } from "@/lib/crm-data";
+import { DeskRangeChip, useDeskRange } from "@/lib/desk-range";
 import { EmptyState, ErrorState, LoadingState } from "@/components/crm/DataState";
 
 /** Every recording synced for the agent's own calls, newest first. */
 export function MyCallLog() {
-  const { leads, calls, isPending, isError, refetch } = useSnapshot();
+  const { leads, calls: allCalls, isPending, isError, refetch } = useSnapshot();
+  const range = useDeskRange();
+  // Date range from the Command Center: calls made within the range.
+  const calls = useMemo(() => allCalls.filter((c) => range.inRange(c.created_at)), [allCalls, range.from, range.to]);
 
   const ordered = useMemo(
     () =>
@@ -24,6 +28,7 @@ export function MyCallLog() {
         <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight">
           <PhoneCall className="size-5 text-primary" /> আমার কল রেকর্ড
         </h2>
+        <DeskRangeChip />
         <p className="text-xs text-muted-foreground sm:text-sm">
           {ordered.length}টি কল · ফোন থেকে অডিও আসার পর এআই সারমর্ম যোগ হয়
           <MyPhoneLine />
