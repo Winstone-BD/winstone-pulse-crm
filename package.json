@@ -87,7 +87,8 @@
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
     "write-excel-file": "^4.1.1",
-    "zod": "3"
+    "zod": "3",
+    "@lovable.dev/vite-tanstack-config": "2.25.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

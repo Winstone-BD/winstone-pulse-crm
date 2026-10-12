@@ -84,7 +84,6 @@ export function TodayHero({ name }: { name: string | null }) {
   const followUps = leads.filter((l) => l.status === "follow_up").length;
   const pct = leads.length ? Math.round((done / leads.length) * 100) : 0;
   const displayName = (name ?? "").trim();
-  const first = displayName ? displayName.split(" ")[0] : t({ bn: "এজেন্ট", en: "Agent" });
   const today = new Date().toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", weekday: "long", day: "numeric", month: "long" });
 
   return (
