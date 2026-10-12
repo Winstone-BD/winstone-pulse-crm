@@ -313,3 +313,55 @@ function DesktopIllustration() {
     </span>
   );
 }
+
+const SHOWCASE = [
+  { icon: Headphones, tag: "Lead & Call Management", title: "প্রতিটি কল, এক জায়গায়", body: "নিজের SIM থেকে কল, তারপর রিপোর্ট — লিডের পুরো ইতিহাস কখনো হারায় না।" },
+  { icon: BarChart3, tag: "Live Sales Monitoring", title: "ফ্লোর লাইভ দেখুন", body: "নতুন লিড, কল আর ফলো-আপ কয়েক সেকেন্ডের মধ্যে HQ বোর্ডে আপডেট হয়।" },
+  { icon: Globe, tag: "Strategy & Forecasts", title: "তথ্য থেকে সিদ্ধান্ত", body: "সোশ্যাল পেজ, সাইট ভিজিট ও বুকিং — বাস্তব রিপোর্ট থেকে লক্ষ্য ও প্রবণতা।" },
+] as const;
+
+function CommandCenterShowcase() {
+  return (
+    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
+      <div className="grid lg:grid-cols-[1.1fr_1fr]">
+        <div className="bg-foreground p-6 text-background sm:p-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-primary">Command Center</p>
+          <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
+          <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
+          <div aria-hidden className="mt-6 grid grid-cols-3 gap-3">
+            {["Leads", "Calls", "Follow-ups"].map((k) => (
+              <div key={k} className="rounded-xl border border-background/15 bg-background/5 p-3">
+                <div className="h-2 w-10 rounded bg-primary/70" />
+                <div className="mt-3 h-4 w-14 rounded bg-background/30" />
+                <p className="mt-2 text-[10px] uppercase tracking-widest opacity-60">{k}</p>
+              </div>
+            ))}
+          </div>
+          <svg aria-hidden viewBox="0 0 300 90" className="mt-4 h-24 w-full">
+            <defs>
+              <linearGradient id="ccFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0 75 C40 70 60 55 90 58 S140 30 170 40 S230 10 300 18 L300 90 L0 90 Z" fill="url(#ccFill)" />
+            <path d="M0 75 C40 70 60 55 90 58 S140 30 170 40 S230 10 300 18" fill="none" stroke="var(--primary)" strokeWidth="2" />
+          </svg>
+          <p className="mt-2 text-[10px] uppercase tracking-[0.3em] opacity-50">Pulse — Find. Build. Invest.</p>
+        </div>
+        <ul className="divide-y divide-border">
+          {SHOWCASE.map(({ icon: Icon, tag, title, body }) => (
+            <li key={tag} className="flex gap-4 p-5 sm:p-6">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary">{tag}</p>
+                <h3 className="mt-1 font-bold">{title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
