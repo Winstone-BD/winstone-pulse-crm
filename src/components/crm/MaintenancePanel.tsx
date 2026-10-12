@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MaintenanceCountdown } from "@/components/crm/MaintenanceNotice";
+import { MaintenanceCountdown, NoticePreview } from "@/components/crm/MaintenanceNotice";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
