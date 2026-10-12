@@ -65,7 +65,7 @@ function EntryHall() {
   };
 
   return (
-    <div className="theme-light min-h-screen bg-background">
+    <div className="theme-exec min-h-screen bg-background">
       <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
         <header className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <div className="text-center lg:text-left">
@@ -73,10 +73,10 @@ function EntryHall() {
               <img
                 src={logoAsset.url}
                 alt="Winstone logo"
-                className="size-14 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-16"
+                className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
               />
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-primary sm:text-base">
+                <p className="text-sm font-black uppercase tracking-wide text-gold sm:text-base">
                   Winstone Properties Ltd.
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
@@ -85,10 +85,10 @@ function EntryHall() {
               </div>
             </div>
             <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Winstone <span className="text-primary">Pulse</span>
+              Winstone <span className="text-gold">Pulse</span>
             </h1>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Close more deals, <span className="text-primary">less chaos.</span>
+              Close more deals, <span className="text-gold">less chaos.</span>
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
               The visual CRM that your sales team will actually love using. Drag, drop, and close —
@@ -98,7 +98,7 @@ function EntryHall() {
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Button
                 size="lg"
-                className="rounded-full px-7 text-base font-bold shadow-lg shadow-primary/30"
+                className="rounded-md px-7 text-base font-bold hover:bg-charcoal"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -107,7 +107,7 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full px-7 text-base font-semibold">
+              <Button asChild size="lg" variant="outline" className="rounded-md px-7 text-base font-semibold">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
@@ -120,7 +120,7 @@ function EntryHall() {
                 { icon: Smartphone, label: "Monitor Call Activity" },
               ].map(({ icon: Icon, label }) => (
                 <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25">
+                  <span className="grid size-8 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
                     <Icon className="size-4" />
                   </span>
                   {label}
