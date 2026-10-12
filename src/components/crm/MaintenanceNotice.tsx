@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, dhakaTime, nextRenewalDueAt } from "@/lib/maintenance-rules";
+import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, nextRenewalDueAt, usd } from "@/lib/maintenance-rules";
 import { useLang, useT } from "@/lib/i18n";
 
 export function useMaintenance() {
@@ -194,6 +194,7 @@ export function MaintenanceCountdown() {
 export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
   if (!data) return null;
+  if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <UpcomingInvoiceWidget />;
   if (!needsNotice(data)) return <MaintenanceCountdown />;
   return (
     <div className="notice-highlight mt-3 rounded-lg border-destructive/40 bg-destructive/10 p-3 pl-4 text-sm">
@@ -240,6 +241,7 @@ export function MaintenanceGate() {
     );
   }
 
+  if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <AmberReminderBanner period={data.period ?? ""} />;
   if (!needsNotice(data)) return null;
   const text =
     data.stage === "locked"
@@ -267,6 +269,66 @@ export function MaintenanceGate() {
       role="status"
     >
       {text}
+    </div>
+  );
+}
+
+function InvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { data } = useMaintenance();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{CRM_PLAN_NAME} — Invoice</DialogTitle>
+        </DialogHeader>
+        <dl className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 text-sm">
+          <dt className="text-muted-foreground">Base monthly fee</dt><dd className="font-semibold">$15.79 USD</dd>
+          <dt className="text-muted-foreground">VAT (15%)</dt><dd className="font-semibold">$2.37 USD</dd>
+          <dt className="text-muted-foreground">Total due</dt><dd className="font-semibold">{usd(CRM_TOTAL_CENTS)} USD</dd>
+          <dt className="text-muted-foreground">Due date</dt><dd className="font-semibold">12 {dhakaMonthName()}</dd>
+          <dt className="text-muted-foreground">Lock deadline</dt><dd className="font-semibold">15th 00:00 (Dhaka)</dd>
+        </dl>
+        <p className="text-xs text-muted-foreground">Payment is completed by IT Console / authorized team and verified by the System Architect.</p>
+        {data && <RequestButton />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Phase 1 amber banner. Dismissal is per user/browser and per billing period; it never touches the invoice. */
+function AmberReminderBanner({ period }: { period: string }) {
+  const key = `billing-amber-dismissed:${period}`;
+  const [hidden, setHidden] = useState(true);
+  const [open, setOpen] = useState(false);
+  useEffect(() => setHidden(localStorage.getItem(key) === "1"), [key]);
+  if (hidden) return <InvoiceDialog open={open} onOpenChange={setOpen} />;
+  return (
+    <>
+      <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-warning/50 bg-warning/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+          <p className="min-w-0 flex-1">
+            <b className="text-warning">Subscription Reminder</b> — Your monthly invoice for {CRM_PLAN_NAME} ({usd(CRM_TOTAL_CENTS)} USD) is available. Payment is due on 12 {dhakaMonthName()}.
+          </p>
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setOpen(true)}>View Invoice</Button>
+          <Button size="sm" className="h-7" onClick={() => setOpen(true)}>Pay Now</Button>
+          <Button size="sm" variant="ghost" className="h-7" aria-label="Dismiss reminder" onClick={() => { localStorage.setItem(key, "1"); setHidden(true); }}>✕</Button>
+        </div>
+      </div>
+      <InvoiceDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+
+function UpcomingInvoiceWidget() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+      <p className="font-bold text-warning">Upcoming Invoice Due</p>
+      <p className="mt-1">Complete payment by 12 {dhakaMonthName()} to maintain uninterrupted access to your CRM pipelines and sales monitoring.</p>
+      <p className="mt-1">Total Due: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including 15% VAT.</p>
+      <Button size="sm" className="mt-2" onClick={() => setOpen(true)}>Settle Invoice</Button>
+      <InvoiceDialog open={open} onOpenChange={setOpen} />
+      <MaintenanceCountdown />
     </div>
   );
 }

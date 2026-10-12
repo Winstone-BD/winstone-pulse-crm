@@ -20,6 +20,9 @@ import { myFollowUps } from "@/lib/call-reports.functions";
 import { useSnapshot } from "@/lib/crm-data";
 import { shortDate } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
+import { toast } from "sonner";
+import { useLang } from "@/lib/i18n";
+import { softMessageDraft } from "@/lib/no-answer-cadence";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 const ALL = "all";
@@ -202,6 +205,9 @@ export function FollowUpWeek() {
                         />
                       </div>
                     )}
+                    {typeof event.note === "string" && event.note.startsWith("২য় বার ধরেননি") && (
+                      <SoftMessageBox name={event.customer_name ?? null} />
+                    )}
                   </li>
                 ))}
               </ul>
@@ -209,5 +215,32 @@ export function FollowUpWeek() {
           ))
       )}
     </section>
+  );
+}
+
+/** Ready-to-send soft message for second-miss leads; agent copies and sends it themselves. */
+function SoftMessageBox({ name }: { name: string | null }) {
+  const lang = useLang();
+  const text = softMessageDraft(name, lang);
+  return (
+    <div className="mt-2.5 rounded-lg border border-border bg-muted/40 p-2.5">
+      <p className="text-[11px] font-semibold text-muted-foreground">
+        {lang === "bn" ? "সফট মেসেজ (পাঠানোর জন্য প্রস্তুত)" : "Soft message (ready to send)"}
+      </p>
+      <p className="mt-1 text-xs">{text}</p>
+      <Button
+        size="sm"
+        variant="outline"
+        className="mt-2 h-7"
+        onClick={() => {
+          void navigator.clipboard
+            .writeText(text)
+            .then(() => toast.success(lang === "bn" ? "মেসেজ কপি হয়েছে" : "Message copied"))
+            .catch(() => toast.error(lang === "bn" ? "কপি করা যায়নি" : "Could not copy"));
+        }}
+      >
+        {lang === "bn" ? "কপি করুন" : "Copy message"}
+      </Button>
+    </div>
   );
 }
