@@ -85,7 +85,8 @@ function EntryHall() {
                 </p>
               </div>
             </div>
-            <h1 className="mt-8 font-hand text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-7xl">
+            <h1 className="mt-6 font-hand text-4xl font-bold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
+
               Winstone <span className="text-gold">Pulse</span>
             </h1>
             <p className="mt-3 font-hand text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
