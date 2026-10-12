@@ -15,6 +15,9 @@ import {
 import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
+import androidAsset from "@/assets/device-android.png.asset.json";
+import webAsset from "@/assets/device-web.png.asset.json";
+import desktopAsset from "@/assets/device-desktop.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -335,7 +338,7 @@ function ModeCard({
       onClick={onClick}
       className="group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <span className="origin-center scale-75 text-foreground sm:scale-100">
+      <span className="text-foreground">
         {illustration}
       </span>
       <span>
@@ -349,30 +352,24 @@ function ModeCard({
   );
 }
 
-function SmartphoneIllustration() {
+function DevicePhoto({ src, alt }: { src: string; alt: string }) {
   return (
-    <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
-      <Smartphone className="size-9 text-gold" strokeWidth={1.5} />
+    <span className="block h-20 w-24 overflow-hidden rounded-lg border border-border bg-card sm:h-32 sm:w-44">
+      <img src={src} alt={alt} loading="lazy" className="h-full w-full object-contain" />
     </span>
   );
+}
+
+function SmartphoneIllustration() {
+  return <DevicePhoto src={androidAsset.url} alt="Android phone" />;
 }
 
 function WebIllustration() {
-  return (
-    <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
-      <Globe className="size-9 text-gold" strokeWidth={1.5} />
-    </span>
-  );
+  return <DevicePhoto src={webAsset.url} alt="Phone browser showing the web CRM" />;
 }
 
 function DesktopIllustration() {
-  return (
-    <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
-      <Monitor className="size-9 text-gold" strokeWidth={1.5} />
-    </span>
-  );
+  return <DevicePhoto src={desktopAsset.url} alt="Desktop computer" />;
 }
+
 
