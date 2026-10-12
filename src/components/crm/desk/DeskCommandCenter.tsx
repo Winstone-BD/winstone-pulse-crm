@@ -965,7 +965,7 @@ export function DeskCommandCenter({
                 bnText="আমার পারফরম্যান্স (আজ)"
                 enText="My performance today"
               />
-              <dl className="mt-3 space-y-2.5 text-xs">
+              <div className="mt-3 space-y-2.5 text-xs">
                 <Meter label={t({ bn: "লিড শেষ", en: "Completed" })} value={stats.done} total={stats.total} />
                 <Meter label={t({ bn: "কথা হয়েছে", en: "Connected" })} value={stats.connected} total={stats.calls} />
                 <Meter
@@ -973,7 +973,7 @@ export function DeskCommandCenter({
                   value={Math.max(stats.followUp - stats.overdue, 0)}
                   total={stats.followUp}
                 />
-              </dl>
+              </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <MiniStat label={t({ bn: "আজ যোগ হওয়া লিড", en: "New today" })} value={bn(stats.newToday, lang)} />
                 <MiniStat label={t({ bn: "কথার সময়", en: "Talk time" })} value={formatTalkTime(stats.talk)} />
@@ -1326,10 +1326,10 @@ function Meter({ label, value, total }: { label: string; value: number; total: n
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
-        <dt className="truncate text-muted-foreground">{label}</dt>
-        <dd className="tabular shrink-0 font-semibold">
+        <span className="block truncate text-muted-foreground">{label}</span>
+        <span className="tabular shrink-0 font-semibold">
           {bn(value, lang)} / {bn(total, lang)} · {bn(pct, lang)}%
-        </dd>
+        </span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />

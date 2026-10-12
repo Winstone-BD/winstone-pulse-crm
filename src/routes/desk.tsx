@@ -121,7 +121,7 @@ function DeskStats() {
   return (
     <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)]">
     <QuotaGauge done={stats.done} total={stats.leads} />
-    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Tile
         icon={<Users className="size-4" />}
         label={t({ bn: "আমার লিড", en: "My leads" })}
@@ -154,7 +154,7 @@ function DeskStats() {
         delta={stats.whatsappDelta}
         deltaUnit={t({ bn: "টি", en: "" })}
       />
-    </dl>
+    </div>
     </div>
   );
 }
@@ -221,11 +221,11 @@ function Tile({
         aria-hidden
         className="pointer-events-none absolute -right-6 -top-6 size-16 rounded-full bg-primary/10 blur-xl"
       />
-      <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {icon}
         {label}
-      </dt>
-      <dd className="tabular mt-1 flex flex-wrap items-baseline gap-2 text-xl font-bold">
+      </div>
+      <div className="tabular mt-1 flex flex-wrap items-baseline gap-2 text-xl font-bold">
         {value}
         {delta !== undefined && delta !== 0 && (
           <span
@@ -238,7 +238,7 @@ function Tile({
             {deltaUnit}
           </span>
         )}
-      </dd>
+      </div>
       <p className="text-[11px] text-muted-foreground">{hint}</p>
       {progress !== undefined && (
         <>
