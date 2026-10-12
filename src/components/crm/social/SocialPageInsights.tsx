@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { History, BarChart3 } from "lucide-react";
-import { useState } from "react";
+import { History, BarChart3, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Input } from "@/components/ui/input";
-import { socialPageAudit, socialPageSummary } from "@/lib/social.functions";
+import { socialPageAudit, socialPageDaily, socialPageSummary } from "@/lib/social.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { useT } from "@/lib/i18n";
 
