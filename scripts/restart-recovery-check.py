@@ -250,4 +250,7 @@ async def main():
 
 
 if __name__ == "__main__":
+    picked = select_account(sys.argv[1:])
+    if picked is not None:
+        sys.exit(picked)
     sys.exit(asyncio.run(main()))
