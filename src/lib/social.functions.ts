@@ -314,7 +314,7 @@ export const saveSocialTemplate = createServerFn({ method: "POST" })
 
 export type SocialPageAuditRow = {
   id: string; at: string; pageId: string | null; pageName: string; action: string; by: string;
-  changes: { field: string; from: unknown; to: unknown }[];
+  changes: { field: string; from: string | boolean | null; to: string | boolean | null }[];
 };
 
 /** HQ/IT: who changed a page/group's name, link or active state, and when (append-only audit_logs). */
