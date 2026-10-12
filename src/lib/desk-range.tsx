@@ -2,6 +2,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { CalendarRange, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useLang, useT } from "@/lib/i18n";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -27,19 +28,21 @@ export function useDeskRange(): DeskRange & { active: boolean; inRange: (iso: st
   };
 }
 
-const fmt = (d: string) =>
-  new Date(`${d}T12:00:00+06:00`).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" });
+const fmt = (d: string, lang: "bn" | "en") =>
+  new Date(`${d}T12:00:00+06:00`).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" });
 
 /** Visible chip with a clear action; keeps other search params. */
 export function DeskRangeChip() {
   const { from, to, active } = useDeskRange();
   const navigate = useNavigate();
+  const t = useT();
+  const lang = useLang();
   if (!active) return null;
-  const label = `${from ? fmt(from) : "শুরু"} – ${to ? fmt(to) : "আজ"}`;
+  const label = `${from ? fmt(from, lang) : t({ bn: "শুরু", en: "Start" })} – ${to ? fmt(to, lang) : t({ bn: "আজ", en: "Today" })}`;
   return (
     <div role="status" className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 py-1 pl-3 pr-1 text-xs font-semibold text-primary">
       <CalendarRange className="size-3.5" aria-hidden />
-      তারিখ: {label}
+      {t({ bn: "তারিখ", en: "Dates" })}: {label}
       <Button
         type="button"
         size="sm"
@@ -54,9 +57,9 @@ export function DeskRangeChip() {
             },
           } as never)
         }
-        aria-label="তারিখের সীমা সরান"
+        aria-label={t({ bn: "তারিখের সীমা সরান", en: "Clear date range" })}
       >
-        <X className="size-3" /> সরান
+        <X className="size-3" /> {t({ bn: "সরান", en: "Clear" })}
       </Button>
     </div>
   );

@@ -153,7 +153,7 @@ function NavContent({
                             data-nav-link
                             className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/70 hover:text-foreground"}`}
                           >
-                            {sub.label}
+                            {t({ bn: sub.label, en: (sub as { en?: string }).en ?? sub.label })}
                           </Link>
                         );
                       })}
@@ -201,7 +201,7 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
   return (
     <aside
       ref={ref}
-      aria-label="প্রধান নেভিগেশন"
+      aria-label={t({ bn: "প্রধান নেভিগেশন", en: "Main navigation" })}
       onKeyDown={onNavKeys}
       className={`sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 flex-col border-r border-border bg-sidebar py-4 transition-[width] duration-200 lg:flex ${collapsed ? "w-16 px-2" : "w-64 px-3"}`}
     >
@@ -209,8 +209,8 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
         type="button"
         onClick={toggle}
         aria-expanded={!collapsed}
-        aria-label={collapsed ? "সাইডবার প্রসারিত করুন (Ctrl+B)" : "সাইডবার ভাঁজ করুন (Ctrl+B)"}
-        title={collapsed ? "প্রসারিত করুন (Ctrl+B)" : "ভাঁজ করুন (Ctrl+B)"}
+        aria-label={collapsed ? t({ bn: "সাইডবার প্রসারিত করুন (Ctrl+B)", en: "Expand sidebar (Ctrl+B)" }) : t({ bn: "সাইডবার ভাঁজ করুন (Ctrl+B)", en: "Collapse sidebar (Ctrl+B)" })}
+        title={collapsed ? t({ bn: "প্রসারিত করুন (Ctrl+B)", en: "Expand (Ctrl+B)" }) : t({ bn: "ভাঁজ করুন (Ctrl+B)", en: "Collapse (Ctrl+B)" })}
         className={`${FOCUS} mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-muted-foreground hover:bg-accent/60 hover:text-foreground ${collapsed ? "justify-center" : ""}`}
       >
         {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -257,6 +257,7 @@ function SidebarAccount({ collapsed }: { collapsed: boolean }) {
 
 /** Left-side navigation drawer for tablet and mobile widths. */
 export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
@@ -273,7 +274,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
       <SheetTrigger asChild>
         <button
           type="button"
-          aria-label="নেভিগেশন মেনু খুলুন (Alt+M)"
+          aria-label={t({ bn: "নেভিগেশন মেনু খুলুন (Alt+M)", en: "Open navigation menu (Alt+M)" })}
           className={`${FOCUS} inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-all duration-200 hover:bg-accent/60 lg:hidden`}
         >
           <Menu className="size-4.5" />

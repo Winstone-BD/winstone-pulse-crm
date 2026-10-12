@@ -51,6 +51,7 @@ function SlowLoadingCard({ onRetry, elapsed }: { onRetry: () => void; elapsed: n
 
 /** Shimmering placeholder shown while the live CRM snapshot loads. */
 export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows?: number }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [slow, setSlow] = useState(false);
   const [round, setRound] = useState(0);
@@ -89,7 +90,7 @@ export function SnapshotSkeleton({ tiles = 4, rows = 6 }: { tiles?: number; rows
   return (
     <div className="space-y-8" aria-busy="true" aria-label="Loading live data">
       {!slow && elapsed > 2000 && (
-        <p className="tabular text-center text-xs text-muted-foreground">লোড হচ্ছে… {(elapsed / 1000).toFixed(1)}s</p>
+        <p className="tabular text-center text-xs text-muted-foreground">{t({ bn: "লোড হচ্ছে…", en: "Loading…" })} {(elapsed / 1000).toFixed(1)}s</p>
       )}
       {slow && <SlowLoadingCard onRetry={retry} elapsed={elapsed} />}
       <div className="space-y-2">

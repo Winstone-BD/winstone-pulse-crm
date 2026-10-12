@@ -17,6 +17,16 @@ export const EVALUATION_QUESTIONS = [
   { key: "wants_follow_up", points: 10, label: "ফলো-আপ চেয়েছে?" },
 ] as const;
 
+/** English labels, keyed by question key (same six keys as EVALUATION_QUESTIONS). */
+export const EVALUATION_QUESTIONS_LABEL_EN: Record<string, string> = {
+  project_interest: "Showed interest in the project?",
+  asked_price: "Asked about price / payment plan?",
+  wanted_info: "Asked for brochure / WhatsApp / project info?",
+  visit_interest: "Interested in a meeting / office / site visit?",
+  decision_30d: "Likely to decide within 30 days?",
+  wants_follow_up: "Requested a follow-up?",
+};
+
 export type EvaluationKey = (typeof EVALUATION_QUESTIONS)[number]["key"];
 export type EvaluationAnswers = Record<EvaluationKey, boolean>;
 export type EvaluationCategory = "hot" | "warm" | "cold";

@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
 import { MAINTENANCE_FEE_LABEL, dhakaTime, nextRenewalDueAt } from "@/lib/maintenance-rules";
+import { useLang, useT } from "@/lib/i18n";
 
 export function useMaintenance() {
   const adminToken = useAdminToken();
@@ -139,18 +140,21 @@ export function MaintenanceBadge() {
   );
 }
 
-function fmtLeft(ms: number) {
-  if (ms <= 0) return "০০:০০:০০";
+function fmtLeft(ms: number, lang: "bn" | "en") {
+  if (ms <= 0) return "00:00:00";
   const s = Math.floor(ms / 1000);
   const d = Math.floor(s / 86400);
   const hh = String(Math.floor((s % 86400) / 3600)).padStart(2, "0");
   const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
   const ss = String(s % 60).padStart(2, "0");
-  return `${d > 0 ? `${d} দিন ` : ""}${hh}:${mm}:${ss}`;
+  const dayLabel = lang === "bn" ? "দিন" : "d";
+  return `${d > 0 ? `${d} ${dayLabel} ` : ""}${hh}:${mm}:${ss}`;
 }
 
 /** Live Dhaka-time countdown to next renewal due and to the unpaid lock. */
 export function MaintenanceCountdown() {
+  const t = useT();
+  const lang = useLang();
   const { data } = useMaintenance();
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
@@ -165,19 +169,19 @@ export function MaintenanceCountdown() {
   return (
     <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
       <div className="rounded-lg border border-border bg-card/60 p-3">
-        <p className="text-[11px] text-muted-foreground">পরবর্তী Renewal Due (ঢাকা সময়)</p>
+        <p className="text-[11px] text-muted-foreground">{t({ bn: "পরবর্তী Renewal Due (ঢাকা সময়)", en: "Next renewal due (Dhaka time)" })}</p>
         <p className="font-semibold">{dhakaTime(renewal)}</p>
-        <p className="font-mono text-base tabular-nums text-primary">{fmtLeft(new Date(renewal).getTime() - now)}</p>
+        <p className="font-mono text-base tabular-nums text-primary">{fmtLeft(new Date(renewal).getTime() - now, lang)}</p>
       </div>
       <div className={`rounded-lg border p-3 ${paid ? "border-border bg-card/60" : "border-destructive/40 bg-destructive/5"}`}>
-        <p className="text-[11px] text-muted-foreground">Unpaid Lock পর্যন্ত (ঢাকা সময়)</p>
+        <p className="text-[11px] text-muted-foreground">{t({ bn: "Unpaid Lock পর্যন্ত (ঢাকা সময়)", en: "Until unpaid lock (Dhaka time)" })}</p>
         {paid ? (
-          <p className="font-semibold text-primary">🟢 পেমেন্ট যাচাইকৃত — এই মাসে লক হবে না</p>
+          <p className="font-semibold text-primary">{t({ bn: "🟢 পেমেন্ট যাচাইকৃত — এই মাসে লক হবে না", en: "🟢 Payment verified — no lock this month" })}</p>
         ) : (
           <>
             <p className="font-semibold">{dhakaTime(data.lockAt)}</p>
             <p className="font-mono text-base tabular-nums text-destructive">
-              {lockMs > 0 ? fmtLeft(lockMs) : data.locked ? "🔒 লক হয়েছে" : "আনলক অনুমোদিত"}
+              {lockMs > 0 ? fmtLeft(lockMs, lang) : data.locked ? t({ bn: "🔒 লক হয়েছে", en: "🔒 Locked" }) : t({ bn: "আনলক অনুমোদিত", en: "Unlock approved" })}
             </p>
           </>
         )}
@@ -213,6 +217,7 @@ const OPEN_PATHS = ["/system", "/tech", "/auth", "/service-bill-alert", "/servic
 
 /** CRM-wide banner before the lock, full lock screen after it. */
 export function MaintenanceGate() {
+  const t = useT();
   const { data } = useMaintenance();
   const path = useRouterState({ select: (r) => r.location.pathname });
   if (!data) return null;
@@ -228,7 +233,7 @@ export function MaintenanceGate() {
           <NoticeBody s={data} />
           <LockSignInButton />
           <p className="text-center text-xs text-muted-foreground">
-            IT Console বা System Architect হলে Google দিয়ে সাইন ইন করুন — সাইন ইনের পর IT Console খুলবে।
+            {t({ bn: "IT Console বা System Architect হলে Google দিয়ে সাইন ইন করুন — সাইন ইনের পর IT Console খুলবে।", en: "If you are IT Console or System Architect, sign in with Google — IT Console will open after sign-in." })}
           </p>
         </div>
       </div>
@@ -238,12 +243,21 @@ export function MaintenanceGate() {
   if (!needsNotice(data)) return null;
   const text =
     data.stage === "locked"
-      ? "🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি বাকি — সিস্টেম লক। দয়া করে কোম্পানি কর্তৃপক্ষকে জানান।"
+      ? t({ bn: "🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি বাকি — সিস্টেম লক। দয়া করে কোম্পানি কর্তৃপক্ষকে জানান।", en: "🔴 Company system maintenance fee is overdue — system locked. Please inform company management." })
       : data.stage === "due_today"
-        ? `🔴 আজ কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) পরিশোধের শেষ দিন — কর্তৃপক্ষকে মনে করিয়ে দিন।`
+        ? t({
+            bn: `🔴 আজ কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) পরিশোধের শেষ দিন — কর্তৃপক্ষকে মনে করিয়ে দিন।`,
+            en: `🔴 Today is the last day to pay the company's system maintenance fee (${MAINTENANCE_FEE_LABEL}) — remind management.`,
+          })
         : data.stage === "soon"
-          ? `🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) শিগগির পরিশোধযোগ্য — ১৫ তারিখ ০০:০০-এ লক। কর্তৃপক্ষকে জানান।`
-          : `কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) — রিন্যুয়াল দিন ১২ তারিখ, ১৪ তারিখ ২৩:৫৯ পর্যন্ত গ্রেস। ফি কোম্পানি দেয় — কর্তৃপক্ষ না জানলে তাঁদের জানান।`;
+          ? t({
+              bn: `🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) শিগগির পরিশোধযোগ্য — ১৫ তারিখ ০০:০০-এ লক। কর্তৃপক্ষকে জানান।`,
+              en: `🔴 The company's system maintenance fee (${MAINTENANCE_FEE_LABEL}) is due soon — lock at 00:00 on the 15th. Inform management.`,
+            })
+          : t({
+              bn: `কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) — রিন্যুয়াল দিন ১২ তারিখ, ১৪ তারিখ ২৩:৫৯ পর্যন্ত গ্রেস। ফি কোম্পানি দেয় — কর্তৃপক্ষ না জানলে তাঁদের জানান।`,
+              en: `Company system maintenance fee (${MAINTENANCE_FEE_LABEL}) — renewal due on the 12th, grace until 23:59 on the 14th. The company pays the fee — inform management if they are unaware.`,
+            });
   const strong = data.stage !== "upcoming";
   return (
     <div

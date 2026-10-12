@@ -58,3 +58,27 @@ export const SHORTCUT_LABELS = {
   save: { bn: "Ctrl/⌘ + Enter — রিপোর্ট জমা (সব ঘর পূরণ হলে)", en: "Ctrl/⌘ + Enter — submit report (when complete)" },
   next: { bn: "Alt + Shift + N — পরের যোগ্য লিড", en: "Alt + Shift + N — next eligible lead" },
 };
+
+/**
+ * Single-flight latch for the save shortcut: a second Ctrl/⌘+Enter before the
+ * first request settles is ignored, even before React re-renders isPending.
+ * `run` must be the same submit the button uses; `release` is called when it settles.
+ */
+export function createSaveLatch() {
+  let inFlight = false;
+  return {
+    get busy() {
+      return inFlight;
+    },
+    try(state: { missing: string | null; pending: boolean; open: boolean }, run: () => void): "ran" | "blocked" | "busy" {
+      if (inFlight || state.pending) return "busy";
+      if (!canSaveReport(state)) return "blocked";
+      inFlight = true;
+      run();
+      return "ran";
+    },
+    release() {
+      inFlight = false;
+    },
+  };
+}

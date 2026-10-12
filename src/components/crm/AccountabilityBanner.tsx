@@ -4,6 +4,7 @@ import { ClipboardCheck, ShieldAlert } from "lucide-react";
 
 import { myAccountability } from "@/lib/accountability.functions";
 import { STATUS_LABEL, type AccountabilityStatus } from "@/lib/accountability";
+import { useT } from "@/lib/i18n";
 
 export function useMyAccountability() {
   const fetchState = useServerFn(myAccountability);
@@ -16,6 +17,7 @@ export function useMyAccountability() {
 
 /** Neutral, factual agent notice. Shown only when a review exists. */
 export function AccountabilityBanner() {
+  const t = useT();
   const { data } = useMyAccountability();
   const latest = data?.reviews?.[0];
   if (!latest) return null;
@@ -42,29 +44,38 @@ export function AccountabilityBanner() {
         <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold text-foreground">
             {approved
-              ? "আপনার কাজের পর্যালোচনা অনুমোদিত হয়েছে"
+              ? t({ bn: "আপনার কাজের পর্যালোচনা অনুমোদিত হয়েছে", en: "Your work review has been approved" })
               : status === "hold"
-                ? "নতুন লিড এখন স্থগিত — HQ-র সাথে কথা বলুন"
-                : "আগের কাজ শেষ করুন, তারপর নতুন লিড আসবে"}
+                ? t({ bn: "নতুন লিড এখন স্থগিত — HQ-র সাথে কথা বলুন", en: "New leads are on hold — talk to HQ" })
+                : t({ bn: "আগের কাজ শেষ করুন, তারপর নতুন লিড আসবে", en: "Finish earlier work, then new leads will arrive" })}
           </p>
           <p className="text-xs text-muted-foreground">
-            আজকের কাজ ({latest.business_date}): মোট {latest.eligible_count}টি কাজের মধ্যে {latest.completed_count}টি শেষ হয়েছে।
-            বাকি — ফলো-আপ {latest.overdue_followups}টি, লিড {pendingLeads}টি
-            {latest.missed_reports > 0 ? `, রিপোর্ট ${latest.missed_reports}টি` : ""}।
+            {t({
+              bn: `আজকের কাজ (${latest.business_date}): মোট ${latest.eligible_count}টি কাজের মধ্যে ${latest.completed_count}টি শেষ হয়েছে। বাকি — ফলো-আপ ${latest.overdue_followups}টি, লিড ${pendingLeads}টি${latest.missed_reports > 0 ? `, রিপোর্ট ${latest.missed_reports}টি` : ""}।`,
+              en: `Today's work (${latest.business_date}): ${latest.completed_count} of ${latest.eligible_count} tasks completed. Remaining — follow-ups ${latest.overdue_followups}, leads ${pendingLeads}${latest.missed_reports > 0 ? `, reports ${latest.missed_reports}` : ""}.`,
+            })}
           </p>
           {backlog > 0 && (
-            <p className="text-xs text-muted-foreground">পুরনো ব্যাকলগ (আগের দিনের ফলো-আপ): {backlog}টি — আজকের হিসাবে ধরা হয়নি।</p>
+            <p className="text-xs text-muted-foreground">
+              {t({
+                bn: `পুরনো ব্যাকলগ (আগের দিনের ফলো-আপ): ${backlog}টি — আজকের হিসাবে ধরা হয়নি।`,
+                en: `Older backlog (previous days' follow-ups): ${backlog} — not counted in today's total.`,
+              })}
+            </p>
           )}
           {approved ? (
             <p className="text-xs font-medium text-success">
-              {latest.unlock_for_date} থেকে নতুন লিড চালু।
-              {latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}
+              {t({
+                bn: `${latest.unlock_for_date} থেকে নতুন লিড চালু।${latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}`,
+                en: `New leads resume from ${latest.unlock_for_date}.${latest.approval_note ? ` HQ note: ${latest.approval_note}` : ""}`,
+              })}
             </p>
           ) : (
             <p className="text-xs text-foreground">
-              কল, ফলো-আপ ও রিপোর্ট সব কাজ স্বাভাবিকভাবে করা যাবে। শুধু {latest.unlock_for_date}-এর নতুন লিড
-              HQ দেখার পর আসবে। ভালো পারফরম্যান্স (Top 3) আর বাকি কাজ — দুটো আলাদা হিসাব।
-              {status === "hold" && latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}
+              {t({
+                bn: `কল, ফলো-আপ ও রিপোর্ট সব কাজ স্বাভাবিকভাবে করা যাবে। শুধু ${latest.unlock_for_date}-এর নতুন লিড HQ দেখার পর আসবে। ভালো পারফরম্যান্স (Top 3) আর বাকি কাজ — দুটো আলাদা হিসাব।${status === "hold" && latest.approval_note ? ` HQ নোট: ${latest.approval_note}` : ""}`,
+                en: `Calls, follow-ups and reports can all continue as usual. Only new leads for ${latest.unlock_for_date} will arrive after HQ review. Top performance (Top 3) and pending work are counted separately.${status === "hold" && latest.approval_note ? ` HQ note: ${latest.approval_note}` : ""}`,
+              })}
             </p>
           )}
         </div>

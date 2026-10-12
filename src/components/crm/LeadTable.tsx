@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, ChevronDown, MapPin, Search, X } from "lucide-react";
+import { useT, useLang } from "@/lib/i18n";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadDossier } from "@/components/crm/LeadDossier";
@@ -27,7 +28,9 @@ import { myLeadExtras } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
 import {
   DESK_BUCKET_LABEL,
+  DESK_BUCKET_LABEL_EN,
   GROUP_LABEL,
+  GROUP_LABEL_EN,
   followUpState,
   groupLeads,
   inBucket,
@@ -38,9 +41,10 @@ import {
 } from "@/lib/lead-groups";
 
 function FollowUpCell({ at }: { at: string | null }) {
+  const lang = useLang();
   const state = followUpState(at);
   if (state === "none") return <span className="text-muted-foreground">—</span>;
-  const when = new Date(at!).toLocaleString("bn-BD", {
+  const when = new Date(at!).toLocaleString(lang === "en" ? "en-GB" : "bn-BD", {
     timeZone: "Asia/Dhaka",
     day: "numeric",
     month: "short",
@@ -66,18 +70,18 @@ function FollowUpCell({ at }: { at: string | null }) {
 
 type Filter = "pending" | "follow_up" | "done" | "all";
 
-const FILTER_LABELS: Record<Filter, string> = {
-  pending: "কল বাকি",
-  follow_up: "আবার যোগাযোগ",
-  done: "কথা হয়েছে",
-  all: "সব লিড",
+const FILTER_LABELS: Record<Filter, { bn: string; en: string }> = {
+  pending: { bn: "কল বাকি", en: "Pending calls" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  done: { bn: "কথা হয়েছে", en: "Contacted" },
+  all: { bn: "সব লিড", en: "All leads" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "কল হয়নি",
-  contacted: "কথা হয়েছে",
-  follow_up: "আবার যোগাযোগ",
-  closed: "শেষ হয়েছে",
+const STATUS_LABELS: Record<string, { bn: string; en: string }> = {
+  pending: { bn: "কল হয়নি", en: "Not called" },
+  contacted: { bn: "কথা হয়েছে", en: "Contacted" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  closed: { bn: "শেষ হয়েছে", en: "Closed" },
 };
 
 const TEMP_STYLES: Record<string, string> = {
@@ -100,6 +104,8 @@ const STATUS_STYLES: Record<string, string> = {
  * so end-of-day it is obvious who still has to be contacted again.
  */
 export function LeadTable() {
+  const t = useT();
+  const lang = useLang();
   const snap = useSnapshot();
   const range = useDeskRange();
   // Date range from the Command Center: leads added within the range.
@@ -176,7 +182,7 @@ export function LeadTable() {
       );
   }, [scoped, filter, search, bucket, extras]);
 
-  const groups = useMemo(() => groupLeads(rows, extras, groupBy), [rows, extras, groupBy]);
+  const groups = useMemo(() => groupLeads(rows, extras, groupBy, Date.now(), lang), [rows, extras, groupBy, lang]);
   const toggleGroup = (key: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -188,18 +194,20 @@ export function LeadTable() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
-  if (isPending) return <div aria-busy="true" aria-label="লিড লোড হচ্ছে"><SnapshotSkeleton /></div>;
+  if (isPending) return <div aria-busy="true" aria-label={t({ bn: "লিড লোড হচ্ছে", en: "Loading leads" })}><SnapshotSkeleton /></div>;
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">লিড ড্যাশবোর্ড</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t({ bn: "লিড ড্যাশবোর্ড", en: "Lead dashboard" })}</h2>
           <DeskRangeChip />
           <p className="text-xs text-muted-foreground sm:text-sm">
-            আজ {counts.pending}টি লিডে কল বাকি · {counts.follow_up}টিতে আবার যোগাযোগ করতে হবে ·{" "}
-            {counts.done}টিতে কথা হয়ে গেছে
+            {t({
+              bn: `আজ ${counts.pending}টি লিডে কল বাকি · ${counts.follow_up}টিতে আবার যোগাযোগ করতে হবে · ${counts.done}টিতে কথা হয়ে গেছে`,
+              en: `${counts.pending} leads pending calls today · ${counts.follow_up} need follow-up · ${counts.done} already contacted`,
+            })}
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -207,7 +215,7 @@ export function LeadTable() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="নাম, নম্বর, রেফারেন্স, কোম্পানি"
+            placeholder={t({ bn: "নাম, নম্বর, রেফারেন্স, কোম্পানি", en: "Name, number, reference, company" })}
             className="pl-9"
           />
         </div>
@@ -233,13 +241,13 @@ export function LeadTable() {
         <TabsList className="flex w-full flex-wrap">
           {(Object.keys(FILTER_LABELS) as Filter[]).map((key) => (
             <TabsTrigger key={key} value={key}>
-              {FILTER_LABELS[key]} ({counts[key]})
+              {t(FILTER_LABELS[key])} ({counts[key]})
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="দ্রুত ভাগ">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t({ bn: "দ্রুত ভাগ", en: "Quick buckets" })}>
         {(Object.keys(DESK_BUCKET_LABEL) as DeskBucket[]).map((key) => (
           <button
             key={key}
@@ -255,11 +263,11 @@ export function LeadTable() {
                 : "border-border bg-card text-foreground hover:bg-surface-2",
             )}
           >
-            {DESK_BUCKET_LABEL[key]} ({bucketCounts[key]})
+            {lang === "en" ? DESK_BUCKET_LABEL_EN[key] : DESK_BUCKET_LABEL[key]} ({bucketCounts[key]})
           </button>
         ))}
         <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          গ্রুপ:
+          {t({ bn: "গ্রুপ:", en: "Group:" })}
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupKey)}
@@ -267,15 +275,15 @@ export function LeadTable() {
           >
             {(Object.keys(GROUP_LABEL) as GroupKey[]).map((key) => (
               <option key={key} value={key}>
-                {GROUP_LABEL[key]}
+                {lang === "en" ? GROUP_LABEL_EN[key] : GROUP_LABEL[key]}
               </option>
             ))}
           </select>
         </label>
       </div>
       <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="font-semibold text-foreground">{rows.length}টি লিড</span>
-        <span>· সব ফিল্টার একসাথে (AND) প্রযোজ্য</span>
+        <span className="font-semibold text-foreground">{t({ bn: `${rows.length}টি লিড`, en: `${rows.length} leads` })}</span>
+        <span>{t({ bn: "· সব ফিল্টার একসাথে (AND) প্রযোজ্য", en: "· All filters apply together (AND)" })}</span>
         {filtersActive && (
           <button
             type="button"
@@ -288,7 +296,7 @@ export function LeadTable() {
               setFilter("all");
             }}
           >
-            <X className="size-3" /> সব ফিল্টার মুছুন
+            <X className="size-3" /> {t({ bn: "সব ফিল্টার মুছুন", en: "Clear all filters" })}
           </button>
         )}
       </p>
@@ -306,7 +314,7 @@ export function LeadTable() {
               >
                 <span className="truncate">{group.key}</span>
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {group.items.length}টি · Hot {group.items.filter((l) => l.temperature === "hot").length}
+                  {t({ bn: `${group.items.length}টি`, en: `${group.items.length}` })} · Hot {group.items.filter((l) => l.temperature === "hot").length}
                   <ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
                 </span>
               </button>
@@ -323,7 +331,7 @@ export function LeadTable() {
       })}
       {rows.length === 0 && (
         <p role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          এই ফিল্টারে কোনো লিড নেই
+          {t({ bn: "এই ফিল্টারে কোনো লিড নেই", en: "No leads match this filter" })}
         </p>
       )}
 
@@ -349,6 +357,7 @@ function LeadRows({
   extras: Map<string, DeskExtras>;
   onOpen: (id: string) => void;
 }) {
+  const t = useT();
   const setOpenLeadId = onOpen;
   return (
     <>
@@ -385,7 +394,7 @@ function LeadRows({
                 )}
                 {lead.grade && (
                   <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[11px] font-semibold">
-                    গ্রেড {lead.grade}
+                    {t({ bn: "গ্রেড", en: "Grade" })} {lead.grade}
                   </span>
                 )}
                 <LeadStatusBadge status={lead.status} />
@@ -394,11 +403,11 @@ function LeadRows({
                 </span>
               </div>
               <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <dt className="text-muted-foreground">রেফারেন্স</dt>
+                <dt className="text-muted-foreground">{t({ bn: "রেফারেন্স", en: "Reference" })}</dt>
                 <dd className="truncate text-right">{lead.reference_by ?? "—"}</dd>
-                <dt className="text-muted-foreground">চাহিদা</dt>
+                <dt className="text-muted-foreground">{t({ bn: "চাহিদা", en: "Requirement" })}</dt>
                 <dd className="truncate text-right">{extras.get(lead.id)?.requirement ?? "—"}</dd>
-                <dt className="text-muted-foreground">পরের ফলো-আপ</dt>
+                <dt className="text-muted-foreground">{t({ bn: "পরের ফলো-আপ", en: "Next follow-up" })}</dt>
                 <dd className="text-right">
                   <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
                 </dd>
@@ -418,7 +427,7 @@ function LeadRows({
               <WebCallButton
                 leadId={lead.id}
                 phone={lead.phone_number}
-                label="কল"
+                label={t({ bn: "কল", en: "Call" })}
                 className="h-11 flex-1 text-base"
               />
               <WhatsAppAction phone={lead.phone_number} leadId={lead.id} label="" />
@@ -428,7 +437,7 @@ function LeadRows({
         ))}
         {rows.length === 0 && (
           <li role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            এই তালিকায় এখন কোনো লিড নেই
+            {t({ bn: "এই তালিকায় এখন কোনো লিড নেই", en: "No leads in this list right now" })}
           </li>
         )}
       </ul>
@@ -437,15 +446,15 @@ function LeadRows({
         <table className="w-full min-w-[960px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              <th className="px-3 py-2.5 font-medium">ক্রমিক</th>
-              <th className="px-3 py-2.5 font-medium">নাম</th>
-              <th className="px-3 py-2.5 font-medium">ফোন নম্বর</th>
-              <th className="px-3 py-2.5 font-medium">রেফারেন্স</th>
-              <th className="px-3 py-2.5 font-medium">ঠিকানা</th>
-              <th className="px-3 py-2.5 font-medium">চাহিদা</th>
-              <th className="px-3 py-2.5 font-medium">অবস্থা</th>
-              <th className="px-3 py-2.5 font-medium">পরের ফলো-আপ</th>
-              <th className="px-3 py-2.5 text-right font-medium">কাজ</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ক্রমিক", en: "No." })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "নাম", en: "Name" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ফোন নম্বর", en: "Phone number" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "রেফারেন্স", en: "Reference" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "ঠিকানা", en: "Address" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "চাহিদা", en: "Requirement" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "অবস্থা", en: "Status" })}</th>
+              <th className="px-3 py-2.5 font-medium">{t({ bn: "পরের ফলো-আপ", en: "Next follow-up" })}</th>
+              <th className="px-3 py-2.5 text-right font-medium">{t({ bn: "কাজ", en: "Actions" })}</th>
             </tr>
           </thead>
           <tbody>
@@ -488,8 +497,8 @@ function LeadRows({
                   <FollowUpCell at={extras.get(lead.id)?.nextFollowUpAt ?? null} />
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     {lead.last_call_at
-                      ? `শেষ কল ${relativeTime(lead.last_call_at)}`
-                      : `${lead.call_attempts} বার চেষ্টা`}
+                      ? t({ bn: `শেষ কল ${relativeTime(lead.last_call_at)}`, en: `Last call ${relativeTime(lead.last_call_at)}` })
+                      : t({ bn: `${lead.call_attempts} বার চেষ্টা`, en: `${lead.call_attempts} attempts` })}
                   </p>
                 </td>
                 <td className="px-3 py-2.5">
@@ -497,7 +506,7 @@ function LeadRows({
                     <WebCallButton
                       leadId={lead.id}
                       phone={lead.phone_number}
-                      label="কল"
+                      label={t({ bn: "কল", en: "Call" })}
                       className="h-9 flex-none text-sm"
                     />
                     <CallbackLogButton leadId={lead.id} label="" />
@@ -509,7 +518,7 @@ function LeadRows({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-3 py-10 text-center text-sm text-muted-foreground">
-                  এই তালিকায় এখন কোনো লিড নেই
+                  {t({ bn: "এই তালিকায় এখন কোনো লিড নেই", en: "No leads in this list right now" })}
                 </td>
               </tr>
             )}

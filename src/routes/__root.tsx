@@ -151,7 +151,7 @@ function RootShell({ children }: { children: ReactNode }) {
     : "";
 
   return (
-    <html lang="bn">
+    <html lang="en">
       <head>
         <HeadContent />
         {/* Recover from stale/failed script downloads after a new deployment:

@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from "react";
 
-/** UI language. Bengali is the primary/default; English is an optional view. */
+/** UI language. English is the default; Bengali is a full alternative. A saved choice always wins. */
 export type Lang = "bn" | "en";
 const KEY = "winstone.lang";
 const listeners = new Set<() => void>();
 
 function read(): Lang {
-  if (typeof window === "undefined") return "bn";
-  return window.localStorage.getItem(KEY) === "en" ? "en" : "bn";
+  if (typeof window === "undefined") return "en";
+  return window.localStorage.getItem(KEY) === "bn" ? "bn" : "en";
 }
 
 export function setLang(lang: Lang) {
@@ -20,10 +20,11 @@ export function useLang(): Lang {
   return useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
+      document.documentElement.lang = read();
       return () => listeners.delete(cb);
     },
     read,
-    () => "bn",
+    () => "en",
   );
 }
 
@@ -57,4 +58,9 @@ export const NAV_LABELS: Record<string, { bn: string; en: string }> = {
   "/customers": { bn: "কাস্টমার", en: "Customers" },
   "/support-admin": { bn: "সাপোর্ট অ্যাডমিন", en: "Support Admin" },
   "/help": { bn: "সহায়তা কেন্দ্র", en: "Help Centre" },
+  "/contributions": { bn: "এজেন্ট অবদান রিপোর্ট", en: "Agent Contributions" },
+  "/staff-portal": { bn: "স্টাফ পোর্টাল", en: "Staff Portal" },
+  "/live-leads": { bn: "লাইভ লিড", en: "Live Leads" },
+  "/booking-review": { bn: "বুকিং রিভিউ", en: "Booking Review" },
+  "/projects": { bn: "প্রজেক্ট", en: "Projects" },
 };

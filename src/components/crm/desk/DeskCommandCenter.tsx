@@ -20,7 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { matchCallShortcut, pickNextEligible, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
-import { useT } from "@/lib/i18n";
+import { useLang, useT, type Lang } from "@/lib/i18n";
 
 import { CallbackLogButton } from "@/components/crm/CallbackLogButton";
 import { LeadCallControls } from "@/components/crm/desk/LeadCallControls";
@@ -49,11 +49,11 @@ import { formatTalkTime, relativeTime, shortDate } from "@/lib/crm-format";
 import { useMyAccount } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "কল হয়নি",
-  contacted: "কথা হয়েছে",
-  follow_up: "আবার যোগাযোগ",
-  closed: "শেষ হয়েছে",
+const STATUS_LABELS: Record<string, { bn: string; en: string }> = {
+  pending: { bn: "কল হয়নি", en: "Not called" },
+  contacted: { bn: "কথা হয়েছে", en: "Contacted" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  closed: { bn: "শেষ হয়েছে", en: "Closed" },
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -69,53 +69,40 @@ const TEMP_STYLES: Record<string, string> = {
   cold: "border-primary/25 bg-primary/10 text-primary",
 };
 
-const STATUS_LABELS_EN: Record<string, string> = {
-  pending: "Not called",
-  contacted: "Contacted",
-  follow_up: "Follow-up",
-  closed: "Closed",
+const TEMP_LABELS: Record<string, { bn: string; en: string }> = {
+  hot: { bn: "হট", en: "Hot" },
+  warm: { bn: "গরম", en: "Warm" },
+  cold: { bn: "ঠান্ডা", en: "Cold" },
 };
 
-const TEMP_LABELS_EN: Record<string, string> = {
-  hot: "Hot",
-  warm: "Warm",
-  cold: "Cold",
-};
+function statusLabel(status: string, lang: Lang) {
+  return STATUS_LABELS[status]?.[lang] ?? status;
+}
+
+function tempLabel(temp: string | null | undefined, lang: Lang) {
+  if (!temp) return temp ?? "";
+  return TEMP_LABELS[temp]?.[lang] ?? temp;
+}
 
 type QueueFilter = "pending" | "follow_up" | "hot" | "done" | "all";
 type QueueSort = "priority" | "recent" | "name" | "serial";
 
-const QUEUE_LABELS: Record<QueueFilter, string> = {
-  pending: "কল বাকি",
-  follow_up: "আবার যোগাযোগ",
-  hot: "হট",
-  done: "কথা হয়েছে",
-  all: "সব",
+const QUEUE_LABELS: Record<QueueFilter, { bn: string; en: string }> = {
+  pending: { bn: "কল বাকি", en: "Pending" },
+  follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  hot: { bn: "হট", en: "Hot" },
+  done: { bn: "কথা হয়েছে", en: "Contacted" },
+  all: { bn: "সব", en: "All" },
 };
 
-const QUEUE_LABELS_EN: Record<QueueFilter, string> = {
-  pending: "Pending",
-  follow_up: "Follow-up",
-  hot: "Hot",
-  done: "Contacted",
-  all: "All",
+const SORT_LABELS: Record<QueueSort, { bn: string; en: string }> = {
+  priority: { bn: "অগ্রাধিকার আগে", en: "Priority first" },
+  recent: { bn: "সাম্প্রতিক আগে", en: "Most recent" },
+  name: { bn: "নাম অনুযায়ী", en: "By name" },
+  serial: { bn: "সিরিয়াল অনুযায়ী", en: "By serial" },
 };
 
-const SORT_LABELS: Record<QueueSort, string> = {
-  priority: "অগ্রাধিকার আগে",
-  recent: "সাম্প্রতিক আগে",
-  name: "নাম অনুযায়ী",
-  serial: "সিরিয়াল অনুযায়ী",
-};
-
-const SORT_LABELS_EN: Record<QueueSort, string> = {
-  priority: "Priority first",
-  recent: "Most recent",
-  name: "By name",
-  serial: "By serial",
-};
-
-/** Bengali headline with an English sub-label, used across the whole board. */
+/** Headline with a muted sub-label underneath, used across the whole board. */
 function DualHeading({
   bnText,
   enText,
@@ -127,13 +114,16 @@ function DualHeading({
   icon?: React.ReactNode;
   id?: string;
 }) {
+  const lang = useLang();
   return (
     <div className="min-w-0">
       <h3 id={id} className="flex items-center gap-2 truncate text-sm font-semibold">
         {icon}
-        {bnText}
+        {lang === "en" ? enText : bnText}
       </h3>
-      <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{enText}</p>
+      <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+        {lang === "en" ? bnText : enText}
+      </p>
     </div>
   );
 }
@@ -148,8 +138,8 @@ function canResolveFollowUp(lead: Lead) {
   return lead.status === "follow_up" || Boolean(lead.retry_after);
 }
 
-function bn(n: number) {
-  return n.toLocaleString("bn-BD");
+function bn(n: number, lang: Lang) {
+  return n.toLocaleString(lang === "en" ? "en-GB" : "bn-BD");
 }
 
 function useCompactDesk() {
@@ -183,6 +173,7 @@ function KpiCard({
   tone?: "primary" | "live" | "chart4" | "destructive";
   progress?: number;
 }) {
+  const lang = useLang();
   const toneClass = {
     primary: "bg-primary/12 text-primary",
     live: "bg-live/15 text-live",
@@ -222,9 +213,8 @@ function KpiCard({
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-medium text-muted-foreground">{label}</p>
-          <p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground/70">
-            {labelEn}
+          <p className="truncate text-[11px] font-medium text-muted-foreground">
+            {lang === "en" ? labelEn : label}
           </p>
         </div>
       </div>
@@ -264,6 +254,7 @@ export function DeskCommandCenter({
   const [mobile360Open, setMobile360Open] = useState(false);
   const [callMode, setCallMode] = useState(false);
   const t = useT();
+  const lang = useLang();
   const [doneIds, setDoneIds] = useState<string[]>([]);
   const queueItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const mobile360HeadingRef = useRef<HTMLHeadingElement | null>(null);
@@ -374,20 +365,22 @@ export function DeskCommandCenter({
         at: c.created_at,
         title:
           c.duration_seconds > CONNECTED_THRESHOLD_SECONDS
-            ? `কল হয়েছে · ${formatTalkTime(c.duration_seconds)}`
-            : "কল ধরা হয়নি",
+            ? (lang === "en"
+                ? `Call connected · ${formatTalkTime(c.duration_seconds)}`
+                : `কল হয়েছে · ${formatTalkTime(c.duration_seconds)}`)
+            : t({ bn: "কল ধরা হয়নি", en: "Call not answered" }),
         icon: <PhoneCall className="size-3.5" />,
       })),
       ...messages.map((m) => ({
         id: `m-${m.id}`,
         at: m.created_at,
-        title: "হোয়াটসঅ্যাপ মেসেজ",
+        title: t({ bn: "হোয়াটসঅ্যাপ মেসেজ", en: "WhatsApp message" }),
         icon: <MessageCircle className="size-3.5" />,
       })),
       ...leads.map((l) => ({
         id: `l-${l.id}`,
         at: l.created_at,
-        title: `লিড যোগ · ${l.name}`,
+        title: t({ bn: `লিড যোগ · ${l.name}`, en: `Lead added · ${l.name}` }),
         icon: <UserPlus className="size-3.5" />,
       })),
     ];
@@ -396,9 +389,12 @@ export function DeskCommandCenter({
       .slice(0, 8)
       .map((r) => ({
         ...r,
-        when: new Date(r.at).toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }),
+        when: new Date(r.at).toLocaleTimeString(lang === "en" ? "en-GB" : "bn-BD", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       }));
-  }, [calls, leads, messages]);
+  }, [calls, leads, messages, lang, t]);
 
   const selected: Lead | null =
     leads.find((l) => l.id === selectedId) ?? priority[0]?.lead ?? rows[0] ?? null;
@@ -415,10 +411,10 @@ export function DeskCommandCenter({
           title:
             entry.kind === "call"
               ? entry.call.duration_seconds > CONNECTED_THRESHOLD_SECONDS
-                ? `কল · ${formatTalkTime(entry.call.duration_seconds)}`
-                : "কল ধরা হয়নি"
+                ? `${t({ bn: "কল", en: "Call" })} · ${formatTalkTime(entry.call.duration_seconds)}`
+                : t({ bn: "কল ধরা হয়নি", en: "Call not answered" })
               : entry.kind === "message"
-                ? "হোয়াটসঅ্যাপ মেসেজ"
+                ? t({ bn: "হোয়াটসঅ্যাপ মেসেজ", en: "WhatsApp message" })
                 : (LEAD_EVENT_LABELS[entry.event.kind] ?? entry.event.kind),
         }))
     : [];
@@ -444,12 +440,12 @@ export function DeskCommandCenter({
       const next = pickNextEligible(rowsRef.current, [...doneIds, leadId].filter(Boolean) as string[]);
       if (next) {
         setSelectedId(next.id);
-        toast.success(`পরের লিড: ${next.name}`);
-      } else toast.success("এই তালিকার সব লিড শেষ!");
+        toast.success(t({ bn: `পরের লিড: ${next.name}`, en: `Next lead: ${next.name}` }));
+      } else toast.success(t({ bn: "এই তালিকার সব লিড শেষ!", en: "All leads in this list are done!" }));
     };
     window.addEventListener("winstone:report-submitted", onSubmitted);
     return () => window.removeEventListener("winstone:report-submitted", onSubmitted);
-  }, [callMode, doneIds]);
+  }, [callMode, doneIds, t]);
   // Alt+Shift+N: same selection rule as auto-advance. Blocked while any dialog
   // (incl. the mandatory call report) is open, so it can never skip a pending report.
   const selectedIdRef = useRef<string | null>(null);
@@ -461,11 +457,11 @@ export function DeskCommandCenter({
       e.preventDefault();
       const next = pickNextEligible(rowsRef.current, doneIds, selectedIdRef.current);
       if (next) setSelectedId(next.id);
-      else toast.message("এই তালিকায় আর কোনো যোগ্য লিড নেই / No more eligible leads");
+      else toast.message(t({ bn: "এই তালিকায় আর কোনো যোগ্য লিড নেই", en: "No more eligible leads" }));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [callMode, doneIds]);
+  }, [callMode, doneIds, t]);
   selectedIdRef.current = selected?.id ?? null;
   const stepLead = (dir: 1 | -1) => {
     const i = rows.findIndex((l) => l.id === selected?.id);
@@ -493,15 +489,15 @@ export function DeskCommandCenter({
       <div className="card-elevated grid min-w-0 gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-sm font-bold text-primary">
-            {(account?.profile?.name ?? "এ").slice(0, 2)}
+            {(account?.profile?.name ?? t({ bn: "এ", en: "A" })).slice(0, 2)}
           </span>
           <div className="min-w-0">
             <p className="truncate text-base font-bold tracking-tight sm:text-lg">
-              {account?.profile?.name ?? "এজেন্ট"}
+              {account?.profile?.name ?? t({ bn: "এজেন্ট", en: "Agent" })}
             </p>
             <p className="truncate text-[11px] text-muted-foreground">
-              {account?.profile?.employee_id ?? "এজেন্ট"} ·{" "}
-              {new Date().toLocaleDateString("bn-BD", {
+              {account?.profile?.employee_id ?? t({ bn: "এজেন্ট", en: "Agent" })} ·{" "}
+              {new Date().toLocaleDateString(lang === "en" ? "en-GB" : "bn-BD", {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
@@ -511,16 +507,73 @@ export function DeskCommandCenter({
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-live/30 bg-live/10 px-2.5 py-1 text-[11px] font-semibold text-live">
-            <span className="size-1.5 rounded-full bg-live" /> ডেস্ক চালু / Live
+            <span className="size-1.5 rounded-full bg-live" /> {t({ bn: "ডেস্ক চালু", en: "Live" })}
           </span>
           {stats.overdue > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-1 text-[11px] font-semibold text-destructive">
-              <AlarmClock className="size-3" /> {bn(stats.overdue)}টি সময় পেরিয়েছে / overdue
+              <AlarmClock className="size-3" />{" "}
+              {t({ bn: `${bn(stats.overdue, lang)}টি সময় পেরিয়েছে`, en: `${bn(stats.overdue, lang)} overdue` })}
             </span>
           )}
           {actions}
         </div>
       </div>
+
+      {/* Next best action — the single highest-priority lead from the agent's own queue.
+          This is where calls start, so it is the most prominent card on the desk. */}
+      {priority[0] && (
+        <section
+          aria-labelledby="nba-heading"
+          className="relative overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/15 via-card to-card p-4 shadow-lg sm:p-5"
+        >
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-md sm:size-14">
+                <PhoneCall className="size-6" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <p id="nba-heading" className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                  {t({ bn: "পরবর্তী সেরা কল", en: "Next best call" })}
+                </p>
+                <p className="mt-0.5 truncate text-xl font-extrabold tracking-tight sm:text-2xl">
+                  {priority[0].lead.name}
+                </p>
+                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="tabular-nums text-sm text-muted-foreground">{priority[0].lead.phone_number}</span>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                      priority[0].overdue
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : priority[0].lead.temperature === "hot"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {priority[0].overdue ? <AlarmClock className="size-3" aria-hidden /> : <Flame className="size-3" aria-hidden />}
+                    {priority[0].overdue
+                      ? t({ bn: "ফলো-আপের সময় পেরিয়েছে", en: "Follow-up overdue" })
+                      : priority[0].lead.temperature === "hot"
+                        ? t({ bn: "হট লিড — আগে কল করুন", en: "Hot lead — call first" })
+                        : t({ bn: "অগ্রাধিকার লিড", en: "Priority lead" })}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:flex md:items-center">
+              <WebCallButton
+                leadId={priority[0].lead.id}
+                phone={priority[0].lead.phone_number}
+                label={t({ bn: "এখনই কল করুন", en: "Call now" })}
+                className="h-12 px-6 text-base font-bold shadow-md"
+                ariaLabel={t({ bn: `${priority[0].lead.name}-কে কল করুন`, en: `Call ${priority[0].lead.name}` })}
+              />
+              <Button variant="outline" className="h-12" onClick={() => selectLead(priority[0]!.lead.id)}>
+                {t({ bn: "লিড ৩৬০", en: "Lead 360" })}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* KPI strip — every figure from the agent's own snapshot */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -528,16 +581,19 @@ export function DeskCommandCenter({
           icon={<Users className="size-4" />}
           label="আমার লিড"
           labelEn="My leads"
-          value={bn(stats.total)}
-          sub={`${bn(stats.pending)}টি কল বাকি`}
+          value={bn(stats.total, lang)}
+          sub={t({ bn: `${bn(stats.pending, lang)}টি কল বাকি`, en: `${bn(stats.pending, lang)} pending` })}
           progress={stats.donePct}
         />
         <KpiCard
           icon={<PhoneOutgoing className="size-4" />}
           label="আজকের কল"
           labelEn="Today's calls"
-          value={bn(stats.calls)}
-          sub={`${bn(stats.connected)}টিতে কথা · ${bn(stats.connectRate)}%`}
+          value={bn(stats.calls, lang)}
+          sub={t({
+            bn: `${bn(stats.connected, lang)}টিতে কথা · ${bn(stats.connectRate, lang)}%`,
+            en: `${bn(stats.connected, lang)} connected · ${bn(stats.connectRate, lang)}%`,
+          })}
           tone="live"
           progress={stats.connectRate}
         />
@@ -546,75 +602,37 @@ export function DeskCommandCenter({
           label="আজকের কথার সময়"
           labelEn="Talk time today"
           value={formatTalkTime(stats.talk)}
-          sub={`${bn(stats.whatsapp)}টি হোয়াটসঅ্যাপ আজ`}
+          sub={t({ bn: `${bn(stats.whatsapp, lang)}টি হোয়াটসঅ্যাপ আজ`, en: `${bn(stats.whatsapp, lang)} WhatsApp today` })}
         />
         <KpiCard
           icon={<CalendarClock className="size-4" />}
           label="ফলো-আপ"
           labelEn="Follow-ups"
-          value={bn(stats.followUp)}
-          sub={`আজ ${bn(stats.dueToday)}টি · সময় পেরিয়েছে ${bn(stats.overdue)}টি`}
+          value={bn(stats.followUp, lang)}
+          sub={t({
+            bn: `আজ ${bn(stats.dueToday, lang)}টি · সময় পেরিয়েছে ${bn(stats.overdue, lang)}টি`,
+            en: `${bn(stats.dueToday, lang)} due today · ${bn(stats.overdue, lang)} overdue`,
+          })}
           tone="chart4"
         />
         <KpiCard
           icon={<Flame className="size-4" />}
           label="হট লিড"
           labelEn="Hot leads"
-          value={bn(stats.hot)}
-          sub={`${bn(stats.uncalled)}টিতে এখনো কল হয়নি`}
+          value={bn(stats.hot, lang)}
+          sub={t({ bn: `${bn(stats.uncalled, lang)}টিতে এখনো কল হয়নি`, en: `${bn(stats.uncalled, lang)} not yet called` })}
           tone="destructive"
         />
         <KpiCard
           icon={<CheckCircle2 className="size-4" />}
           label="শেষ হয়েছে"
           labelEn="Completed"
-          value={`${bn(stats.done)} / ${bn(stats.total)}`}
-          sub={`${bn(stats.donePct)}% কাজ শেষ`}
+          value={`${bn(stats.done, lang)} / ${bn(stats.total, lang)}`}
+          sub={t({ bn: `${bn(stats.donePct, lang)}% কাজ শেষ`, en: `${bn(stats.donePct, lang)}% complete` })}
           tone="live"
           progress={stats.donePct}
         />
       </div>
-
-      {/* Next best action — the single highest-priority lead from the agent's own queue */}
-      {priority[0] && (
-        <div className="card-elevated grid min-w-0 gap-3 border-primary/25 bg-primary/5 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
-              পরবর্তী সেরা কাজ · Next best action
-            </p>
-            <p className="mt-0.5 truncate text-sm font-bold">
-              {priority[0].lead.name}{" "}
-              <span className="tabular text-xs font-normal text-muted-foreground">
-                {priority[0].lead.phone_number}
-              </span>
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {priority[0].overdue
-                ? "ফলো-আপের সময় পেরিয়েছে · Follow-up overdue"
-                : priority[0].lead.temperature === "hot"
-                  ? "হট লিড — আগে কল করুন · Hot lead, call first"
-                  : "অগ্রাধিকার লিড · Priority lead"}
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-            <WebCallButton
-              leadId={priority[0].lead.id}
-              phone={priority[0].lead.phone_number}
-              label="কল / Call"
-              className="h-9"
-              ariaLabel={`${priority[0].lead.name}-কে কল করুন`}
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-9"
-              onClick={() => selectLead(priority[0]!.lead.id)}
-            >
-              লিড ৩৬০ / Open
-            </Button>
-          </div>
-        </div>
-      )}
 
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-3">
@@ -622,12 +640,20 @@ export function DeskCommandCenter({
           <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
             {/* Pinned controls: stay visible while the page scrolls — no nested scroll box. */}
             <div className="sticky top-14 z-20 -mx-3 -mt-3 rounded-t-xl border-b border-border/60 bg-card/95 px-3 pb-2 pt-3 backdrop-blur sm:-mx-4 sm:-mt-4 sm:px-4 sm:pt-4">
-            <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-[11px] text-muted-foreground">
-                {callMode ? "কল মোড চালু — রিপোর্টের পর পরের লিড নিজেই খুলবে" : "কল মোডে বর্তমান লিড ও কলের বোতাম সবসময় উপরে থাকে"}
+                {callMode
+                  ? t({
+                      bn: "কল মোড চালু — রিপোর্টের পর পরের লিড নিজেই খুলবে",
+                      en: "Call mode on — the next lead opens automatically after each report",
+                    })
+                  : t({
+                      bn: "কল মোডে বর্তমান লিড ও কলের বোতাম সবসময় উপরে থাকে",
+                      en: "Call mode keeps the current lead and call button pinned at the top",
+                    })}
               </span>
               <Button type="button" size="sm" variant={callMode ? "default" : "outline"} className="h-8 shrink-0 gap-1.5" onClick={() => setCallMode((v) => !v)} aria-pressed={callMode}>
-                <PhoneCall className="size-3.5" /> {callMode ? "কল মোড বন্ধ" : "কল মোড চালু"}
+                <PhoneCall className="size-3.5" /> {callMode ? t({ bn: "কল মোড বন্ধ", en: "Turn off call mode" }) : t({ bn: "কল মোড চালু", en: "Turn on call mode" })}
               </Button>
             </div>
             {callMode && (
@@ -643,18 +669,22 @@ export function DeskCommandCenter({
               <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
                 <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">এখনকার লিড</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                      {t({ bn: "এখনকার লিড", en: "Current lead" })}
+                    </p>
                     <p className="truncate text-base font-bold">{selected.name}</p>
                     <p className="truncate text-xs tabular-nums text-muted-foreground">
                       {selected.phone_number}
-                      {selected.temperature ? ` · ${TEMP_LABELS_EN[selected.temperature] ?? selected.temperature}` : ""}
-                      {` · ${bn(selected.call_attempts)} বার চেষ্টা`}
-                      {selected.last_call_at ? ` · শেষ কল ${relativeTime(selected.last_call_at)}` : ""}
+                      {selected.temperature ? ` · ${tempLabel(selected.temperature, lang)}` : ""}
+                      {` · ${t({ bn: `${bn(selected.call_attempts, lang)} বার চেষ্টা`, en: `${bn(selected.call_attempts, lang)} attempts` })}`}
+                      {selected.last_call_at
+                        ? ` · ${t({ bn: `শেষ কল ${relativeTime(selected.last_call_at)}`, en: `Last call ${relativeTime(selected.last_call_at)}` })}`
+                        : ""}
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(-1)} aria-label="আগের লিড">‹</Button>
-                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(1)} aria-label="পরের লিড">›</Button>
+                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(-1)} aria-label={t({ bn: "আগের লিড", en: "Previous lead" })}>‹</Button>
+                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(1)} aria-label={t({ bn: "পরের লিড", en: "Next lead" })}>›</Button>
                   </div>
                 </div>
                 <LeadCallControls leadId={selected.id} phone={selected.phone_number} name={selected.name}
@@ -664,10 +694,10 @@ export function DeskCommandCenter({
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">
-                  আমার লিড কিউ <span className="text-muted-foreground">/ My Lead Queue</span>
+                  {t({ bn: "আমার লিড কিউ", en: "My Lead Queue" })}
                 </h3>
                 <p id="lead-queue-help" className="text-[11px] text-muted-foreground">
-                  {bn(rows.length)}টি দেখা যাচ্ছে · showing {rows.length} leads
+                  {t({ bn: `${bn(rows.length, lang)}টি দেখা যাচ্ছে`, en: `Showing ${rows.length} leads` })}
                 </p>
               </div>
               <div className="relative min-w-0 sm:w-64">
@@ -675,9 +705,9 @@ export function DeskCommandCenter({
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="নাম বা নম্বর"
+                  placeholder={t({ bn: "নাম বা নম্বর", en: "Name or number" })}
                   className="h-10 pl-9 pr-9"
-                  aria-label="আমার লিড কিউতে নাম, নম্বর, ঠিকানা বা সিরিয়াল দিয়ে খুঁজুন"
+                  aria-label={t({ bn: "আমার লিড কিউতে নাম, নম্বর, ঠিকানা বা সিরিয়াল দিয়ে খুঁজুন", en: "Search my lead queue by name, number, address or serial" })}
                   aria-controls="agent-lead-queue-results"
                 />
                 {search && (
@@ -687,7 +717,7 @@ export function DeskCommandCenter({
                     variant="ghost"
                     className="absolute right-1 top-1/2 size-8 -translate-y-1/2"
                     onClick={() => setSearch("")}
-                    aria-label="সার্চ মুছুন"
+                    aria-label={t({ bn: "সার্চ মুছুন", en: "Clear search" })}
                   >
                     <X className="size-3.5" />
                   </Button>
@@ -695,11 +725,11 @@ export function DeskCommandCenter({
               </div>
             </div>
 
-            <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_190px]">
+            <div className="mt-2 grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_190px]">
               <div
-                className="grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-3"
+                className="flex min-w-0 flex-wrap items-center gap-1.5"
                 role="group"
-                aria-label="লিড কিউ ফিল্টার"
+                aria-label={t({ bn: "লিড কিউ ফিল্টার", en: "Lead queue filters" })}
               >
                 {(Object.keys(QUEUE_LABELS) as QueueFilter[]).map((key) => (
                   <Button
@@ -708,24 +738,23 @@ export function DeskCommandCenter({
                     size="sm"
                     variant={filter === key ? "default" : "outline"}
                     onClick={() => setFilter(key)}
-                    className={cn("h-auto min-h-11 min-w-0 whitespace-normal rounded-lg px-2 text-[11px]", key === "pending" || key === "hot" ? "border-destructive/30" : key === "done" ? "border-success/30" : key === "follow_up" ? "border-chart-4/30" : "border-chart-2/30")}
+                    className={cn("h-8 min-h-8 min-w-0 whitespace-nowrap rounded-lg px-3 text-xs", key === "pending" || key === "hot" ? "border-destructive/30" : key === "done" ? "border-success/30" : key === "follow_up" ? "border-chart-4/30" : "border-chart-2/30")}
                     aria-pressed={filter === key}
                     aria-controls="agent-lead-queue-results"
                   >
-                    {QUEUE_LABELS[key]}
-                    <span className="ml-1 opacity-70">/ {QUEUE_LABELS_EN[key]}</span>
+                    {t(QUEUE_LABELS[key])}
                   </Button>
                 ))}
               </div>
               <Select value={sort} onValueChange={(value) => setSort(value as QueueSort)}>
-                <SelectTrigger className="h-9 w-full" aria-label="লিড সাজান">
+                <SelectTrigger className="h-9 w-full" aria-label={t({ bn: "লিড সাজান", en: "Sort leads" })}>
                   <SlidersHorizontal className="size-3.5 shrink-0 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(SORT_LABELS) as QueueSort[]).map((key) => (
                     <SelectItem key={key} value={key}>
-                      {SORT_LABELS[key]} · {SORT_LABELS_EN[key]}
+                      {t(SORT_LABELS[key])}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -738,19 +767,21 @@ export function DeskCommandCenter({
             >
               <div className="flex min-w-0 flex-wrap items-center gap-2 px-0.5 pb-0.5">
                 <SlidersHorizontal className="size-3.5 shrink-0 text-primary" />
-                <span className="shrink-0 text-muted-foreground">সক্রিয় / Active:</span>
+                <span className="shrink-0 text-muted-foreground">{t({ bn: "সক্রিয়:", en: "Active:" })}</span>
                 <span className="shrink-0 rounded-full bg-primary/12 px-2 py-0.5 font-semibold text-primary">
-                  {QUEUE_LABELS[filter]} · {QUEUE_LABELS_EN[filter]}
+                  {t(QUEUE_LABELS[filter])}
                 </span>
                 {search.trim() && (
                   <span className="max-w-40 shrink-0 truncate rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground">
-                    খোঁজ / Search: {search.trim()}
+                    {t({ bn: `খোঁজ: ${search.trim()}`, en: `Search: ${search.trim()}` })}
                   </span>
                 )}
                 <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                  {SORT_LABELS[sort]}
+                  {t(SORT_LABELS[sort])}
                 </span>
-                <span className="tabular shrink-0 text-muted-foreground" role="status">{bn(rows.length)} ফল / results</span>
+                <span className="tabular shrink-0 text-muted-foreground" role="status">
+                  {t({ bn: `${bn(rows.length, lang)} ফল`, en: `${bn(rows.length, lang)} results` })}
+                </span>
               </div>
               <Button
                 type="button"
@@ -759,9 +790,9 @@ export function DeskCommandCenter({
                 className="h-8 shrink-0 gap-1 px-2 text-[11px]"
                 onClick={resetQueue}
                 disabled={!hasQueueState}
-                aria-label="লিড কিউয়ের ফিল্টার, সার্চ ও সাজানো রিসেট করুন"
+                aria-label={t({ bn: "লিড কিউয়ের ফিল্টার, সার্চ ও সাজানো রিসেট করুন", en: "Reset lead queue filters, search and sort" })}
               >
-                <RotateCcw className="size-3" /> রিসেট / Reset
+                <RotateCcw className="size-3" /> {t({ bn: "রিসেট", en: "Reset" })}
               </Button>
             </div>
             </div>
@@ -770,7 +801,10 @@ export function DeskCommandCenter({
               <ul
                 id="agent-lead-queue-results"
                  className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2"
-                aria-label={`${QUEUE_LABELS[filter]} লিড, ${SORT_LABELS[sort]}, ${bn(rows.length)} ফল`}
+                aria-label={t({
+                  bn: `${t(QUEUE_LABELS[filter])} লিড, ${t(SORT_LABELS[sort])}, ${bn(rows.length, lang)} ফল`,
+                  en: `${t(QUEUE_LABELS[filter])} leads, ${t(SORT_LABELS[sort])}, ${bn(rows.length, lang)} results`,
+                })}
                 aria-describedby="lead-queue-help"
               >
                 {rows.map((lead) => {
@@ -799,7 +833,10 @@ export function DeskCommandCenter({
                            }
                          }}
                          aria-current={selected?.id === lead.id ? "true" : undefined}
-                         aria-label={`${lead.name}, ${lead.phone_number}, ${STATUS_LABELS[lead.status] ?? lead.status}${lead.temperature ? `, ${lead.temperature}` : ""}. লিড ৩৬০ খুলুন`}
+                         aria-label={t({
+                           bn: `${lead.name}, ${lead.phone_number}, ${statusLabel(lead.status, "bn")}${lead.temperature ? `, ${tempLabel(lead.temperature, "bn")}` : ""}. লিড ৩৬০ খুলুন`,
+                           en: `${lead.name}, ${lead.phone_number}, ${statusLabel(lead.status, "en")}${lead.temperature ? `, ${tempLabel(lead.temperature, "en")}` : ""}. Open Lead 360`,
+                         })}
                           className="block h-auto w-full min-w-0 whitespace-normal rounded-lg p-0 text-center hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="relative min-w-0 pb-2">
@@ -818,9 +855,9 @@ export function DeskCommandCenter({
                             {lead.reference_by ? (
                               <span
                                 className="max-w-[9rem] truncate"
-                                title={`রেফারেন্স / Reference: ${lead.reference_by}`}
+                                title={t({ bn: `রেফারেন্স: ${lead.reference_by}`, en: `Reference: ${lead.reference_by}` })}
                               >
-                                রেফ: {lead.reference_by}
+                                {t({ bn: "রেফ:", en: "Ref:" })} {lead.reference_by}
                               </span>
                             ) : null}
                           </span>
@@ -832,10 +869,7 @@ export function DeskCommandCenter({
                               STATUS_STYLES[lead.status],
                             )}
                           >
-                            {STATUS_LABELS[lead.status] ?? lead.status}
-                            <span className="ml-1 opacity-70">
-                              / {STATUS_LABELS_EN[lead.status] ?? lead.status}
-                            </span>
+                            {statusLabel(lead.status, lang)}
                           </span>
                           {lead.temperature && (
                             <span
@@ -844,18 +878,18 @@ export function DeskCommandCenter({
                                 TEMP_STYLES[lead.temperature] ?? "border-border bg-surface-2",
                               )}
                             >
-                              {TEMP_LABELS_EN[lead.temperature] ?? lead.temperature}
+                              {tempLabel(lead.temperature, lang)}
                             </span>
                           )}
                           {overdue && (
                             <span className="rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                              সময় পেরিয়েছে / Overdue
+                              {t({ bn: "সময় পেরিয়েছে", en: "Overdue" })}
                             </span>
                           )}
                           <span className="w-full text-[10px] text-muted-foreground">
                             {lead.last_call_at
                               ? relativeTime(lead.last_call_at)
-                              : `${bn(lead.call_attempts)} বার চেষ্টা`}
+                              : t({ bn: `${bn(lead.call_attempts, lang)} বার চেষ্টা`, en: `${bn(lead.call_attempts, lang)} attempts` })}
                           </span>
                         </div>
                       </Button>
@@ -874,7 +908,7 @@ export function DeskCommandCenter({
                 })}
                 {rows.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-                    এই তালিকায় এখন কোনো লিড নেই · No leads in this view
+                    {t({ bn: "এই তালিকায় এখন কোনো লিড নেই", en: "No leads in this view" })}
                   </li>
                 )}
               </ul>
@@ -895,7 +929,10 @@ export function DeskCommandCenter({
                     <button
                       type="button"
                        onClick={() => selectLead(lead.id)}
-                       aria-label={`${lead.name}, ${overdue ? "ফলো-আপের সময় পেরিয়েছে" : (lead.temperature ?? lead.status)}. লিড ৩৬০ খুলুন`}
+                       aria-label={t({
+                         bn: `${lead.name}, ${overdue ? "ফলো-আপের সময় পেরিয়েছে" : tempLabel(lead.temperature, "bn") || statusLabel(lead.status, "bn")}. লিড ৩৬০ খুলুন`,
+                         en: `${lead.name}, ${overdue ? "Follow-up overdue" : tempLabel(lead.temperature, "en") || statusLabel(lead.status, "en")}. Open Lead 360`,
+                       })}
                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-1 py-1 text-left outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <span className="min-w-0">
@@ -914,14 +951,14 @@ export function DeskCommandCenter({
                               "border-border bg-surface-2 text-muted-foreground"),
                         )}
                       >
-                        {overdue ? "সময় পেরিয়েছে" : (lead.temperature ?? lead.status)}
+                        {overdue ? t({ bn: "সময় পেরিয়েছে", en: "Overdue" }) : (tempLabel(lead.temperature, lang) || statusLabel(lead.status, lang))}
                       </span>
                     </button>
                   </li>
                 ))}
                 {priority.length === 0 && (
                   <li className="text-[11px] text-muted-foreground">
-                    এখন কোনো হট লিড বা বাকি ফলো-আপ নেই · Nothing urgent right now
+                    {t({ bn: "এখন কোনো হট লিড বা বাকি ফলো-আপ নেই", en: "Nothing urgent right now" })}
                   </li>
                 )}
               </ul>
@@ -934,25 +971,25 @@ export function DeskCommandCenter({
                 enText="My performance today"
               />
               <dl className="mt-3 space-y-2.5 text-xs">
-                <Meter label="লিড শেষ / Completed" value={stats.done} total={stats.total} />
-                <Meter label="কথা হয়েছে / Connected" value={stats.connected} total={stats.calls} />
+                <Meter label={t({ bn: "লিড শেষ", en: "Completed" })} value={stats.done} total={stats.total} />
+                <Meter label={t({ bn: "কথা হয়েছে", en: "Connected" })} value={stats.connected} total={stats.calls} />
                 <Meter
-                  label="ফলো-আপ সময়মতো / On-time follow-ups"
+                  label={t({ bn: "ফলো-আপ সময়মতো", en: "On-time follow-ups" })}
                   value={Math.max(stats.followUp - stats.overdue, 0)}
                   total={stats.followUp}
                 />
               </dl>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <MiniStat label="আজ যোগ হওয়া লিড / New today" value={bn(stats.newToday)} />
-                <MiniStat label="কথার সময় / Talk time" value={formatTalkTime(stats.talk)} />
+                <MiniStat label={t({ bn: "আজ যোগ হওয়া লিড", en: "New today" })} value={bn(stats.newToday, lang)} />
+                <MiniStat label={t({ bn: "কথার সময়", en: "Talk time" })} value={formatTalkTime(stats.talk)} />
               </div>
               {onJumpTab && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("reports")}>
-                    আমার রিপোর্ট / Reports
+                    {t({ bn: "আমার রিপোর্ট", en: "Reports" })}
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => onJumpTab("calendar")}>
-                    ফলো-আপ ক্যালেন্ডার / Calendar
+                    {t({ bn: "ফলো-আপ ক্যালেন্ডার", en: "Calendar" })}
                   </Button>
                 </div>
               )}
@@ -971,9 +1008,9 @@ export function DeskCommandCenter({
                   variant="ghost"
                   className="h-7 px-2 text-[11px]"
                   onClick={() => setDossierId(selected.id)}
-                   aria-label={`${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`}
+                   aria-label={t({ bn: `${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`, en: `Open full lead details for ${selected.name}` })}
                 >
-                  পুরো ফাইল
+                  {t({ bn: "পুরো ফাইল", en: "Full file" })}
                 </Button>
               )}
             </div>
@@ -992,10 +1029,7 @@ export function DeskCommandCenter({
                       STATUS_STYLES[selected.status],
                     )}
                   >
-                    {STATUS_LABELS[selected.status] ?? selected.status}
-                    <span className="ml-1 opacity-70">
-                      / {STATUS_LABELS_EN[selected.status] ?? selected.status}
-                    </span>
+                    {statusLabel(selected.status, lang)}
                   </span>
                   {selected.temperature && (
                     <span
@@ -1004,48 +1038,46 @@ export function DeskCommandCenter({
                         TEMP_STYLES[selected.temperature] ?? "border-border bg-surface-2",
                       )}
                     >
-                      {selected.temperature}
+                      {tempLabel(selected.temperature, lang)}
                     </span>
                   )}
                   {selected.grade && (
                     <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[10px] font-semibold">
-                      গ্রেড {selected.grade}
+                      {t({ bn: `গ্রেড ${selected.grade}`, en: `Grade ${selected.grade}` })}
                     </span>
                   )}
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-[11px]">
-                  <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
-                  <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
-                  <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
-                  <Field label="সোর্স" labelEn="Source" value={selected.source} />
+                  <Field label={t({ bn: "ঠিকানা", en: "Address" })} value={selected.address} />
+                  <Field label={t({ bn: "প্রতিষ্ঠান", en: "Company" })} value={selected.company} />
+                  <Field label={t({ bn: "রেফারেন্স", en: "Reference" })} value={selected.reference_by} />
+                  <Field label={t({ bn: "সোর্স", en: "Source" })} value={selected.source} />
                   <Field
-                    label="শেষ কল"
-                    labelEn="Last call"
+                    label={t({ bn: "শেষ কল", en: "Last call" })}
                     value={selected.last_call_at ? relativeTime(selected.last_call_at) : null}
                   />
-                  <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
+                  <Field label={t({ bn: "চেষ্টা", en: "Attempts" })} value={bn(selected.call_attempts, lang)} />
                   <Field
-                    label="পরের যোগাযোগ"
-                    labelEn="Next follow-up"
+                    label={t({ bn: "পরের যোগাযোগ", en: "Next follow-up" })}
                     value={selected.retry_after ? shortDate(selected.retry_after) : null}
                   />
-                  <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
+                  <Field label={t({ bn: "কাজের দিন", en: "Work date" })} value={selected.work_date} />
                 </dl>
                 <div className="flex items-center gap-2">
                   <WebCallButton
                     leadId={selected.id}
                     phone={selected.phone_number}
-                    label="কল"
+                    label={t({ bn: "কল", en: "Call" })}
                     className="h-10 flex-1"
-                     ariaLabel={`${selected.name}-কে কল করুন`}
+                     ariaLabel={t({ bn: `${selected.name}-কে কল করুন`, en: `Call ${selected.name}` })}
                   />
-                  <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
-                  <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
+                  <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={t({ bn: `${selected.name}-কে হোয়াটসঅ্যাপ করুন`, en: `WhatsApp ${selected.name}` })} />
+                  <CallbackLogButton leadId={selected.id} label="" ariaLabel={t({ bn: `${selected.name}-এর কলব্যাক রিপোর্ট করুন`, en: `Log callback for ${selected.name}` })} />
                 </div>
                 {canResolveFollowUp(selected) && (
                   <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-chart-4">
-                      যোগাযোগ হয়েছে — এখন কী করবেন?
+                      {t({ bn: "যোগাযোগ হয়েছে — এখন কী করবেন?", en: "Contacted — what's next?" })}
                     </p>
                     <FollowUpResolveActions
                       leadId={selected.id}
@@ -1053,12 +1085,12 @@ export function DeskCommandCenter({
                       className="mt-2"
                     />
                     <p className="mt-2 text-[10px] text-muted-foreground">
-                      সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+                      {t({ bn: "সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।", en: "Once resolved, the lead leaves the queue automatically." })}
                     </p>
                   </div>
                 )}
                 <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
+                  <p className="text-[11px] font-semibold text-muted-foreground">{t({ bn: "এই লিডের ইতিহাস", en: "History for this lead" })}</p>
                   <ul className="mt-1.5 space-y-1.5">
                     {selectedHistory.map((entry) => (
                       <li key={entry.key} className="flex items-start gap-2 text-[11px]">
@@ -1069,7 +1101,7 @@ export function DeskCommandCenter({
                     ))}
                     {selectedHistory.length === 0 && (
                       <li className="text-[11px] text-muted-foreground">
-                        এখনো কোনো কল বা মেসেজ নেই।
+                        {t({ bn: "এখনো কোনো কল বা মেসেজ নেই।", en: "No calls or messages yet." })}
                       </li>
                     )}
                   </ul>
@@ -1082,7 +1114,7 @@ export function DeskCommandCenter({
               </div>
             ) : (
               <p className="mt-3 text-[11px] text-muted-foreground">
-                কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue
+                {t({ bn: "কিউ থেকে একটি লিড বেছে নিন", en: "Pick a lead from the queue" })}
               </p>
             )}
           </div>
@@ -1100,11 +1132,11 @@ export function DeskCommandCenter({
                 </li>
               ))}
               {activity.length === 0 && (
-                <li className="text-[11px] text-muted-foreground">আজ এখনো কোনো কাজ নেই · No activity yet today</li>
+                <li className="text-[11px] text-muted-foreground">{t({ bn: "আজ এখনো কোনো কাজ নেই", en: "No activity yet today" })}</li>
               )}
             </ul>
             <Button asChild size="sm" variant="secondary" className="mt-3 w-full">
-              <Link to="/reports">রিপোর্ট পাতা</Link>
+              <Link to="/reports">{t({ bn: "রিপোর্ট পাতা", en: "Reports page" })}</Link>
             </Button>
           </div>
         </aside>
@@ -1123,10 +1155,13 @@ export function DeskCommandCenter({
           <SheetHeader className="relative z-10 m-0 shrink-0 border-b border-border bg-background px-4 pb-3 pt-2 text-left">
             <span aria-hidden className="mx-auto mb-1 block h-1 w-10 rounded-full bg-muted-foreground/35" />
             <SheetTitle ref={mobile360HeadingRef} tabIndex={-1} className="pr-10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              লিড ৩৬০{selected ? ` — ${selected.name}` : ""}
+              {t({ bn: "লিড ৩৬০", en: "Lead 360" })}{selected ? ` — ${selected.name}` : ""}
             </SheetTitle>
             <p id="mobile-lead-360-description" className="sr-only">
-              নির্বাচিত লিডের পরিচিতি, দ্রুত অ্যাকশন এবং সাম্প্রতিক ইতিহাস। Escape চাপলে প্যানেল বন্ধ হবে।
+              {t({
+                bn: "নির্বাচিত লিডের পরিচিতি, দ্রুত অ্যাকশন এবং সাম্প্রতিক ইতিহাস। Escape চাপলে প্যানেল বন্ধ হবে।",
+                en: "Selected lead's profile, quick actions and recent history. Press Escape to close the panel.",
+              })}
             </p>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -1164,18 +1199,15 @@ export function DeskCommandCenter({
 
 function Field({
   label,
-  labelEn,
   value,
 }: {
   label: string;
-  labelEn?: string;
   value?: string | null;
 }) {
   return (
     <div className="min-w-0">
       <dt className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
         {label}
-        {labelEn ? <span className="text-muted-foreground/60"> · {labelEn}</span> : null}
       </dt>
       <dd className="truncate font-medium">{value ?? "—"}</dd>
     </div>
@@ -1191,8 +1223,11 @@ function Lead360Content({
   selectedHistory: { key: string; at: string; title: string }[];
   onOpenDossier: (id: string) => void;
 }) {
+  const t = useT();
+  const lang = useLang();
+
   if (!selected) {
-    return <p className="text-sm text-muted-foreground">কিউ থেকে একটি লিড বেছে নিন · Pick a lead from the queue</p>;
+    return <p className="text-sm text-muted-foreground">{t({ bn: "কিউ থেকে একটি লিড বেছে নিন", en: "Pick a lead from the queue" })}</p>;
   }
 
   return (
@@ -1207,9 +1242,9 @@ function Lead360Content({
           variant="outline"
           className="shrink-0"
           onClick={() => onOpenDossier(selected.id)}
-          aria-label={`${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`}
+          aria-label={t({ bn: `${selected.name}-এর পুরো লিড বিস্তারিত খুলুন`, en: `Open full lead details for ${selected.name}` })}
         >
-          পুরো ফাইল
+          {t({ bn: "পুরো ফাইল", en: "Full file" })}
         </Button>
       </div>
 
@@ -1220,10 +1255,7 @@ function Lead360Content({
             STATUS_STYLES[selected.status],
           )}
         >
-          {STATUS_LABELS[selected.status] ?? selected.status}
-          <span className="ml-1 opacity-70">
-            / {STATUS_LABELS_EN[selected.status] ?? selected.status}
-          </span>
+          {statusLabel(selected.status, lang)}
         </span>
         {selected.temperature && (
           <span
@@ -1232,43 +1264,43 @@ function Lead360Content({
               TEMP_STYLES[selected.temperature] ?? "border-border bg-surface-2",
             )}
           >
-            {selected.temperature}
+            {tempLabel(selected.temperature, lang)}
           </span>
         )}
         {selected.grade && (
           <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 text-[11px] font-semibold">
-            গ্রেড {selected.grade}
+            {t({ bn: `গ্রেড ${selected.grade}`, en: `Grade ${selected.grade}` })}
           </span>
         )}
       </div>
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-4 text-xs">
-        <Field label="ঠিকানা" labelEn="Address" value={selected.address} />
-        <Field label="প্রতিষ্ঠান" labelEn="Company" value={selected.company} />
-        <Field label="রেফারেন্স" labelEn="Reference" value={selected.reference_by} />
-        <Field label="সোর্স" labelEn="Source" value={selected.source} />
-        <Field label="শেষ কল" labelEn="Last call" value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
-        <Field label="চেষ্টা" labelEn="Attempts" value={bn(selected.call_attempts)} />
-        <Field label="পরের যোগাযোগ" labelEn="Next follow-up" value={selected.retry_after ? shortDate(selected.retry_after) : null} />
-        <Field label="কাজের দিন" labelEn="Work date" value={selected.work_date} />
+        <Field label={t({ bn: "ঠিকানা", en: "Address" })} value={selected.address} />
+        <Field label={t({ bn: "প্রতিষ্ঠান", en: "Company" })} value={selected.company} />
+        <Field label={t({ bn: "রেফারেন্স", en: "Reference" })} value={selected.reference_by} />
+        <Field label={t({ bn: "সোর্স", en: "Source" })} value={selected.source} />
+        <Field label={t({ bn: "শেষ কল", en: "Last call" })} value={selected.last_call_at ? relativeTime(selected.last_call_at) : null} />
+        <Field label={t({ bn: "চেষ্টা", en: "Attempts" })} value={bn(selected.call_attempts, lang)} />
+        <Field label={t({ bn: "পরের যোগাযোগ", en: "Next follow-up" })} value={selected.retry_after ? shortDate(selected.retry_after) : null} />
+        <Field label={t({ bn: "কাজের দিন", en: "Work date" })} value={selected.work_date} />
       </dl>
 
       <div className="sticky bottom-0 z-10 grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 border-y border-border bg-background py-3">
         <WebCallButton
           leadId={selected.id}
           phone={selected.phone_number}
-          label="কল"
+          label={t({ bn: "কল", en: "Call" })}
           className="h-11 min-w-0"
-          ariaLabel={`${selected.name}-কে কল করুন`}
+          ariaLabel={t({ bn: `${selected.name}-কে কল করুন`, en: `Call ${selected.name}` })}
         />
-        <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={`${selected.name}-কে হোয়াটসঅ্যাপ করুন`} />
-        <CallbackLogButton leadId={selected.id} label="" ariaLabel={`${selected.name}-এর কলব্যাক রিপোর্ট করুন`} />
+        <WhatsAppAction phone={selected.phone_number} leadId={selected.id} label="" ariaLabel={t({ bn: `${selected.name}-কে হোয়াটসঅ্যাপ করুন`, en: `WhatsApp ${selected.name}` })} />
+        <CallbackLogButton leadId={selected.id} label="" ariaLabel={t({ bn: `${selected.name}-এর কলব্যাক রিপোর্ট করুন`, en: `Log callback for ${selected.name}` })} />
       </div>
 
       {canResolveFollowUp(selected) && (
         <div className="rounded-xl border border-chart-4/25 bg-chart-4/5 p-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-chart-4">
-            যোগাযোগ হয়েছে — এখন কী করবেন?
+            {t({ bn: "যোগাযোগ হয়েছে — এখন কী করবেন?", en: "Contacted — what's next?" })}
           </p>
           <FollowUpResolveActions
             leadId={selected.id}
@@ -1276,13 +1308,13 @@ function Lead360Content({
             className="mt-2"
           />
           <p className="mt-2 text-[11px] text-muted-foreground">
-            সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।
+            {t({ bn: "সম্পন্ন করলে লিডটি নিজেই কিউ থেকে সরে যাবে।", en: "Once resolved, the lead leaves the queue automatically." })}
           </p>
         </div>
       )}
 
       <div>
-        <p className="text-xs font-semibold text-muted-foreground">এই লিডের ইতিহাস</p>
+        <p className="text-xs font-semibold text-muted-foreground">{t({ bn: "এই লিডের ইতিহাস", en: "History for this lead" })}</p>
         <ul className="mt-2 space-y-2">
           {selectedHistory.map((entry) => (
             <li key={entry.key} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 text-xs">
@@ -1292,7 +1324,7 @@ function Lead360Content({
             </li>
           ))}
           {selectedHistory.length === 0 && (
-            <li className="text-xs text-muted-foreground">এখনো কোনো কল বা মেসেজ নেই।</li>
+            <li className="text-xs text-muted-foreground">{t({ bn: "এখনো কোনো কল বা মেসেজ নেই।", en: "No calls or messages yet." })}</li>
           )}
         </ul>
       </div>
@@ -1314,13 +1346,14 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 }
 
 function Meter({ label, value, total }: { label: string; value: number; total: number }) {
+  const lang = useLang();
   const pct = total ? Math.round((value / total) * 100) : 0;
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
         <dt className="truncate text-muted-foreground">{label}</dt>
         <dd className="tabular shrink-0 font-semibold">
-          {bn(value)} / {bn(total)} · {bn(pct)}%
+          {bn(value, lang)} / {bn(total, lang)} · {bn(pct, lang)}%
         </dd>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">

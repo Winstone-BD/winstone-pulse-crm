@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useLang, useT } from "@/lib/i18n";
 
 
 import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
@@ -80,6 +81,7 @@ export const Route = createFileRoute("/desk")({
 
 /** Live counters for the agent's own day, each compared with yesterday. */
 function DeskStats() {
+  const t = useT();
   const { leads, calls, messages } = useSnapshot();
 
   const stats = useMemo(() => {
@@ -121,35 +123,35 @@ function DeskStats() {
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Tile
         icon={<Users className="size-4" />}
-        label="আমার লিড"
+        label={t({ bn: "আমার লিড", en: "My leads" })}
         value={String(stats.leads)}
-        hint={`${stats.pending}টি এখনো বাকি`}
+        hint={t({ bn: `${stats.pending}টি এখনো বাকি`, en: `${stats.pending} still pending` })}
         progress={donePct}
-        progressLabel={`${donePct}% কাজ শেষ`}
+        progressLabel={t({ bn: `${donePct}% কাজ শেষ`, en: `${donePct}% done` })}
       />
       <Tile
         icon={<PhoneCall className="size-4" />}
-        label="আজকের কল"
+        label={t({ bn: "আজকের কল", en: "Today's calls" })}
         value={String(stats.calls)}
-        hint={`${stats.connected}টিতে কথা হয়েছে · ${stats.connectRate}%`}
+        hint={t({ bn: `${stats.connected}টিতে কথা হয়েছে · ${stats.connectRate}%`, en: `${stats.connected} connected · ${stats.connectRate}%` })}
         delta={stats.callsDelta}
-        deltaUnit="টি"
+        deltaUnit={t({ bn: "টি", en: "" })}
       />
       <Tile
         icon={<Timer className="size-4" />}
-        label="আজকের কথার সময়"
+        label={t({ bn: "আজকের কথার সময়", en: "Today's talk time" })}
         value={formatTalkTime(stats.talk)}
-        hint="সব কল মিলিয়ে"
+        hint={t({ bn: "সব কল মিলিয়ে", en: "Across all calls" })}
         delta={stats.talkDelta}
-        deltaUnit=" মিনিট"
+        deltaUnit={t({ bn: " মিনিট", en: " min" })}
       />
       <Tile
         icon={<MessageCircle className="size-4" />}
-        label="আজকের হোয়াটসঅ্যাপ"
+        label={t({ bn: "আজকের হোয়াটসঅ্যাপ", en: "Today's WhatsApp" })}
         value={String(stats.whatsapp)}
-        hint="মেসেজ আদান-প্রদান"
+        hint={t({ bn: "মেসেজ আদান-প্রদান", en: "Messages exchanged" })}
         delta={stats.whatsappDelta}
-        deltaUnit="টি"
+        deltaUnit={t({ bn: "টি", en: "" })}
       />
     </dl>
     </div>
@@ -158,6 +160,7 @@ function DeskStats() {
 
 /** Interactive daily-quota gauge: completed vs today's leads (tap toggles % / count). */
 function QuotaGauge({ done, total }: { done: number; total: number }) {
+  const t = useT();
   const [showCount, setShowCount] = useState(false);
   const pct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
   const r = 52;
@@ -168,9 +171,9 @@ function QuotaGauge({ done, total }: { done: number; total: number }) {
       type="button"
       onClick={() => setShowCount((v) => !v)}
       className="card-elevated glass-panel flex flex-col items-center p-4 text-center transition-transform active:scale-[0.98]"
-      aria-label={`দৈনিক কোটা ${pct}%`}
+      aria-label={t({ bn: `দৈনিক কোটা ${pct}%`, en: `Daily quota ${pct}%` })}
     >
-      <p className="text-xs font-semibold text-muted-foreground">আজকের কোটা অগ্রগতি</p>
+      <p className="text-xs font-semibold text-muted-foreground">{t({ bn: "আজকের কোটা অগ্রগতি", en: "Today's quota progress" })}</p>
       <svg viewBox="0 0 128 72" className="mt-2 w-44">
         <path d="M12 66 A52 52 0 0 1 116 66" fill="none" stroke="var(--muted)" strokeWidth="10" strokeLinecap="round" />
         <path
@@ -186,7 +189,7 @@ function QuotaGauge({ done, total }: { done: number; total: number }) {
       </svg>
       <p className="tabular -mt-8 text-2xl font-bold">{showCount ? `${done}/${total}` : `${pct}%`}</p>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        {done}টি সম্পন্ন · {Math.max(0, total - done)}টি বাকি · ছুঁয়ে দেখুন
+        {t({ bn: `${done}টি সম্পন্ন · ${Math.max(0, total - done)}টি বাকি · ছুঁয়ে দেখুন`, en: `${done} done · ${Math.max(0, total - done)} remaining · tap to toggle` })}
       </p>
     </button>
   );
@@ -254,15 +257,17 @@ function Tile({
 }
 
 function QueueLockedNote() {
+  const t = useT();
   return (
     <div role="status" className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full border border-warning/40 bg-gradient-to-r from-warning/20 to-destructive/20 px-4 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur-md sm:text-sm">
       <span className="size-2 shrink-0 animate-pulse rounded-full bg-warning" aria-hidden />
-      আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে
+      {t({ bn: "আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে", en: "Today's lead queue is awaiting HQ review — follow-ups and reports remain open" })}
     </div>
   );
 }
 
 function DeskPage() {
+  const t = useT();
   const { account, scope, isPending } = useMyAccount();
   const signOut = useSignOut();
   const accountability = useMyAccountability();
@@ -290,29 +295,31 @@ function DeskPage() {
             <>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
-                  {account.approval === "rejected" ? "প্রবেশ বাতিল" : "অনুমোদনের অপেক্ষায়"}
+                  {account.approval === "rejected"
+                    ? t({ bn: "প্রবেশ বাতিল", en: "Access denied" })
+                    : t({ bn: "অনুমোদনের অপেক্ষায়", en: "Awaiting approval" })}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {account.approval === "rejected"
-                    ? "একজন সুপারভাইজার এই অ্যাকাউন্ট বাতিল করেছেন। ভুল মনে হলে টিম লিডের সঙ্গে কথা বলুন।"
-                    : "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আইটি কনসোল বা এক্সিকিউটিভ এইচকিউ থেকে শীঘ্রই ডেস্ক খুলে দেওয়া হবে।"}
+                    ? t({ bn: "একজন সুপারভাইজার এই অ্যাকাউন্ট বাতিল করেছেন। ভুল মনে হলে টিম লিডের সঙ্গে কথা বলুন।", en: "A supervisor has rejected this account. If this seems wrong, talk to your team lead." })
+                    : t({ bn: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আইটি কনসোল বা এক্সিকিউটিভ এইচকিউ থেকে শীঘ্রই ডেস্ক খুলে দেওয়া হবে।", en: "Your account has been created. The desk will be unlocked soon from the IT Console or Executive HQ." })}
                 </p>
               </div>
               <Button variant="secondary" onClick={() => void signOut()}>
-                সাইন আউট
+                {t({ bn: "সাইন আউট", en: "Sign out" })}
               </Button>
             </>
           ) : (
             <>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">নিজের ডেস্কে সাইন ইন করুন</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t({ bn: "নিজের ডেস্কে সাইন ইন করুন", en: "Sign in to your desk" })}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।
+                  {t({ bn: "এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।", en: "Agents and coordinators should use their own email and password." })}
                 </p>
               </div>
               <Button asChild size="lg">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
-                  <LogIn className="size-4" /> সাইন ইন
+                  <LogIn className="size-4" /> {t({ bn: "সাইন ইন", en: "Sign in" })}
                 </Link>
               </Button>
             </>
@@ -328,13 +335,13 @@ function DeskPage() {
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-12 text-center">
           <StaffAvatar profile={account.profile} className="size-20" />
           <div>
-            <h1 className="text-xl font-bold">আপনার ছবি যুক্ত করুন</h1>
+            <h1 className="text-xl font-bold">{t({ bn: "আপনার ছবি যুক্ত করুন", en: "Add your photo" })}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              প্রত্যেক এজেন্টের অ্যাকাউন্টে নিজের বর্তমান, পরিষ্কার মুখের ছবি থাকা বাধ্যতামূলক। ছবি দেওয়ার পরই ডেস্ক খুলবে ও কল করা যাবে।
+              {t({ bn: "প্রত্যেক এজেন্টের অ্যাকাউন্টে নিজের বর্তমান, পরিষ্কার মুখের ছবি থাকা বাধ্যতামূলক। ছবি দেওয়ার পরই ডেস্ক খুলবে ও কল করা যাবে।", en: "Every agent account must have a current, clear photo of their face. The desk unlocks and calls become possible only after the photo is added." })}
             </p>
           </div>
           <PhotoUpload />
-          <p className="text-xs text-muted-foreground">সামনে থেকে, ভালো আলোয়, মুখ স্পষ্ট — সানগ্লাস বা গ্রুপ ছবি নয়।</p>
+          <p className="text-xs text-muted-foreground">{t({ bn: "সামনে থেকে, ভালো আলোয়, মুখ স্পষ্ট — সানগ্লাস বা গ্রুপ ছবি নয়।", en: "Front-facing, well lit, face clearly visible — no sunglasses or group photos." })}</p>
         </div>
       </AppShell>
     );
@@ -348,7 +355,7 @@ function DeskPage() {
         <div className="min-w-0 space-y-4 sm:space-y-6">
           <TodayHero name={account?.profile?.name ?? null} />
 
-          <section aria-label="সতর্কবার্তা" className="space-y-2">
+          <section aria-label={t({ bn: "সতর্কবার্তা", en: "Alerts" })} className="space-y-2">
             <AccountabilityBanner />
             <LeadDeadlineBanner />
             <MyNeglectNotice />
@@ -360,7 +367,7 @@ function DeskPage() {
 
           <details className="group card-elevated overflow-hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-              প্রোফাইল ও ফোন সেটআপ
+              {t({ bn: "প্রোফাইল ও ফোন সেটআপ", en: "Profile & phone setup" })}
               <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
             <div className="space-y-4 border-t border-border p-3 sm:p-4">
@@ -397,7 +404,7 @@ function DeskPage() {
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold tracking-wide [&::-webkit-details-marker]:hidden">
               <span className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-primary" aria-hidden />
-                আমার লিড কিউ
+                {t({ bn: "আমার লিড কিউ", en: "My lead queue" })}
               </span>
               <ChevronDown className="size-4 text-primary transition-transform duration-300 group-open:rotate-180" />
             </summary>
@@ -433,7 +440,7 @@ function DeskPage() {
               <>
                 {/* Self-claim retired: LeadHub Nexus is the only assignment path. */}
                 <QueueBoard
-                  title={scope === "agent" ? "আমার লিড" : "ফ্লোর কিউ"}
+                  title={t(scope === "agent" ? { bn: "আমার লিড", en: "My leads" } : { bn: "ফ্লোর কিউ", en: "Floor queue" })}
                   canSeeAllAgents={scope !== "agent"}
                   showManualLog={scope !== "agent"}
                 />
@@ -464,6 +471,8 @@ function DeskPage() {
 
 /** Follow-up leads whose last change falls inside the Command Center date range. */
 function FollowUpsInRange() {
+  const t = useT();
+  const lang = useLang();
   const range = useDeskRange();
   const { leads } = useSnapshot();
   if (!range.active) return null;
@@ -471,21 +480,25 @@ function FollowUpsInRange() {
     .filter((l) => l.status === "follow_up" && range.inRange(l.updated_at))
     .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
   return (
-    <section className="card-elevated space-y-3 p-4" aria-label="তারিখের সীমার ফলো-আপ">
+    <section className="card-elevated space-y-3 p-4" aria-label={t({ bn: "তারিখের সীমার ফলো-আপ", en: "Follow-ups in date range" })}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-base font-bold">এই সময়ের ফলো-আপ · {rows.length.toLocaleString("bn-BD")}টি</h2>
+        <h2 className="text-base font-bold">
+          {t({ bn: "এই সময়ের ফলো-আপ", en: "Follow-ups in this range" })} ·{" "}
+          {lang === "bn" ? rows.length.toLocaleString("bn-BD") : rows.length}
+          {t({ bn: "টি", en: "" })}
+        </h2>
         <DeskRangeChip />
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">এই তারিখের মধ্যে কোনো ফলো-আপ লিড নেই।</p>
+        <p className="text-sm text-muted-foreground">{t({ bn: "এই তারিখের মধ্যে কোনো ফলো-আপ লিড নেই।", en: "No follow-up leads in this date range." })}</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {rows.map((l) => (
             <li key={l.id} className="rounded-xl border border-border bg-card p-3">
               <p className="truncate font-semibold">{l.name}</p>
               <p className="truncate text-xs tabular-nums text-muted-foreground">
-                {l.phone_number} · শেষ পরিবর্তন{" "}
-                {new Date(l.updated_at).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
+                {l.phone_number} · {t({ bn: "শেষ পরিবর্তন", en: "last updated" })}{" "}
+                {new Date(l.updated_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
               </p>
             </li>
           ))}

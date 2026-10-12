@@ -28,7 +28,7 @@ describe("phone-style lead controls", () => {
     const output = html();
     expect(output.match(/aria-label=/g)).toHaveLength(4);
     expect(output).toContain("h-14 w-full rounded-full");
-    expect(output).toContain("নিজের SIM");
+    expect(output).toContain("Your SIM"); // English is the default language
     expect(output).not.toContain("Connected");
     expect(output).not.toContain("tel:");
   });
