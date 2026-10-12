@@ -119,7 +119,7 @@ function NavContent({
         if (list.length === 0) return null;
         return (
           <div key={group.title.en} className="mb-5">
-            <p hidden={collapsed} className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
+            <p hidden={collapsed} className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/80">
               {t(group.title)}
             </p>
             <nav className="flex flex-col gap-0.5">
