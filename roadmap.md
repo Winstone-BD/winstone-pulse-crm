@@ -138,5 +138,5 @@
 - [x] Home: remove duplicate banner image under hero
 - [x] Audit log (created/edited/archived, who, when) — awaiting plan approval
 - [x] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
-- [ ] Reconnect Google Calendar in new workspace
-- [ ] Email domain notify.crm.winstonebd.com
+- [ ] Reconnect Google Calendar — blocked: project owner lacks access to the existing connections
+- [ ] Email domain notify.crm.winstonebd.com — waiting on DNS records at registrar
