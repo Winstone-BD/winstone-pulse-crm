@@ -85,10 +85,10 @@ function EntryHall() {
                 </p>
               </div>
             </div>
-            <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+            <h1 className="mt-8 font-hand text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-7xl">
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            <p className="mt-3 font-hand text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Close more deals, <span className="text-gold">less chaos.</span>
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
@@ -149,7 +149,7 @@ function EntryHall() {
           </div>
         </header>
 
-        <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
+        <h2 className="mt-10 text-center font-hand text-3xl font-semibold tracking-tight sm:text-4xl">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
@@ -184,7 +184,7 @@ function EntryHall() {
 
         <h2
           id="workspace-signin"
-          className="mt-10 scroll-mt-6 text-center text-xl font-bold tracking-tight"
+          className="mt-10 scroll-mt-6 text-center font-hand text-3xl font-semibold tracking-tight"
         >
           Sign in to your workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
