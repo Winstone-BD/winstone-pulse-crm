@@ -58,13 +58,25 @@ export const mySupportRequests = createServerFn({ method: "GET" })
 export const supportInbox = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
-    const me = await caller(data.adminToken);
-    const { supportAccess } = await import("@/lib/team-support-access.server");
-    const access = await supportAccess(me);
-    if (!access.inbox) return { allowed: false as const, tickets: [], replies: [] };
-    const { listInboxTickets, listReplies } = await import("@/lib/team-support.server");
-    const tickets = await listInboxTickets();
-    return { allowed: true as const, tickets, replies: await listReplies(tickets.map((t) => t.id)) };
+    // The inbox polls every 15s: an expired PIN, a dropped request or a brief
+    // backend hiccup must come back as a typed "unavailable", not a 500.
+    try {
+      const me = await caller(data.adminToken);
+      const { supportAccess } = await import("@/lib/team-support-access.server");
+      const access = await supportAccess(me);
+      if (!access.inbox) return { allowed: false as const, tickets: [], replies: [], error: null };
+      const { listInboxTickets, listReplies } = await import("@/lib/team-support.server");
+      const tickets = await listInboxTickets();
+      return {
+        allowed: true as const,
+        tickets,
+        replies: await listReplies(tickets.map((t) => t.id)),
+        error: null,
+      };
+    } catch (err) {
+      console.error("[supportInbox] failed:", err instanceof Error ? err.message : err);
+      return { allowed: false as const, tickets: [], replies: [], error: "unavailable" as const };
+    }
   });
 
 /** True when this account owns the Sales Team Admin inbox. */
