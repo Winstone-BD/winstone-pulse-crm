@@ -81,6 +81,7 @@ import { Route as ApiPublicAgentVersionRouteImport } from './routes/api/public/a
 import { Route as ApiPublicAgentVersionHandoffRouteImport } from './routes/api/public/agent/version-handoff'
 import { Route as ApiPublicAgentWhatsappRouteImport } from './routes/api/public/agent/whatsapp'
 import { Route as ApiPublicAgentWorkspaceRouteImport } from './routes/api/public/agent/workspace'
+import { Route as ApiPublicBackupsRunRouteImport } from './routes/api/public/backups/run'
 import { Route as ApiPublicConfigMaintenanceRouteImport } from './routes/api/public/config/maintenance'
 import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/config/rules'
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
@@ -476,6 +477,11 @@ const ApiPublicAgentWorkspaceRoute = ApiPublicAgentWorkspaceRouteImport.update({
   path: '/api/public/agent/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBackupsRunRoute = ApiPublicBackupsRunRouteImport.update({
+  id: '/api/public/backups/run',
+  path: '/api/public/backups/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicConfigMaintenanceRoute =
   ApiPublicConfigMaintenanceRouteImport.update({
     id: '/api/public/config/maintenance',
@@ -712,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -815,6 +822,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -919,6 +927,7 @@ export interface FileRoutesById {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -1024,6 +1033,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1230,6 +1241,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1334,6 +1346,7 @@ export interface RootRouteChildren {
   ApiPublicAgentVersionHandoffRoute: typeof ApiPublicAgentVersionHandoffRoute
   ApiPublicAgentWhatsappRoute: typeof ApiPublicAgentWhatsappRoute
   ApiPublicAgentWorkspaceRoute: typeof ApiPublicAgentWorkspaceRoute
+  ApiPublicBackupsRunRoute: typeof ApiPublicBackupsRunRoute
   ApiPublicConfigMaintenanceRoute: typeof ApiPublicConfigMaintenanceRoute
   ApiPublicConfigRulesRoute: typeof ApiPublicConfigRulesRoute
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
@@ -1871,6 +1884,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentWorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/backups/run': {
+      id: '/api/public/backups/run'
+      path: '/api/public/backups/run'
+      fullPath: '/api/public/backups/run'
+      preLoaderRoute: typeof ApiPublicBackupsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/config/maintenance': {
       id: '/api/public/config/maintenance'
       path: '/api/public/config/maintenance'
@@ -2151,6 +2171,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentVersionHandoffRoute: ApiPublicAgentVersionHandoffRoute,
   ApiPublicAgentWhatsappRoute: ApiPublicAgentWhatsappRoute,
   ApiPublicAgentWorkspaceRoute: ApiPublicAgentWorkspaceRoute,
+  ApiPublicBackupsRunRoute: ApiPublicBackupsRunRoute,
   ApiPublicConfigMaintenanceRoute: ApiPublicConfigMaintenanceRoute,
   ApiPublicConfigRulesRoute: ApiPublicConfigRulesRoute,
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
