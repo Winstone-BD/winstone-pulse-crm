@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-export type DeskRange = { from?: string; to?: string };
+export type DeskRange = { from: string | undefined; to: string | undefined };
 
 /** Reads ?from=&to= (YYYY-MM-DD, Asia/Dhaka, inclusive) from the URL. */
 export function useDeskRange(): DeskRange & { active: boolean; inRange: (iso: string | null | undefined) => boolean } {
