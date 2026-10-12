@@ -49,7 +49,7 @@ function waitThenReload(){
 var t=0;
 function ping(){
 Promise.all([probeDocument(),probeModule(failingUrl)]).then(function(ok){
-if(ok[0]&&ok[1]){setTimeout(function(){location.reload()},400)}else{again()}
+if(ok[0]&&ok[1]){setTimeout(function(){location.reload()},400+3000*Math.max(0,count()-1))}else{again()}
 },function(){again()})
 }
 function again(){if(++t>=PROBE_TRIES){recovering=false;fallback();return}setTimeout(ping,2000)}
