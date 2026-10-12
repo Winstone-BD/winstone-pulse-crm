@@ -711,6 +711,12 @@ function ReportDialog({
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
       void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
       void queryClient.invalidateQueries({ queryKey: ["followup-reminders"] });
+      // Call mode on the desk listens for this to open the next suitable lead.
+      window.dispatchEvent(
+        new CustomEvent("winstone:report-submitted", {
+          detail: { leadId: (detail.lead as { id?: string } | null)?.id ?? null },
+        }),
+      );
     },
     onError: (error: Error) => toast.error(error.message),
   });

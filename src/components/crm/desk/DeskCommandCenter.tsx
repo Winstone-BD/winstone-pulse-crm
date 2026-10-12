@@ -259,6 +259,8 @@ export function DeskCommandCenter({
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<QueueSort>("priority");
   const [mobile360Open, setMobile360Open] = useState(false);
+  const [callMode, setCallMode] = useState(false);
+  const [doneIds, setDoneIds] = useState<string[]>([]);
   const queueItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const mobile360HeadingRef = useRef<HTMLHeadingElement | null>(null);
   const compactDesk = useCompactDesk();
@@ -427,6 +429,32 @@ export function DeskCommandCenter({
     setSelectedId(leadId);
     if (compactDesk) setMobile360Open(true);
   };
+  // Call mode: after a report is saved, open the next open lead in the queue.
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  useEffect(() => {
+    if (!callMode) return;
+    const onSubmitted = (e: Event) => {
+      const leadId = (e as CustomEvent<{ leadId: string | null }>).detail?.leadId;
+      setDoneIds((prev) => (leadId ? [...prev, leadId] : prev));
+      const skip = new Set([...doneIds, leadId].filter(Boolean) as string[]);
+      const next = rowsRef.current.find(
+        (l) => !skip.has(l.id) && l.status !== "closed" && l.work_state !== "completed",
+      );
+      if (next) {
+        setSelectedId(next.id);
+        toast.success(`পরের লিড: ${next.name}`);
+      } else toast.success("এই তালিকার সব লিড শেষ!");
+    };
+    window.addEventListener("winstone:report-submitted", onSubmitted);
+    return () => window.removeEventListener("winstone:report-submitted", onSubmitted);
+  }, [callMode, doneIds]);
+  const stepLead = (dir: 1 | -1) => {
+    const i = rows.findIndex((l) => l.id === selected?.id);
+    const next = rows[Math.min(Math.max(i + dir, 0), rows.length - 1)];
+    if (next) setSelectedId(next.id);
+  };
+
   const moveQueueFocus = (leadId: string, key: string) => {
     const currentIndex = rows.findIndex((lead) => lead.id === leadId);
     if (currentIndex < 0 || rows.length === 0) return;
@@ -576,6 +604,36 @@ export function DeskCommandCenter({
           <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
             {/* Pinned controls: stay visible while the page scrolls — no nested scroll box. */}
             <div className="sticky top-14 z-20 -mx-3 -mt-3 rounded-t-xl border-b border-border/60 bg-card/95 px-3 pb-2 pt-3 backdrop-blur sm:-mx-4 sm:-mt-4 sm:px-4 sm:pt-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted-foreground">
+                {callMode ? "কল মোড চালু — রিপোর্টের পর পরের লিড নিজেই খুলবে" : "কল মোডে বর্তমান লিড ও কলের বোতাম সবসময় উপরে থাকে"}
+              </span>
+              <Button type="button" size="sm" variant={callMode ? "default" : "outline"} className="h-8 shrink-0 gap-1.5" onClick={() => setCallMode((v) => !v)} aria-pressed={callMode}>
+                <PhoneCall className="size-3.5" /> {callMode ? "কল মোড বন্ধ" : "কল মোড চালু"}
+              </Button>
+            </div>
+            {callMode && selected && (
+              <div className="mb-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">এখনকার লিড</p>
+                    <p className="truncate text-base font-bold">{selected.name}</p>
+                    <p className="truncate text-xs tabular-nums text-muted-foreground">
+                      {selected.phone_number}
+                      {selected.temperature ? ` · ${TEMP_LABELS_EN[selected.temperature] ?? selected.temperature}` : ""}
+                      {` · ${bn(selected.call_attempts)} বার চেষ্টা`}
+                      {selected.last_call_at ? ` · শেষ কল ${relativeTime(selected.last_call_at)}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(-1)} aria-label="আগের লিড">‹</Button>
+                    <Button type="button" size="icon" variant="outline" className="size-9" onClick={() => stepLead(1)} aria-label="পরের লিড">›</Button>
+                  </div>
+                </div>
+                <LeadCallControls leadId={selected.id} phone={selected.phone_number} name={selected.name}
+                  onDetails={() => setDossierId(selected.id)} />
+              </div>
+            )}
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">
