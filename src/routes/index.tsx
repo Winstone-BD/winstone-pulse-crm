@@ -321,32 +321,88 @@ const SHOWCASE = [
   { icon: Globe, tag: "Strategy & Forecasts", title: "তথ্য থেকে সিদ্ধান্ত", to: "/reports", body: "সোশ্যাল পেজ, সাইট ভিজিট ও বুকিং — বাস্তব রিপোর্ট থেকে লক্ষ্য ও প্রবণতা।" },
 ] as const;
 
+const RANGES = [
+  { key: "today", label: "আজ", days: 1 },
+  { key: "7", label: "৭ দিন", days: 7 },
+  { key: "30", label: "৩০ দিন", days: 30 },
+  { key: "all", label: "সব", days: 0 },
+] as const;
+type RangeKey = (typeof RANGES)[number]["key"];
+
 function LiveTiles() {
   const snap = useSnapshot();
-  const today = new Date().toDateString();
-  const values = {
-    Leads: snap.leads.length,
-    Calls: snap.calls.filter((c) => new Date(c.created_at).toDateString() === today).length,
-    "Follow-ups": snap.leads.filter((l) => l.status === "follow_up").length,
+  const [range, setRange] = useState<RangeKey>("today");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const inRange = (iso: string | null | undefined) => {
+    if (!iso) return false;
+    const t = Date.parse(iso);
+    if (from || to) {
+      const f = from ? Date.parse(`${from}T00:00:00+06:00`) : -Infinity;
+      const e = to ? Date.parse(`${to}T23:59:59+06:00`) : Infinity;
+      return t >= f && t <= e;
+    }
+    const days = RANGES.find((r) => r.key === range)!.days;
+    if (!days) return true;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (days - 1));
+    return t >= start.getTime();
   };
-  return <Tiles values={snap.isPending ? null : values} />;
+  const values = {
+    Leads: snap.leads.filter((l) => inRange(l.created_at)).length,
+    Calls: snap.calls.filter((c) => inRange(c.created_at)).length,
+    "Follow-ups": snap.leads.filter((l) => l.status === "follow_up" && inRange(l.updated_at)).length,
+  };
+  return (
+    <>
+      <div className="mt-6 flex flex-wrap items-center gap-1.5">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => { setRange(r.key); setFrom(""); setTo(""); }}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-primary text-primary-foreground" : "bg-background/10 hover:bg-background/20"}`}
+          >
+            {r.label}
+          </button>
+        ))}
+        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="শুরুর তারিখ" className="rounded-md bg-background/10 px-2 py-1 text-xs" />
+        <span className="text-xs opacity-60">–</span>
+        <input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="শেষ তারিখ" className="rounded-md bg-background/10 px-2 py-1 text-xs" />
+      </div>
+      <Tiles values={snap.isPending ? null : values} linked />
+    </>
+  );
 }
 
-function Tiles({ values }: { values: Record<string, number> | null }) {
-  const labels = { Leads: "মোট লিড", Calls: "আজকের কল", "Follow-ups": "ফলো-আপ" } as const;
+const TILE_LINKS = { Leads: "leads", Calls: "calls", "Follow-ups": "calendar" } as const;
+
+function Tiles({ values, linked = false }: { values: Record<string, number> | null; linked?: boolean }) {
+  const labels = { Leads: "লিড", Calls: "কল", "Follow-ups": "ফলো-আপ" } as const;
   return (
-    <div className="mt-6 grid grid-cols-3 gap-3">
-      {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => (
-        <div key={k} className="rounded-xl border border-background/15 bg-background/5 p-3">
-          <div className="h-1.5 w-8 rounded bg-primary/70" />
-          {values ? (
-            <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
-          ) : (
-            <div className="mt-3 h-6 w-12 animate-pulse rounded bg-background/30" />
-          )}
-          <p className="mt-1 text-[10px] uppercase tracking-widest opacity-60">{labels[k]}</p>
-        </div>
-      ))}
+    <div className="mt-3 grid grid-cols-3 gap-3">
+      {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => {
+        const inner = (
+          <>
+            <div className="h-1.5 w-8 rounded bg-primary/70" />
+            {values ? (
+              <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
+            ) : (
+              <div className="mt-3 h-6 w-12 animate-pulse rounded bg-background/30" />
+            )}
+            <p className="mt-1 text-[10px] uppercase tracking-widest opacity-60">{labels[k]}{linked && " →"}</p>
+          </>
+        );
+        const cls = "block rounded-xl border border-background/15 bg-background/5 p-3";
+        return linked ? (
+          <Link key={k} to="/desk" search={{ s: TILE_LINKS[k] }} className={`${cls} transition-colors hover:border-primary/60 hover:bg-background/10`}>
+            {inner}
+          </Link>
+        ) : (
+          <div key={k} className={cls}>{inner}</div>
+        );
+      })}
     </div>
   );
 }
@@ -361,7 +417,7 @@ function CommandCenterShowcase() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-primary">Command Center</p>
           <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
           <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
-          {signedIn ? <LiveTiles /> : <Tiles values={null} />}
+          {signedIn ? <LiveTiles /> : <div className="mt-3"><Tiles values={null} /></div>}
           {!isPending && !signedIn && (
             <p className="mt-2 text-xs opacity-60">লাইভ সংখ্যা দেখতে নিচে সাইন ইন করুন।</p>
           )}

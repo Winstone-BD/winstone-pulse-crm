@@ -715,6 +715,13 @@
       "when": 1791744920013,
       "tag": "0101_social_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1791768196496,
+      "tag": "0102_agent_daily_contributions",
+      "breakpoints": true
     }
   ]
 }

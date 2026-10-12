@@ -126,6 +126,44 @@ export type Database = {
           },
         ]
       }
+      agent_daily_contributions: {
+        Row: {
+          agent_id: string
+          business_date: string
+          created_at: string
+          id: string
+          kind: string
+          source: string
+          summary: string
+        }
+        Insert: {
+          agent_id: string
+          business_date: string
+          created_at?: string
+          id?: string
+          kind: string
+          source?: string
+          summary: string
+        }
+        Update: {
+          agent_id?: string
+          business_date?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          source?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_daily_contributions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_devices: {
         Row: {
           android_version: string | null
