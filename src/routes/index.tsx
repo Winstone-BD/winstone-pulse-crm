@@ -112,6 +112,8 @@ function EntryHall() {
           One CRM. One data layer. Every device.
         </p>
 
+        <CommandCenterShowcase />
+
         <h2
           id="workspace-signin"
           className="mt-16 scroll-mt-6 text-center text-xl font-bold tracking-tight"
