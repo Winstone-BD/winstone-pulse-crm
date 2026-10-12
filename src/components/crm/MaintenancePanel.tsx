@@ -186,6 +186,12 @@ export function MaintenancePanel() {
       </div>
 
       <div>
+        <p className="mb-1 text-sm font-semibold">Billing notice preview</p>
+        <p className="mb-2 text-xs text-muted-foreground">How each payment notice looks before publishing — amber, blue, red, and verified. Display-only; nothing here changes the real invoice.</p>
+        <NoticePreview />
+      </div>
+
+      <div>
         <p className="mb-1 text-sm font-semibold">Subscription payment history</p>
         <p className="mb-2 text-xs text-muted-foreground">Each invoice with its deadline, every payment submission and the verification result. Read-only.</p>
         <div className="space-y-2">
