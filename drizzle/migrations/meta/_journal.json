@@ -736,6 +736,13 @@
       "when": 1791774293878,
       "tag": "0104_record_audit_log_and_backups",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1791774339501,
+      "tag": "0105_backup_cron_token",
+      "breakpoints": true
     }
   ]
 }

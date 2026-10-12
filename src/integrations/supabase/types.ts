@@ -1207,6 +1207,21 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_backup_secret: {
+        Row: {
+          id: number
+          token: string
+        }
+        Insert: {
+          id?: number
+          token?: string
+        }
+        Update: {
+          id?: number
+          token?: string
+        }
+        Relationships: []
+      }
       custom_reports: {
         Row: {
           assigned_to: string | null
