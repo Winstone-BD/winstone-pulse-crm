@@ -750,6 +750,13 @@
       "when": 1791816824936,
       "tag": "0106_billing_invoice_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1791828484019,
+      "tag": "0107_independent_plan_entitlements",
+      "breakpoints": true
     }
   ]
 }
