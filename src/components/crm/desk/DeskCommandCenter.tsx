@@ -574,6 +574,8 @@ export function DeskCommandCenter({
         <div className="min-w-0 space-y-3">
           {/* Lead queue */}
           <div className="card-elevated p-3 sm:p-4" role="region" aria-labelledby="lead-queue-heading">
+            {/* Pinned controls: stay visible while the page scrolls — no nested scroll box. */}
+            <div className="sticky top-14 z-20 -mx-3 -mt-3 rounded-t-xl border-b border-border/60 bg-card/95 px-3 pb-2 pt-3 backdrop-blur sm:-mx-4 sm:-mt-4 sm:px-4 sm:pt-4">
             <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <h3 id="lead-queue-heading" className="truncate text-sm font-semibold">
@@ -677,8 +679,9 @@ export function DeskCommandCenter({
                 <RotateCcw className="size-3" /> রিসেট / Reset
               </Button>
             </div>
+            </div>
 
-            <div className="mt-3 max-h-[520px] overflow-y-auto">
+            <div className="mt-3">
               <ul
                 id="agent-lead-queue-results"
                  className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2"
