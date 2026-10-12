@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { createSaveLatch, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
 import { useLang, useT, type Lang } from "@/lib/i18n";
 import { DictateButton } from "@/components/crm/DictateButton";
+import { DEFAULT_RETRY_PICK, NoAnswerRetryPicker, type RetryPick } from "@/components/crm/NoAnswerRetryPicker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -392,6 +393,7 @@ export function PostCallReportGate() {
   const [nextAction, setNextAction] = useState("");
   const [nextActionNote, setNextActionNote] = useState("");
   const [followMode, setFollowMode] = useState<"set" | "none">("set");
+  const [retryPick, setRetryPick] = useState<RetryPick>(DEFAULT_RETRY_PICK);
   const [when, setWhen] = useState("");
   const [fuReason, setFuReason] = useState<FollowUpReasonCode | null>(null);
   const [fuReasonNote, setFuReasonNote] = useState("");
@@ -431,6 +433,7 @@ export function PostCallReportGate() {
     setNextAction("");
     setNextActionNote("");
     setFollowMode("set");
+    setRetryPick(DEFAULT_RETRY_PICK);
     setWhen("");
     setNoFuReason("");
     setNoFuNote("");
@@ -532,6 +535,8 @@ export function PostCallReportGate() {
       ? t({ bn: "Call Status বাছাই করুন", en: "Select Call Status" })
       : connected && seconds < 1
         ? t({ bn: "কথা হওয়া কলের সময়কাল (সেকেন্ড) দিন", en: "Enter the connected call's duration (seconds)" })
+        : !connected && retryPick.mode === "custom" && (!retryPick.customAt || Date.parse(retryPick.customAt) <= Date.now())
+          ? t({ bn: "ভবিষ্যতের তারিখ ও সময় বাছাই করুন", en: "Pick a future date and time" })
         : !category
           ? t({ bn: "Lead Category বাছাই করুন (Confirm বা Change)", en: "Select Lead Category (Confirm or Change)" })
           : connected && category === "no_answer"
@@ -617,6 +622,15 @@ export function PostCallReportGate() {
       noFollowUpReason: followUpAt ? null : connected ? noFuReason || null : "not_connected",
       smartReasons: Object.keys(smartReasons).length ? smartReasons : null,
       evaluationAnswers: connected && answeredAll ? (answers as Record<string, boolean>) : null,
+      retryPlan:
+        !connected && (callState === "no_answer" || callState === "busy")
+          ? {
+              mode: retryPick.mode,
+              slot: retryPick.slot,
+              time: retryPick.slot === "custom" && retryPick.time ? retryPick.time : null,
+              customAt: retryPick.mode === "custom" && retryPick.customAt ? new Date(retryPick.customAt).toISOString() : null,
+            }
+          : null,
     };
   };
 
@@ -648,7 +662,9 @@ export function PostCallReportGate() {
         <SmartRow id="sr-direction" label={t({ bn: "কলের দিক", en: "Call direction" })} required options={DIRECTIONS} value={direction} onChange={setDirection} />
         <SmartRow id="sr-status" label="Call Status" required options={CALL_STATES} value={callState} onChange={setCallState} />
       </div>
-      {!connected && callState ? (
+      {!connected && (callState === "no_answer" || callState === "busy") ? (
+        <NoAnswerRetryPicker value={retryPick} onChange={setRetryPick} />
+      ) : !connected && callState ? (
         <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
           {t({ bn: "কথা হয়নি — লিডটি কিউ-এর শেষে চলে যাবে এবং আবার নিজে থেকেই আসবে।", en: "No answer — the lead will go to the end of the queue and come back on its own." })}
         </p>

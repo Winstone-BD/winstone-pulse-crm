@@ -128,7 +128,15 @@ export async function rolloverPendingLeads(workDate: string = dhakaToday()): Pro
     .eq("work_state", "pending")
     .lt("work_date", workDate)
     .select("id");
-  return (data ?? []).length;
+  // Snoozed / unresponsive leads whose retry time has come back to the same
+  // agent's desk (Reactivation Queue) — same lead row, never a duplicate.
+  const { data: woke } = await supabaseAdmin
+    .from("leads")
+    .update({ work_state: "pending", work_date: workDate })
+    .in("work_state", ["snoozed", "unresponsive"])
+    .lte("retry_after", new Date().toISOString())
+    .select("id");
+  return (data ?? []).length + (woke ?? []).length;
 }
 
 /**
@@ -144,6 +152,8 @@ export async function assignedTodayByAgent(workDate: string): Promise<Map<string
       .from("leads")
       .select("assigned_to")
       .eq("work_date", workDate)
+      // Snoozed and unresponsive leads are counted separately, not as active quota.
+      .not("work_state", "in", "(snoozed,unresponsive)")
       .in("assignment_source", ["lead_database", "coordinator", "leadhub"])
       .not("assigned_to", "is", null)
       .range(from, from + 999);

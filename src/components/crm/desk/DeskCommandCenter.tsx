@@ -49,6 +49,7 @@ import {
 import { formatTalkTime, relativeTime, shortDate } from "@/lib/crm-format";
 import { useMyAccount } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import { isParked } from "@/lib/no-answer-cadence";
 
 const STATUS_LABELS: Record<string, { bn: string; en: string }> = {
   pending: { bn: "কল হয়নি", en: "Not called" },
@@ -85,12 +86,13 @@ function tempLabel(temp: string | null | undefined, lang: Lang) {
   return TEMP_LABELS[temp]?.[lang] ?? temp;
 }
 
-type QueueFilter = "pending" | "follow_up" | "hot" | "done" | "all";
+type QueueFilter = "pending" | "follow_up" | "parked" | "hot" | "done" | "all";
 type QueueSort = "priority" | "recent" | "name" | "serial";
 
 const QUEUE_LABELS: Record<QueueFilter, { bn: string; en: string }> = {
   pending: { bn: "কল বাকি", en: "Pending" },
   follow_up: { bn: "আবার যোগাযোগ", en: "Follow-up" },
+  parked: { bn: "স্নুজ / সাড়াহীন", en: "Snoozed / Unresponsive" },
   hot: { bn: "হট", en: "Hot" },
   done: { bn: "কথা হয়েছে", en: "Contacted" },
   all: { bn: "সব", en: "All" },
@@ -231,7 +233,8 @@ export function DeskCommandCenter({
     const now = Date.now();
     return leads
       .filter((l) => {
-        if (filter === "pending") return l.status === "pending";
+        if (filter === "parked") return isParked(l);
+        if (filter === "pending") return l.status === "pending" && !isParked(l);
         if (filter === "follow_up") return l.status === "follow_up";
         if (filter === "hot") return l.temperature === "hot" && l.status !== "closed";
         if (filter === "done") return l.status === "contacted" || l.status === "closed";

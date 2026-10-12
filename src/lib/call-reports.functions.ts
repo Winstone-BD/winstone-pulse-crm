@@ -348,6 +348,15 @@ export const submitMyReport = createServerFn({ method: "POST" })
       noFollowUpReason: z.string().trim().max(60).nullable().optional(),
       smartReasons: z.record(z.string(), z.string().max(300)).nullable().optional(),
       evaluationAnswers: z.record(z.string(), z.boolean()).nullable().optional(),
+      retryPlan: z
+        .object({
+          mode: z.enum(["plus2", "plus3", "custom"]),
+          slot: z.enum(["morning", "afternoon", "evening", "custom"]),
+          time: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+          customAt: z.string().max(40).nullable().optional(),
+        })
+        .nullable()
+        .optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -382,6 +391,7 @@ export const submitMyReport = createServerFn({ method: "POST" })
       noFollowUpReason: data.noFollowUpReason ?? null,
       smartReasons: data.smartReasons ?? null,
       evaluationAnswers: data.evaluationAnswers ?? null,
+      retryPlan: data.retryPlan ?? null,
     });
   });
 
