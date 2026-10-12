@@ -354,7 +354,7 @@ function DeskPage() {
         <div className="sticky top-28 z-30 sm:top-16"><DeskTabBar tab={tab} onChange={setTab} /></div>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
-          <TodayHero name={account?.profile?.name ?? null} />
+          <TodayHero name={account?.profile?.name?.trim() || account?.profile?.email?.split("@")[0] || null} />
 
           <section aria-label={t({ bn: "সতর্কবার্তা", en: "Alerts" })} className="space-y-2">
             <AccountabilityBanner />
