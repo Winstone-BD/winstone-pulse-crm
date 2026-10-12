@@ -140,3 +140,5 @@
 - [x] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
 - [ ] Reconnect Google Calendar — blocked: project owner lacks access to the existing connections
 - [ ] Email domain notify.crm.winstonebd.com — waiting on DNS records at registrar
+- [ ] Auto Google Calendar events for site visits + follow-ups (only real saved times/places) — blocked: Google Calendar connection not linkable (owner lacks access); also need: shared office calendar vs each agent's own
+- [ ] Email .ics invite to the agent per event from notify.crm.winstonebd.com — blocked: DNS (TXT + 2 NS) not yet verified
