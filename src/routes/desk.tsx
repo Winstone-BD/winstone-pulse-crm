@@ -51,6 +51,7 @@ import { Button } from "@/components/ui/button";
 import { DeskTabBar } from "@/components/crm/desk/DeskTabBar";
 import { SocialDesk } from "@/components/crm/social/SocialDesk";
 import { TodayHero } from "@/components/crm/desk/TodayHero";
+import { AiLeadPriority } from "@/components/crm/AiLeadPriority";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONNECTED_THRESHOLD_SECONDS, useSnapshot } from "@/lib/crm-data";
 import { formatTalkTime } from "@/lib/crm-format";

@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { DatabaseBackup, Download, History, Loader2, RotateCcw } from "lucide-react";
+import { DatabaseBackup, Download, History, Loader2, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { AiTeamSummary } from "@/components/crm/AiTeamSummary";
 import { AppShell } from "@/components/crm/AppShell";
 import { PageHeader } from "@/components/crm/PageHeader";
 import { RoleGate } from "@/components/crm/RoleGate";

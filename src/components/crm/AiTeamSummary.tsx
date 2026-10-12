@@ -23,7 +23,7 @@ export function AiTeamSummary() {
 
   const model = useQuery({ queryKey: ["ai-model"], queryFn: () => modelGet() });
   const switchModel = useMutation({
-    mutationFn: (next: "openai" | "gemini") => modelSet({ data: { adminToken, model: next } }),
+    mutationFn: (next: "openai" | "gemini") => modelSet({ data: { adminToken: adminToken ?? "", model: next } }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["ai-model"] });
       toast.success(t({ bn: "AI মডেল বদলানো হয়েছে", en: "AI model updated" }));
