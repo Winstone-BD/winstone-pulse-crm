@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { EmptyState, StatCard } from "@/components/crm/ui-kit";
 import {
   buildTimeline,
   CONNECTED_THRESHOLD_SECONDS,
@@ -156,81 +157,6 @@ function useCompactDesk() {
   return compact;
 }
 
-function KpiCard({
-  icon,
-  label,
-  labelEn,
-  value,
-  sub,
-  tone = "primary",
-  progress,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  labelEn: string;
-  value: string;
-  sub?: string;
-  tone?: "primary" | "live" | "chart4" | "destructive";
-  progress?: number;
-}) {
-  const lang = useLang();
-  const toneClass = {
-    primary: "bg-primary/12 text-primary",
-    live: "bg-live/15 text-live",
-    chart4: "bg-chart-4/15 text-chart-4",
-    destructive: "bg-destructive/15 text-destructive",
-  }[tone];
-  const glowClass = {
-    primary: "from-primary/12 ring-primary/20",
-    live: "from-live/12 ring-live/20",
-    chart4: "from-chart-4/12 ring-chart-4/20",
-    destructive: "from-destructive/12 ring-destructive/20",
-  }[tone];
-  const barClass = {
-    primary: "bg-primary",
-    live: "bg-live",
-    chart4: "bg-chart-4",
-    destructive: "bg-destructive",
-  }[tone];
-  return (
-    <div
-      className={cn(
-        "card-elevated relative overflow-hidden bg-gradient-to-br to-transparent p-3 ring-1 transition-shadow hover:shadow-lg",
-        glowClass,
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn("absolute inset-x-0 top-0 h-0.5 opacity-70", barClass)}
-      />
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "grid size-9 shrink-0 place-items-center rounded-xl shadow-inner",
-            toneClass,
-          )}
-        >
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-[11px] font-medium text-muted-foreground">
-            {lang === "en" ? labelEn : label}
-          </p>
-        </div>
-      </div>
-      <p className="tabular mt-2 text-xl font-bold leading-none">{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-muted-foreground">{sub}</p>}
-      {progress !== undefined && (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn("h-full rounded-full transition-all", barClass)}
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
 
 /**
  * Sales command centre for the agent's own desk: KPI strip, quick actions, the
@@ -245,7 +171,7 @@ export function DeskCommandCenter({
   actions?: React.ReactNode;
 }) {
   const { account } = useMyAccount();
-  const { leads, profiles, calls, messages, events } = useSnapshot();
+  const { leads, profiles, calls, messages, events, isPending } = useSnapshot();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dossierId, setDossierId] = useState<string | null>(null);
   const [filter, setFilter] = useState<QueueFilter>("pending");
