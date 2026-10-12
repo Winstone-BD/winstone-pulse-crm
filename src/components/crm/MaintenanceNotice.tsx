@@ -397,7 +397,7 @@ function NoticeCard({
 /** Floating placement for the CRM-wide notice: bottom-centre on phones, bottom-right on desktops. */
 function NoticeShell({ children }: { children: ReactNode }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 sm:justify-end sm:p-5">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 pb-24 sm:justify-end sm:p-5 sm:pb-28">
       <div className="pointer-events-auto w-full max-w-lg">{children}</div>
     </div>
   );
