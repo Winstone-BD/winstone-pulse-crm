@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentActivityRouteImport } from './routes/agent-activity'
+import { Route as AuditLogRouteImport } from './routes/audit-log'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookingReviewRouteImport } from './routes/booking-review'
@@ -120,6 +121,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentActivityRoute = AgentActivityRouteImport.update({
   id: '/agent-activity',
   path: '/agent-activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditLogRoute = AuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditReportRoute = AuditReportRouteImport.update({
@@ -648,6 +654,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -752,6 +759,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -857,6 +865,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -963,6 +972,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1067,6 +1077,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1171,6 +1182,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1276,6 +1288,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentActivityRoute: typeof AgentActivityRoute
+  AuditLogRoute: typeof AuditLogRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
   BookingReviewRoute: typeof BookingReviewRoute
@@ -1392,6 +1405,13 @@ declare module '@tanstack/react-router' {
       path: '/agent-activity'
       fullPath: '/agent-activity'
       preLoaderRoute: typeof AgentActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-log': {
+      id: '/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AuditLogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-report': {
@@ -2100,6 +2120,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentActivityRoute: AgentActivityRoute,
+  AuditLogRoute: AuditLogRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
   BookingReviewRoute: BookingReviewRoute,
