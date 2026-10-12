@@ -11,6 +11,7 @@ import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
 import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, isRedWindow, nextRenewalDueAt, paymentDueLabel, usd } from "@/lib/maintenance-rules";
 import { useLang, useT } from "@/lib/i18n";
+import { amberDismissed, dismissAmber, firstRedModalThisSession } from "@/lib/billing-dismiss";
 
 export function useMaintenance() {
   const adminToken = useAdminToken();
@@ -298,10 +299,9 @@ function InvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
 /** Phase 1 amber banner. Dismissal is per user/browser and per billing period; it never touches the invoice. */
 function AmberReminderBanner({ period }: { period: string }) {
-  const key = `billing-amber-dismissed:${period}`;
   const [hidden, setHidden] = useState(true);
   const [open, setOpen] = useState(false);
-  useEffect(() => setHidden(localStorage.getItem(key) === "1"), [key]);
+  useEffect(() => setHidden(amberDismissed(period)), [period]);
   if (hidden) return <InvoiceDialog open={open} onOpenChange={setOpen} />;
   return (
     <>
@@ -312,7 +312,7 @@ function AmberReminderBanner({ period }: { period: string }) {
           </p>
           <Button size="sm" variant="outline" className="h-7" onClick={() => setOpen(true)}>View Invoice</Button>
           <Button size="sm" className="h-7" onClick={() => setOpen(true)}>Pay Now</Button>
-          <Button size="sm" variant="ghost" className="h-7" aria-label="Dismiss reminder" onClick={() => { localStorage.setItem(key, "1"); setHidden(true); }}>✕</Button>
+          <Button size="sm" variant="ghost" className="h-7" aria-label="Dismiss reminder" onClick={() => { dismissAmber(period); setHidden(true); }}>✕</Button>
         </div>
       </div>
       <InvoiceDialog open={open} onOpenChange={setOpen} />
@@ -338,13 +338,9 @@ function UpcomingInvoiceWidget() {
 function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin: boolean; paymentStatus: string }) {
   const [invoice, setInvoice] = useState(false);
   const [modal, setModal] = useState(false);
-  const key = `billing-red-modal:${period}`;
   useEffect(() => {
-    if (admin && sessionStorage.getItem(key) !== "1") {
-      sessionStorage.setItem(key, "1");
-      setModal(true);
-    }
-  }, [admin, key]);
+    if (admin && firstRedModalThisSession(period)) setModal(true);
+  }, [admin, period]);
   const month = dhakaMonthName();
   const statusText =
     paymentStatus === "pending" ? "Verification Pending" : paymentDueLabel();

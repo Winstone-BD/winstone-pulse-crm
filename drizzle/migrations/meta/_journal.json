@@ -743,6 +743,13 @@
       "when": 1791774339501,
       "tag": "0105_backup_cron_token",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1791816824936,
+      "tag": "0106_billing_invoice_snapshot",
+      "breakpoints": true
     }
   ]
 }
