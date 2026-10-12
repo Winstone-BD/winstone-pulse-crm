@@ -364,6 +364,8 @@ function DeskPage() {
             <SiteVisitReminder />
           </section>
 
+          {tab === "today" && (
+            <>
           <OfficialNewsStrip />
 
           <details className="group card-elevated overflow-hidden">
@@ -391,6 +393,8 @@ function DeskPage() {
               </>
             }
           />
+            </>
+          )}
 
         {tab === "today" && (
           <div className="space-y-4 sm:space-y-6">

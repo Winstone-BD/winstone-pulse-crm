@@ -106,7 +106,7 @@ export function TodayHero({ name }: { name: string | null }) {
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">{greeting(lang)} · {today}</p>
-            <h1 className="mt-1 truncate text-3xl font-black tracking-tight sm:text-4xl">{t({ bn: `স্বাগতম, ${first}`, en: `Welcome back, ${first}` })}</h1>
+            <h1 className="mt-1 break-words text-2xl font-black leading-tight tracking-tight sm:text-4xl">{t({ bn: `স্বাগতম, ${first}`, en: `Welcome back, ${first}` })}</h1>
             <p className="mt-0.5 text-sm font-medium opacity-80">{t({ bn: "আজকের কাজের এক নজর দেখে নিন।", en: "Here's your day at a glance." })}</p>
             <p className="mt-1 text-sm opacity-70">{mood(pct, lang)}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
