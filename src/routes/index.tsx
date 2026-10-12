@@ -313,12 +313,8 @@ function EntryCard({
   secondary?: React.ReactNode;
 }) {
   return (
-    <section className="card-elevated group relative flex flex-col gap-3 overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:ring-1 hover:ring-primary/30">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-80"
-      />
-      <span className="grid size-12 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25 transition-transform group-hover:scale-105">
+    <section className="group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-gold">
+      <span className="grid size-12 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
         {icon}
       </span>
       <div>
@@ -348,9 +344,9 @@ function ModeCard({
     <button
       type="button"
       onClick={onClick}
-      className="card-elevated group flex min-w-0 flex-col items-center gap-2 p-3 text-center sm:min-h-44 sm:gap-4 sm:p-7 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:translate-y-0 active:shadow-sm"
+      className="group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <span className="origin-center scale-75 text-foreground transition-transform duration-200 group-hover:scale-90 sm:scale-100 sm:group-hover:scale-105">
+      <span className="origin-center scale-75 text-foreground sm:scale-100">
         {illustration}
       </span>
       <span>
@@ -367,8 +363,8 @@ function ModeCard({
 function SmartphoneIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Smartphone className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Smartphone className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
@@ -376,8 +372,8 @@ function SmartphoneIllustration() {
 function WebIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Globe className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Globe className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
@@ -385,8 +381,8 @@ function WebIllustration() {
 function DesktopIllustration() {
   return (
     <span className="relative grid size-20 place-items-center">
-      <span className="absolute inset-0 rounded-3xl border border-primary/30 bg-primary/5" />
-      <Monitor className="size-9" strokeWidth={1.5} />
+      <span className="absolute inset-0 rounded-2xl border border-border bg-surface" />
+      <Monitor className="size-9 text-gold" strokeWidth={1.5} />
     </span>
   );
 }
