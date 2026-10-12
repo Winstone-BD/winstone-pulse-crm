@@ -453,7 +453,21 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
   const [modal, setModal] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
-...
+  const period = status.period ?? "";
+  useEffect(() => {
+    if (state === "amber") setHidden(amberDismissed(period));
+  }, [state, period]);
+  useEffect(() => {
+    if (state === "red" && status.exempt && firstRedModalThisSession(period)) setModal(true);
+  }, [state, period, status.exempt]);
+
+  const month = dhakaMonthName();
+  const copy = subscriptionNoticeCopy(state, {
+    month,
+    totalLabel: `${usd(CRM_TOTAL_CENTS)} USD`,
+    lockDate: dhakaDateLabel(status.lockAt),
+    lockClock: dhakaClockLabel(status.lockAt),
+  });
   if (hidden) return <InvoiceDialog open={invoice} onOpenChange={setInvoice} />;
   const ms = now === null ? null : new Date(status.lockAt).getTime() - now;
   const tone = TONES[state];
