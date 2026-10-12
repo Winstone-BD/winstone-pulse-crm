@@ -1174,6 +1174,54 @@ export type Database = {
           },
         ]
       }
+      crm_backup_runs: {
+        Row: {
+          backup_date: string
+          checksum: string | null
+          counts: Json
+          created_at: string
+          error: string | null
+          id: string
+          size_bytes: number | null
+          status: string
+        }
+        Insert: {
+          backup_date: string
+          checksum?: string | null
+          counts?: Json
+          created_at?: string
+          error?: string | null
+          id?: string
+          size_bytes?: number | null
+          status?: string
+        }
+        Update: {
+          backup_date?: string
+          checksum?: string | null
+          counts?: Json
+          created_at?: string
+          error?: string | null
+          id?: string
+          size_bytes?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
+      crm_backup_secret: {
+        Row: {
+          id: number
+          token: string
+        }
+        Insert: {
+          id?: number
+          token?: string
+        }
+        Update: {
+          id?: number
+          token?: string
+        }
+        Relationships: []
+      }
       custom_reports: {
         Row: {
           assigned_to: string | null
@@ -3291,6 +3339,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      record_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          at: string
+          changes: Json
+          id: number
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          at?: string
+          changes?: Json
+          id?: never
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          at?: string
+          changes?: Json
+          id?: never
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
       }
       recording_doc_backups: {
         Row: {

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentActivityRouteImport } from './routes/agent-activity'
+import { Route as AuditLogRouteImport } from './routes/audit-log'
 import { Route as AuditReportRouteImport } from './routes/audit-report'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookingReviewRouteImport } from './routes/booking-review'
@@ -81,6 +82,7 @@ import { Route as ApiPublicAgentVersionRouteImport } from './routes/api/public/a
 import { Route as ApiPublicAgentVersionHandoffRouteImport } from './routes/api/public/agent/version-handoff'
 import { Route as ApiPublicAgentWhatsappRouteImport } from './routes/api/public/agent/whatsapp'
 import { Route as ApiPublicAgentWorkspaceRouteImport } from './routes/api/public/agent/workspace'
+import { Route as ApiPublicBackupsRunRouteImport } from './routes/api/public/backups/run'
 import { Route as ApiPublicConfigMaintenanceRouteImport } from './routes/api/public/config/maintenance'
 import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/config/rules'
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
@@ -119,6 +121,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentActivityRoute = AgentActivityRouteImport.update({
   id: '/agent-activity',
   path: '/agent-activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditLogRoute = AuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditReportRoute = AuditReportRouteImport.update({
@@ -476,6 +483,11 @@ const ApiPublicAgentWorkspaceRoute = ApiPublicAgentWorkspaceRouteImport.update({
   path: '/api/public/agent/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBackupsRunRoute = ApiPublicBackupsRunRouteImport.update({
+  id: '/api/public/backups/run',
+  path: '/api/public/backups/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicConfigMaintenanceRoute =
   ApiPublicConfigMaintenanceRouteImport.update({
     id: '/api/public/config/maintenance',
@@ -642,6 +654,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -712,6 +725,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -745,6 +759,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -815,6 +830,7 @@ export interface FileRoutesByTo {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -849,6 +865,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent-activity': typeof AgentActivityRoute
+  '/audit-log': typeof AuditLogRoute
   '/audit-report': typeof AuditReportRoute
   '/auth': typeof AuthRoute
   '/booking-review': typeof BookingReviewRoute
@@ -919,6 +936,7 @@ export interface FileRoutesById {
   '/api/public/agent/version-handoff': typeof ApiPublicAgentVersionHandoffRoute
   '/api/public/agent/whatsapp': typeof ApiPublicAgentWhatsappRoute
   '/api/public/agent/workspace': typeof ApiPublicAgentWorkspaceRoute
+  '/api/public/backups/run': typeof ApiPublicBackupsRunRoute
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
@@ -954,6 +972,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1024,6 +1043,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1057,6 +1077,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1127,6 +1148,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1160,6 +1182,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agent-activity'
+    | '/audit-log'
     | '/audit-report'
     | '/auth'
     | '/booking-review'
@@ -1230,6 +1253,7 @@ export interface FileRouteTypes {
     | '/api/public/agent/version-handoff'
     | '/api/public/agent/whatsapp'
     | '/api/public/agent/workspace'
+    | '/api/public/backups/run'
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
@@ -1264,6 +1288,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentActivityRoute: typeof AgentActivityRoute
+  AuditLogRoute: typeof AuditLogRoute
   AuditReportRoute: typeof AuditReportRoute
   AuthRoute: typeof AuthRoute
   BookingReviewRoute: typeof BookingReviewRoute
@@ -1334,6 +1359,7 @@ export interface RootRouteChildren {
   ApiPublicAgentVersionHandoffRoute: typeof ApiPublicAgentVersionHandoffRoute
   ApiPublicAgentWhatsappRoute: typeof ApiPublicAgentWhatsappRoute
   ApiPublicAgentWorkspaceRoute: typeof ApiPublicAgentWorkspaceRoute
+  ApiPublicBackupsRunRoute: typeof ApiPublicBackupsRunRoute
   ApiPublicConfigMaintenanceRoute: typeof ApiPublicConfigMaintenanceRoute
   ApiPublicConfigRulesRoute: typeof ApiPublicConfigRulesRoute
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
@@ -1379,6 +1405,13 @@ declare module '@tanstack/react-router' {
       path: '/agent-activity'
       fullPath: '/agent-activity'
       preLoaderRoute: typeof AgentActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-log': {
+      id: '/audit-log'
+      path: '/audit-log'
+      fullPath: '/audit-log'
+      preLoaderRoute: typeof AuditLogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-report': {
@@ -1871,6 +1904,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentWorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/backups/run': {
+      id: '/api/public/backups/run'
+      path: '/api/public/backups/run'
+      fullPath: '/api/public/backups/run'
+      preLoaderRoute: typeof ApiPublicBackupsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/config/maintenance': {
       id: '/api/public/config/maintenance'
       path: '/api/public/config/maintenance'
@@ -2080,6 +2120,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentActivityRoute: AgentActivityRoute,
+  AuditLogRoute: AuditLogRoute,
   AuditReportRoute: AuditReportRoute,
   AuthRoute: AuthRoute,
   BookingReviewRoute: BookingReviewRoute,
@@ -2151,6 +2192,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentVersionHandoffRoute: ApiPublicAgentVersionHandoffRoute,
   ApiPublicAgentWhatsappRoute: ApiPublicAgentWhatsappRoute,
   ApiPublicAgentWorkspaceRoute: ApiPublicAgentWorkspaceRoute,
+  ApiPublicBackupsRunRoute: ApiPublicBackupsRunRoute,
   ApiPublicConfigMaintenanceRoute: ApiPublicConfigMaintenanceRoute,
   ApiPublicConfigRulesRoute: ApiPublicConfigRulesRoute,
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
