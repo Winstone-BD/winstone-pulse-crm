@@ -14,7 +14,7 @@ describe("Hostinger service-bill payload", () => {
       to: ["hq@example.com"],
       displayName: "Winstone IT Team",
       subject: "Service-Bill Alert: মেয়াদ শেষ - Winstone Pulse",
-      text: "WINSTONE PULSE — SERVICE BILL ALERT\n\nStatus: মেয়াদ শেষ\nAmount: $46.29 USD\n\nThis notice requires authorized human review. It does not execute or approve a payment.",
+      text: "WINSTONE PULSE — SERVICE BILL ALERT\n\nStatus: মেয়াদ শেষ\nAmount: $46.29 USD + 15% VAT ($6.94) = $53.23 USD\n\nThis notice requires authorized human review. It does not execute or approve a payment.",
     });
   });
 
