@@ -18,7 +18,6 @@ import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
-import { useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -179,8 +178,6 @@ function EntryHall() {
         <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
           One CRM. One data layer. Every device.
         </p>
-
-        <CommandCenterShowcase />
 
         <h2
           id="workspace-signin"
