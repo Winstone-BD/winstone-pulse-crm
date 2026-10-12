@@ -141,6 +141,33 @@ export function SocialPageTrendChart() {
   const hasData = tc.leads > 0 || tp.leads > 0;
   const labelInterval = Math.max(0, Math.ceil(points.length / 8) - 1);
   const [exporting, setExporting] = useState(false);
+  const qPrevSum = useQuery({
+    queryKey: ["social-page-summary", adminToken, prevFrom, prevTo],
+    queryFn: () => sumFn({ data: { adminToken, from: prevFrom, to: prevTo } }),
+    enabled: Boolean(adminToken) && valid,
+  });
+  const qCurSum = useQuery({
+    queryKey: ["social-page-summary", adminToken, from, to],
+    queryFn: () => sumFn({ data: { adminToken, from, to } }),
+    enabled: Boolean(adminToken) && valid,
+  });
+
+  const setPreset = (days: number) => {
+    setTo(dhakaDate(Date.now()));
+    setFrom(dhakaDate(Date.now() - (days - 1) * 86_400_000));
+  };
+
+  const csvEsc = (v: unknown) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const exportCsv = () => {
+    const rows: string[] = ["date,leads,bookings,conversion_pct,prev_date,prev_leads,prev_conversion_pct"];
+    for (const p of points) rows.push([p.date, p.leads, p.bookings, p.leads ? p.conversion : "", p.prevDate, p.prevLeads, p.prevLeads ? p.prevConversion : ""].map(csvEsc).join(","));
+    const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `social-chart-${pageId === "all" ? "all" : pageId}-${from}-${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   const exportPdf = async () => {
     const w = window.open("", "_blank");
