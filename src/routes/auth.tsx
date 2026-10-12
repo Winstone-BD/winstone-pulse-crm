@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

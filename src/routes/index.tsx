@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import heroImage from "@/assets/pulse-hero.jpg";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";

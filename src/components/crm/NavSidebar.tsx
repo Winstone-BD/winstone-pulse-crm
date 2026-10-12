@@ -35,7 +35,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useT } from "@/lib/i18n";
 import { useMyAccount, useSignOut } from "@/lib/session";
 import { LogOut } from "lucide-react";
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 type Item = { to: string; label: string };

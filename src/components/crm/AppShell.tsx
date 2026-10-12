@@ -5,7 +5,7 @@ import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import logoAsset from "@/assets/winstone-logo.png.asset.json";
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
