@@ -18,6 +18,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-sidebar: var(--sidebar);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -61,8 +62,8 @@
   --color-exec-amber: var(--exec-amber);
   --color-exec-red: var(--exec-red);
   --color-exec-gold: var(--exec-gold);
-  --font-display: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
@@ -523,4 +524,72 @@
   --idle-ink: var(--idle);
   --whatsapp-ink: var(--whatsapp);
   --verified-ink: var(--verified);
+}
+
+/* ===========================================================================
+   Pipeline reskin (2026-10-12): calm mint canvas + sidebar, warm orange
+   actions, dark-teal ink. Same token names, so every screen follows; only
+   colours change — no layout or logic depends on these values.
+   =========================================================================== */
+.hq-luxe,
+.theme-light {
+  --background: oklch(0.975 0.012 175);
+  --foreground: oklch(0.24 0.03 185);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.03 185);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.03 185);
+  --primary: oklch(0.68 0.19 40);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-ink: oklch(0.55 0.17 40);
+  --secondary: oklch(0.95 0.02 175);
+  --secondary-foreground: oklch(0.24 0.03 185);
+  --muted: oklch(0.955 0.015 175);
+  --muted-foreground: oklch(0.48 0.025 185);
+  --accent: oklch(0.94 0.03 175);
+  --accent-foreground: oklch(0.26 0.04 185);
+  --border: oklch(0.91 0.015 175);
+  --input: oklch(0.89 0.015 175);
+  --ring: oklch(0.68 0.19 40);
+  --surface: oklch(0.97 0.012 175);
+  --surface-2: oklch(0.955 0.016 175);
+  --sidebar: oklch(0.95 0.022 175);
+  --ink: oklch(0.26 0.035 190);
+  --ink-foreground: oklch(0.96 0.01 175);
+  --chart-1: oklch(0.68 0.19 40);
+  --chart-2: oklch(0.6 0.1 185);
+  --chart-3: oklch(0.62 0.15 155);
+  --chart-4: oklch(0.75 0.14 75);
+  --chart-5: oklch(0.58 0.2 25);
+  --shadow-card: 0 1px 2px oklch(0.3 0.03 185 / 5%), 0 6px 20px -12px oklch(0.3 0.03 185 / 14%);
+  --shadow-card-hover: 0 1px 2px oklch(0.3 0.03 185 / 7%), 0 12px 28px -14px oklch(0.3 0.03 185 / 22%);
+  --radius: 0.85rem;
+}
+
+/* Matching dark mode (toggle in the top bar). */
+.dark .hq-luxe,
+.dark .theme-light {
+  --background: oklch(0.17 0.015 190);
+  --foreground: oklch(0.94 0.01 175);
+  --card: oklch(0.21 0.018 190);
+  --card-foreground: oklch(0.94 0.01 175);
+  --popover: oklch(0.21 0.018 190);
+  --popover-foreground: oklch(0.94 0.01 175);
+  --primary: oklch(0.72 0.18 42);
+  --primary-foreground: oklch(0.15 0.02 40);
+  --primary-ink: oklch(0.78 0.15 45);
+  --secondary: oklch(0.25 0.02 190);
+  --secondary-foreground: oklch(0.94 0.01 175);
+  --muted: oklch(0.24 0.018 190);
+  --muted-foreground: oklch(0.72 0.02 180);
+  --accent: oklch(0.27 0.025 185);
+  --accent-foreground: oklch(0.94 0.01 175);
+  --border: oklch(0.3 0.02 190);
+  --input: oklch(0.32 0.02 190);
+  --surface: oklch(0.2 0.016 190);
+  --surface-2: oklch(0.23 0.018 190);
+  --sidebar: oklch(0.2 0.02 190);
+  --success-ink: var(--success);
+  --warning-ink: var(--warning);
+  color-scheme: dark;
 }
