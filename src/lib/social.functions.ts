@@ -268,10 +268,34 @@ export const saveSocialPage = createServerFn({ method: "POST" })
     kind: z.enum(["page", "group"]), url: Link.nullable().optional().or(z.literal("").transform(() => null)), active: z.boolean().default(true),
   }).parse(i))
   .handler(async ({ data }) => {
-    const { db } = await authorityCtx(data.adminToken, true);
+    const { db, caller } = await authorityCtx(data.adminToken, true);
     const row = { name: data.name, kind: data.kind, url: data.url ?? null, active: data.active };
-    const { error } = data.id ? await db.from("social_pages").update(row).eq("id", data.id) : await db.from("social_pages").insert(row);
+    let before: { name: string; kind: string; url: string | null; active: boolean } | null = null;
+    if (data.id) {
+      const { data: prev } = await db.from("social_pages").select("name, kind, url, active").eq("id", data.id).maybeSingle();
+      if (!prev) throw new Error("পেজ পাওয়া যায়নি");
+      before = prev;
+    }
+    const { data: saved, error } = data.id
+      ? await db.from("social_pages").update(row).eq("id", data.id).select("id").single()
+      : await db.from("social_pages").insert(row).select("id").single();
     if (error) throw new Error(error.message);
+    const changes = before
+      ? (Object.keys(row) as (keyof typeof row)[])
+          .filter((k) => before![k] !== row[k])
+          .map((k) => ({ field: k, from: before![k], to: row[k] }))
+      : (Object.keys(row) as (keyof typeof row)[]).map((k) => ({ field: k, from: null, to: row[k] }));
+    if (changes.length) {
+      const { logAudit } = await import("@/lib/audit.server");
+      await logAudit({
+        action: before ? "social_page_updated" : "social_page_created",
+        entityType: "social_page",
+        entityId: saved.id,
+        actorProfileId: caller.profile?.id ?? null,
+        actorLabel: caller.profile?.name ?? "HQ/IT PIN",
+        metadata: { changes },
+      });
+    }
     return { ok: true };
   });
 
@@ -286,4 +310,74 @@ export const saveSocialTemplate = createServerFn({ method: "POST" })
     const { error } = data.id ? await db.from("social_reply_templates").update(row).eq("id", data.id) : await db.from("social_reply_templates").insert(row);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export type SocialPageAuditRow = {
+  id: string; at: string; pageId: string | null; pageName: string; action: string; by: string;
+  changes: { field: string; from: string | boolean | null; to: string | boolean | null }[];
+};
+
+/** HQ/IT: who changed a page/group's name, link or active state, and when (append-only audit_logs). */
+export const socialPageAudit = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => Base.parse(i))
+  .handler(async ({ data }): Promise<SocialPageAuditRow[]> => {
+    const { db } = await authorityCtx(data.adminToken);
+    const { data: rows, error } = await db.from("audit_logs")
+      .select("id, created_at, entity_id, action, actor_label, metadata")
+      .eq("entity_type", "social_page").order("created_at", { ascending: false }).limit(300);
+    if (error) throw new Error(error.message);
+    const ids = [...new Set((rows ?? []).map((r) => r.entity_id).filter(Boolean))] as string[];
+    const { data: pages } = ids.length ? await db.from("social_pages").select("id, name").in("id", ids) : { data: [] as { id: string; name: string }[] };
+    const pn = new Map((pages ?? []).map((p) => [p.id, p.name]));
+    return (rows ?? []).map((r) => ({
+      id: r.id, at: r.created_at, pageId: r.entity_id, pageName: (r.entity_id && pn.get(r.entity_id)) || "—",
+      action: r.action, by: r.actor_label ?? "—",
+      changes: ((r.metadata as { changes?: SocialPageAuditRow["changes"] } | null)?.changes) ?? [],
+    }));
+  });
+
+export type SocialPageSummary = {
+  pageId: string; name: string; kind: string; active: boolean;
+  entries: number; replies: number; leads: number; visits: number; bookings: number; closed: number; conversion: number;
+};
+
+/** HQ/IT: per page/group — work logged, leads made, site visits, bookings and conversion (real rows only). */
+export const socialPageSummary = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => Base.extend({
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  }).parse(i))
+  .handler(async ({ data }): Promise<SocialPageSummary[]> => {
+    const { db } = await authorityCtx(data.adminToken);
+    const since = new Date(`${data.from}T00:00:00+06:00`).toISOString();
+    const until = new Date(new Date(`${data.to}T00:00:00+06:00`).getTime() + 86_400_000).toISOString();
+    const [{ data: pages, error: pe }, { data: rows, error }] = await Promise.all([
+      db.from("social_pages").select("id, name, kind, active").order("name"),
+      db.from("social_activity_logs").select("page_id, reply_count, lead_id")
+        .is("voided_at", null).gte("created_at", since).lt("created_at", until).limit(20000),
+    ]);
+    if (pe || error) throw new Error((pe ?? error)!.message);
+    const leadIds = [...new Set((rows ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+    const empty = Promise.resolve({ data: [] as never[] });
+    const [{ data: visits }, { data: bookings }, { data: leads }] = await Promise.all([
+      leadIds.length ? db.from("site_visits").select("lead_id").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("bookings").select("lead_id, approval_status").in("lead_id", leadIds) : empty,
+      leadIds.length ? db.from("leads").select("id, status").in("id", leadIds) : empty,
+    ]);
+    const vs = new Set((visits ?? []).map((v: { lead_id: string | null }) => v.lead_id));
+    const bs = new Set((bookings ?? []).filter((b: { approval_status: string | null }) => b.approval_status !== "rejected").map((b: { lead_id: string | null }) => b.lead_id));
+    const cs = new Set((leads ?? []).filter((l: { status: string | null }) => l.status === "closed").map((l: { id: string }) => l.id));
+    const out = new Map<string, SocialPageSummary & { _l: Set<string> }>();
+    for (const p of pages ?? []) out.set(p.id, { pageId: p.id, name: p.name, kind: p.kind, active: p.active, entries: 0, replies: 0, leads: 0, visits: 0, bookings: 0, closed: 0, conversion: 0, _l: new Set() });
+    for (const r of rows ?? []) {
+      const a = r.page_id ? out.get(r.page_id) : undefined;
+      if (!a) continue;
+      a.entries += 1; a.replies += r.reply_count ?? 0;
+      if (r.lead_id) a._l.add(r.lead_id);
+    }
+    return [...out.values()].map(({ _l, ...a }) => {
+      const ls = [..._l];
+      const bookingsN = ls.filter((id) => bs.has(id)).length;
+      return { ...a, leads: ls.length, visits: ls.filter((id) => vs.has(id)).length, bookings: bookingsN,
+        closed: ls.filter((id) => cs.has(id)).length, conversion: ls.length ? Math.round((bookingsN / ls.length) * 100) : 0 };
+    }).sort((x, y) => y.leads - x.leads || y.entries - x.entries);
   });

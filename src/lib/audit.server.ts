@@ -89,7 +89,9 @@ export type AuditAction =
   | "agent_login_locked"
   | "github_issue_created"
   | "monthly_summary_saved"
-  | "lead_neglect_recalled";
+  | "lead_neglect_recalled"
+  | "social_page_created"
+  | "social_page_updated";
 
 export async function logAudit(input: {
   action: AuditAction;

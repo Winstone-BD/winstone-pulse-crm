@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { getSocialSetup, saveSocialPage } from "@/lib/social.functions";
 import { useAdminToken } from "@/lib/local-session";
 import { useT } from "@/lib/i18n";
+import { SocialPageAuditLog, SocialPageSummaryTable } from "@/components/crm/social/SocialPageInsights";
 
 type PageRow = { id: string; name: string; kind: string; url: string | null; active: boolean };
 
@@ -38,6 +39,7 @@ export function SocialPagesAdmin() {
     onSuccess: () => {
       toast.success(t({ bn: "সংরক্ষিত", en: "Saved" }));
       void qc.invalidateQueries({ queryKey: ["social-setup"] });
+      void qc.invalidateQueries({ queryKey: ["social-page-audit"] });
       reset();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -123,6 +125,9 @@ export function SocialPagesAdmin() {
           ))}
         </ul>
       )}
+
+      <SocialPageSummaryTable />
+      <SocialPageAuditLog />
     </div>
   );
 }
