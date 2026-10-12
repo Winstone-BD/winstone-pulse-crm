@@ -131,3 +131,23 @@ export function dhakaTime(iso: string | null | undefined): string {
     hour12: true,
   });
 }
+
+/** CRM plan invoice in integer cents (decimal-safe): 1579 + round(1579 × 15%) = 1579 + 237 = 1816. */
+export const CRM_PLAN_NAME = "WINSTONE PULSE : CRM";
+export const CRM_BASE_CENTS = 1579;
+export const VAT_RATE_BPS = 1500;
+export const CRM_VAT_CENTS = Math.round((CRM_BASE_CENTS * VAT_RATE_BPS) / 10000);
+export const CRM_TOTAL_CENTS = CRM_BASE_CENTS + CRM_VAT_CENTS;
+export const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+/** Amber window: 9th 00:00 through 11th 16:59 Dhaka. Display-only; never changes lock enforcement. */
+export function isAmberWindow(now: Date = new Date()): boolean {
+  const d = new Date(now.getTime() + 6 * 3600_000);
+  const day = d.getUTCDate();
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return day === 9 || day === 10 || (day === 11 && mins < 17 * 60);
+}
+
+export function dhakaMonthName(now: Date = new Date()): string {
+  return new Date(now.getTime() + 6 * 3600_000).toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
+}
