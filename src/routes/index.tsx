@@ -65,28 +65,99 @@ function EntryHall() {
 
   return (
     <div className="theme-light min-h-screen bg-background">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-12 sm:px-6 sm:py-16">
-        <header className="flex flex-col items-center text-center">
-          <img
-            src={logoAsset.url}
-            alt="Winstone Properties Ltd."
-            className="size-24 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-28"
-          />
-          <h1 className="mt-6 text-4xl font-black uppercase tracking-tight text-foreground sm:text-6xl">
-            Winstone Pulse
-          </h1>
-          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary sm:text-xs">
-            The Premium Real Estate CRM
-          </p>
-          <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground sm:text-xs">
-            Pulse — Find. Build. Invest.
-          </p>
-          <span aria-hidden className="mt-6 h-px w-24 bg-primary/60" />
-          <h2 className="mt-8 text-2xl font-bold tracking-tight sm:text-3xl">Choose Your Workspace</h2>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Select the mode you are using — the same Winstone Pulse opens on every device.
-          </p>
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
+        <header className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+          <div className="text-center lg:text-left">
+            <div className="flex items-center justify-center gap-3 lg:justify-start">
+              <img
+                src={logoAsset.url}
+                alt="Winstone Properties Ltd."
+                className="size-14 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-16"
+              />
+              <div>
+                <p className="text-sm font-black uppercase tracking-wide text-primary sm:text-base">
+                  Winstone Properties Ltd.
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+                  Find. Build. Invest.
+                </p>
+              </div>
+            </div>
+            <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+              Winstone <span className="text-primary">Pulse</span>
+            </h1>
+            <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              Close more deals, <span className="text-primary">less chaos.</span>
+            </p>
+            <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
+              The visual CRM that your sales team will actually love using. Drag, drop, and close —
+              live sales monitoring, lead management, call activity, follow-up deadlines and team
+              performance, all in one place.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <Button
+                size="lg"
+                className="rounded-full px-7 text-base font-bold shadow-lg shadow-primary/30"
+                onClick={() =>
+                  document
+                    .getElementById("workspace-signin")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              >
+                Get started <ChevronRight className="size-5" />
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full px-7 text-base font-semibold">
+                <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
+                  Sign in
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
+              {[
+                { icon: Headphones, label: "Manage Your Team" },
+                { icon: BarChart3, label: "Track Sales Pipeline" },
+                { icon: Smartphone, label: "Monitor Call Activity" },
+              ].map(({ icon: Icon, label }) => (
+                <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <span className="grid size-8 place-items-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25">
+                    <Icon className="size-4" />
+                  </span>
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-xl">
+            <img
+              src={heroImage}
+              alt="Winstone Pulse sales team reviewing the live pipeline"
+              width={1280}
+              height={960}
+              className="w-full rounded-3xl object-cover shadow-2xl ring-1 ring-primary/30"
+            />
+            <div className="card-elevated absolute -left-3 top-6 hidden px-4 py-3 sm:block lg:-left-8">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Pipeline Value
+              </p>
+              <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
+              <p className="text-xs font-bold text-primary">↑ Updated in real time</p>
+            </div>
+            <div className="card-elevated absolute -bottom-4 right-3 px-4 py-3 sm:-bottom-6 sm:right-6">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Follow-ups
+              </p>
+              <p className="text-lg font-extrabold tracking-tight">Never missed</p>
+            </div>
+          </div>
         </header>
+
+        <h2 className="mt-16 text-center text-2xl font-bold tracking-tight sm:text-3xl">
+          Choose Your Workspace
+        </h2>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Select the mode you are using — the same Winstone Pulse opens on every device.
+        </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-3 sm:gap-6">
           <ModeCard
