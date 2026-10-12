@@ -139,3 +139,4 @@
 - [x] Audit log (created/edited/archived, who, when) — awaiting plan approval
 - [x] Backups: daily export, single-record restore (full restore = platform-level) — awaiting plan approval
 - [ ] Reconnect Google Calendar in new workspace
+- [ ] Email domain notify.crm.winstonebd.com
