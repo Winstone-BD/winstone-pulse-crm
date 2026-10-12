@@ -153,7 +153,7 @@ function NavContent({
                             data-nav-link
                             className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/70 hover:text-foreground"}`}
                           >
-                            {t(sub.label)}
+                            {t({ bn: sub.label, en: (sub as { en?: string }).en ?? sub.label })}
                           </Link>
                         );
                       })}
