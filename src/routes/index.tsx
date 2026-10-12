@@ -18,7 +18,6 @@ import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
-import { useSnapshot } from "@/lib/crm-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -179,8 +178,6 @@ function EntryHall() {
         <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
           One CRM. One data layer. Every device.
         </p>
-
-        <CommandCenterShowcase />
 
         <h2
           id="workspace-signin"
@@ -379,158 +376,3 @@ function DesktopIllustration() {
   );
 }
 
-const SHOWCASE = [
-  { icon: Headphones, tag: "Lead & Call Management", title: "প্রতিটি কল, এক জায়গায়", to: "/desk", body: "নিজের SIM থেকে কল, তারপর রিপোর্ট — লিডের পুরো ইতিহাস কখনো হারায় না।" },
-  { icon: BarChart3, tag: "Live Sales Monitoring", title: "ফ্লোর লাইভ দেখুন", to: "/live-leads", body: "নতুন লিড, কল আর ফলো-আপ কয়েক সেকেন্ডের মধ্যে HQ বোর্ডে আপডেট হয়।" },
-  { icon: Globe, tag: "Strategy & Forecasts", title: "তথ্য থেকে সিদ্ধান্ত", to: "/reports", body: "সোশ্যাল পেজ, সাইট ভিজিট ও বুকিং — বাস্তব রিপোর্ট থেকে লক্ষ্য ও প্রবণতা।" },
-] as const;
-
-const RANGES = [
-  { key: "today", label: "আজ", days: 1 },
-  { key: "7", label: "৭ দিন", days: 7 },
-  { key: "30", label: "৩০ দিন", days: 30 },
-  { key: "all", label: "সব", days: 0 },
-] as const;
-type RangeKey = (typeof RANGES)[number]["key"];
-
-function LiveTiles() {
-  const snap = useSnapshot();
-  const [range, setRange] = useState<RangeKey>("today");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const inRange = (iso: string | null | undefined) => {
-    if (!iso) return false;
-    const t = Date.parse(iso);
-    if (from || to) {
-      const f = from ? Date.parse(`${from}T00:00:00+06:00`) : -Infinity;
-      const e = to ? Date.parse(`${to}T23:59:59+06:00`) : Infinity;
-      return t >= f && t <= e;
-    }
-    const days = RANGES.find((r) => r.key === range)!.days;
-    if (!days) return true;
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - (days - 1));
-    return t >= start.getTime();
-  };
-  // Dhaka YYYY-MM-DD bounds handed to the desk lists.
-  const rangeDates = (): { from?: string; to?: string } => {
-    if (from || to) return { ...(from ? { from } : {}), ...(to ? { to } : {}) };
-    const days = RANGES.find((r) => r.key === range)!.days;
-    if (!days) return {};
-    const d = (ms: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka" }).format(new Date(ms));
-    return { from: d(Date.now() - (days - 1) * 86_400_000), to: d(Date.now()) };
-  };
-  const values = {
-    Leads: snap.leads.filter((l) => inRange(l.created_at)).length,
-    Calls: snap.calls.filter((c) => inRange(c.created_at)).length,
-    "Follow-ups": snap.leads.filter((l) => l.status === "follow_up" && inRange(l.updated_at)).length,
-  };
-  return (
-    <>
-      <div className="mt-6 flex flex-wrap items-center gap-1.5">
-        {RANGES.map((r) => (
-          <button
-            key={r.key}
-            type="button"
-            onClick={() => { setRange(r.key); setFrom(""); setTo(""); }}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${range === r.key && !from && !to ? "bg-gold text-foreground" : "bg-background/10 hover:bg-background/20"}`}
-          >
-            {r.label}
-          </button>
-        ))}
-        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="শুরুর তারিখ" className="rounded-md bg-background/10 px-2 py-1 text-xs" />
-        <span className="text-xs opacity-60">–</span>
-        <input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="শেষ তারিখ" className="rounded-md bg-background/10 px-2 py-1 text-xs" />
-      </div>
-      <Tiles values={snap.isPending ? null : values} linked range={rangeDates()} />
-    </>
-  );
-}
-
-const TILE_LINKS = { Leads: "leads", Calls: "calls", "Follow-ups": "calendar" } as const;
-
-function Tiles({
-  values,
-  linked = false,
-  range = {},
-}: {
-  values: Record<string, number> | null;
-  linked?: boolean;
-  range?: { from?: string; to?: string };
-}) {
-  const labels = { Leads: "লিড", Calls: "কল", "Follow-ups": "ফলো-আপ" } as const;
-  return (
-    <div className="mt-3 grid grid-cols-3 gap-3">
-      {(Object.keys(labels) as (keyof typeof labels)[]).map((k) => {
-        const inner = (
-          <>
-            <div className="h-1.5 w-8 rounded bg-gold" />
-            {values ? (
-              <p className="mt-2 text-2xl font-black tabular-nums">{(values[k] ?? 0).toLocaleString("bn-BD")}</p>
-            ) : (
-              <div className="mt-3 h-6 w-12 animate-pulse rounded bg-background/30" />
-            )}
-            <p className="mt-1 text-[10px] uppercase tracking-widest opacity-60">{labels[k]}{linked && " →"}</p>
-          </>
-        );
-        const cls = "block rounded-xl border border-background/15 bg-background/5 p-3";
-        return linked ? (
-          <Link key={k} to="/desk" search={{ s: TILE_LINKS[k], ...range }} className={`${cls} transition-colors hover:border-primary/60 hover:bg-background/10`}>
-            {inner}
-          </Link>
-        ) : (
-          <div key={k} className={cls}>{inner}</div>
-        );
-      })}
-    </div>
-  );
-}
-
-function CommandCenterShowcase() {
-  const { scope, isPending } = useMyAccount();
-  const signedIn = !isPending && scope !== "none";
-  return (
-    <section aria-labelledby="command-center" className="mt-14 overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid lg:grid-cols-[1.1fr_1fr]">
-        <div className="bg-foreground p-6 text-background sm:p-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-gold">Command Center</p>
-          <h2 id="command-center" className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">এক নজরে পুরো সেলস ফ্লোর</h2>
-          <p className="mt-2 max-w-sm text-sm opacity-70">লিড থেকে বুকিং পর্যন্ত — প্রতিটি ধাপ যাচাই করা তথ্যে, অনুমানে নয়।</p>
-          {signedIn ? <LiveTiles /> : <div className="mt-3"><Tiles values={null} /></div>}
-          {!isPending && !signedIn && (
-            <p className="mt-2 text-xs opacity-60">লাইভ সংখ্যা দেখতে নিচে সাইন ইন করুন।</p>
-          )}
-          <svg aria-hidden viewBox="0 0 300 90" className="mt-4 h-24 w-full">
-            <defs>
-              <linearGradient id="ccFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0 75 C40 70 60 55 90 58 S140 30 170 40 S230 10 300 18 L300 90 L0 90 Z" fill="url(#ccFill)" />
-            <path d="M0 75 C40 70 60 55 90 58 S140 30 170 40 S230 10 300 18" fill="none" stroke="var(--primary)" strokeWidth="2" />
-          </svg>
-          <p className="mt-2 text-[10px] uppercase tracking-[0.3em] opacity-50">Pulse — Find. Build. Invest.</p>
-        </div>
-        <ul className="divide-y divide-border">
-          {SHOWCASE.map(({ icon: Icon, tag, title, body, to }) => (
-            <li key={tag}>
-              <Link to={to} className="group flex gap-4 p-5 transition-colors hover:bg-muted/50 sm:p-6">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold"><Icon className="size-5" /></span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">{tag}</p>
-                <h3 className="mt-1 font-bold">{title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-                <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-gold">
-                  খুলুন <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
