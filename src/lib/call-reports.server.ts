@@ -369,6 +369,8 @@ export async function submitCallReport(input: {
   smartReasons?: Record<string, string> | null;
   /** V2: the six yes/no facts; score/category/priority are derived server-side. */
   evaluationAnswers?: unknown;
+  /** Did-not-receive retry pick (+2 / +3 / custom, preferred slot). */
+  retryPlan?: import("@/lib/no-answer-cadence").RetryPlanInput | null;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // Friday only pauses lead distribution; a follow-up picked for Friday is kept as-is.
