@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import {
@@ -72,7 +73,7 @@ function ArchitectPage() {
         <Button
           onClick={async () => {
             const r = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}/tech`,
+              redirect_uri: `${window.location.origin}/tech${window.location.search}`,
               extraParams: { prompt: "select_account" },
             });
             if (r.error) toast.error(r.error.message);
@@ -89,11 +90,20 @@ function ArchitectPage() {
       <div className="card-elevated space-y-2 border-destructive/40 p-6">
         <p className="flex items-center gap-2 font-bold text-destructive"><ShieldAlert className="size-5" /> ACCESS DENIED</p>
         <p className="text-sm">This Google account is not authorized as System Architect.</p>
+        <Dialog open>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive"><ShieldAlert className="size-5" /> Approval failed</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm">This account cannot approve payments or unlock the system. Nothing was changed.</p>
+            <Button variant="outline" onClick={() => void supabase.auth.signOut()}>Sign out and try another account</Button>
+          </DialogContent>
+        </Dialog>
       </div>,
     );
   }
   if (!session) return shell(<CredentialStep onSession={setSession} />);
-  return shell(<Dashboard session={session} onExpired={() => setSession(null)} />);
+  return shell(<><AutoApprove session={session} /><Dashboard session={session} onExpired={() => setSession(null)} /></>);
 }
 
 function CredentialStep({ onSession }: { onSession: (s: string) => void }) {
@@ -235,5 +245,58 @@ function PaymentReview({ session, status, paymentRef, period, onDone }: { sessio
         <Button variant="destructive" disabled={reason.trim().length < 3 || decide.isPending} onClick={() => decide.mutate(false)}>Reject</Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Pay → Google → PIN flow (?auto=1): once the server has accepted the authorized
+ * Google account AND the PIN, the pending payment and open unlock requests are
+ * approved automatically. The server re-checks the architect on every call, so a
+ * wrong account can never approve — it gets "Approval failed" before this runs.
+ */
+function AutoApprove({ session }: { session: string }) {
+  const qc = useQueryClient();
+  const [result, setResult] = useState<null | { ok: boolean; text: string }>(null);
+  const [ran, setRan] = useState(false);
+  const auto = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("auto") === "1";
+  useEffect(() => {
+    if (!auto || ran) return;
+    setRan(true);
+    void (async () => {
+      try {
+        const { state, requests } = await architectOverview({ data: { session } });
+        const done: string[] = [];
+        if (state.paymentStatus === "pending" && state.paymentRef) {
+          await architectPaymentDecision({ data: { session, approve: true, reason: "Auto-approved: authorized architect signed in with PIN" } });
+          done.push("payment verified");
+        }
+        for (const r of requests.filter((x) => x.status === "requested")) {
+          await architectDecision({ data: { session, requestId: r.id, approve: true, minutes: r.requested_hours * 60, reason: "Auto-approved by authorized architect" } });
+          done.push("system unlocked");
+        }
+        setResult(done.length
+          ? { ok: true, text: `President unlock approved — ${[...new Set(done)].join(" and ")}.` }
+          : { ok: false, text: "Nothing to approve yet — no payment reference or unlock request has been submitted." });
+      } catch (e) {
+        setResult({ ok: false, text: `Approval failed: ${(e as Error).message}` });
+      } finally {
+        window.history.replaceState(null, "", "/tech");
+        void qc.invalidateQueries({ queryKey: ["architect-overview"] });
+      }
+    })();
+  }, [auto, ran, session, qc]);
+  return (
+    <Dialog open={result !== null} onOpenChange={(v) => { if (!v) setResult(null); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className={result?.ok ? "flex items-center gap-2 text-success" : "flex items-center gap-2 text-destructive"}>
+            {result?.ok ? <ShieldCheck className="size-5" /> : <ShieldAlert className="size-5" />}
+            {result?.ok ? "President unlock" : "Approval failed"}
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm">{result?.text}</p>
+        <Button onClick={() => setResult(null)}>OK</Button>
+      </DialogContent>
+    </Dialog>
   );
 }

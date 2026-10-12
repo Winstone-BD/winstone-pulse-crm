@@ -434,8 +434,8 @@ function RenewalModal({
         </ul>
         <p className="text-sm text-muted-foreground">Complete payment and ensure verification before the deadline.</p>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Button className="bg-pay-danger text-pay-danger-fg hover:bg-pay-danger-hover active:bg-pay-danger-hover" onClick={onPay}>
-            Pay Online
+          <Button className="bg-pay-danger text-pay-danger-fg hover:bg-pay-danger-hover active:bg-pay-danger-hover" asChild>
+            <a href="/tech?auto=1" onClick={() => onOpenChange(false)}>Pay Online</a>
           </Button>
           <Button variant="outline" asChild>
             <a href="/system">Submit Transfer Receipt</a>
