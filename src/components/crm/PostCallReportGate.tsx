@@ -7,6 +7,8 @@ import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { canSaveReport, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
+import { useT } from "@/lib/i18n";
 import { DictateButton } from "@/components/crm/DictateButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -721,6 +723,26 @@ function ReportDialog({
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const t = useT();
+  // Ctrl/⌘+Enter runs the exact same send.mutate() as the button, under the same guards.
+  const guardRef = { missing, pending: send.isPending, open: !dismissed };
+  useEffect(() => {
+    if (dismissed) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (matchCallShortcut(e) !== "save") return;
+      const dialog = document.querySelector('[data-call-report-dialog]');
+      if (!dialog || !(e.target instanceof Node) || !(dialog.contains(e.target) || e.target === document.body)) return;
+      e.preventDefault();
+      if (!canSaveReport(guardRef)) {
+        if (guardRef.missing) toast.error(`জমা দিতে বাকি / Still required: ${guardRef.missing}`);
+        return;
+      }
+      send.mutate();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   const secs = Math.max(0, detail.report.duration_seconds ?? 0);
   const durationLabel = secs >= 60 ? `${Math.floor(secs / 60)} মি ${secs % 60} সে` : `${secs} সে`;
 
@@ -732,7 +754,7 @@ function ReportDialog({
         </Button>
       ) : null}
       <Dialog open={!dismissed} onOpenChange={(open) => (!open ? onDismiss() : undefined)}>
-        <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-lg space-y-1 overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
+        <DialogContent data-call-report-dialog className="h-[100dvh] max-h-[100dvh] w-full max-w-lg space-y-1 overflow-y-auto rounded-none p-4 pb-8 sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="size-4 text-warning" /> Post-Call Smart Report
@@ -765,6 +787,10 @@ function ReportDialog({
             {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Confirm &amp; Submit
           </Button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            <kbd className="rounded border border-border bg-muted px-1 font-mono">Ctrl/⌘ + Enter</kbd>{" "}
+            {t(SHORTCUT_LABELS.save).split("—")[1]}
+          </p>
           <p className="text-center text-[11px] text-muted-foreground">
             রিপোর্ট জমা না দিলে পরের কল শুরু করা যাবে না।
           </p>
