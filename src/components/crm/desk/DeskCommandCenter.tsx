@@ -322,6 +322,17 @@ export function DeskCommandCenter({
       }));
   }, [calls, leads, messages, lang, t]);
 
+  const upcoming = useMemo(() => {
+    const now = Date.now();
+    const horizon = now + 7 * 24 * 60 * 60 * 1000;
+    return leads
+      .filter((l) => l.status === "follow_up" && l.retry_after)
+      .map((l) => ({ lead: l, at: l.retry_after as string }))
+      .filter(({ at }) => Date.parse(at) >= now - 24 * 60 * 60 * 1000 && Date.parse(at) <= horizon)
+      .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+      .slice(0, 6);
+  }, [leads]);
+
   const selected: Lead | null =
     leads.find((l) => l.id === selectedId) ?? priority[0]?.lead ?? rows[0] ?? null;
   const dossierLead = leads.find((l) => l.id === dossierId) ?? null;
@@ -503,61 +514,114 @@ export function DeskCommandCenter({
 
       {/* KPI strip — every figure from the agent's own snapshot */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard
-          icon={<Users className="size-4" />}
-          label="আমার লিড"
-          labelEn="My leads"
+        <StatCard
+          icon={<Users />}
+          label={t({ bn: "আমার লিড", en: "My leads" })}
           value={bn(stats.total, lang)}
           sub={t({ bn: `${bn(stats.pending, lang)}টি কল বাকি`, en: `${bn(stats.pending, lang)} pending` })}
-          progress={stats.donePct}
+          loading={isPending}
         />
-        <KpiCard
-          icon={<PhoneOutgoing className="size-4" />}
-          label="আজকের কল"
-          labelEn="Today's calls"
+        <StatCard
+          icon={<PhoneOutgoing />}
+          label={t({ bn: "আজকের কল", en: "Today's calls" })}
           value={bn(stats.calls, lang)}
           sub={t({
             bn: `${bn(stats.connected, lang)}টিতে কথা · ${bn(stats.connectRate, lang)}%`,
             en: `${bn(stats.connected, lang)} connected · ${bn(stats.connectRate, lang)}%`,
           })}
           tone="live"
-          progress={stats.connectRate}
+          loading={isPending}
         />
-        <KpiCard
-          icon={<Timer className="size-4" />}
-          label="আজকের কথার সময়"
-          labelEn="Talk time today"
+        <StatCard
+          icon={<Timer />}
+          label={t({ bn: "আজকের কথার সময়", en: "Talk time today" })}
           value={formatTalkTime(stats.talk)}
           sub={t({ bn: `${bn(stats.whatsapp, lang)}টি হোয়াটসঅ্যাপ আজ`, en: `${bn(stats.whatsapp, lang)} WhatsApp today` })}
+          loading={isPending}
         />
-        <KpiCard
-          icon={<CalendarClock className="size-4" />}
-          label="ফলো-আপ"
-          labelEn="Follow-ups"
+        <StatCard
+          icon={<CalendarClock />}
+          label={t({ bn: "ফলো-আপ", en: "Follow-ups" })}
           value={bn(stats.followUp, lang)}
           sub={t({
             bn: `আজ ${bn(stats.dueToday, lang)}টি · সময় পেরিয়েছে ${bn(stats.overdue, lang)}টি`,
             en: `${bn(stats.dueToday, lang)} due today · ${bn(stats.overdue, lang)} overdue`,
           })}
           tone="chart4"
+          loading={isPending}
         />
-        <KpiCard
-          icon={<Flame className="size-4" />}
-          label="হট লিড"
-          labelEn="Hot leads"
+        <StatCard
+          icon={<Flame />}
+          label={t({ bn: "হট লিড", en: "Hot leads" })}
           value={bn(stats.hot, lang)}
           sub={t({ bn: `${bn(stats.uncalled, lang)}টিতে এখনো কল হয়নি`, en: `${bn(stats.uncalled, lang)} not yet called` })}
           tone="destructive"
+          loading={isPending}
         />
-        <KpiCard
-          icon={<CheckCircle2 className="size-4" />}
-          label="শেষ হয়েছে"
-          labelEn="Completed"
+        <StatCard
+          icon={<CheckCircle2 />}
+          label={t({ bn: "শেষ হয়েছে", en: "Completed" })}
           value={`${bn(stats.done, lang)} / ${bn(stats.total, lang)}`}
           sub={t({ bn: `${bn(stats.donePct, lang)}% কাজ শেষ`, en: `${bn(stats.donePct, lang)}% complete` })}
           tone="live"
-          progress={stats.donePct}
+          loading={isPending}
         />
+      </div>
+
+      {/* Reference-style summary cards: what's coming up, and what already happened */}
+      <div className="grid min-w-0 gap-3 lg:grid-cols-2">
+        <div className="card-elevated p-4">
+          <DualHeading bnText="আগামী ৭ দিনে ফলো-আপ" enText="Coming up (next 7 days)" />
+          {upcoming.length > 0 ? (
+            <ul className="mt-3 space-y-1.5">
+              {upcoming.map(({ lead, at }) => (
+                <li key={lead.id}>
+                  <button
+                    type="button"
+                    onClick={() => selectLead(lead.id)}
+                    className="flex min-h-10 w-full min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[11px] transition-colors hover:bg-muted"
+                  >
+                    <CalendarClock className="size-3.5 shrink-0 text-chart-4" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate font-medium text-foreground">{lead.name}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">{shortDate(at)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              compact
+              icon={<CalendarClock />}
+              title={t({ bn: "আগামী ৭ দিনে কিছু বাকি নেই।", en: "Nothing due in the next 7 days." })}
+            />
+          )}
+        </div>
+
+        <div className="card-elevated p-4">
+          <DualHeading bnText="আমার সাম্প্রতিক কাজ" enText="Recent activity" />
+          {activity.length > 0 ? (
+            <ul className="mt-3 space-y-2">
+              {activity.map((row) => (
+                <li key={row.id} className="flex items-center gap-2 text-[11px]">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/12 text-primary">
+                    {row.icon}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{row.title}</span>
+                  <span className="shrink-0 text-muted-foreground">{row.when}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              compact
+              icon={<PhoneCall />}
+              title={t({
+                bn: "এখনো কোনো কাজ নেই। পরবর্তী সেরা লিডকে কল করে শুরু করুন।",
+                en: "No activity yet. Start by calling your next best lead.",
+              })}
+            />
+          )}
+        </div>
       </div>
 
       <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -1045,26 +1109,6 @@ export function DeskCommandCenter({
             )}
           </div>
 
-          <div className="card-elevated p-4">
-            <DualHeading bnText="আমার সাম্প্রতিক কাজ" enText="Recent activity" />
-            <ul className="mt-3 space-y-2">
-              {activity.map((row) => (
-                <li key={row.id} className="flex items-center gap-2 text-[11px]">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/12 text-primary">
-                    {row.icon}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{row.title}</span>
-                  <span className="shrink-0 text-muted-foreground">{row.when}</span>
-                </li>
-              ))}
-              {activity.length === 0 && (
-                <li className="text-[11px] text-muted-foreground">{t({ bn: "আজ এখনো কোনো কাজ নেই", en: "No activity yet today" })}</li>
-              )}
-            </ul>
-            <Button asChild size="sm" variant="secondary" className="mt-3 w-full">
-              <Link to="/reports">{t({ bn: "রিপোর্ট পাতা", en: "Reports page" })}</Link>
-            </Button>
-          </div>
         </aside>
       </div>
 

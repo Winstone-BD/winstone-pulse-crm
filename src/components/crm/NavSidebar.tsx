@@ -40,7 +40,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 type Item = { to: string; label: string };
 
-const ICONS: Record<string, LucideIcon> = {
+export const NAV_ICONS: Record<string, LucideIcon> = {
   "/": Home,
   "/desk": PhoneCall,
   "/coach": Brain,
@@ -112,19 +112,24 @@ function NavContent({
   const byRoute = new Map(items.map((i) => [i.to, i]));
   const path = useRouterState({ select: (st) => st.location.pathname });
   const activeS = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
+  const visibleGroups = GROUPS.map((group) => ({
+    group,
+    list: group.routes.map((r) => byRoute.get(r)).filter(Boolean) as Item[],
+  })).filter((g) => g.list.length > 0);
+  const showGroupLabels = visibleGroups.length > 1;
   return (
     <>
-      {GROUPS.map((group) => {
-        const list = group.routes.map((r) => byRoute.get(r)).filter(Boolean) as Item[];
-        if (list.length === 0) return null;
+      {visibleGroups.map(({ group, list }) => {
         return (
-          <div key={group.title.en} className="mb-5">
+          <div key={group.title.en} className={showGroupLabels ? "mb-5" : "mb-0.5"}>
+            {showGroupLabels && (
             <p hidden={collapsed} className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/80">
               {t(group.title)}
             </p>
+            )}
             <nav className="flex flex-col gap-0.5">
               {list.map((item) => {
-                const Icon = ICONS[item.to] ?? LifeBuoy;
+                const Icon = NAV_ICONS[item.to] ?? LifeBuoy;
                 const subs = PAGE_SECTIONS[item.to as SectionRoute];
                 return (
                   <div key={item.to}>
