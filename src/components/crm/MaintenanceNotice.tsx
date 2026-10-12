@@ -494,7 +494,7 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
   );
   const body = (
     <>
-      {card}
+      {!(float && (invoice || modal)) && card}
       {state === "red" && status.exempt && (
         <RenewalModal
           open={modal}
