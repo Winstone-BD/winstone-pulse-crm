@@ -38,3 +38,49 @@ describe("call shortcuts", () => {
     expect(pickNextEligible(rows, ["a", "d", "e"])).toBeNull();
   });
 });
+
+import { createSaveLatch } from "@/lib/call-shortcuts";
+
+describe("save latch (shortcut submit flow)", () => {
+  const ok = { open: true, missing: null, pending: false };
+  it("runs once and ignores duplicate presses until settled", () => {
+    const latch = createSaveLatch();
+    let calls = 0;
+    expect(latch.try(ok, () => calls++)).toBe("ran");
+    expect(latch.try(ok, () => calls++)).toBe("busy");
+    expect(calls).toBe(1);
+    latch.release();
+    expect(latch.try(ok, () => calls++)).toBe("ran");
+  });
+  it("never submits an incomplete report", () => {
+    const latch = createSaveLatch();
+    let calls = 0;
+    expect(latch.try({ ...ok, missing: "Outcome" }, () => calls++)).toBe("blocked");
+    expect(calls).toBe(0);
+    expect(latch.busy).toBe(false);
+  });
+  it("after a failed save the latch releases and no advance happens", async () => {
+    const latch = createSaveLatch();
+    const advanced: string[] = [];
+    const submit = () => Promise.reject(new Error("server refused"));
+    latch.try(ok, () => {
+      submit()
+        .then(() => advanced.push("next")) // advance only on success (mirrors onSuccess)
+        .catch(() => undefined)
+        .finally(() => latch.release());
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(advanced).toEqual([]);
+    expect(latch.busy).toBe(false);
+  });
+  it("after a successful save it advances exactly once", async () => {
+    const latch = createSaveLatch();
+    const advanced: string[] = [];
+    latch.try(ok, () => {
+      Promise.resolve().then(() => advanced.push("next")).finally(() => latch.release());
+    });
+    latch.try(ok, () => advanced.push("dup"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(advanced).toEqual(["next"]);
+  });
+});
