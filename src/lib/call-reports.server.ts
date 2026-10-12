@@ -427,6 +427,27 @@ export async function submitCallReport(input: {
         .filter(Boolean)
         .join(" — ") || null;
 
+  // Did-not-receive cadence: planned (and validated) before anything is saved,
+  // so a past custom time is refused without touching the report.
+  const didNotReceive = !received && (input.callStatus === "no_answer" || input.callStatus === "busy");
+  let cadence: ReturnType<typeof import("@/lib/no-answer-cadence").planNoAnswer> | null = null;
+  if (didNotReceive) {
+    const { planNoAnswer, RetryPlanError } = await import("@/lib/no-answer-cadence");
+    const [{ data: leadRow }, { data: holidayRow }] = await Promise.all([
+      supabaseAdmin.from("leads").select("unanswered_attempts").eq("id", report.lead_id).maybeSingle(),
+      supabaseAdmin.from("app_config").select("data").eq("id", "office_holidays").maybeSingle(),
+    ]);
+    const holidays = Array.isArray((holidayRow?.data as { dates?: unknown } | null)?.dates)
+      ? ((holidayRow!.data as { dates: unknown[] }).dates.filter((d) => typeof d === "string") as string[])
+      : [];
+    try {
+      cadence = planNoAnswer((leadRow?.unanswered_attempts ?? 0) + 1, input.retryPlan ?? null, Date.now(), holidays);
+    } catch (e) {
+      if (e instanceof RetryPlanError) throw new Error(e.message);
+      throw e;
+    }
+  }
+
   const { data: claimed, error } = await supabaseAdmin
     .from("call_reports")
     .update({
