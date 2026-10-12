@@ -127,5 +127,5 @@
 - [x] Social media moderation (Method A): desk Social section, HQ report, pages + reply templates
 - [x] Rename app: WINSTONE PULSE — The Premium Real Estate CRM · PULSE — Find. Build. Invest. (web, PWA, Android, emails, PDFs, exports)
 
-- [ ] HQ social: per page/group summary of leads, conversions, outcomes
-- [ ] Social pages: audit log of who changed name/link/active and when
+- [x] HQ social: per page/group summary of leads, conversions, outcomes
+- [x] Social pages: audit log of who changed name/link/active and when
