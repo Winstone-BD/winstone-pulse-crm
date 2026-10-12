@@ -52,9 +52,17 @@ export function TeamSupportInbox() {
 
   const query = useQuery({
     queryKey: ["team-support-inbox"],
-    queryFn: () => load({ data: { adminToken: getAdminToken() } }),
+    // A temporary failure throws so the last good tickets stay on screen
+    // while the next 15s poll retries.
+    queryFn: async () => {
+      const res = await load({ data: { adminToken: getAdminToken() } });
+      if (res.error === "unavailable") throw new Error("unavailable");
+      return res;
+    },
     refetchInterval: 15_000,
+    retry: 1,
   });
+  const staleNotice = query.isError && !!query.data;
 
   const tickets = query.data?.tickets ?? [];
   const replies = query.data?.replies ?? [];
@@ -137,6 +145,11 @@ export function TeamSupportInbox() {
 
   return (
     <section className="card-elevated space-y-3 p-4">
+      {staleNotice && (
+        <p role="status" className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+          Connection hiccup — showing the last loaded tickets, retrying automatically.
+        </p>
+      )}
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
