@@ -297,7 +297,7 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
     input.approve ? "Maintenance payment verified" : "Maintenance payment rejected",
     `${state.period} reference ${row.payment_ref}: ${input.approve ? "verified — no lock this month" : "rejected"}. Reason: ${input.reason}`,
   );
-  return { ok: true };
+  return { ok: true, voucher };
 }
 
 
@@ -342,12 +342,18 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 
 export async function maintenanceHistory() {
   const client = await db();
-  const [{ data: periods }, { data: requests }, { data: log }] = await Promise.all([
+  const [{ data: periods }, { data: requests }, { data: log }, { data: vouchers }] = await Promise.all([
     client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
+    client.from("payment_vouchers").select("voucher_no, billing_period, payment_ref, base_cents, vat_cents, total_cents, currency, verified_by, verified_at").eq("plan_code", PLAN_CODE).order("verified_at", { ascending: false }).limit(50),
   ]);
-  return { periods: periods ?? [], requests: requests ?? [], audit: log ?? [] };
+  return {
+    periods: periods ?? [],
+    requests: requests ?? [],
+    audit: log ?? [],
+    vouchers: (vouchers ?? []).map((v) => ({ no: v.voucher_no, period: v.billing_period, ref: v.payment_ref, baseCents: v.base_cents, vatCents: v.vat_cents, totalCents: v.total_cents, currency: v.currency, verifiedBy: v.verified_by, at: dhakaTime(v.verified_at) })),
+  };
 }
 
 /* ---------------- System Architect ---------------- */
