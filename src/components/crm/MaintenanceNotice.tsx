@@ -518,7 +518,7 @@ function NoticeCardHost({ state, status, float }: { state: NoticeState; status: 
 export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
   if (!data) return null;
-  if (data.paymentStatus !== "verified" && !data.locked && (isAmberWindow() || data.paymentStatus === "pending")) {
+  if (data.paymentStatus !== "verified" && !data.locked) {
     const state = subscriptionNoticeState(data.paymentStatus, data.locked);
     if (state) return <NoticeCardHost state={state} status={data} float={false} />;
   }
@@ -606,7 +606,7 @@ export function MaintenanceGate() {
 function InvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { data } = useMaintenance();
   return (
-    <Dialog open={open} onOpenChange={setOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{CRM_PLAN_NAME} — Invoice</DialogTitle>
