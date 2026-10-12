@@ -107,7 +107,7 @@ export function MaintenanceBadge() {
   const [open, setOpen] = useState(false);
   if (!data) return null;
   if (data.stage === "paid") {
-    return <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">🟢 VERIFIED</span>;
+    return <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">🟢 Subscription active</span>;
   }
   if (!needsNotice(data) && !data.openRequest) return null;
   const amber = data.openRequest || data.paymentStatus === "pending";
@@ -387,9 +387,9 @@ function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin
 /** Receipt submitted, awaiting architect verification: calm blue status, no action needed. */
 function VerifyingBanner() {
   return (
-    <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-info/50 bg-info/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
+    <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-verify/50 bg-verify/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
       <p className="mx-auto max-w-5xl">
-        <b className="text-info">Payment verification in progress</b> — your {CRM_PLAN_NAME} payment has been submitted and is being verified. No further action is needed.
+        <b className="text-verify">Payment verification in progress</b> — your {CRM_PLAN_NAME} payment has been submitted and is being verified. No further action is needed.
       </p>
     </div>
   );

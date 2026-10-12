@@ -49,6 +49,7 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
+  --color-verify: var(--verify);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --color-chart-1: var(--chart-1);
@@ -154,6 +155,7 @@
   --warning: oklch(0.8 0.15 70);
   --warning-foreground: oklch(0.2 0.02 85);
   --info: oklch(0.86 0.06 90);
+  --verify: oklch(0.62 0.15 250);
   --success: oklch(0.74 0.16 150);
   --danger: oklch(0.72 0.17 28);
   /* Charts: 1 brand gold (volume), 2 slate blue (secondary), 3 green (connected/success),
