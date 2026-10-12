@@ -4,10 +4,10 @@ import { FOLLOW_UP_REASONS, FOLLOW_UP_REASONS_EN, type FollowUpReasonCode } from
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, Bot, Check, Loader2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { canSaveReport, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
+import { createSaveLatch, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
 import { useLang, useT, type Lang } from "@/lib/i18n";
 import { DictateButton } from "@/components/crm/DictateButton";
 import { Button } from "@/components/ui/button";
@@ -831,6 +831,7 @@ function ReportDialog({
   });
 
   // Ctrl/⌘+Enter runs the exact same send.mutate() as the button, under the same guards.
+  const latchRef = useRef(createSaveLatch());
   const guardRef = { missing, pending: send.isPending, open: !dismissed };
   useEffect(() => {
     if (dismissed) return;
@@ -839,11 +840,11 @@ function ReportDialog({
       const dialog = document.querySelector('[data-call-report-dialog]');
       if (!dialog || !(e.target instanceof Node) || !(dialog.contains(e.target) || e.target === document.body)) return;
       e.preventDefault();
-      if (!canSaveReport(guardRef)) {
-        if (guardRef.missing) toast.error(`${t({ bn: "জমা দিতে বাকি", en: "Still required" })}: ${guardRef.missing}`);
-        return;
-      }
-      send.mutate();
+      const r = latchRef.current.try(guardRef, () =>
+        send.mutate(undefined, { onSettled: () => latchRef.current.release() }),
+      );
+      if (r === "blocked" && guardRef.missing)
+        toast.error(`${t({ bn: "জমা দিতে বাকি", en: "Still required" })}: ${guardRef.missing}`);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

@@ -104,6 +104,8 @@ const STATUS_STYLES: Record<string, string> = {
  * so end-of-day it is obvious who still has to be contacted again.
  */
 export function LeadTable() {
+  const t = useT();
+  const lang = useLang();
   const snap = useSnapshot();
   const range = useDeskRange();
   // Date range from the Command Center: leads added within the range.
@@ -180,7 +182,7 @@ export function LeadTable() {
       );
   }, [scoped, filter, search, bucket, extras]);
 
-  const groups = useMemo(() => groupLeads(rows, extras, groupBy), [rows, extras, groupBy]);
+  const groups = useMemo(() => groupLeads(rows, extras, groupBy, Date.now(), lang), [rows, extras, groupBy, lang]);
   const toggleGroup = (key: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -192,18 +194,20 @@ export function LeadTable() {
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
-  if (isPending) return <div aria-busy="true" aria-label="লিড লোড হচ্ছে"><SnapshotSkeleton /></div>;
+  if (isPending) return <div aria-busy="true" aria-label={t({ bn: "লিড লোড হচ্ছে", en: "Loading leads" })}><SnapshotSkeleton /></div>;
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">লিড ড্যাশবোর্ড</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t({ bn: "লিড ড্যাশবোর্ড", en: "Lead dashboard" })}</h2>
           <DeskRangeChip />
           <p className="text-xs text-muted-foreground sm:text-sm">
-            আজ {counts.pending}টি লিডে কল বাকি · {counts.follow_up}টিতে আবার যোগাযোগ করতে হবে ·{" "}
-            {counts.done}টিতে কথা হয়ে গেছে
+            {t({
+              bn: `আজ ${counts.pending}টি লিডে কল বাকি · ${counts.follow_up}টিতে আবার যোগাযোগ করতে হবে · ${counts.done}টিতে কথা হয়ে গেছে`,
+              en: `${counts.pending} leads pending calls today · ${counts.follow_up} need follow-up · ${counts.done} already contacted`,
+            })}
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -211,7 +215,7 @@ export function LeadTable() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="নাম, নম্বর, রেফারেন্স, কোম্পানি"
+            placeholder={t({ bn: "নাম, নম্বর, রেফারেন্স, কোম্পানি", en: "Name, number, reference, company" })}
             className="pl-9"
           />
         </div>
@@ -237,13 +241,13 @@ export function LeadTable() {
         <TabsList className="flex w-full flex-wrap">
           {(Object.keys(FILTER_LABELS) as Filter[]).map((key) => (
             <TabsTrigger key={key} value={key}>
-              {FILTER_LABELS[key]} ({counts[key]})
+              {t(FILTER_LABELS[key])} ({counts[key]})
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="দ্রুত ভাগ">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t({ bn: "দ্রুত ভাগ", en: "Quick buckets" })}>
         {(Object.keys(DESK_BUCKET_LABEL) as DeskBucket[]).map((key) => (
           <button
             key={key}
@@ -259,11 +263,11 @@ export function LeadTable() {
                 : "border-border bg-card text-foreground hover:bg-surface-2",
             )}
           >
-            {DESK_BUCKET_LABEL[key]} ({bucketCounts[key]})
+            {lang === "en" ? DESK_BUCKET_LABEL_EN[key] : DESK_BUCKET_LABEL[key]} ({bucketCounts[key]})
           </button>
         ))}
         <label className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-          গ্রুপ:
+          {t({ bn: "গ্রুপ:", en: "Group:" })}
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupKey)}
@@ -271,15 +275,15 @@ export function LeadTable() {
           >
             {(Object.keys(GROUP_LABEL) as GroupKey[]).map((key) => (
               <option key={key} value={key}>
-                {GROUP_LABEL[key]}
+                {lang === "en" ? GROUP_LABEL_EN[key] : GROUP_LABEL[key]}
               </option>
             ))}
           </select>
         </label>
       </div>
       <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="font-semibold text-foreground">{rows.length}টি লিড</span>
-        <span>· সব ফিল্টার একসাথে (AND) প্রযোজ্য</span>
+        <span className="font-semibold text-foreground">{t({ bn: `${rows.length}টি লিড`, en: `${rows.length} leads` })}</span>
+        <span>{t({ bn: "· সব ফিল্টার একসাথে (AND) প্রযোজ্য", en: "· All filters apply together (AND)" })}</span>
         {filtersActive && (
           <button
             type="button"
@@ -292,7 +296,7 @@ export function LeadTable() {
               setFilter("all");
             }}
           >
-            <X className="size-3" /> সব ফিল্টার মুছুন
+            <X className="size-3" /> {t({ bn: "সব ফিল্টার মুছুন", en: "Clear all filters" })}
           </button>
         )}
       </p>
@@ -310,7 +314,7 @@ export function LeadTable() {
               >
                 <span className="truncate">{group.key}</span>
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {group.items.length}টি · Hot {group.items.filter((l) => l.temperature === "hot").length}
+                  {t({ bn: `${group.items.length}টি`, en: `${group.items.length}` })} · Hot {group.items.filter((l) => l.temperature === "hot").length}
                   <ChevronDown className={cn("size-4 transition-transform", isOpen && "rotate-180")} />
                 </span>
               </button>
@@ -327,7 +331,7 @@ export function LeadTable() {
       })}
       {rows.length === 0 && (
         <p role="status" className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          এই ফিল্টারে কোনো লিড নেই
+          {t({ bn: "এই ফিল্টারে কোনো লিড নেই", en: "No leads match this filter" })}
         </p>
       )}
 
