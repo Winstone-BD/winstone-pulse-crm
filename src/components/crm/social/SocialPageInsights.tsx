@@ -265,6 +265,41 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           </div>
         )}
       <p className="text-xs text-muted-foreground">{t({ bn: "কনভার্সন = বুকিং হওয়া লিড ÷ ওই দিনের লিড (বাতিল বুকিং বাদ)। ধূসর/হালকা রেখা = আগের সমান সময়সীমা।", en: "Conversion = booked leads ÷ that day's leads (rejected bookings excluded). Faint lines = previous equal period." })}</p>
+      {valid && (qCurSum.data?.length ?? 0) > 0 && (
+        <div className="table-scroll">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="p-2">{t({ bn: "পেজ/গ্রুপ", en: "Page/group" })}</th>
+                <th className="p-2 text-right">{t({ bn: "লিড", en: "Leads" })}</th>
+                <th className="p-2 text-right">{t({ bn: "আগের লিড", en: "Prev leads" })}</th>
+                <th className="p-2 text-right">{t({ bn: "পরিবর্তন", en: "Change" })}</th>
+                <th className="p-2 text-right">{t({ bn: "কনভার্সন", en: "Conversion" })}</th>
+                <th className="p-2 text-right">{t({ bn: "আগের কনভার্সন", en: "Prev conversion" })}</th>
+                <th className="p-2 text-right">{t({ bn: "পরিবর্তন", en: "Change" })}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(qCurSum.data ?? []).map((r) => {
+                const pr = (qPrevSum.data ?? []).find((x) => x.pageId === r.pageId);
+                const pp = pr ? pct(pr.bookings, pr.leads) : 0;
+                const cp = pct(r.bookings, r.leads);
+                return (
+                  <tr key={r.pageId} className="border-t border-border">
+                    <td className="p-2 font-medium">{r.name}</td>
+                    <td className="p-2 text-right">{r.leads}</td>
+                    <td className="p-2 text-right">{pr?.leads ?? 0}</td>
+                    <td className="p-2 text-right">{delta(r.leads, pr?.leads ?? 0)}</td>
+                    <td className="p-2 text-right">{r.leads ? `${cp}%` : "—"}</td>
+                    <td className="p-2 text-right">{pr?.leads ? `${pp}%` : "—"}</td>
+                    <td className="p-2 text-right">{r.leads && pr?.leads ? `${cp - pp >= 0 ? "+" : ""}${cp - pp}%` : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
