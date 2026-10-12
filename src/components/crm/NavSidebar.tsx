@@ -294,7 +294,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
             <span className="flex items-center gap-2.5">
               <img
                 src={logoAsset.url}
-                alt="Winstone Properties Ltd. logo"
+                alt="Winstone logo"
                 className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
               />
               <span className="min-w-0 leading-tight">

@@ -72,7 +72,7 @@ function EntryHall() {
             <div className="flex items-center justify-center gap-3 lg:justify-start">
               <img
                 src={logoAsset.url}
-                alt="Winstone Properties Ltd."
+                alt="Winstone logo"
                 className="size-14 rounded-full object-cover shadow-md ring-2 ring-primary/40 sm:size-16"
               />
               <div>
