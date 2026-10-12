@@ -141,6 +141,33 @@ export function SocialPageTrendChart() {
   const hasData = tc.leads > 0 || tp.leads > 0;
   const labelInterval = Math.max(0, Math.ceil(points.length / 8) - 1);
   const [exporting, setExporting] = useState(false);
+  const qPrevSum = useQuery({
+    queryKey: ["social-page-summary", adminToken, prevFrom, prevTo],
+    queryFn: () => sumFn({ data: { adminToken, from: prevFrom, to: prevTo } }),
+    enabled: Boolean(adminToken) && valid,
+  });
+  const qCurSum = useQuery({
+    queryKey: ["social-page-summary", adminToken, from, to],
+    queryFn: () => sumFn({ data: { adminToken, from, to } }),
+    enabled: Boolean(adminToken) && valid,
+  });
+
+  const setPreset = (days: number) => {
+    setTo(dhakaDate(Date.now()));
+    setFrom(dhakaDate(Date.now() - (days - 1) * 86_400_000));
+  };
+
+  const csvEsc = (v: unknown) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const exportCsv = () => {
+    const rows: string[] = ["date,leads,bookings,conversion_pct,prev_date,prev_leads,prev_conversion_pct"];
+    for (const p of points) rows.push([p.date, p.leads, p.bookings, p.leads ? p.conversion : "", p.prevDate, p.prevLeads, p.prevLeads ? p.prevConversion : ""].map(csvEsc).join(","));
+    const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `social-chart-${pageId === "all" ? "all" : pageId}-${from}-${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   const exportPdf = async () => {
     const w = window.open("", "_blank");
@@ -181,6 +208,11 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           <TrendingUp className="size-4 text-primary" /> {t({ bn: "তারিখভিত্তিক লিড ও কনভার্সন চার্ট", en: "Daily leads & conversion chart" })}
         </h2>
         <div className="flex flex-wrap items-end gap-2 text-xs">
+          <div className="flex gap-1" role="group" aria-label={t({ bn: "দ্রুত তারিখসীমা", en: "Quick range" })}>
+            {[7, 30, 90].map((d) => (
+              <Button key={d} size="sm" variant="outline" onClick={() => setPreset(d)}>{d} {t({ bn: "দিন", en: "days" })}</Button>
+            ))}
+          </div>
           <label className="grid gap-0.5">{t({ bn: "পেজ/গ্রুপ", en: "Page/group" })}
             <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={pageId} onChange={(e) => setPageId(e.target.value)}>
               <option value="all">{t({ bn: "সব পেজ/গ্রুপ", en: "All pages/groups" })}</option>
@@ -189,6 +221,9 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           </label>
           <label className="grid gap-0.5">{t({ bn: "থেকে", en: "From" })}<Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
           <label className="grid gap-0.5">{t({ bn: "পর্যন্ত", en: "To" })}<Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
+          <Button size="sm" variant="outline" onClick={exportCsv} disabled={!valid || !q.data}>
+            <FileDown className="size-4" /> {t({ bn: "CSV", en: "CSV" })}
+          </Button>
           <Button size="sm" variant="outline" onClick={exportPdf} disabled={!valid || exporting || !q.data}>
             <FileDown className="size-4" /> {exporting ? "…" : t({ bn: "PDF রিপোর্ট", en: "PDF report" })}
           </Button>
@@ -230,6 +265,41 @@ ${points.map((p) => `<tr><td>${esc(p.date)}</td><td>${p.leads}</td><td>${p.leads
           </div>
         )}
       <p className="text-xs text-muted-foreground">{t({ bn: "কনভার্সন = বুকিং হওয়া লিড ÷ ওই দিনের লিড (বাতিল বুকিং বাদ)। ধূসর/হালকা রেখা = আগের সমান সময়সীমা।", en: "Conversion = booked leads ÷ that day's leads (rejected bookings excluded). Faint lines = previous equal period." })}</p>
+      {valid && (qCurSum.data?.length ?? 0) > 0 && (
+        <div className="table-scroll">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="p-2">{t({ bn: "পেজ/গ্রুপ", en: "Page/group" })}</th>
+                <th className="p-2 text-right">{t({ bn: "লিড", en: "Leads" })}</th>
+                <th className="p-2 text-right">{t({ bn: "আগের লিড", en: "Prev leads" })}</th>
+                <th className="p-2 text-right">{t({ bn: "পরিবর্তন", en: "Change" })}</th>
+                <th className="p-2 text-right">{t({ bn: "কনভার্সন", en: "Conversion" })}</th>
+                <th className="p-2 text-right">{t({ bn: "আগের কনভার্সন", en: "Prev conversion" })}</th>
+                <th className="p-2 text-right">{t({ bn: "পরিবর্তন", en: "Change" })}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(qCurSum.data ?? []).map((r) => {
+                const pr = (qPrevSum.data ?? []).find((x) => x.pageId === r.pageId);
+                const pp = pr ? pct(pr.bookings, pr.leads) : 0;
+                const cp = pct(r.bookings, r.leads);
+                return (
+                  <tr key={r.pageId} className="border-t border-border">
+                    <td className="p-2 font-medium">{r.name}</td>
+                    <td className="p-2 text-right">{r.leads}</td>
+                    <td className="p-2 text-right">{pr?.leads ?? 0}</td>
+                    <td className="p-2 text-right">{delta(r.leads, pr?.leads ?? 0)}</td>
+                    <td className="p-2 text-right">{r.leads ? `${cp}%` : "—"}</td>
+                    <td className="p-2 text-right">{pr?.leads ? `${pp}%` : "—"}</td>
+                    <td className="p-2 text-right">{r.leads && pr?.leads ? `${cp - pp >= 0 ? "+" : ""}${cp - pp}%` : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
