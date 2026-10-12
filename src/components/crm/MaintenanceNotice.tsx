@@ -334,7 +334,7 @@ function NoticeCard({
   body: string[];
   cta: string | null;
   onCta?: () => void;
-  onDismiss?: () => void;
+  onDismiss?: (() => void) | undefined;
   deadline: { label: string; left: string | null; date: string; clock: string };
 }) {
   const tone = TONES[state];
