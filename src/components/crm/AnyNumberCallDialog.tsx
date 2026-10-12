@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { logAnyNumberCall } from "@/lib/call-reports.functions";
 import { useAdminToken } from "@/lib/local-session";
+import { useT } from "@/lib/i18n";
 
 /**
  * "যেকোনো কল লগ করুন" — the web side of the universal report rule.
@@ -26,6 +27,7 @@ import { useAdminToken } from "@/lib/local-session";
  * when it is new and opens the same mandatory post-call report popup.
  */
 export function AnyNumberCallDialog() {
+  const t = useT();
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
   const run = useServerFn(logAnyNumberCall);
@@ -52,9 +54,9 @@ export function AnyNumberCallDialog() {
       setPhone("");
       setName("");
       toast.success(
-        result.createdLead
-          ? "নতুন লিড তৈরি হয়েছে — এখন রিপোর্টটি পূরণ করুন"
-          : "কল জমা হয়েছে — এখন রিপোর্টটি পূরণ করুন",
+        t(result.createdLead
+          ? { bn: "নতুন লিড তৈরি হয়েছে — এখন রিপোর্টটি পূরণ করুন", en: "New lead created — now fill in the report" }
+          : { bn: "কল জমা হয়েছে — এখন রিপোর্টটি পূরণ করুন", en: "Call logged — now fill in the report" }),
       );
       void queryClient.invalidateQueries({ queryKey: ["pending-call-report"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
@@ -70,23 +72,23 @@ export function AnyNumberCallDialog() {
           variant="outline"
           size="sm"
           className="h-8 w-8 shrink-0 gap-1.5 whitespace-nowrap rounded-full px-0 text-xs font-semibold sm:w-auto sm:px-2.5"
-          title="যেকোনো নম্বরের কল লগ করুন — রিপোর্ট বাধ্যতামূলক"
+          title={t({ bn: "যেকোনো নম্বরের কল লগ করুন — রিপোর্ট বাধ্যতামূলক", en: "Log a call to any number — report required" })}
         >
           <PhoneCall className="size-3.5" />
-          <span className="hidden sm:inline">কল লগ</span>
+          <span className="hidden sm:inline">{t({ bn: "কল লগ", en: "Log call" })}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>যেকোনো কল লগ করুন</DialogTitle>
+          <DialogTitle>{t({ bn: "যেকোনো কল লগ করুন", en: "Log any call" })}</DialogTitle>
           <DialogDescription>
-            নম্বরটি CRM-এ না থাকলেও নতুন লিড তৈরি হবে এবং রিপোর্টের পপ-আপ আসবে।
+            {t({ bn: "নম্বরটি CRM-এ না থাকলেও নতুন লিড তৈরি হবে এবং রিপোর্টের পপ-আপ আসবে।", en: "Even if the number is not in the CRM, a new lead will be created and the report popup will appear." })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="any-call-phone">মোবাইল নম্বর</Label>
+            <Label htmlFor="any-call-phone">{t({ bn: "মোবাইল নম্বর", en: "Mobile number" })}</Label>
             <Input
               id="any-call-phone"
               inputMode="tel"
@@ -96,10 +98,10 @@ export function AnyNumberCallDialog() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="any-call-name">নাম (জানা থাকলে)</Label>
+            <Label htmlFor="any-call-name">{t({ bn: "নাম (জানা থাকলে)", en: "Name (if known)" })}</Label>
             <Input
               id="any-call-name"
-              placeholder="ক্রেতার নাম"
+              placeholder={t({ bn: "ক্রেতার নাম", en: "Customer name" })}
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
@@ -108,8 +110,8 @@ export function AnyNumberCallDialog() {
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                { value: "incoming", label: "কল এসেছে" },
-                { value: "outgoing", label: "কল দিয়েছি" },
+                { value: "incoming", label: { bn: "কল এসেছে", en: "Incoming" } },
+                { value: "outgoing", label: { bn: "কল দিয়েছি", en: "Outgoing" } },
               ] as const
             ).map((item) => (
               <Button
@@ -118,7 +120,7 @@ export function AnyNumberCallDialog() {
                 variant={direction === item.value ? "default" : "outline"}
                 onClick={() => setDirection(item.value)}
               >
-                {item.label}
+                {t(item.label)}
               </Button>
             ))}
           </div>
@@ -126,8 +128,8 @@ export function AnyNumberCallDialog() {
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                { value: true, label: "কথা হয়েছে" },
-                { value: false, label: "ধরেনি" },
+                { value: true, label: { bn: "কথা হয়েছে", en: "Connected" } },
+                { value: false, label: { bn: "ধরেনি", en: "No answer" } },
               ] as const
             ).map((item) => (
               <Button
@@ -136,7 +138,7 @@ export function AnyNumberCallDialog() {
                 variant={connected === item.value ? "default" : "outline"}
                 onClick={() => setConnected(item.value)}
               >
-                {item.label}
+                {t(item.label)}
               </Button>
             ))}
           </div>
@@ -148,7 +150,7 @@ export function AnyNumberCallDialog() {
             onClick={() => mutation.mutate()}
           >
             {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
-            রিপোর্ট খুলুন
+            {t({ bn: "রিপোর্ট খুলুন", en: "Open report" })}
           </Button>
         </div>
       </DialogContent>

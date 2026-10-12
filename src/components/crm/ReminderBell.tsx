@@ -10,6 +10,7 @@ import { useAdminToken } from "@/lib/local-session";
 import { myReminders, registerReminderDevice } from "@/lib/reminders.functions";
 import { PUSH_MESSAGES, pushConfigured, requestWebPushToken } from "@/lib/web-push";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
+import { useT } from "@/lib/i18n";
 
 /**
  * The reminder bell: unfinished reports and due follow-ups, refreshed every
@@ -17,6 +18,7 @@ import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
  * opening the bell; browser push covers the case of the tab being closed.
  */
 export function ReminderBell() {
+  const t = useT();
   const adminToken = useAdminToken();
   const load = useServerFn(myReminders);
   const registerDevice = useServerFn(registerReminderDevice);
@@ -43,7 +45,7 @@ export function ReminderBell() {
       toast.warning(item.title, { description: item.detail, duration: 10_000 });
     }
     if (first && reminders.length > 0) {
-      toast.warning(`${reminders.length}টি রিমাইন্ডার অপেক্ষা করছে`, {
+      toast.warning(t({ bn: `${reminders.length}টি রিমাইন্ডার অপেক্ষা করছে`, en: `${reminders.length} reminders waiting` }), {
         description: reminders[0]!.detail,
         duration: 8_000,
       });
@@ -55,7 +57,7 @@ export function ReminderBell() {
     const result = await requestWebPushToken();
     if (result.status === "registered" && result.token) {
       await registerDevice({ data: { adminToken, token: result.token, label: "Web CRM" } });
-      toast.success("এই ব্রাউজারে রিমাইন্ডার নোটিফিকেশন চালু হয়েছে");
+      toast.success(t({ bn: "এই ব্রাউজারে রিমাইন্ডার নোটিফিকেশন চালু হয়েছে", en: "Reminder notifications are enabled on this browser" }));
       return;
     }
     toast.info(PUSH_MESSAGES[result.status]);
@@ -66,7 +68,7 @@ export function ReminderBell() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="রিমাইন্ডার"
+          aria-label={t({ bn: "রিমাইন্ডার", en: "Reminders" })}
           className="relative inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all duration-300 hover:text-foreground hover:shadow-sm"
         >
           <BellRing className="size-3.5" />
@@ -85,15 +87,15 @@ export function ReminderBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="border-b border-border px-3 py-2">
-          <p className="text-sm font-semibold">রিমাইন্ডার</p>
+          <p className="text-sm font-semibold">{t({ bn: "রিমাইন্ডার", en: "Reminders" })}</p>
           <p className="text-xs text-muted-foreground">
-            অসম্পূর্ণ রিপোর্ট ও সময় হয়ে যাওয়া ফলো-আপ
+            {t({ bn: "অসম্পূর্ণ রিপোর্ট ও সময় হয়ে যাওয়া ফলো-আপ", en: "Incomplete reports and due follow-ups" })}
           </p>
         </div>
         <div className="max-h-72 overflow-y-auto">
           {reminders.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-              এখন কোনো রিমাইন্ডার নেই — সব রিপোর্ট ও ফলো-আপ হালনাগাদ
+              {t({ bn: "এখন কোনো রিমাইন্ডার নেই — সব রিপোর্ট ও ফলো-আপ হালনাগাদ", en: "No reminders right now — all reports and follow-ups are up to date" })}
             </p>
           ) : (
             reminders.map((item) => (
@@ -122,7 +124,7 @@ export function ReminderBell() {
         {pushConfigured() && (
           <div className="border-t border-border p-2">
             <Button size="sm" variant="outline" className="w-full text-xs" onClick={enablePush}>
-              ব্রাউজার নোটিফিকেশন চালু করুন
+              {t({ bn: "ব্রাউজার নোটিফিকেশন চালু করুন", en: "Enable browser notifications" })}
             </Button>
           </div>
         )}
