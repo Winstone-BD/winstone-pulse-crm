@@ -1,3 +1,4 @@
+import { isParked } from "@/lib/no-answer-cadence";
 /**
  * Call-mode keyboard shortcuts. Pure helpers so the guards are unit-tested;
  * components wire them to the SAME handlers the visible buttons use.
@@ -44,14 +45,14 @@ export function canSaveReport(s: { missing: string | null; pending: boolean; ope
 }
 
 /** Next eligible lead: same rule as auto-advance after a saved report. */
-export function pickNextEligible<T extends { id: string; status?: string | null; work_state?: string | null }>(
+export function pickNextEligible<T extends { id: string; status?: string | null; work_state?: string | null; retry_after?: string | null }>(
   rows: T[],
   skip: Iterable<string>,
   currentId?: string | null,
 ): T | null {
   const s = new Set(skip);
   if (currentId) s.add(currentId);
-  return rows.find((l) => !s.has(l.id) && l.status !== "closed" && l.work_state !== "completed") ?? null;
+  return rows.find((l) => !s.has(l.id) && l.status !== "closed" && l.work_state !== "completed" && !isParked(l)) ?? null;
 }
 
 export const SHORTCUT_LABELS = {
