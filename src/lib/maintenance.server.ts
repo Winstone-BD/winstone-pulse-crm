@@ -337,7 +337,9 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
   await client.from("system_maintenance").update({ unlock_status: "requested" }).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).neq("unlock_status", "approved");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "unlock_requested", period: state.period, next: "requested", reason: input.reason, requestId: data.id, durationMinutes: input.hours * 60, metadata: { payment_status: state.paymentStatus } });
-  return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified" };
+  const { sendUnlockApprovalEmail } = await import("@/lib/unlock-email.server");
+  const mail = await sendUnlockApprovalEmail({ requestId: data.id, requestedBy: input.actor, hours: input.hours, reason: input.reason, paymentVerified: state.paymentStatus === "verified" });
+  return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified", emailed: mail.emailed };
 }
 
 export async function maintenanceHistory() {

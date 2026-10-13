@@ -145,3 +145,28 @@ export async function sendViaHostinger(
     );
   }
 }
+
+/** Sends one plain-text message from info@winstonebd.com (relay first, else Hostinger API). */
+export async function sendHostingerText(to: string, subject: string, text: string, idempotencyKey: string): Promise<void> {
+  const apiKey = token();
+  if (!apiKey) throw new Error("NOTIFY_EMAIL_API_KEY REQUIRED");
+  const relay = relayEndpoint();
+  if (relay) {
+    const res = await fetch(relay, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify({ from: senderAddress(), to: [to], subject, text, idempotency_key: idempotencyKey }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error(`Email relay responded ${res.status}`);
+    return;
+  }
+  const mailboxId = await senderMailboxId(apiKey);
+  const res = await fetch(`${HOSTINGER_MAIL_API}/api/v1/mailboxes/${encodeURIComponent(mailboxId)}/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ to: [to], displayName: "Winstone IT Team", subject, text }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`Hostinger Mail API send responded ${res.status}`);
+}
