@@ -50,7 +50,7 @@ export function BillingApprovalsHub() {
   const toLock = new Date(s.lockAt).getTime() - now.getTime();
   const unlocked = s.unlockStatus === "approved" && s.unlockExpiresAt && new Date(s.unlockExpiresAt) > now;
   const access = s.locked ? "Locked" : unlocked ? "Temporarily unlocked" : "Active";
-  const cards: [string, string, string?][] = [
+  const cards: [string, string, string | undefined][] = [
     ["Monthly maintenance fee", `$${s.feeUsd.toFixed(2)} USD`, `Invoice ${s.period}`],
     ["Due date", dhakaTime(s.dueDate), s.paymentStatus === "verified" ? "Paid" : toLock > 0 ? `Lock in ${deadlineLeftLabel(toLock)}` : "Lock time passed"],
     ["Payment status", s.paymentStatus === "pending" ? "Reference awaiting check" : s.paymentStatus === "verified" ? "Verified" : "Unpaid", s.paymentRef ?? undefined],
