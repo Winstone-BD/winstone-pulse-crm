@@ -688,6 +688,11 @@
   color: var(--foreground);
   color-scheme: light;
 }
+.theme-exec {
+  --enter: #0b0b0b;
+  --enter-hover: #171717;
+  --enter-foreground: #f5f2ea;
+}
 .theme-exec .card-elevated {
   box-shadow: none;
 }

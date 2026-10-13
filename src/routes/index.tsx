@@ -12,7 +12,7 @@ import {
   Smartphone,
   Database,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { HomeSignupForm } from "@/components/HomeSignupForm";
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/")({
 
 function EntryHall() {
   const navigate = useNavigate();
-  const { scope } = useMyAccount();
+  const { scope, account } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<"android" | "web" | "desktop" | null>(null);
@@ -71,74 +71,66 @@ function EntryHall() {
     }
   };
 
+  const signedInName = account?.profile?.name ?? null;
+
   return (
     <div className="theme-exec min-h-screen bg-background">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
-        <header className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5">
+            <img src={logoAsset.url} alt="Winstone logo" className="size-8 rounded-full object-cover ring-1 ring-border" />
+            <span className="truncate text-sm font-semibold tracking-tight">
+              WINSTONE <span className="text-gold">PULSE</span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <SystemStatus />
+            {signedInName && (
+              <Link to="/desk" className="hidden max-w-[12rem] truncate rounded-full border border-border bg-card px-3 py-1 text-xs font-medium hover:border-gold sm:inline-block">
+                {signedInName}
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-16">
+        <section className="grid items-end gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
           <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center gap-3 lg:justify-start">
-              <img
-                src={logoAsset.url}
-                alt="Winstone logo"
-                className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
-              />
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-gold sm:text-base">
-                  Winstone Properties Ltd.
-                </p>
-                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
-                  Find. Build. Invest.
-                </p>
-              </div>
-            </div>
-            <h1 className="mt-6 font-hand text-[2.6rem] font-semibold leading-[1.15] tracking-normal text-foreground sm:mt-8 sm:text-6xl sm:leading-[1.1] lg:text-7xl lg:leading-[1.05]">
-
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold">
+              Winstone Properties Ltd. · Find. Build. Invest.
+            </p>
+            <h1 className="mt-5 font-hand text-[2.8rem] font-semibold leading-[1.05] tracking-normal text-foreground sm:text-6xl lg:text-[5.25rem]">
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-2 font-hand text-[1.65rem] font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-3xl lg:text-4xl">
-              Close more deals, <span className="text-gold">less chaos.</span>
+            <p className="mt-3 text-xl font-medium tracking-tight text-foreground sm:text-2xl">
+              The Premium Real Estate CRM.
             </p>
-            <p className="mx-auto mt-4 max-w-md text-[15px] leading-[1.65] text-muted-foreground sm:mt-5 sm:text-base sm:leading-relaxed lg:text-[17px] lg:mx-0">
-              The visual CRM that your sales team will actually love using. Drag, drop, and close —
-              live sales monitoring, lead management, call activity, follow-up deadlines and team
-              performance, all in one place.
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-[1.7] text-muted-foreground sm:text-base lg:mx-0">
+              Live sales monitoring, lead management, call activity, follow-up deadlines and team
+              performance — one data layer for the whole sales floor.
             </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 sm:mt-8 sm:gap-x-6 lg:justify-start">
-              {[
-                { icon: Headphones, label: "Manage Your Team" },
-                { icon: BarChart3, label: "Track Sales Pipeline" },
-                { icon: Smartphone, label: "Monitor Call Activity" },
-              ].map(({ icon: Icon, label }) => (
-                <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="grid size-8 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
-                    <Icon className="size-4" />
-                  </span>
-                  {label}
+          </div>
+
+          <dl className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-card lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+            {[
+              { icon: Headphones, label: "Team", value: "Every agent, one floor" },
+              { icon: BarChart3, label: "Pipeline", value: "Updated in real time" },
+              { icon: Smartphone, label: "Calls", value: "Synced from agent SIMs" },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex flex-col items-center gap-2 px-3 py-4 text-center lg:flex-row lg:gap-4 lg:px-5 lg:text-left">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/50 text-gold">
+                  <Icon className="size-4" />
                 </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-border bg-card px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Pipeline Value
-                </p>
-                <p className="text-lg font-semibold tracking-tight">Live, every second</p>
-                <p className="text-xs font-medium text-gold">↑ Updated in real time</p>
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</dt>
+                  <dd className="mt-0.5 text-xs font-semibold leading-snug sm:text-sm">{value}</dd>
+                </div>
               </div>
-              <div className="rounded-xl border border-border bg-card px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Follow-ups
-                </p>
-                <p className="text-lg font-semibold tracking-tight">Never missed</p>
-              </div>
-            </div>
-          </div>
-        </header>
+            ))}
+          </dl>
+        </section>
 
-        <h2 className="mt-10 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight">
+        <h2 className="mt-16 text-center font-hand text-3xl font-semibold leading-snug tracking-normal sm:mt-20 sm:text-4xl sm:tracking-tight">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
@@ -358,7 +350,7 @@ function ModeCard({
       variant="outline"
       aria-pressed={selected}
       onClick={onClick}
-      className={`group h-auto min-w-0 flex-col items-center gap-2 rounded-xl bg-card p-3 text-center whitespace-normal transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? "border-gold ring-1 ring-gold" : "border-border"}`}
+      className={`group h-auto min-w-0 flex-col items-center gap-2 rounded-xl bg-card p-3 text-center shadow-none whitespace-normal transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? "border-gold ring-1 ring-gold" : "border-border"}`}
     >
       <span className="text-foreground">
         {illustration}
@@ -395,3 +387,29 @@ function DesktopIllustration() {
 }
 
 
+
+/** Real liveness only: pings the public health probe, never shows invented numbers. */
+function SystemStatus() {
+  const [state, setState] = useState<"checking" | "ok" | "down">("checking");
+  useEffect(() => {
+    let alive = true;
+    const check = () =>
+      fetch("/api/public/health", { cache: "no-store" })
+        .then((r) => alive && setState(r.ok ? "ok" : "down"))
+        .catch(() => alive && setState("down"));
+    void check();
+    const id = window.setInterval(check, 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, []);
+  const label = state === "ok" ? "Systems online" : state === "down" ? "Server not reachable" : "Checking…";
+  const dot = state === "ok" ? "bg-success" : state === "down" ? "bg-destructive" : "bg-muted-foreground";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground" role="status">
+      <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
+}
