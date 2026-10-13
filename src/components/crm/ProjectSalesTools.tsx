@@ -1,3 +1,4 @@
+import { safeCsvCell } from "@/lib/csv-safe";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useRef, useState } from "react";
@@ -45,7 +46,7 @@ export function ProjectSalesReport() {
   }, [rows]);
 
   const csv = () => {
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = safeCsvCell;
     const lines = [["date", "project", "agent", "lead", "interest", "quoted_price", "note"].join(",")]
       .concat(rows.map((r) => [r.created_at, r.project_name, r.agent_name, r.lead_name, r.interest, r.offered_price ?? "", r.note ?? ""].map(esc).join(",")));
     const url = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv" }));
