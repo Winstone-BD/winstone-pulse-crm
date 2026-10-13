@@ -260,6 +260,8 @@
   h3,
   h4 {
     font-family: var(--font-display);
+    /* Headings and dashboard UI: Inter, semibold by default. */
+    font-weight: 600;
     letter-spacing: -0.02em;
   }
 
