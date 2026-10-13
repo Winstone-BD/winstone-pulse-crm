@@ -6,16 +6,7 @@ import { useAdminToken } from "@/lib/local-session";
 
 export const SIGNUP_DRAFT_KEY = "winstone.signup.draft";
 
-export type SignupDraft = { name: string; phone: string; email?: string; requestedRole: "agent" };
-
-export function peekSignupDraft(): SignupDraft | null {
-  try {
-    const raw = window.localStorage.getItem(SIGNUP_DRAFT_KEY);
-    return raw ? (JSON.parse(raw) as SignupDraft) : null;
-  } catch {
-    return null;
-  }
-}
+export type SignupDraft = { name: string; phone: string; requestedRole: "agent" };
 
 export function saveSignupDraft(draft: SignupDraft) {
   try {

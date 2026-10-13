@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, LifeBuoy, Monitor, RefreshCw, Search, Smartphone } from "lucide-react";
+import { BookOpen, LifeBuoy, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { ConnectionDiagnostics } from "@/components/ConnectionDiagnostics";
 import { Input } from "@/components/ui/input";
 import { listPublishedArticles } from "@/lib/support.functions";
 
@@ -79,89 +78,6 @@ function HelpCentre() {
             />
           </div>
         </header>
-        <div className="mt-8">
-          <ConnectionDiagnostics />
-        </div>
-
-        <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
-            <RefreshCw className="size-4 text-primary" />
-            App not loading or showing an old version?
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            If the app shows a blank screen, an "offline" message while your internet works, or an
-            old design after an update, your device is probably holding a stale saved copy. If you
-            are using the preview on your phone, start with the phone preview steps below; otherwise
-            follow the steps for your device, then reopen the app.
-          </p>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-border bg-background p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Smartphone className="size-4 text-primary" /> Phone preview (Lovable app)
-              </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>Close the preview completely — swipe it away so it is no longer open in the background.</li>
-                <li>Open the Lovable app again and reopen the preview from there.</li>
-                <li>If it is still blank, clear the cached data using the steps for your phone below, then reopen the preview.</li>
-              </ol>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Smartphone className="size-4 text-primary" /> Android phone (Chrome)
-              </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>Open Chrome and go to the CRM site.</li>
-                <li>Tap the <strong>⋮ menu</strong> (top right) → <strong>Settings</strong>.</li>
-                <li>Tap <strong>Privacy and security</strong> → <strong>Delete browsing data</strong>.</li>
-                <li>Choose <strong>Cached images and files</strong> (and Cookies if asked), then tap <strong>Delete data</strong>.</li>
-                <li>Close Chrome fully, reopen it, and sign in again.</li>
-              </ol>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Smartphone className="size-4 text-primary" /> iPhone / iPad (Safari)
-              </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>Open the <strong>Settings</strong> app → <strong>Safari</strong>.</li>
-                <li>Tap <strong>Clear History and Website Data</strong> and confirm.</li>
-                <li>Reopen Safari, go to the CRM site, and sign in again.</li>
-              </ol>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Monitor className="size-4 text-primary" /> Computer browser
-              </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>On the CRM page, press <strong>Ctrl + Shift + R</strong> (Windows) or <strong>Cmd + Shift + R</strong> (Mac) for a hard reload.</li>
-                <li>If that doesn't help: browser <strong>Settings</strong> → <strong>Privacy</strong> → <strong>Clear browsing data</strong> → choose <strong>Cached images and files</strong> → Clear.</li>
-                <li>Reload the site and sign in again.</li>
-              </ol>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4">
-              <h3 className="flex items-center gap-2 text-sm font-semibold">
-                <Smartphone className="size-4 text-primary" /> Installed app / home-screen icon
-              </h3>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                <li>Remove the app icon from your home screen.</li>
-                <li>Clear the browser cache using the steps above for your device.</li>
-                <li>Open the site in your browser and add it to your home screen again.</li>
-              </ol>
-            </div>
-          </div>
-
-          <p className="mt-4 text-sm text-muted-foreground">
-            Still stuck after these steps?{" "}
-            <Link to="/support" className="text-primary underline-offset-2 hover:underline">
-              Chat with the support assistant
-            </Link>{" "}
-            and tell us which device you are using.
-          </p>
-        </section>
 
         {kb.isLoading && <p className="mt-10 text-center text-sm text-muted-foreground">Loading…</p>}
 
