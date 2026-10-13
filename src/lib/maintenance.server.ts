@@ -19,7 +19,9 @@ import {
   parseVatSetting,
   invoiceTotals,
   nextUngeneratedPeriod,
+  nextPeriod,
   nextInvoicePreviewFor,
+  CRM_PLAN_NAME,
   type AccessStatus,
   type InvoiceStatus,
   type PaymentState,
@@ -236,6 +238,22 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
   }
   if (result.stage === "due_today") {
     await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Invoice ${CRM_INVOICE_LABEL}.`);
+  }
+
+  // Upcoming-invoice reminder: once the current month is verified, remind about the
+  // next invoice in the 30 days before its due date (one alert per period, deduped).
+  if (row.payment_status === "verified") {
+    const next = nextPeriod(period);
+    const msToDue = new Date(defaultDueAt(next)).getTime() - now.getTime();
+    if (msToDue > 0 && msToDue <= 30 * 86_400_000) {
+      const preview = nextInvoicePreviewFor(next, await readVatRateBps());
+      await notifyOnce(
+        `billing_upcoming_invoice_${next}`,
+        "info",
+        "Upcoming invoice reminder",
+        `Next ${CRM_PLAN_NAME} invoice (${preview.totalLabel ?? preview.subtotalLabel}) is due ${dhakaTime(preview.dueAt)} (Dhaka). Pay before the due date to keep access uninterrupted.`,
+      );
+    }
   }
 
   const { count } = await client
