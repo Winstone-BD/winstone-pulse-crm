@@ -332,7 +332,7 @@ function OperationalStatus({ account }: { account: ReturnType<typeof useMyAccoun
     return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
   }, []);
   const status = maintenance.data;
-  const access = !status || !status.ok ? t({ en: "Status unavailable", bn: "অবস্থা অনুপলব্ধ" }) : status.locked ? t({ en: "Workspace locked", bn: "কর্মক্ষেত্র লক" }) : status.stage === "unlocked" ? t({ en: "Temporary unlock", bn: "সাময়িক আনলক" }) : t({ en: "Workspace open", bn: "কর্মক্ষেত্র খোলা" });
+  const access = account && !account.signedIn ? t({ en: "Shown after sign-in", bn: "সাইন-ইনের পর দেখা যাবে" }) : !status ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : !status.ok ? t({ en: "Status unavailable", bn: "অবস্থা অনুপলব্ধ" }) : status.locked ? t({ en: "Workspace locked", bn: "কর্মক্ষেত্র লক" }) : status.stage === "unlocked" ? t({ en: "Temporary unlock", bn: "সাময়িক আনলক" }) : t({ en: "Workspace open", bn: "কর্মক্ষেত্র খোলা" });
   const items = [
     { label: t({ en: "Device connection", bn: "ডিভাইসের সংযোগ" }), value: online === null ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : online ? t({ en: "Network available", bn: "নেটওয়ার্ক উপলব্ধ" }) : t({ en: "Offline", bn: "অফলাইন" }) },
     { label: t({ en: "Account", bn: "অ্যাকাউন্ট" }), value: !account ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : account.signedIn ? account.approval === "approved" ? t({ en: "Approved account", bn: "অনুমোদিত অ্যাকাউন্ট" }) : t({ en: "Approval required", bn: "অনুমোদন প্রয়োজন" }) : t({ en: "Sign-in required", bn: "সাইন-ইন প্রয়োজন" }) },

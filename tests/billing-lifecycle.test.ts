@@ -43,13 +43,13 @@ describe("payment-status wording", () => {
 });
 
 describe("notice card copy", () => {
-  const opts = { month: "October", totalLabel: "৳4,345 BDT", lockDate: "15 Oct 2026", lockClock: "00:00 (Asia/Dhaka)" };
+  const opts = { month: "October", totalLabel: "$35.29 USD", lockDate: "15 Oct 2026", lockClock: "00:00 (Asia/Dhaka)" };
   it("red states the deadline and offers one payment action", () => {
     const c = subscriptionNoticeCopy("red", opts);
     expect(c.tone).toBe("red");
     expect(c.cta).toBe("Review invoice & pay");
     expect(c.body.join(" ")).toContain("15 Oct 2026 00:00 (Asia/Dhaka)");
-    expect(c.body.join(" ")).toContain("৳4,345 BDT");
+    expect(c.body.join(" ")).toContain("$35.29 USD");
   });
   it("amber keeps the same action but never claims suspension", () => {
     const c = subscriptionNoticeCopy("amber", opts);

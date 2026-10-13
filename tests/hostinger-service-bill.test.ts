@@ -7,14 +7,14 @@ import {
 } from "@/lib/email-templates/hostinger-send.server";
 
 describe("Hostinger service-bill payload", () => {
-  it("uses the Hostinger Mail API send shape and current BDT fee", () => {
+  it("uses the Hostinger Mail API send shape and current USD fee", () => {
     expect(
       buildHostingerServiceBillPayload({ recipient: "hq@example.com", stage: "মেয়াদ শেষ" }),
     ).toEqual({
       to: ["hq@example.com"],
       displayName: "Winstone IT Team",
       subject: "Service-Bill Alert: মেয়াদ শেষ - Winstone Pulse",
-      text: "WINSTONE PULSE — SERVICE BILL ALERT\n\nStatus: মেয়াদ শেষ\nAmount: ৳4,345 BDT\n\nThis notice requires authorized human review. It does not execute or approve a payment.",
+      text: "WINSTONE PULSE — SERVICE BILL ALERT\n\nStatus: মেয়াদ শেষ\nAmount: $35.29 USD\n\nThis notice requires authorized human review. It does not execute or approve a payment.",
     });
   });
 

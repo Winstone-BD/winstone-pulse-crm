@@ -4,7 +4,7 @@ const PLAN_CODE = "crm" as const;
 
 import {
   MAINTENANCE_CURRENCY,
-  MAINTENANCE_FEE_BDT,
+  MAINTENANCE_FEE_USD,
   MAINTENANCE_FEE_MINOR,
   moneyLabel,
   clampUnlockMinutes,
@@ -85,7 +85,7 @@ export async function audit(entry: {
   if (error) console.error("maintenance audit failed", error);
 }
 
-/** Label from the row's own immutable snapshot: BDT rows show ৳, historical USD rows stay USD. */
+/** Label from the row's own immutable snapshot: each row shows its own stored currency. */
 function rowAmountLabel(row: { total_cents?: number | null; currency?: string | null; fee_usd?: number | string | null }): string {
   if (row.total_cents != null) return moneyLabel(row.total_cents, row.currency);
   return moneyLabel(Math.round(Number(row.fee_usd ?? 0) * 100), row.currency ?? "USD");
@@ -109,8 +109,7 @@ async function ensureRow(period: string) {
     {
       billing_period: period,
       plan_code: PLAN_CODE,
-      fee_usd: 0,
-      fee_bdt: MAINTENANCE_FEE_BDT,
+      fee_usd: MAINTENANCE_FEE_USD,
       base_cents: MAINTENANCE_FEE_MINOR,
       vat_rate_bps: 0,
       vat_cents: 0,
