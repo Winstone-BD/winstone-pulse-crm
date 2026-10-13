@@ -25,6 +25,7 @@ import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
 import { useT } from "@/lib/i18n";
+import { HomeErrorBoundary } from "@/components/HomeErrorBoundary";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/")({
     ],
   }),
   component: EntryHall,
+  errorComponent: HomeErrorBoundary,
 });
 
 function EntryHall() {
