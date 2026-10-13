@@ -147,3 +147,7 @@
 - [x] Minimized subscription notice moved into page layout: it now sits below the page content (home + app shell), never overlays features; tap still expands the full card, Minimise folds it back. Pages without the app layout keep the floating fallback. Fixed the hydration mismatch this caused (notice renders only after hydration) — 0 hydration errors on /, /news, /inventory, /docs, /help, /desk; expand verified on phone; 17 billing/entitlement tests, typecheck and build clean. Not published.
 - [x] Blank-screen fix: a tab whose module stops loading now waits until that module actually serves again before reloading (was: reload as soon as the page answered, 3 attempts in ~2s, then a blank Refresh screen). Verified with a reproduction that blocks the entry module — recovers instead of falling back; real restart leaves all 8 pages clean; 510 tests, typecheck and build clean. Not published.
 - Security: restrict audit-name lookup, support escalation to assignee/managers, recordings to current lead owner
+
+- [ ] Real-phone check: "no answer" save → next lead opens; redial within 15 min shows warning. Needs a person on a real agent phone (would write a real report to live data).
+- [x] Homepage signup form (name, email, phone) → sign-up page prefilled.
+- [x] Caveat page headings (h1) site-wide; Inter for everything else.

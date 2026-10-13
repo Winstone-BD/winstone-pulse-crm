@@ -264,6 +264,11 @@
     font-weight: 600;
     letter-spacing: -0.02em;
   }
+  /* Page hero headings (h1) use Caveat site-wide; h2–h4 stay Inter. */
+  h1 {
+    font-family: var(--font-hand);
+    letter-spacing: 0;
+  }
 
   /* One visible gold focus ring everywhere, so keyboard users never lose the
      cursor on the dark surfaces. */
