@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
+import { HomeSignupForm } from "@/components/HomeSignupForm";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
@@ -150,6 +151,8 @@ function EntryHall() {
             </div>
           </div>
         </header>
+
+        <HomeSignupForm />
 
         <h2 className="mt-10 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight">
           Choose Your Workspace

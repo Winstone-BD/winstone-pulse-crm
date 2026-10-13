@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, LogIn, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/lib/accounts.functions";
-import { ensureRegistered, saveSignupDraft } from "@/lib/session";
+import { ensureRegistered, peekSignupDraft, saveSignupDraft } from "@/lib/session";
 
 const SearchSchema = z.object({
   role: z.literal("agent").catch("agent"),
@@ -49,6 +49,14 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
+  useEffect(() => {
+    const draft = peekSignupDraft();
+    if (!draft) return;
+    if (draft.name) setName((v) => v || draft.name);
+    if (draft.phone) setPhone((v) => v || draft.phone);
+    if (draft.email) setEmail((v) => v || draft.email!);
+  }, []);
 
   const signIn = useMutation({
     mutationFn: async () => {
