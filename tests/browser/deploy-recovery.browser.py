@@ -84,6 +84,28 @@ async def main():
         check(await page.get_by_role("button", name="Refresh Page").is_visible(), "fallback offers Refresh Page")
         await ctx.close()
 
+        # C: four reloads already used -> stop, show refresh screen, no reload loop.
+        ctx = await browser.new_context()
+        await ctx.add_init_script("if(location.origin==='http://recovery.test'){sessionStorage.setItem('deployment-reload-attempted','1');sessionStorage.setItem('deployment-reload-attempted:n','4')}")
+        st = {"docs": 0, "probes": 0}
+        async def handle3(route):
+            r = route.request
+            if r.url.startswith(ORIGIN + "/assets/"):
+                if r.method == "HEAD": st["probes"] += 1
+                return await route.fulfill(status=404, content_type="text/html", body="missing")
+            if r.method == "GET": st["docs"] += 1
+            await route.fulfill(status=200, content_type="text/html", body=PAGE)
+        await ctx.route(ORIGIN + "/**", handle3)
+        page = await ctx.new_page()
+        await page.goto(ORIGIN + "/", wait_until="domcontentloaded")
+        await page.wait_for_selector("#deploy-recovery", timeout=5000)
+        check(await page.get_by_role("button", name="Refresh Page").is_visible(), "after 4 failed attempts the refresh screen shows")
+        await page.wait_for_timeout(6000)
+        check(st["docs"] == 1, f"no reload loop after limit (docs={st['docs']})")
+        check(st["probes"] == 0, f"stops probing after limit (probes={st['probes']})")
+        check(await page.locator("#deploy-notice").count() == 0, "no 'loading' notice once limit reached")
+        await ctx.close()
+
         await browser.close()
     if failures:
         print(f"\n{len(failures)} failure(s)"); sys.exit(1)
