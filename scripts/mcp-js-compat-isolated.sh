@@ -3,8 +3,8 @@
 # Never touches this checkout's package.json, lockfile or node_modules.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-LATEST=$(npm view @lovable.dev/mcp-js versions --json | node -e 'const v=JSON.parse(require("fs").readFileSync(0));const s=v.filter(x=>/^\d+\.\d+\.\d+$/.test(x));console.log(s.at(-1)||"")')
-[ -z "$LATEST" ] && { echo "No stable release."; exit 0; }
+LATEST=$(npm view @lovable.dev/mcp-js versions --json | node -e 'const v=JSON.parse(require("fs").readFileSync(0));const s=v.filter(x=>/^4\.\d+\.\d+$/.test(x));console.log(s.at(-1)||"")')
+[ -z "$LATEST" ] && { echo "No stable 4.x release yet — nothing to test."; exit 0; }
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 tar -C "$ROOT" --exclude=node_modules --exclude=.git --exclude=dist --exclude=.output -cf - . | tar -C "$TMP" -xf -
 cd "$TMP"
