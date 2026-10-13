@@ -132,8 +132,8 @@ export function AdminPinDialog({
             <>
               <div className="flex w-full min-w-0 items-center gap-3">
                 <img src={logoAsset.url} alt="" className="h-9 w-auto shrink-0 object-contain md:hidden" />
-                <span className="rounded-md bg-gold/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-gold">IT Console</span>
-                <span className="inline-flex min-w-0 items-center gap-1 truncate text-xs uppercase tracking-wider text-muted-foreground"><Lock className="size-3.5 shrink-0" />Secure administrative access</span>
+                <span className="shrink-0 whitespace-nowrap rounded-md bg-gold/15 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-gold">IT Console</span>
+                <span className="hidden min-w-0 items-center gap-1 truncate text-xs uppercase sm:inline-flex tracking-wider text-muted-foreground"><Lock className="size-3.5 shrink-0" />Secure administrative access</span>
               </div>
               <DialogTitle className="mt-3 text-xl">Select your profile to continue</DialogTitle>
             </>
