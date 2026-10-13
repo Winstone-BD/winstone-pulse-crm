@@ -1,3 +1,4 @@
+import { BrandLockup } from "@/components/BrandLockup";
 import { Link } from "@tanstack/react-router";
 import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
 import { MobileNavDrawer, NavSidebar, NAV_ICONS } from "@/components/crm/NavSidebar";
@@ -122,20 +123,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="lg:hidden">
             <MobileNavDrawer items={nav} />
           </div>
-          <Link to="/" className="flex min-w-0 shrink items-center gap-2.5">
-            <img
-              src={logoAsset.url}
-              alt="Winstone logo"
-              className="size-8 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-border"
-            />
-            <span className="hidden min-w-0 leading-tight min-[480px]:block">
-              <span className="block truncate text-[13px] font-bold tracking-tight">
-                Winstone Pulse
-              </span>
-              <span className="hidden truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:block">
-                Premium Real Estate CRM
-              </span>
-            </span>
+          <Link to="/" className="flex min-w-0 shrink items-center">
+            <BrandLockup />
           </Link>
 
 
