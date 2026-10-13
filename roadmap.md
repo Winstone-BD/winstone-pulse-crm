@@ -1,8 +1,10 @@
 # Roadmap
 
 ## Active
+- [x] Require device selection before Get started; uploaded IT portraits after PIN; service billing restricted to existing verified architect identity plus user-bound IT token. 572 tests passed/5 skipped; phone/desktop UI checked with mocked PIN response, no live login or publish.
+- [ ] Map Head/Officer to real IT accounts and enable assistant onboarding: blocked on their login emails and verified account identities; never use shared passwords as embedded credentials.
 - [x] Hide signup/portals until Get started; reorder HQ, Agent, LeadHub, IT; require identified IT account after PIN. Phone/desktop reveal and PIN screen checked; 569 tests pass, 5 skipped; no publish.
-- [ ] Verify real IT PIN → authorized officer email/password → console and session audit. Blocked: no authorized officer test credentials/PIN supplied; do not invent accounts or write live test audit records.
+- [ ] Verify real IT PIN → authorized officer email/password → console and session audit. Blocked: verified officer login emails/account mapping and authorized test PIN missing; do not invent accounts or write live test audit records.
 
 - [x] Replace sideways desk navigation with a colour-accented, non-scrolling section picker; mobile global menu opens from below. Browser verified, no overflow.
 - [x] Bring saved notes and prior reports/history into pre-call and active web-call workspace using existing authorised paths; 11 targeted checks passed. Signed-in saving remains unverified.

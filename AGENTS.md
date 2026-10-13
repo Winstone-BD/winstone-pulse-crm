@@ -36,4 +36,4 @@
 - Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
 - Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
 
-- IT PIN yields a 10m challenge; completeItAccess checks an active approved admin-role account and issues an 8h user-bound token; await requireAdminToken — why: PIN alone cannot identify or authorize IT staff.
+- IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.

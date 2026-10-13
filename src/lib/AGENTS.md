@@ -7,6 +7,7 @@
 
 - Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.
 - Service-bill review may reveal details to an authenticated admin after a server-only PIN check, but never executes payment or grants financial approval — why: notification and financial execution must remain separate.
+- Service-bill verification/payout requires a user-bound IT account token and architectFromRequest matching that user; overview returns server-derived canApproveBilling — why: portraits and officer selections must never grant financial powers.
 - Runtime crashes go to server-only runtime_error_issues/occurrences via POST /api/public/telemetry/runtime-error (sanitised, query strings dropped, same-origin); a resolved issue reopens when it recurs — why: one cross-device record HQ/IT can trust.
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
 - Agent contribution reports (agent_daily_contributions) and HQ reviews (agent_contribution_reviews) are server-only and append-only, accessed only via agent-contribution.functions.ts with resolveCaller scope checks — why: original reports and review history must stay trustworthy.
