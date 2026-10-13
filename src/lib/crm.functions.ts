@@ -181,13 +181,20 @@ export const getAudioUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: recording, error: lookupError } = await supabaseAdmin
       .from("call_recordings")
-      .select("audio_url, agent_id")
+      .select("audio_url, agent_id, lead_id")
       .eq("id", data.recordingId)
       .maybeSingle();
     if (lookupError) throw new Error("Could not load this recording");
     if (!recording?.audio_url) throw new Error("This recording has no audio");
-    if (caller.scope === "agent" && recording.agent_id !== caller.profile?.id) {
-      throw new Error("This recording belongs to another agent");
+    if (caller.scope === "agent") {
+      // Agents may play a recording only while the lead is still theirs.
+      const { leadNotAssignedTo, LEAD_OWNER_COLUMNS } = await import("@/lib/lead-access.server");
+      const me = caller.profile?.id ?? "";
+      const { data: lead } = recording.lead_id
+        ? await supabaseAdmin.from("leads").select(LEAD_OWNER_COLUMNS).eq("id", recording.lead_id).maybeSingle()
+        : { data: null };
+      const owns = lead ? !leadNotAssignedTo(lead as never, me) : recording.agent_id === me;
+      if (!owns) throw new Error("This recording belongs to another agent");
     }
     const { data: signed, error } = await supabaseAdmin.storage
       .from("call-audio")

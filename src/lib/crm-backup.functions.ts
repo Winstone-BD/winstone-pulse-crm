@@ -88,7 +88,10 @@ export const listRecordAudit = createServerFn({ method: "POST" })
     if (data.recordId) q = q.eq("record_id", data.recordId);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const { data: people } = await supabaseAdmin.from("profiles").select("user_id,name");
+    const actorIds = [...new Set((rows ?? []).map((r) => r.actor_id).filter((x): x is string => Boolean(x)))];
+    const { data: people } = actorIds.length
+      ? await supabaseAdmin.from("profiles").select("user_id,name").in("user_id", actorIds)
+      : { data: [] as { user_id: string | null; name: string | null }[] };
     const names: Record<string, string> = {};
     for (const p of people ?? []) if (p.user_id) names[p.user_id] = p.name ?? "";
     return { rows: rows ?? [], names, full: c.scope === "authority" };
