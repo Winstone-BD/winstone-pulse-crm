@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 subprocess.run(["bun","build","tests/browser/home-error-boundary.entry.tsx","--outfile=/tmp/home-boundary.js","--define","process.env.NODE_ENV='\"production\"'"],check=True,capture_output=True)
 JS=open("/tmp/home-boundary.js").read()
 ORIGIN="http://boundary.test"
-PAGE=f"<!doctype html><html><body><div id=root></div><script>window.__fail=sessionStorage.getItem('fixed')!=='1';</script><script type=module>{JS}</script></body></html>"
+PAGE=f"<!doctype html><html><body><div id=root></div><script>window.__fail=sessionStorage.getItem('fixed')!=='1';</script><script type=module src=/app.js></script></body></html>"
 fails=[]
 def check(ok,msg):
     print(("PASS " if ok else "FAIL ")+msg)
@@ -14,6 +14,7 @@ async def main():
     async with async_playwright() as p:
         b=await p.chromium.launch(headless=True); ctx=await b.new_context(); docs={"n":0}
         async def h(r):
+            if r.request.url.endswith("/app.js"): return await r.fulfill(status=200,content_type="text/javascript",body=JS)
             docs["n"]+=1; await r.fulfill(status=200,content_type="text/html",body=PAGE)
         await ctx.route(ORIGIN+"/**",h); page=await ctx.new_page(); page.on("pageerror",lambda e: print("PAGEERR",e)); page.on("console",lambda m: print("CON",m.text[:200]))
         await page.goto(ORIGIN+"/")
