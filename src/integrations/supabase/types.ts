@@ -4723,6 +4723,8 @@ export type Database = {
           lock_status: string
           locked_logged_at: string | null
           payment_ref: string | null
+          payment_rejected_at: string | null
+          payment_rejected_reason: string | null
           payment_status: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at: string | null
           payment_verified_by: string | null
@@ -4752,6 +4754,8 @@ export type Database = {
           lock_status?: string
           locked_logged_at?: string | null
           payment_ref?: string | null
+          payment_rejected_at?: string | null
+          payment_rejected_reason?: string | null
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
@@ -4781,6 +4785,8 @@ export type Database = {
           lock_status?: string
           locked_logged_at?: string | null
           payment_ref?: string | null
+          payment_rejected_at?: string | null
+          payment_rejected_reason?: string | null
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null

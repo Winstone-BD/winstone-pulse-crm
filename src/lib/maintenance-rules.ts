@@ -258,3 +258,29 @@ export function subscriptionNoticeCopy(
     cta: "Review invoice & pay",
   };
 }
+
+/* ---------------- Distinct billing states (display + API; derived from the one rule) ---------------- */
+export type InvoiceStatus = "OPEN" | "OVERDUE" | "PAID";
+export type PaymentState = "UNPAID" | "PENDING_VERIFICATION" | "VERIFIED" | "FAILED";
+export type AccessStatus = "ACTIVE" | "LOCKED";
+
+/**
+ * Splits the stored row into invoice / payment / access states. Pure: never changes enforcement,
+ * which stays in decide(). A rejected reference is FAILED (not silently "unpaid"); a pending
+ * reference is never shown as unpaid nor as paid.
+ */
+export function billingStates(input: RuleInput & { dueAt: string; rejectedAt?: string | null }): {
+  invoice: InvoiceStatus; payment: PaymentState; access: AccessStatus; recoveryPending: boolean;
+} {
+  const { locked } = decide(input);
+  const payment: PaymentState =
+    input.paymentStatus === "verified" ? "VERIFIED"
+      : input.paymentStatus === "pending" ? "PENDING_VERIFICATION"
+        : input.rejectedAt ? "FAILED" : "UNPAID";
+  const invoice: InvoiceStatus =
+    payment === "VERIFIED" ? "PAID" : input.now.getTime() >= new Date(input.dueAt).getTime() + 86_400_000 ? "OVERDUE" : "OPEN";
+  return { invoice, payment, access: locked ? "LOCKED" : "ACTIVE", recoveryPending: locked && payment === "PENDING_VERIFICATION" };
+}
+
+/** Plain CRM invoice label used in every server message (this app bills plan_code='crm' only). */
+export const CRM_INVOICE_LABEL = "$18.16 USD (VAT included)";

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/config/maintenance")({
             active: true,
             title: "🔒 SYSTEM MAINTENANCE LOCKED",
             detail:
-              "Winstone Pulse is temporarily unavailable because the monthly system maintenance payment ($46.29 USD) is pending. Please contact IT Console to complete payment verification and request system restoration.",
+              "Winstone Pulse is temporarily unavailable because the CRM subscription invoice ($18.16 USD, VAT included) is not yet verified. Please contact IT Console to complete payment verification and request system restoration.",
           });
         }
         return json({

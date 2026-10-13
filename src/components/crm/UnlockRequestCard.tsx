@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitReferenceAndRequestUnlock } from "@/lib/maintenance.functions";
 import { UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; openRequest: boolean };
+type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean };
 
 /** Billing card (reference design) + real payment-reference / unlock request form. */
 export function UnlockRequestCard({ state, adminToken }: { state: State; adminToken: string | null }) {
@@ -44,7 +44,7 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
         <div className="grid size-11 place-items-center rounded-lg bg-destructive/10 text-destructive"><FileText className="size-5" /></div>
         <div>
           <p className="text-lg font-bold tracking-tight">WINSTONE <span className="text-destructive">PULSE</span></p>
-          <p className="text-xs text-muted-foreground">CRM · Subscription Billing · {state.period}</p>
+          <p className="text-xs text-muted-foreground">Winstone Pulse · CRM Subscription Access · {state.period}</p>
         </div>
         <span className={`ml-auto rounded-full border px-3 py-1 text-xs font-semibold ${badge}`}>
           {verified ? "Verified" : pending ? "Verification Pending" : "Not Paid"}
@@ -53,21 +53,24 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Monthly subscription total</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Invoice amount due</p>
           <p className="text-4xl font-bold text-destructive sm:text-5xl">$18.16</p>
-          <p className="text-sm text-muted-foreground">Current CRM invoice (VAT included)</p>
+          <p className="text-sm text-muted-foreground">Current CRM invoice · $15.79 + 15% VAT $2.37 (VAT included)</p>
+          <p className="mt-1 text-xs text-muted-foreground">Due {state.dueDate ? dhakaTime(state.dueDate) : "12th"} · Asia/Dhaka</p>
         </div>
         <dl className="divide-y divide-border rounded-lg border border-border text-sm">
           <Row icon={<FileText className="size-4" />} k="Invoice amount" v="$18.16 USD" />
           <Row icon={<Percent className="size-4" />} k="VAT" v="Included" />
-          <Row icon={<Wallet className="size-4" />} k="Payment status" v={verified ? "Verified" : pending ? `Pending · ${state.paymentRef ?? ""}` : "Not verified"} tone={verified ? "text-success" : "text-destructive"} />
+          <Row icon={<Wallet className="size-4" />} k="Payment status" v={verified ? "Verified" : pending ? `Pending verification · ${state.paymentRef ?? ""}` : "Not verified"} tone={verified ? "text-success" : "text-destructive"} />
         </dl>
       </div>
 
       {!verified && (
         <div className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
           <p className="flex gap-2 text-sm"><AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
-            <span><b>Billing reconciliation required.</b> Submit the real bKash/bank reference so the System Architect can verify it.</span></p>
+            <span>{pending
+              ? <><b>Payment submitted — awaiting verification.</b> Do not pay again. Access is restored automatically once the reviewer verifies this reference. Need help? Contact IT Console support.</>
+              : <><b>Already paid? Submit for verification.</b> Enter the real bKash/bank reference. Submitting a reference does not mark the invoice paid — only server verification does.</>}</span></p>
           <p className="flex gap-2 border-t border-destructive/20 pt-3 text-sm"><CalendarClock className="mt-0.5 size-4 shrink-0 text-destructive" />
             <span>Suspension deadline: <b className="text-destructive">{dhakaTime(state.lockAt)}</b> · Asia/Dhaka (UTC+6)</span></p>
         </div>
@@ -79,7 +82,7 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
       </p>
 
       <Button variant="destructive" size="lg" className="w-full" disabled={state.openRequest} onClick={() => setOpen(true)}>
-        <MailCheck className="size-4" /> {state.openRequest ? "Request waiting for approval" : "Review Invoice & Submit Reference"}
+        <MailCheck className="size-4" /> {state.openRequest ? "Request waiting for approval" : pending ? "Request temporary access (audited exception)" : "Review Invoice & Submit Payment Reference"}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
