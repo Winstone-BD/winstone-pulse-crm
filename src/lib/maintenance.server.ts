@@ -11,6 +11,11 @@ import {
   dhakaTime,
   dhakaPeriod,
   isArchitectIdentity,
+  billingStates,
+  CRM_INVOICE_LABEL,
+  type AccessStatus,
+  type InvoiceStatus,
+  type PaymentState,
   type PaymentStatus,
   type Stage,
   type UnlockStatus,
@@ -33,6 +38,12 @@ export type MaintenanceState = {
   openRequest: boolean;
   locked: boolean;
   stage: Stage;
+  invoiceStatus: InvoiceStatus;
+  paymentState: PaymentState;
+  accessStatus: AccessStatus;
+  /** Locked while a submitted reference awaits review: recovery state, never a second charge. */
+  recoveryPending: boolean;
+  rejectedReason: string | null;
 };
 
 async function db() {
@@ -151,7 +162,11 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
       .maybeSingle();
     if (flagged) {
       await audit({ actor: "system", actorRole: "system", action: "system_locked", period, previous: "active", next: "locked" });
-      await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — maintenance unpaid", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Submit the payment reference in IT Console.`);
+      if (row.payment_status === "pending") {
+        await notifyOnce(`maintenance_locked_${period}`, "critical", "Access paused — payment awaiting verification", `CRM access paused at ${dhakaTime(row.lock_at)} (Dhaka) while reference ${row.payment_ref ?? "—"} awaits review. Do not pay again — verify or reject it; verification restores access automatically.`);
+      } else {
+        await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — invoice unverified", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Invoice ${CRM_INVOICE_LABEL} has no verified payment. Submit the payment reference in IT Console.`);
+      }
     }
   }
   // Invoice milestones for management — one alert per invoice event (deduped by code).
@@ -169,7 +184,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     }
   }
   if (result.stage === "due_today") {
-    await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Fee $46.29 USD.`);
+    await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Invoice ${CRM_INVOICE_LABEL}.`);
   }
 
   const { count } = await client
@@ -195,13 +210,18 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     openRequest: (count ?? 0) > 0,
     locked: result.locked,
     stage: result.stage,
+    ...(() => {
+      const b = billingStates({ now, lockAt: row.lock_at, paymentStatus: row.payment_status, unlockStatus: row.unlock_status, unlockExpiresAt: row.unlock_expires_at, dueAt: row.due_date, rejectedAt: row.payment_rejected_at });
+      return { invoiceStatus: b.invoice, paymentState: b.payment, accessStatus: b.access, recoveryPending: b.recoveryPending };
+    })(),
+    rejectedReason: row.payment_rejected_reason ?? null,
   };
   cache = { at: now.getTime(), state };
   return state;
 }
 
 export const LOCKED_MESSAGE =
-  "SYSTEM MAINTENANCE LOCKED — monthly maintenance payment ($46.29 USD) is pending. Contact IT Console.";
+  "SYSTEM MAINTENANCE LOCKED — CRM subscription invoice ($18.16 USD, VAT included) is not verified. Contact IT Console.";
 
 /** Fail closed: an unexpected error counts as locked for ordinary callers. */
 export async function isLockedForOrdinaryUsers(): Promise<boolean> {
@@ -234,15 +254,20 @@ async function notify(code: string, severity: "info" | "warning" | "critical", t
 export async function submitPayment(input: { actor: string; paymentRef: string; note?: string | null }) {
   const state = await maintenanceAccess();
   if (state.paymentStatus === "verified") return { ok: true, already: true };
+  // Repeated submission of the same reference is a no-op; a different one while pending is refused (no double payment).
+  if (state.paymentStatus === "pending") {
+    if (state.paymentRef === input.paymentRef) return { ok: true, already: true };
+    throw new Error("A payment reference is already awaiting verification — do not pay again. Withdraw it first to replace it.");
+  }
   const client = await db();
   const { error } = await client
     .from("system_maintenance")
-    .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null })
+    .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null, payment_rejected_at: null, payment_rejected_reason: null })
     .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
   if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
-  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} ($46.29 USD). Awaiting System Architect verification.`);
+  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} (${CRM_INVOICE_LABEL}). Awaiting System Architect verification.`);
   return { ok: true, already: false };
 }
 
@@ -269,8 +294,8 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
   const at = new Date().toISOString();
   const update = input.approve
-    ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active" }
-    : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null };
+    ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active", payment_rejected_at: null, payment_rejected_reason: null }
+    : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null, payment_rejected_at: at, payment_rejected_reason: input.reason };
   const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
   if (error) throw new Error("Could not record decision");
   clearMaintenanceCache();
