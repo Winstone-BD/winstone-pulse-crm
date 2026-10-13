@@ -16,7 +16,7 @@ export function buildSdkServer(def: { name: string; title?: string; version: str
   for (const t of def.tools) {
     server.registerTool(
       t.name,
-      { title: t.title, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations },
+      { title: t.title, description: t.description, inputSchema: t.inputSchema, annotations: t.annotations } as any,
       (async (input: unknown, extra: { signal: AbortSignal }) => {
         try {
           return (await t.handler(input, { ...caller, signal: extra.signal })) as any;
