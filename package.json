@@ -24,7 +24,8 @@
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
     "check:colors": "node scripts/check-dashboard-colors.mjs",
-    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py"
+    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py",
+    "test:inbox-browser": "python3 tests/browser/support-inbox.browser.py"
   },
   "overrides": {
     "rolldown": "1.2.1",
