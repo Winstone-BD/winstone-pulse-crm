@@ -24,7 +24,8 @@
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
     "check:colors": "node scripts/check-dashboard-colors.mjs",
-    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py"
+    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py",
+    "test:inbox-browser": "python3 tests/browser/support-inbox.browser.py"
   },
   "overrides": {
     "rolldown": "1.2.1",
@@ -105,7 +106,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.2",
+    "@lovable.dev/vite-tanstack-config": "2.25.3",
     "@modelcontextprotocol/sdk": "1.32.1",
     "@types/node": "^22.16.5",
     "@types/qrcode": "^1.5.6",

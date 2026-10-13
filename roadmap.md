@@ -161,3 +161,6 @@
 - [x] Secure auto role setup for System Architect + Super Admin on first sign-up
 - [x] Homepage redesign, black/gold kept
 - [x] Verify real sign-in for both accounts (both approved admins)
+
+- [ ] Smart lead scoring + neglected high-potential lead flags for coordinators (from workspace chat)
+- [ ] Lead scoring v1: transparent score (engagement, duration, AI sentiment), coordinator neglected high-potential list, manual reassignment + transfer safeguards
