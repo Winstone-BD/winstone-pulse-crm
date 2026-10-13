@@ -50,7 +50,7 @@ export function HomeSignupForm() {
         New sales agent? Join Winstone Pulse
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Enter your details, then set a password on the next page. HQ approves new accounts.
+        Enter your details, then set a password on the next page. IT Console approves new accounts.
       </p>
       <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-2" noValidate>
         <div className="grid gap-1.5 sm:col-span-2">

@@ -142,7 +142,7 @@ function AuthPage() {
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {isSignup
-            ? "A supervisor approves new accounts before the floor data opens up."
+            ? "IT Console approves new accounts before the floor data opens up."
             : "Use your phone number, Employee ID or email."}
         </p>
 

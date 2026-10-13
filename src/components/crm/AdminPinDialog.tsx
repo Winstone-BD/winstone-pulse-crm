@@ -107,7 +107,7 @@ export function AdminPinDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className={challenge && surface === "system" ? "max-h-[96dvh] w-[calc(100vw-1rem)] max-w-5xl gap-0 overflow-y-auto p-0 sm:max-w-5xl md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : "max-h-[90dvh] overflow-y-auto sm:max-w-sm"}>
+      <DialogContent className={challenge && surface === "system" ? "max-h-[96dvh] w-[calc(100vw-1rem)] max-w-5xl gap-0 overflow-y-auto p-0 sm:max-w-5xl sm:p-0 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : "max-h-[90dvh] overflow-y-auto sm:max-w-sm"}>
         {challenge && surface === "system" && (
           <aside className="relative hidden min-h-[560px] overflow-hidden rounded-l-lg md:block" aria-hidden="true">
             <img src={brandPhoto.url} alt="" className="absolute inset-0 size-full object-cover" />
@@ -127,7 +127,7 @@ export function AdminPinDialog({
           </aside>
         )}
         <div className={challenge && surface === "system" ? "grid gap-5 p-5 sm:p-8" : "contents"}>
-        <DialogHeader className={challenge && surface === "system" ? "items-start text-left" : "items-center text-center"}>
+        <DialogHeader className={challenge && surface === "system" ? "m-0 items-start rounded-none border-0 bg-transparent p-0 text-left shadow-none backdrop-blur-none" : "items-center text-center"}>
           {challenge && surface === "system" ? (
             <>
               <div className="flex w-full min-w-0 items-center gap-3">
@@ -154,8 +154,8 @@ export function AdminPinDialog({
             <ItOfficerPicker selected={selectedOfficer} onSelect={selectOfficer} />
             {selectedOfficer && (
               <div className="flex min-w-0 items-center justify-between gap-2 rounded-md border border-gold/30 bg-gold/10 px-3 py-2 text-sm">
-                <span className="inline-flex min-w-0 items-center gap-2 truncate"><CheckCircle2 className="size-4 shrink-0 text-gold" />Selected: <strong className="truncate">{selectedOfficer}</strong></span>
-                <button type="button" className="shrink-0 text-xs font-medium text-gold underline-offset-2 hover:underline" onClick={() => { setSelectedOfficer(null); setEmail(""); requestAnimationFrame(() => emailRef.current?.focus()); }}>Use a different account</button>
+                <span className="inline-flex min-w-0 items-center gap-2 truncate"><CheckCircle2 className="size-4 shrink-0 text-gold" /><span className="hidden sm:inline">Selected:</span> <strong className="truncate">{selectedOfficer}</strong></span>
+                <button type="button" className="shrink-0 text-xs font-medium text-gold underline-offset-2 hover:underline" onClick={() => { setSelectedOfficer(null); setEmail(""); requestAnimationFrame(() => emailRef.current?.focus()); }}><span className="sm:hidden">Change</span><span className="hidden sm:inline">Use a different account</span></button>
               </div>
             )}
             <div className="grid gap-1.5">

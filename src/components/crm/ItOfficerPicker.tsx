@@ -17,7 +17,7 @@ export function ItOfficerPicker({ selected, onSelect }: { selected: string | nul
     { name: "Nafs Ul Haque", role: t({ en: "IT Officer", bn: "আইটি অফিসার" }), portrait: officerPortrait.url },
   ];
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-3" role="group" aria-label={t({ en: "Select your profile", bn: "আপনার প্রোফাইল বেছে নিন" })}>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3" role="group" aria-label={t({ en: "Select your profile", bn: "আপনার প্রোফাইল বেছে নিন" })}>
       {officers.map((officer) => {
         const active = selected === officer.name;
         return (
@@ -32,7 +32,7 @@ export function ItOfficerPicker({ selected, onSelect }: { selected: string | nul
           </button>
         );
       })}
-      <Link to="/support" className="flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-card p-2 text-center transition hover:border-gold/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Link to="/support" className="col-span-2 flex min-w-0 flex-row items-center sm:col-span-1 sm:flex-col justify-center gap-1.5 rounded-lg border border-dashed border-border bg-card p-2 text-center transition hover:border-gold/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <span className="grid size-9 place-items-center rounded-full bg-muted text-muted-foreground"><Users className="size-4" /></span>
         <span className="text-xs font-semibold text-foreground">{t({ en: "IT Assistant", bn: "আইটি অ্যাসিস্ট্যান্ট" })}</span>
         <span className="inline-flex items-center text-[11px] font-medium text-gold">{t({ en: "Request account", bn: "অ্যাকাউন্টের আবেদন" })}<ChevronRight className="size-3" /></span>
