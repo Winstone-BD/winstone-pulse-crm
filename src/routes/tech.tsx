@@ -71,6 +71,7 @@ function ArchitectPage() {
   if (!hasSession) {
     return shell(
       <div className="card-elevated space-y-3 p-6">
+        <ReviewSteps step={1} />
         <p className="text-sm">Sign in with the authorized Google account to continue.</p>
         <Button
           onClick={async () => {
@@ -104,8 +105,22 @@ function ArchitectPage() {
       </div>,
     );
   }
-  if (!session) return shell(<CredentialStep onSession={setSession} />);
-  return shell(<><AutoApprove session={session} /><Dashboard session={session} onExpired={() => setSession(null)} /></>);
+  if (!session) return shell(<><ReviewSteps step={2} /><CredentialStep onSession={setSession} /></>);
+  return shell(<><ReviewSteps step={3} /><AutoApprove session={session} /><Dashboard session={session} onExpired={() => setSession(null)} /></>);
+}
+
+/** Shows where the architect is in the required Google → private PIN → decide flow. */
+function ReviewSteps({ step }: { step: 1 | 2 | 3 }) {
+  const steps = ["Verified Google account", "Private architect PIN", "Review & decide"];
+  return (
+    <ol className="flex flex-wrap gap-2 text-xs" aria-label="Approval steps">
+      {steps.map((label, i) => (
+        <li key={label} aria-current={i + 1 === step ? "step" : undefined} className={`rounded-full border px-3 py-1 ${i + 1 < step ? "border-primary/40 text-primary" : i + 1 === step ? "border-primary bg-primary font-semibold text-primary-foreground" : "border-border text-muted-foreground"}`}>
+          {i + 1}. {label}
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 function CredentialStep({ onSession }: { onSession: (s: string) => void }) {
