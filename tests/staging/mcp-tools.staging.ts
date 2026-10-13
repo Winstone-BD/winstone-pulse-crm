@@ -1,105 +1,187 @@
 /**
- * STAGING-ONLY end-to-end check of EVERY MCP tool on an isolated backend.
+ * STAGING-ONLY end-to-end check of every MCP tool returned by tools/list.
  *
- * Flow once the user provides an isolated staging app and approves sign-in:
- *   1. Seeds clearly labelled synthetic market_facts (tagged STAGING:<ts>).
- *   2. Discovers tools via tools/list — never hardcoded.
- *   3. Runs per-tool checks (auth, execution, filtering, error handling).
- *   4. Prints a per-tool PASS/FAIL summary table at the end.
+ * Order (fails closed at each step):
+ *   1. assertStaging(): opt-in + confirmed staging ref + allow-listed staging app host.
+ *   2. verifyAppBackend(): the app's published sign-in issuer is that same staging ref.
+ *   3. Seeds synthetic market_facts whose metric AND geography carry a unique TAG.
+ *   4. Discovers tools via tools/list and runs generic checks on each one,
+ *      plus fixture checks for tools this suite knows the data contract of.
+ *   5. afterAll: deletes only rows whose metric starts with this run's TAG,
+ *      then prints a per-tool PASS/FAIL summary.
+ *
+ * Prerequisite: the OAuth-approved test account's email must be on the staging
+ * IT Console allow-list (app_config.mcpAllowedEmails), otherwise tools refuse.
  *
  * Run:
- *   STAGING_E2E=1 STAGING_CONFIRM=<ref> SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
- *   STAGING_APP_URL=https://<staging-app> STAGING_MCP_TOKEN=<oauth token> \
+ *   STAGING_E2E=1 SUPABASE_URL=https://<ref>.supabase.co STAGING_CONFIRM=<ref> \
+ *   SUPABASE_SERVICE_ROLE_KEY=<staging key> STAGING_APP_URL=https://<staging-app> \
+ *   STAGING_APP_ALLOWLIST=<staging-app-host> STAGING_MCP_TOKEN=<oauth access token> \
  *   bunx vitest run --config vitest.staging.config.ts tests/staging/mcp-tools.staging.ts
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { assertStaging } from "./guard";
 
-const supabaseUrl = assertStaging(); // throws before any write on non-staging
-const app = process.env["STAGING_APP_URL"];
+import { assertStaging, verifyAppBackend } from "./guard";
+
+const { supabaseUrl, ref, appUrl } = assertStaging(); // throws before anything else
 const token = process.env["STAGING_MCP_TOKEN"];
-if (!app || !token) throw new Error("[staging] STAGING_APP_URL and STAGING_MCP_TOKEN are required");
-const TAG = `STAGING:${Date.now()}`;
+const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+if (!token || !serviceKey) throw new Error("[staging] STAGING_MCP_TOKEN and SUPABASE_SERVICE_ROLE_KEY are required");
+
+const TAG = `STAGING-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 interface ToolDef {
   name: string;
-  inputSchema?: { properties?: Record<string, unknown>; required?: string[] };
+  inputSchema?: { properties?: Record<string, JsonSchema>; required?: string[] };
+}
+interface JsonSchema {
+  type?: string | string[];
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
+}
+interface RpcReply {
+  status: number;
+  json: { id?: number; result?: { isError?: boolean; tools?: ToolDef[]; content?: { type: string; text?: string }[] }; error?: { code: number; message: string } } | null;
+  raw: string;
 }
 
 const results: { tool: string; check: string; pass: boolean; detail?: string }[] = [];
 function record(tool: string, check: string, pass: boolean, detail?: string) {
   results.push({ tool, check, pass, detail });
+  return pass;
 }
 
-async function rpc(method: string, params: unknown, auth = token) {
-  const res = await fetch(`${app}/mcp`, {
+let nextId = 1;
+/** Parses a plain JSON body or an SSE stream (picks the message with our id). Never throws on bad bodies. */
+export function parseRpcBody(raw: string, id: number): RpcReply["json"] {
+  const tryParse = (s: string) => {
+    try {
+      return JSON.parse(s) as RpcReply["json"];
+    } catch {
+      return null;
+    }
+  };
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("{")) return tryParse(trimmed);
+  const messages = trimmed
+    .split(/\r?\n\r?\n/)
+    .map((evt) => evt.split(/\r?\n/).filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trimStart()).join("\n"))
+    .filter(Boolean)
+    .map(tryParse)
+    .filter((m): m is NonNullable<RpcReply["json"]> => !!m);
+  return messages.find((m) => m.id === id) ?? null;
+}
+
+async function rpc(method: string, params: unknown, auth: string | null = token!): Promise<RpcReply> {
+  const id = nextId++;
+  const res = await fetch(`${appUrl}/mcp`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       accept: "application/json, text/event-stream",
       ...(auth ? { authorization: `Bearer ${auth}` } : {}),
     },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
   });
-  const body = await res.text();
-  const json = body.startsWith("{") ? JSON.parse(body) : JSON.parse(body.split("data: ").pop()!.trim());
-  return { status: res.status, json };
+  const raw = await res.text();
+  return { status: res.status, json: parseRpcBody(raw, id), raw: raw.slice(0, 300) };
 }
 
-function callTool(name: string, args: Record<string, unknown>) {
-  return rpc("tools/call", { name, arguments: args });
-}
+const callTool = (name: string, args: Record<string, unknown>) => rpc("tools/call", { name, arguments: args });
+const isRejected = (r: RpcReply) => r.status >= 400 || !!r.json?.error || r.json?.result?.isError === true;
+const succeeded = (r: RpcReply) => r.status === 200 && !!r.json?.result && !r.json.error && r.json.result.isError !== true;
 
-/** Build minimal valid arguments for a tool from its input schema. */
-function validArgs(tool: ToolDef): Record<string, unknown> {
+const typeOf = (s: JsonSchema) => (Array.isArray(s.type) ? s.type[0] : s.type);
+
+/** Only required arguments, filled from schema bounds. Optional args keep their server defaults. */
+function minimalArgs(tool: ToolDef): Record<string, unknown> {
   const args: Record<string, unknown> = {};
-  for (const [key, schema] of Object.entries(tool.inputSchema?.properties ?? {})) {
-    const t = (schema as { type?: string }).type;
-    if (t === "number" || t === "integer") args[key] = 100;
-    else if (t === "boolean") args[key] = true;
-    else args[key] = "Uttara"; // string filters match a seeded fixture
+  const props = tool.inputSchema?.properties ?? {};
+  for (const key of tool.inputSchema?.required ?? []) {
+    const s = props[key] ?? {};
+    const t = typeOf(s);
+    if (t === "number" || t === "integer") args[key] = s.minimum ?? 1;
+    else if (t === "boolean") args[key] = false;
+    else args[key] = "x".repeat(Math.max(s.minLength ?? 1, 1));
   }
   return args;
 }
 
-/** Build an argument set that must fail validation (violate one constraint). */
-function invalidArgs(tool: ToolDef): Record<string, unknown> | null {
-  const props = tool.inputSchema?.properties ?? {};
-  for (const [key, schema] of Object.entries(props)) {
-    const s = schema as { type?: string; minimum?: number };
-    if ((s.type === "number" || s.type === "integer") && s.minimum !== undefined) {
-      return { ...validArgs(tool), [key]: s.minimum - 1 };
-    }
+/** One argument set per violatable constraint advertised in the schema. */
+function invalidArgSets(tool: ToolDef): { label: string; args: Record<string, unknown> }[] {
+  const out: { label: string; args: Record<string, unknown> }[] = [];
+  for (const [key, s] of Object.entries(tool.inputSchema?.properties ?? {})) {
+    const t = typeOf(s);
+    if ((t === "number" || t === "integer") && s.minimum !== undefined) out.push({ label: `${key} below minimum`, args: { ...minimalArgs(tool), [key]: s.minimum - 1 } });
+    if ((t === "number" || t === "integer") && s.maximum !== undefined) out.push({ label: `${key} above maximum`, args: { ...minimalArgs(tool), [key]: s.maximum + 1 } });
+    if (t === "integer") out.push({ label: `${key} not an integer`, args: { ...minimalArgs(tool), [key]: 1.5 } });
+    if (t === "string" && s.maxLength !== undefined) out.push({ label: `${key} too long`, args: { ...minimalArgs(tool), [key]: "x".repeat(s.maxLength + 1) } });
   }
-  return null;
+  out.push({ label: "undeclared argument", args: { ...minimalArgs(tool), __staging_unknown__: 1 } });
+  return out;
 }
 
-function toolFacts(r: Awaited<ReturnType<typeof rpc>>) {
-  return JSON.parse(r.json.result.content[0].text).facts.filter((f: { metric?: string }) => f.metric?.startsWith(TAG));
+function taggedFacts(r: RpcReply): { metric: string; geography: string }[] {
+  const textPart = r.json?.result?.content?.find((c) => c.type === "text")?.text ?? "{}";
+  const parsed = JSON.parse(textPart) as { facts?: { metric?: string; geography?: string }[] };
+  return (parsed.facts ?? []).filter((f) => f.metric?.startsWith(TAG)) as { metric: string; geography: string }[];
 }
 
+/** Data-contract checks for tools whose implementation we know (src/lib/mcp/tools). */
+const FIXTURE_CHECKS: Record<string, (name: string) => Promise<void>> = {
+  // Implementation: category=project_property, status=published, verified_at not null,
+  // expiry null or >= today, optional geography ILIKE %value% (trimmed, 2..100 chars), limit 1..100.
+  async list_public_property_facts(name) {
+    const all = taggedFacts(await callTool(name, { geography: TAG, limit: 100 }));
+    const metrics = all.map((f) => f.metric).sort();
+    const expected = [`${TAG} published-a`, `${TAG} published-b`, `${TAG} published-c`];
+    expect(record(name, "only published, verified, unexpired fixtures", JSON.stringify(metrics) === JSON.stringify(expected), metrics.join(","))).toBe(true);
+
+    const uttara = taggedFacts(await callTool(name, { geography: `${TAG} Dhaka - Uttara`, limit: 100 }));
+    expect(record(name, "geography substring filter", uttara.length === 1 && uttara[0]!.metric === `${TAG} published-b`, `got ${uttara.length}`)).toBe(true);
+
+    const caseInsensitive = taggedFacts(await callTool(name, { geography: `${TAG} dhaka - uttara`.toLowerCase(), limit: 100 }));
+    expect(record(name, "geography filter is case-insensitive", caseInsensitive.length === 1, `got ${caseInsensitive.length}`)).toBe(true);
+
+    const short = await callTool(name, { geography: "x" });
+    expect(record(name, "geography shorter than 2 chars rejected", isRejected(short), short.raw)).toBe(true);
+  },
+};
+
+let db: SupabaseClient | null = null;
 let tools: ToolDef[] = [];
 
 beforeAll(async () => {
-  const db = createClient(supabaseUrl, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, { auth: { persistSession: false } });
-  const today = new Date().toISOString().slice(0, 10);
+  await verifyAppBackend(appUrl, ref); // app must sign in against the confirmed staging backend
+  db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10);
   const base = { category: "project_property", source_name: "STAGING FIXTURE", value: "1", effective_date: today };
   const { error } = await db.from("market_facts").insert([
-    { ...base, metric: `${TAG} a`, geography: "Dhaka - Bashundhara", status: "published", verified_at: new Date().toISOString() },
-    { ...base, metric: `${TAG} b`, geography: "Dhaka - Uttara", status: "published", verified_at: new Date().toISOString() },
-    { ...base, metric: `${TAG} c`, geography: "Chattogram", status: "published", verified_at: new Date().toISOString() },
-    { ...base, metric: `${TAG} draft`, geography: "Dhaka - Uttara", status: "draft" },
-    { ...base, metric: `${TAG} expired`, geography: "Dhaka - Uttara", status: "published", verified_at: new Date().toISOString(), expiry_date: "2000-01-01" },
-  ] as never);
-  if (error) throw error;
+    { ...base, metric: `${TAG} published-a`, geography: `${TAG} Dhaka - Bashundhara`, status: "published", verified_at: now },
+    { ...base, metric: `${TAG} published-b`, geography: `${TAG} Dhaka - Uttara`, status: "published", verified_at: now },
+    { ...base, metric: `${TAG} published-c`, geography: `${TAG} Chattogram`, status: "published", verified_at: now },
+    { ...base, metric: `${TAG} draft`, geography: `${TAG} Dhaka - Uttara`, status: "draft" },
+    { ...base, metric: `${TAG} unverified`, geography: `${TAG} Dhaka - Uttara`, status: "published" },
+    { ...base, metric: `${TAG} expired`, geography: `${TAG} Dhaka - Uttara`, status: "published", verified_at: now, expiry_date: "2000-01-01" },
+  ]);
+  if (error) throw new Error(`[staging] fixture insert failed: ${error.message}`);
 
   const listed = await rpc("tools/list", {});
-  tools = listed.json.result.tools;
-  if (!Array.isArray(tools) || tools.length === 0) throw new Error("[staging] tools/list returned no tools");
-});
+  const list = listed.json?.result?.tools;
+  if (!succeeded(listed) || !Array.isArray(list) || list.length === 0) throw new Error(`[staging] tools/list failed: ${listed.raw}`);
+  tools = list;
+}, 60_000);
 
-afterAll(() => {
+afterAll(async () => {
+  // Cleanup runs only because the module-level guard already passed; scoped to this run's TAG.
+  if (db) {
+    const { error, count } = await db.from("market_facts").delete({ count: "exact" }).like("metric", `${TAG}%`);
+    console.log(error ? `[staging] cleanup failed: ${error.message} — rows tagged ${TAG} remain` : `[staging] cleanup removed ${count ?? 0} rows tagged ${TAG}`);
+  }
   const byTool = new Map<string, { pass: number; fail: number; failures: string[] }>();
   for (const r of results) {
     const e = byTool.get(r.tool) ?? { pass: 0, fail: 0, failures: [] };
@@ -110,61 +192,52 @@ afterAll(() => {
     }
     byTool.set(r.tool, e);
   }
+  for (const t of tools) if (!byTool.has(t.name)) byTool.set(t.name, { pass: 0, fail: 1, failures: ["no checks ran"] });
   console.log("\n===== MCP STAGING SUMMARY =====");
   for (const [tool, e] of byTool) {
     console.log(`${e.fail === 0 ? "PASS" : "FAIL"}  ${tool}  (${e.pass} passed, ${e.fail} failed)`);
-    for (const f of e.failures) console.log(`       ✗ ${f}`);
+    for (const f of e.failures) console.log(`       x ${f}`);
   }
   console.log("================================\n");
 });
 
 describe("MCP on staging — auth", () => {
   it("rejects unauthenticated calls", async () => {
-    const r = await rpc("tools/list", {}, "");
-    record("(server)", "unauthenticated rejected", r.status === 401, `status ${r.status}`);
-    expect(r.status).toBe(401);
+    const r = await rpc("tools/list", {}, null);
+    expect(record("(server)", "unauthenticated rejected with 401", r.status === 401, `status ${r.status}`)).toBe(true);
   });
   it("rejects a bogus token", async () => {
     const r = await rpc("tools/list", {}, "bogus-token");
-    record("(server)", "bogus token rejected", r.status === 401, `status ${r.status}`);
-    expect(r.status).toBe(401);
+    expect(record("(server)", "bogus token rejected with 401", r.status === 401, `status ${r.status}`)).toBe(true);
+  });
+  it("rejects an unknown tool name", async () => {
+    const r = await callTool(`staging_unknown_${TAG}`, {});
+    expect(record("(server)", "unknown tool rejected", isRejected(r), r.raw)).toBe(true);
   });
 });
 
-describe("MCP on staging — per-tool checks", () => {
-  it("every discovered tool executes and handles errors", async () => {
+describe("MCP on staging — every listed tool", () => {
+  it("executes, validates input, and meets its data contract", async () => {
     for (const tool of tools) {
-      // 1. Executes with valid arguments
-      const ok = await callTool(tool.name, validArgs(tool));
-      const okPass = ok.status === 200 && !ok.json.error && !ok.json.result?.isError;
-      record(tool.name, "executes with valid args", okPass, okPass ? undefined : JSON.stringify(ok.json).slice(0, 200));
-      expect(okPass).toBe(true);
+      const ok = await callTool(tool.name, minimalArgs(tool));
+      record(tool.name, "executes with minimal valid args", succeeded(ok), succeeded(ok) ? undefined : ok.raw);
 
-      // 2. Returns only published, unexpired fixture rows (3 of 5 seeded)
-      if (tool.name === "list_public_property_facts") {
-        const rows = toolFacts(ok);
-        record(tool.name, "returns only published unexpired fixtures", rows.length === 3, `got ${rows.length}`);
-        expect(rows).toHaveLength(3);
-
-        const filtered = toolFacts(await callTool(tool.name, { geography: "Uttara", limit: 100 }));
-        record(tool.name, "geography filter works", filtered.length === 1, `got ${filtered.length}`);
-        expect(filtered).toHaveLength(1);
+      for (const bad of invalidArgSets(tool)) {
+        const r = await callTool(tool.name, bad.args);
+        record(tool.name, `rejects ${bad.label}`, isRejected(r), isRejected(r) ? undefined : r.raw);
       }
 
-      // 3. Rejects invalid input, when the schema has a violatable constraint
-      const bad = invalidArgs(tool);
-      if (bad) {
-        const r = await callTool(tool.name, bad);
-        const rejected = (r.json.result?.isError ?? false) || !!r.json.error;
-        record(tool.name, "invalid input rejected", rejected, rejected ? undefined : JSON.stringify(r.json).slice(0, 200));
-        expect(rejected).toBe(true);
+      const fixture = FIXTURE_CHECKS[tool.name];
+      if (fixture) {
+        try {
+          await fixture(tool.name);
+        } catch (e) {
+          record(tool.name, "fixture checks", false, (e as Error).message.slice(0, 200));
+        }
+      } else {
+        record(tool.name, "data contract", false, "no fixture check written for this tool — add one to FIXTURE_CHECKS");
       }
-
-      // 4. Unknown tool name is an error, not a crash
-      const unknown = await callTool(`${tool.name}__nope`, {});
-      const unknownRejected = (unknown.json.result?.isError ?? false) || !!unknown.json.error;
-      record("(server)", "unknown tool rejected", unknownRejected, unknownRejected ? undefined : JSON.stringify(unknown.json).slice(0, 200));
-      expect(unknownRejected).toBe(true);
     }
+    expect(results.filter((r) => !r.pass)).toEqual([]);
   });
 });
