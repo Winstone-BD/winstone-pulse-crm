@@ -34,3 +34,17 @@ Device, browser version, time sent, time received, pass/fail, screenshot. Never 
 
 ## Pass rule
 All F/B cases pass on devices 1, 3 and 4; D cases pass on at least one device.
+
+## What the automated test covers (and what it cannot)
+`tests/push-flow.test.ts` (run: `bunx vitest run push-flow`) checks the flow after the move from `firebase` to `@firebase/app` + `@firebase/messaging`, with Firebase and the browser mocked:
+- Not-configured, preview-frame, unsupported and denied branches return the right status and never register the worker early.
+- Registration passes full config, including `messagingSenderId` from the app ID, to both the app and `/firebase-messaging-sw.js`.
+- Server sends go through the connector gateway, stale tokens (404/400) are revoked, a repeated event key sends nothing, and a missing connection is skipped quietly.
+
+Still needs a real device (cases above):
+- The real permission prompt and the token Firebase issues (mocked in tests).
+- The service worker: it still loads the compat scripts from gstatic 10.12.0, separate from the bundled modular packages — confirm it installs and shows background notifications (B1–B4).
+- Foreground behaviour: the app has no `onMessage` handler, so a visible tab relies on the in-app badge (F1); confirm no duplicate popup.
+- Tapping a notification opening the right page (`data.path`, default `/desk`).
+- iOS Home Screen delivery, lock screen, offline-then-online delivery and sign-out (D2: tokens are not revoked on sign-out today — record what happens).
+- Android app (Winstone Connect) tokens: only the server send path is tested.
