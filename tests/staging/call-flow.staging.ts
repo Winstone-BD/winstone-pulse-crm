@@ -20,13 +20,18 @@ const LIVE_REF = "siepfegeubbqwhodyxcg";
 const url = process.env["SUPABASE_URL"] ?? "";
 const confirm = process.env["STAGING_CONFIRM"] ?? "";
 
+import { stagingBlocker } from "./guard";
 export function stagingGuard(): string | null {
+  return stagingBlocker();
+}
+function legacyStagingGuard(): string | null {
   if (process.env["STAGING_E2E"] !== "1") return "STAGING_E2E=1 not set";
   if (!url) return "SUPABASE_URL missing";
   if (url.includes(LIVE_REF)) return "Refusing: SUPABASE_URL points at the LIVE CRM";
   if (!confirm || !url.includes(confirm)) return "STAGING_CONFIRM must match the staging project ref in SUPABASE_URL";
   return null;
 }
+void legacyStagingGuard;
 const blocked = stagingGuard();
 if (blocked) throw new Error(`[staging-e2e] ${blocked}`);
 

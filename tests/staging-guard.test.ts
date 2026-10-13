@@ -1,15 +1,16 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { stagingBlocker } from "./staging/guard";
 
-describe("staging e2e suite safety", () => {
-  const src = readFileSync("tests/staging/call-flow.staging.ts", "utf8");
-  it("refuses the live project and needs explicit opt-in + ref confirmation", () => {
-    expect(src).toMatch(/LIVE_REF = "siepfegeubbqwhodyxcg"/);
-    expect(src).toMatch(/STAGING_E2E/);
-    expect(src).toMatch(/STAGING_CONFIRM/);
-    expect(src.indexOf("if (blocked) throw")).toBeLessThan(src.indexOf("beforeAll("));
-  });
-  it("is not part of the normal test run", () => {
-    expect(readFileSync("vitest.config.ts", "utf8")).toMatch(/tests\/\*\*\/\*\.test\.ts/);
-  });
+const ok = { STAGING_E2E: "1", SUPABASE_URL: "https://abcdefghijklmnopqrst.supabase.co", STAGING_CONFIRM: "abcdefghijklmnopqrst" };
+
+describe("staging guard fails closed", () => {
+  it("passes only a confirmed non-live backend", () => expect(stagingBlocker(ok)).toBeNull());
+  it("blocks without opt-in", () => expect(stagingBlocker({ ...ok, STAGING_E2E: undefined })).toMatch(/not set/));
+  it("blocks the live backend", () =>
+    expect(stagingBlocker({ ...ok, SUPABASE_URL: "https://siepfegeubbqwhodyxcg.supabase.co", STAGING_CONFIRM: "siepfegeubbqwhodyxcg" })).toMatch(/LIVE/));
+  it("blocks unknown hosts (proxies, localhost)", () =>
+    expect(stagingBlocker({ ...ok, SUPABASE_URL: "http://localhost:54321" })).toMatch(/unknown/));
+  it("blocks mismatched confirmation", () => expect(stagingBlocker({ ...ok, STAGING_CONFIRM: "x" })).toMatch(/exactly/));
+  it("blocks the live site as app URL", () =>
+    expect(stagingBlocker({ ...ok, STAGING_APP_URL: "https://crm.winstonebd.com" })).toMatch(/live site/));
 });
