@@ -61,10 +61,10 @@ export const template = {
       : "Winstone Pulse — সার্ভিস বিল আপডেট",
   displayName: "Service bill alert",
   previewData: {
-    title: "2026-10 সার্ভিস বিল বকেয়া — ৳4,345 BDT",
+    title: "2026-10 সার্ভিস বিল বকেয়া — $35.29 USD",
     detail: "আজ মেয়াদ শেষ; ১৮ অক্টোবর পর্যন্ত গ্রেস।",
     period: "2026-10",
-    amount: "৳4,345 BDT",
+    amount: "$35.29 USD",
     stageLabel: "মেয়াদ শেষ",
     reviewUrl: "https://crm.winstonebd.com/service-bill-unlock",
   },

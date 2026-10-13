@@ -1,5 +1,5 @@
 /**
- * Automatic reminders for the monthly ৳4,345 BDT maintenance fee.
+ * Automatic reminders for the monthly $35.29 USD maintenance fee.
  *
  * Three stages per period, each fired at most once: the bill is coming up
  * (3 days before the 15th), the bill is due, and the grace window closed so it
@@ -13,7 +13,7 @@
  */
 
 import { logAudit } from "@/lib/audit.server";
-import { MAINTENANCE_FEE_BDT, MAINTENANCE_FEE_LABEL } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_USD, MAINTENANCE_FEE_LABEL } from "@/lib/maintenance-rules";
 import { sendPush } from "@/lib/push.server";
 import {
   dhakaPeriod,
@@ -211,7 +211,7 @@ export async function runServiceBillingAlerts(now = new Date()): Promise<AlertRu
           entityType: "service_invoice",
           entityId: invoice.period,
           actorLabel: "Billing scheduler",
-          metadata: { stage, amountBdt: MAINTENANCE_FEE_BDT, status: invoice.status },
+          metadata: { stage, amountUsd: MAINTENANCE_FEE_USD, status: invoice.status },
         });
       }
     }
