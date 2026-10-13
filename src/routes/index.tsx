@@ -77,7 +77,7 @@ function EntryHall() {
   return (
     <div className="theme-exec min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto grid min-h-16 w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6">
+        <div className="mx-auto grid min-h-16 w-full max-w-6xl grid-cols-1 items-center gap-1 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
             <BrandLockup />
           </Link>
@@ -401,7 +401,7 @@ function SystemStatus() {
   const label = state === "ok" ? t({ en: "Server online", bn: "সার্ভার অনলাইন" }) : state === "down" ? t({ en: "Server unavailable", bn: "সার্ভার অনুপলব্ধ" }) : t({ en: "Checking server…", bn: "সার্ভার যাচাই…" });
   const dot = state === "ok" ? "bg-success" : state === "down" ? "bg-destructive" : "bg-muted-foreground";
   return (
-    <span className="inline-flex w-28 shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium text-muted-foreground sm:w-32 sm:text-[11px]" role="status">
+    <span className="inline-flex w-28 shrink-0 items-center gap-1.5 text-[10px] font-medium text-muted-foreground sm:w-32 sm:justify-end sm:text-[11px]" role="status">
       <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
