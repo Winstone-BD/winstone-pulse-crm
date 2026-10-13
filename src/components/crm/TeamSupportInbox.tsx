@@ -39,14 +39,14 @@ const FILTERS: { key: Filter; label: string }[] = [
 /** Sales Team Admin inbox: agent complaints from web and Android in one list. */
 /** Keeps a crash in the inbox from blanking the whole page. */
 class InboxBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
+  override state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch(error: unknown) {
+  override componentDidCatch(error: unknown) {
     console.error(error);
   }
-  render() {
+  override render() {
     if (!this.state.failed) return this.props.children;
     return (
       <InboxError
@@ -56,7 +56,7 @@ class InboxBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 
-function InboxError({ onRetry, detail }: { onRetry: () => void; detail?: string }) {
+function InboxError({ onRetry, detail }: { onRetry: () => void; detail?: string | undefined }) {
   return (
     <section role="alert" className="card-elevated space-y-2 p-4">
       <h2 className="text-sm font-semibold">Support inbox couldn't load</h2>
