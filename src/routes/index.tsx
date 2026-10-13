@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
+import { BrandLockup } from "@/components/BrandLockup";
 import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
@@ -76,11 +76,8 @@ function EntryHall() {
     <div className="theme-exec min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5">
-            <img src={logoAsset.url} alt="Winstone logo" className="size-8 rounded-full object-cover ring-1 ring-border" />
-            <span className="truncate text-sm font-semibold tracking-tight">
-              WINSTONE <span className="text-gold">PULSE</span>
-            </span>
+          <Link to="/" className="flex min-w-0 items-center">
+            <BrandLockup />
           </Link>
           <div className="flex items-center gap-3">
             <SystemStatus />
