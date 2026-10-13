@@ -15,6 +15,11 @@ import {
   dhakaPeriod,
   isArchitectIdentity,
   billingStates,
+  VAT_SETTING_KEY,
+  parseVatSetting,
+  invoiceTotals,
+  nextUngeneratedPeriod,
+  nextInvoicePreviewFor,
   type AccessStatus,
   type InvoiceStatus,
   type PaymentState,
@@ -96,6 +101,23 @@ export function clearMaintenanceCache() {
   cache = null;
 }
 
+/** Admin-configured VAT rate (basis points) or null when not configured. Read-only. */
+export async function readVatRateBps(): Promise<number | null> {
+  const client = await db();
+  const { data } = await client.from("system_settings").select("value").eq("key", VAT_SETTING_KEY).maybeSingle();
+  return parseVatSetting(data?.value ?? null);
+}
+
+/** Read-only preview of the next not-yet-generated invoice. SELECTs only — never inserts or updates. */
+export async function previewNextInvoice(now: Date = new Date()) {
+  const client = await db();
+  const { data } = await client
+    .from("system_maintenance").select("billing_period")
+    .eq("plan_code", PLAN_CODE).eq("billing_period", dhakaPeriod(now)).maybeSingle();
+  const period = nextUngeneratedPeriod(now, Boolean(data));
+  return nextInvoicePreviewFor(period, await readVatRateBps());
+}
+
 async function ensureRow(period: string) {
   const client = await db();
   const { data } = await client
@@ -105,15 +127,17 @@ async function ensureRow(period: string) {
     .maybeSingle();
   if (data) return data;
   const lockAt = defaultLockAt(period);
+  const vat = invoiceTotals(MAINTENANCE_FEE_MINOR, await readVatRateBps());
   await client.from("system_maintenance").upsert(
     {
       billing_period: period,
       plan_code: PLAN_CODE,
       fee_usd: MAINTENANCE_FEE_USD,
       base_cents: MAINTENANCE_FEE_MINOR,
-      vat_rate_bps: 0,
-      vat_cents: 0,
-      total_cents: MAINTENANCE_FEE_MINOR,
+      // Same canonical source as the preview; unconfigured VAT is stored as 0 VAT with the rate left null.
+      vat_rate_bps: vat.vatRateBps,
+      vat_cents: vat.vatMinor ?? 0,
+      total_cents: vat.totalMinor ?? MAINTENANCE_FEE_MINOR,
       currency: MAINTENANCE_CURRENCY,
       due_date: defaultDueAt(period),
       lock_at: lockAt,

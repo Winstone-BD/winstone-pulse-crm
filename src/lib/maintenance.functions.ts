@@ -93,6 +93,16 @@ export const itMaintenance = createServerFn({ method: "POST" })
     return { state, ...history };
   });
 
+/** IT Console only: read-only preview of the next invoice before it is generated. No writes. */
+export const nextMaintenanceInvoicePreview = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Token.parse(input))
+  .handler(async ({ data }) => {
+    await itCaller(data.adminToken);
+    const { previewNextInvoice, maintenanceAccess } = await import("@/lib/maintenance.server");
+    const [preview, state] = await Promise.all([previewNextInvoice(), maintenanceAccess()]);
+    return { preview, status: { period: state.period, paymentStatus: state.paymentStatus, locked: state.locked } };
+  });
+
 /**
  * Read-only "Billing & Approvals" summary for the IT Console. canApprove is
  * derived on the server from the confirmed Google architect identity — it only
