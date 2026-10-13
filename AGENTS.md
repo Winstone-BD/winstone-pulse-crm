@@ -28,9 +28,6 @@
 - Restart recovery: `bun run test:restart` (sandbox-only; --account/--self/--list-accounts); post-publish: `bun run test:smoke` (live, signed out, read-only) — why: blank screens need real restarts/loads, not unit tests.
 - Module recovery lives in src/lib/deploy-recovery.ts (injected by __root): it coalesces concurrent failures, bounds each availability probe with a timeout, and reloads only once the module that failed serves again, not merely the page — why: a restarting server answers its document long before its modules, and reloading into that state stranded a blank tab.
 - Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
-- Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
-- Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
-- Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
 - Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
 - IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
