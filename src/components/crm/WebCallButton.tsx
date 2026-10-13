@@ -260,7 +260,7 @@ export function WebCallButton({
             disabled={start.isPending}
             onClick={() => {
               setBriefOpen(false);
-              start.mutate();
+              startGuarded();
             }}
           >
             {start.isPending ? <Loader2 className="size-5 animate-spin" /> : <PhoneOutgoing className="size-5" />}
@@ -277,7 +277,7 @@ export function WebCallButton({
         className,
       )}
       disabled={start.isPending}
-      onClick={() => (leadId ? setBriefOpen(true) : start.mutate())}
+      onClick={() => (leadId ? setBriefOpen(true) : startGuarded())}
       title="কল করুন — কল শেষে রিপোর্ট বাধ্যতামূলক"
       aria-label={ariaLabel}
     >
