@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
- * CRM maintenance invoice endpoints ($35.29 USD from 2026-11; older invoices keep their stored amount). The lock itself is decided in
+ * CRM maintenance invoice endpoints (৳4,345 BDT from 2026-11; older invoices keep their stored amount). The lock itself is decided in
  * maintenance.server.ts; these functions only read it or move it through the
  * IT Console → System Architect workflow.
  */
@@ -52,7 +52,7 @@ export const getMaintenanceStatus = createServerFn({ method: "POST" })
       };
     } catch (error) {
       console.error("maintenance status failed", error);
-      return { ok: false as const, locked: true, stage: "locked" as const, exempt, amountLabel: "—", currency: "USD", paymentStatus: "unpaid" as const, invoiceStatus: "OPEN" as const, paymentState: "UNPAID" as const, accessStatus: "LOCKED" as const, recoveryPending: false, rejectedReason: null as string | null, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
+      return { ok: false as const, locked: true, stage: "locked" as const, exempt, amountLabel: "—", currency: "BDT", paymentStatus: "unpaid" as const, invoiceStatus: "OPEN" as const, paymentState: "UNPAID" as const, accessStatus: "LOCKED" as const, recoveryPending: false, rejectedReason: null as string | null, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
     }
   });
 
