@@ -3,19 +3,8 @@ message, Try again, and Reload page actions. Run: bun run test:inbox-browser"""
 import asyncio, subprocess, sys
 from playwright.async_api import async_playwright
 
-TSCONFIG_OVERRIDE = (
-    '{"compilerOptions":{"paths":{'
-    '"@tanstack/react-start":["./tests/browser/support-inbox-mock-start.ts"],'
-    '"@/lib/local-session":["./tests/browser/support-inbox-mock-session.ts"],'
-    '"@/*":["./src/*"]}}}'
-)
 subprocess.run(
-    [
-        "bun", "build", "tests/browser/support-inbox.entry.tsx",
-        "--outfile=/tmp/support-inbox.js",
-        "--tsconfig-override", TSCONFIG_OVERRIDE,
-        "--define", "process.env.NODE_ENV='\"production\"'",
-    ],
+    ["bun", "tests/browser/build-support-inbox.ts"],
     check=True, capture_output=True,
 )
 JS = open("/tmp/support-inbox.js").read()
