@@ -23,7 +23,8 @@
     "check:mcp-js:compat": "bash scripts/mcp-js-compat-isolated.sh",
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
-    "check:colors": "node scripts/check-dashboard-colors.mjs"
+    "check:colors": "node scripts/check-dashboard-colors.mjs",
+    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py"
   },
   "overrides": {
     "rolldown": "1.2.1",

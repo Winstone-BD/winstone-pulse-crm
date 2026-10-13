@@ -106,6 +106,43 @@ async def main():
         check(await page.locator("#deploy-notice").count() == 0, "no 'loading' notice once limit reached")
         await ctx.close()
 
+        # D: interrupted reload — the reload starts but is aborted mid-flight, server then flaps.
+        # The page must end on a usable refresh screen, and Refresh Page must load the new version.
+        ctx = await browser.new_context()
+        st = {"docs": 0, "ready": False, "abort_next_doc": False}
+        html = PAGE.replace("PROBE_TRIES=12", "PROBE_TRIES=2")
+        async def handle4(route):
+            r = route.request
+            if r.url.startswith(ORIGIN + "/assets/"):
+                if st["ready"]: return await route.fulfill(status=200, content_type="text/javascript", body="export default 1;")
+                return await route.fulfill(status=404, content_type="text/html", body="missing")
+            if r.method == "GET":
+                if st["abort_next_doc"]:
+                    st["abort_next_doc"] = False
+                    return await route.abort("connectionreset")
+                st["docs"] += 1
+            await route.fulfill(status=200, content_type="text/html", body=html)
+        await ctx.route(ORIGIN + "/**", handle4)
+        page = await ctx.new_page()
+        await page.goto(ORIGIN + "/", wait_until="domcontentloaded")
+        await page.wait_for_selector("#deploy-recovery", timeout=15000)
+        st["abort_next_doc"] = True
+        try:
+            await page.get_by_role("button", name="Refresh Page").click()
+            await page.wait_for_timeout(1500)
+        except Exception: pass
+        check(st["docs"] == 1, f"interrupted reload did not load a new document (docs={st['docs']})")
+        await page.goto(ORIGIN + "/", wait_until="domcontentloaded")
+        await page.wait_for_selector("#deploy-recovery", timeout=15000)
+        btn = page.get_by_role("button", name="Refresh Page")
+        check(await btn.is_visible() and await btn.is_enabled(), "refresh screen is shown again and usable after the interruption")
+        st["ready"] = True
+        await btn.click()
+        await page.wait_for_function("document.getElementById('app').textContent==='new'", timeout=15000)
+        check(await page.locator("#deploy-recovery").count() == 0, "Refresh Page loads the new version and clears the screen")
+        check(await page.evaluate("sessionStorage.getItem('deployment-reload-attempted:n')") is None, "reload counter cleared after recovery")
+        await ctx.close()
+
         await browser.close()
     if failures:
         print(f"\n{len(failures)} failure(s)"); sys.exit(1)
