@@ -3,7 +3,10 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 const PLAN_CODE = "crm" as const;
 
 import {
-  MAINTENANCE_FEE_USD,
+  MAINTENANCE_CURRENCY,
+  MAINTENANCE_FEE_BDT,
+  MAINTENANCE_FEE_MINOR,
+  moneyLabel,
   clampUnlockMinutes,
   decide,
   defaultDueAt,
@@ -12,7 +15,6 @@ import {
   dhakaPeriod,
   isArchitectIdentity,
   billingStates,
-  CRM_INVOICE_LABEL,
   type AccessStatus,
   type InvoiceStatus,
   type PaymentState,
@@ -23,7 +25,9 @@ import {
 
 export type MaintenanceState = {
   period: string;
-  feeUsd: number;
+  /** Amount label from this invoice's own stored snapshot (historical rows keep their currency). */
+  amountLabel: string;
+  currency: string;
   dueDate: string;
   lockAt: string;
   paymentStatus: PaymentStatus;
@@ -81,6 +85,12 @@ export async function audit(entry: {
   if (error) console.error("maintenance audit failed", error);
 }
 
+/** Label from the row's own immutable snapshot: BDT rows show ৳, historical USD rows stay USD. */
+function rowAmountLabel(row: { total_cents?: number | null; currency?: string | null; fee_usd?: number | string | null }): string {
+  if (row.total_cents != null) return moneyLabel(row.total_cents, row.currency);
+  return moneyLabel(Math.round(Number(row.fee_usd ?? 0) * 100), row.currency ?? "USD");
+}
+
 let cache: { at: number; state: MaintenanceState } | null = null;
 export function clearMaintenanceCache() {
   cache = null;
@@ -99,7 +109,13 @@ async function ensureRow(period: string) {
     {
       billing_period: period,
       plan_code: PLAN_CODE,
-      fee_usd: MAINTENANCE_FEE_USD,
+      fee_usd: 0,
+      fee_bdt: MAINTENANCE_FEE_BDT,
+      base_cents: MAINTENANCE_FEE_MINOR,
+      vat_rate_bps: 0,
+      vat_cents: 0,
+      total_cents: MAINTENANCE_FEE_MINOR,
+      currency: MAINTENANCE_CURRENCY,
       due_date: defaultDueAt(period),
       lock_at: lockAt,
     },
@@ -121,6 +137,8 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
   const client = await db();
   const period = dhakaPeriod(now);
   let row = await ensureRow(period);
+  const amountLabel = rowAmountLabel(row);
+  const CRM_INVOICE_LABEL = amountLabel;
 
   // Server-side expiry: an approved unlock past its time is closed here, once.
   if (
@@ -174,13 +192,13 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     const { isAmberWindow, isRedWindow } = await import("@/lib/maintenance-rules");
     const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
     if (day >= 9 && day < 15) {
-      await notifyOnce(`billing_invoice_available_${period}`, "info", "New invoice available", `WINSTONE PULSE : CRM invoice for ${period}: $18.16 USD incl. 15% VAT. Due on the 12th; lock deadline 15th 00:00 (Dhaka).`);
+      await notifyOnce(`billing_invoice_available_${period}`, "info", "New invoice available", `WINSTONE PULSE : CRM invoice for ${period}: ${amountLabel}. Due ${dhakaTime(row.due_date)}; lock deadline ${dhakaTime(row.lock_at)} (Dhaka).`);
     }
-    if (isRedWindow(now) || (!isAmberWindow(now) && day === 11)) {
-      await notifyOnce(`billing_due_approaching_${period}`, "warning", "Payment due date approaching", `Invoice ${period} ($18.16 USD) is due on the 12th. Payment status: ${row.payment_status}.`);
+    if (isRedWindow(now) || (!isAmberWindow(now) && day === 13)) {
+      await notifyOnce(`billing_due_approaching_${period}`, "warning", "Payment due date approaching", `Invoice ${period} (${amountLabel}) is due ${dhakaTime(row.due_date)}. Payment status: ${row.payment_status}.`);
     }
-    if (day >= 13 && day < 15) {
-      await notifyOnce(`billing_overdue_${period}`, "critical", "Invoice overdue", `Invoice ${period} ($18.16 USD) passed its 12th due date unpaid/unverified. Lock at 15th 00:00 (Dhaka).`);
+    if (now.getTime() >= new Date(row.due_date).getTime() + 86_400_000 && day < 15) {
+      await notifyOnce(`billing_overdue_${period}`, "critical", "Invoice overdue", `Invoice ${period} (${amountLabel}) is past its due date ${dhakaTime(row.due_date)} and unverified. Lock at ${dhakaTime(row.lock_at)} (Dhaka).`);
     }
   }
   if (result.stage === "due_today") {
@@ -195,7 +213,8 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
 
   const state: MaintenanceState = {
     period,
-    feeUsd: Number(row.fee_usd),
+    amountLabel,
+    currency: row.currency ?? "USD",
     dueDate: row.due_date,
     lockAt: row.lock_at,
     paymentStatus: row.payment_status,
@@ -221,7 +240,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
 }
 
 export const LOCKED_MESSAGE =
-  "SYSTEM MAINTENANCE LOCKED — CRM subscription invoice ($18.16 USD, VAT included) is not verified. Contact IT Console.";
+  "SYSTEM MAINTENANCE LOCKED — the CRM maintenance invoice is not verified. Contact IT Console.";
 
 /** Fail closed: an unexpected error counts as locked for ordinary callers. */
 export async function isLockedForOrdinaryUsers(): Promise<boolean> {
@@ -266,8 +285,8 @@ export async function submitPayment(input: { actor: string; paymentRef: string; 
     .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
   if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
-  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
-  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} (${CRM_INVOICE_LABEL}). Awaiting System Architect verification.`);
+  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, amount: state.amountLabel, currency: state.currency } });
+  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} (${state.amountLabel}). Awaiting System Architect verification.`);
   return { ok: true, already: false };
 }
 
@@ -304,7 +323,7 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   if (!changed || changed.length === 0) throw new Error("Already decided — another review finished first. Refresh to see the latest status.");
   clearMaintenanceCache();
   const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
-  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
+  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, amount: state.amountLabel, currency: state.currency, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
   if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
   // Save a permanent receipt for this approval so it can be reopened from payment history.
   let voucher: { no: string; period: string; ref: string; baseCents: number; vatCents: number; totalCents: number; currency: string; verifiedBy: string; at: string } | null = null;
@@ -374,7 +393,7 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 export async function maintenanceHistory() {
   const client = await db();
   const [{ data: periods }, { data: requests }, { data: log }, { data: vouchers }] = await Promise.all([
-    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, payment_rejected_at, payment_rejected_reason, base_cents, vat_cents, total_cents, currency, due_date, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
+    client.from("system_maintenance").select("billing_period, fee_usd, fee_bdt, payment_status, payment_ref, payment_verified_at, payment_verified_by, payment_rejected_at, payment_rejected_reason, base_cents, vat_cents, total_cents, currency, due_date, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
     client.from("payment_vouchers").select("voucher_no, billing_period, payment_ref, base_cents, vat_cents, total_cents, currency, verified_by, verified_at").eq("plan_code", PLAN_CODE).order("verified_at", { ascending: false }).limit(50),

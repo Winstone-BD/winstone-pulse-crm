@@ -51,7 +51,7 @@ export function BillingApprovalsHub() {
   const unlocked = s.unlockStatus === "approved" && s.unlockExpiresAt && new Date(s.unlockExpiresAt) > now;
   const access = s.locked ? "Locked" : unlocked ? "Temporarily unlocked" : "Active";
   const cards: [string, string, string | undefined][] = [
-    ["Monthly maintenance fee", `$${s.feeUsd.toFixed(2)} USD`, `Invoice ${s.period}`],
+    ["Monthly maintenance fee", s.amountLabel, `Invoice ${s.period}`],
     ["Due date", dhakaTime(s.dueDate), s.paymentStatus === "verified" ? "Paid" : toLock > 0 ? `Lock in ${deadlineLeftLabel(toLock)}` : "Lock time passed"],
     ["Payment status", s.paymentStatus === "pending" ? "Reference awaiting check" : s.paymentStatus === "verified" ? "Verified" : "Unpaid", s.paymentRef ?? undefined],
     ["Access", access, unlocked ? `Auto-relocks ${dhakaTime(s.unlockExpiresAt)}` : undefined],
@@ -130,7 +130,7 @@ export function BillingReminder({ onReview }: { onReview: () => void }) {
     if (window.sessionStorage.getItem(key) === "1") return;
     window.sessionStorage.setItem(key, "1");
     if (kind === "approval") setOpen(true);
-    else toast.warning(`Invoice ${s.period}: $${s.feeUsd.toFixed(2)} USD due ${dhakaTime(s.dueDate)}`, {
+    else toast.warning(`Invoice ${s.period}: ${s.amountLabel} due ${dhakaTime(s.dueDate)}`, {
       description: "Review the billing status before the lock time.",
       action: { label: "Review billing", onClick: onReview },
       duration: 12_000,
@@ -146,7 +146,7 @@ export function BillingReminder({ onReview }: { onReview: () => void }) {
           <DialogDescription>Nothing is approved until you decide on the Architect page.</DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-          <dt className="text-muted-foreground">Invoice</dt><dd>{s.period} · ${s.feeUsd.toFixed(2)} USD</dd>
+          <dt className="text-muted-foreground">Invoice</dt><dd>{s.period} · {s.amountLabel}</dd>
           <dt className="text-muted-foreground">Reference</dt><dd className="break-all">{s.paymentRef ?? "— none submitted"}</dd>
           {r && <><dt className="text-muted-foreground">Unlock</dt><dd>{r.hours}h requested by {r.requestedBy}</dd></>}
           {r?.reason && <><dt className="text-muted-foreground">Context</dt><dd>{r.reason}</dd></>}
