@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitReferenceAndRequestUnlock } from "@/lib/maintenance.functions";
 import { UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; openRequest: boolean };
+type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean };
 
 /** Billing card (reference design) + real payment-reference / unlock request form. */
 export function UnlockRequestCard({ state, adminToken }: { state: State; adminToken: string | null }) {
@@ -56,7 +56,7 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Invoice amount due</p>
           <p className="text-4xl font-bold text-destructive sm:text-5xl">$18.16</p>
           <p className="text-sm text-muted-foreground">Current CRM invoice · $15.79 + 15% VAT $2.37 (VAT included)</p>
-          <p className="mt-1 text-xs text-muted-foreground">Due {dhakaTime(state.dueDate)} · Asia/Dhaka</p>
+          <p className="mt-1 text-xs text-muted-foreground">Due {state.dueDate ? dhakaTime(state.dueDate) : "12th"} · Asia/Dhaka</p>
         </div>
         <dl className="divide-y divide-border rounded-lg border border-border text-sm">
           <Row icon={<FileText className="size-4" />} k="Invoice amount" v="$18.16 USD" />
