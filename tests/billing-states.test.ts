@@ -21,9 +21,9 @@ describe("distinct billing states", () => {
   it("unpaid before due is OPEN/UNPAID/ACTIVE", () => {
     expect(billingStates({ ...base, now: dhaka("2026-10-10T10:00:00") })).toEqual({ invoice: "OPEN", payment: "UNPAID", access: "ACTIVE", recoveryPending: false });
   });
-  it("overdue only after the 12th", () => {
-    expect(billingStates({ ...base, now: dhaka("2026-10-12T23:59:00") }).invoice).toBe("OPEN");
-    expect(billingStates({ ...base, now: dhaka("2026-10-13T00:00:00") }).invoice).toBe("OVERDUE");
+  it("overdue only after the 14th due day", () => {
+    expect(billingStates({ ...base, now: dhaka("2026-10-14T23:59:00") }).invoice).toBe("OPEN");
+    expect(billingStates({ ...base, now: dhaka("2026-10-15T00:00:00") }).invoice).toBe("OVERDUE");
   });
   it("pending at lock time is a recovery state, never PAID and never plain UNPAID", () => {
     const s = billingStates({ ...base, paymentStatus: "pending", now: dhaka("2026-10-15T00:00:00") });
