@@ -15,7 +15,6 @@ import {
 import { useEffect, useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
-import { HomeSignupForm } from "@/components/HomeSignupForm";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
@@ -214,13 +213,6 @@ function EntryHall() {
                 </Link>
               </Button>
             }
-            secondary={
-              <Button asChild variant="secondary" className="flex-1">
-                <Link to="/auth" search={{ role: "agent", mode: "signup" }}>
-                  Create account
-                </Link>
-              </Button>
-            }
           />
 
           <EntryCard
@@ -248,7 +240,7 @@ function EntryHall() {
           />
         </div>
 
-        <HomeSignupForm />
+        <AgentOnboardingNotice />
         </div>}
 
         {scope !== "none" && (
@@ -411,5 +403,25 @@ function SystemStatus() {
       <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
+  );
+}
+
+/** Informational only: agent accounts and devices are provisioned by IT HQ, never self-created. */
+function AgentOnboardingNotice() {
+  return (
+    <aside aria-labelledby="agent-onboarding-title" className="mt-4 rounded-xl border border-border bg-card p-5 sm:p-6">
+      <h2 id="agent-onboarding-title" className="text-base font-semibold tracking-tight">
+        Are you a Winstone sales agent?
+      </h2>
+      <p className="mt-1.5 text-sm text-muted-foreground">
+        Your account and company device must be provisioned by IT HQ before you can start working.
+      </p>
+      <p className="mt-1.5 text-sm text-muted-foreground">
+        Already have an account? Sign in using your assigned credentials on the authorized device.
+      </p>
+      <p className="mt-4 border-t border-border pt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-gold">
+        New agent accounts are created and managed by Winstone IT HQ.
+      </p>
+    </aside>
   );
 }
