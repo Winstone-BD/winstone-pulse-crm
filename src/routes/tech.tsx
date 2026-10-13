@@ -71,6 +71,7 @@ function ArchitectPage() {
   if (!hasSession) {
     return shell(
       <div className="card-elevated space-y-3 p-6">
+        <ReviewSteps step={1} />
         <p className="text-sm">Sign in with the authorized Google account to continue.</p>
         <Button
           onClick={async () => {
