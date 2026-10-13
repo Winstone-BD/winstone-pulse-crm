@@ -81,8 +81,8 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
         Approval email goes from info@winstonebd.com to the authorized approver. The link works once, for 2 hours, and needs a Confirm press.
       </p>
 
-      <Button variant="destructive" size="lg" className="w-full" disabled={state.openRequest || pending} onClick={() => setOpen(true)}>
-        <MailCheck className="size-4" /> {state.openRequest ? "Request waiting for approval" : pending ? "Verification pending" : "Review Invoice & Submit Payment Reference"}
+      <Button variant="destructive" size="lg" className="w-full" disabled={state.openRequest} onClick={() => setOpen(true)}>
+        <MailCheck className="size-4" /> {state.openRequest ? "Request waiting for approval" : pending ? "Request temporary access (audited exception)" : "Review Invoice & Submit Payment Reference"}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
