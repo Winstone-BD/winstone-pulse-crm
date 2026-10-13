@@ -64,6 +64,7 @@ import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
 import { Route as HelpSlugRouteImport } from './routes/help_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicEmailEventsRouteImport } from './routes/api/public/email-events'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
 import { Route as ApiPublicTmpBulkImportRouteImport } from './routes/api/public/tmp-bulk-import'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
@@ -389,6 +390,11 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 const ApiPublicEmailEventsRoute = ApiPublicEmailEventsRouteImport.update({
   id: '/api/public/email-events',
   path: '/api/public/email-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSmokeRoute = ApiPublicSmokeRouteImport.update({
@@ -719,6 +725,7 @@ export interface FileRoutesByFullPath {
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -826,6 +833,7 @@ export interface FileRoutesByTo {
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -934,6 +942,7 @@ export interface FileRoutesById {
   '/help_/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -1043,6 +1052,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
+    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -1150,6 +1160,7 @@ export interface FileRouteTypes {
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
+    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -1257,6 +1268,7 @@ export interface FileRouteTypes {
     | '/help_/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
+    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin_/editor/$slug'
@@ -1365,6 +1377,7 @@ export interface RootRouteChildren {
   HelpSlugRoute: typeof HelpSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicEmailEventsRoute: typeof ApiPublicEmailEventsRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
   ApiPublicTmpBulkImportRoute: typeof ApiPublicTmpBulkImportRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
@@ -1804,6 +1817,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/smoke': {
       id: '/api/public/smoke'
       path: '/api/public/smoke'
@@ -2214,6 +2234,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpSlugRoute: HelpSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicEmailEventsRoute: ApiPublicEmailEventsRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
   ApiPublicTmpBulkImportRoute: ApiPublicTmpBulkImportRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,

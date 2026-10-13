@@ -238,6 +238,8 @@ function RootComponent() {
       <MaintenanceGate />
       {/* Temporary IT closure covers home, agent, coordinator, HQ and IT surfaces. */}
       <TemporaryClosureNotice />
+      {/* Site-wide pill that tells internet loss apart from a server problem. */}
+      <ConnectionStatus />
       <Toaster position="top-right" />
     </QueryClientProvider>
   );
