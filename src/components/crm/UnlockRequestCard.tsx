@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitReferenceAndRequestUnlock } from "@/lib/maintenance.functions";
 import { UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean };
+type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean; amountLabel: string };
 
 /** Billing card (reference design) + real payment-reference / unlock request form. */
 export function UnlockRequestCard({ state, adminToken }: { state: State; adminToken: string | null }) {
