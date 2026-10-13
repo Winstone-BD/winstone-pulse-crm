@@ -155,3 +155,7 @@
 - [ ] Real-phone check: "no answer" save → next lead opens; redial within 15 min shows warning. Needs a person on a real agent phone (would write a real report to live data).
 - [x] Homepage signup form (name, email, phone) → sign-up page prefilled.
 - [x] Caveat page headings (h1) site-wide; Inter for everything else.
+
+- [x] Secure auto role setup for System Architect + Super Admin on first sign-up
+- [ ] Winstone Pulse 2.0 homepage redesign (ivory / forest green / champagne gold) — next step, needs colour approval vs current black/gold memory
+- [ ] Verify real sign-in for both accounts — blocked: accounts not created yet

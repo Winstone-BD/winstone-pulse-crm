@@ -3064,6 +3064,30 @@ export type Database = {
         }
         Relationships: []
       }
+      privileged_account_allowlist: {
+        Row: {
+          account_kind: string
+          created_at: string
+          email: string
+          provisioned_at: string | null
+          provisioned_user_id: string | null
+        }
+        Insert: {
+          account_kind: string
+          created_at?: string
+          email: string
+          provisioned_at?: string | null
+          provisioned_user_id?: string | null
+        }
+        Update: {
+          account_kind?: string
+          created_at?: string
+          email?: string
+          provisioned_at?: string | null
+          provisioned_user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approval_status: string
