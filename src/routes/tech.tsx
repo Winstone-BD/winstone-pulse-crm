@@ -283,7 +283,7 @@ function AutoApprove({ session }: { session: string }) {
       const done: string[] = [];
       let voucher: Voucher | null = null;
       if (plan.paymentRef) {
-        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}` } });
+        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}`, expectedRef: plan.paymentRef ?? undefined } });
         voucher = res.voucher ?? null;
         done.push("payment verified");
       }
