@@ -7,7 +7,8 @@ import { deadlineLeftLabel, dhakaTime, subscriptionNoticeState } from "@/lib/mai
 
 export type ApprovalSummary = {
   period: string;
-  feeUsd: number;
+  amountLabel: string;
+  currency: string;
   dueDate: string;
   lockAt: string;
   paymentStatus: "unpaid" | "pending" | "verified";
@@ -64,7 +65,7 @@ export function nextAction(s: ApprovalSummary): string {
 export function advisory(s: ApprovalSummary, now = new Date()): string[] {
   const out: string[] = [];
   const toLock = new Date(s.lockAt).getTime() - now.getTime();
-  out.push(`Invoice ${s.period}: $${s.feeUsd.toFixed(2)} USD, due ${dhakaTime(s.dueDate)} (Dhaka).`);
+  out.push(`Invoice ${s.period}: ${s.amountLabel}, due ${dhakaTime(s.dueDate)} (Dhaka).`);
   if (s.locked) out.push("The CRM is currently locked for this invoice.");
   else if (s.paymentStatus !== "verified" && toLock > 0) out.push(`Unpaid lock in ${deadlineLeftLabel(toLock)} (${dhakaTime(s.lockAt)} Dhaka).`);
   if (s.paymentStatus === "pending" && s.paymentRef) out.push(`IT submitted reference "${s.paymentRef}". A reference is a claim — it does not prove payment until checked.`);

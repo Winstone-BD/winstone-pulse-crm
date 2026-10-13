@@ -4741,6 +4741,7 @@ export type Database = {
           created_at: string
           currency: string
           due_date: string
+          fee_bdt: number | null
           fee_usd: number
           id: string
           lock_at: string
@@ -4772,6 +4773,7 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date: string
+          fee_bdt?: number | null
           fee_usd?: number
           id?: string
           lock_at: string
@@ -4803,6 +4805,7 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date?: string
+          fee_bdt?: number | null
           fee_usd?: number
           id?: string
           lock_at?: string

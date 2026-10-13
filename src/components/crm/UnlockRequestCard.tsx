@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitReferenceAndRequestUnlock } from "@/lib/maintenance.functions";
 import { UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
-type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean };
+type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; dueDate?: string | null; openRequest: boolean; amountLabel: string };
 
 /** Billing card (reference design) + real payment-reference / unlock request form. */
 export function UnlockRequestCard({ state, adminToken }: { state: State; adminToken: string | null }) {
@@ -54,13 +54,12 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Invoice amount due</p>
-          <p className="text-4xl font-bold text-destructive sm:text-5xl">$18.16</p>
-          <p className="text-sm text-muted-foreground">Current CRM invoice · $15.79 + 15% VAT $2.37 (VAT included)</p>
-          <p className="mt-1 text-xs text-muted-foreground">Due {state.dueDate ? dhakaTime(state.dueDate) : "12th"} · Asia/Dhaka</p>
+          <p className="text-4xl font-bold text-destructive sm:text-5xl">{state.amountLabel}</p>
+          <p className="text-sm text-muted-foreground">Current CRM maintenance invoice (stored amount for {state.period})</p>
+          <p className="mt-1 text-xs text-muted-foreground">Due {state.dueDate ? dhakaTime(state.dueDate) : "14th"} · Asia/Dhaka</p>
         </div>
         <dl className="divide-y divide-border rounded-lg border border-border text-sm">
-          <Row icon={<FileText className="size-4" />} k="Invoice amount" v="$18.16 USD" />
-          <Row icon={<Percent className="size-4" />} k="VAT" v="Included" />
+          <Row icon={<FileText className="size-4" />} k="Invoice amount" v={state.amountLabel} />
           <Row icon={<Wallet className="size-4" />} k="Payment status" v={verified ? "Verified" : pending ? `Pending verification · ${state.paymentRef ?? ""}` : "Not verified"} tone={verified ? "text-success" : "text-destructive"} />
         </dl>
       </div>

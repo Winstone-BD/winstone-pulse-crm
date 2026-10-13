@@ -1,4 +1,4 @@
-import { MAINTENANCE_FEE_USD } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_BDT } from "@/lib/maintenance-rules";
 
 export const SERVICE_BILL_NAME = "Winstone Pulse IT Service & Maintenance";
 export const SERVICE_BILL_ISSUER = "Winstone IT Team";
@@ -10,7 +10,7 @@ export type ServiceBillPayload = {
   bill_id: string;
   service_name: string;
   amount: number;
-  currency: "USD";
+  currency: "BDT";
   status: "Pending Review";
   issuer: string;
   recipient: string;
@@ -34,8 +34,8 @@ export function serviceBillPayload(row: ServiceBillRow, recipient: string): Serv
   return {
     bill_id: row.id,
     service_name: SERVICE_BILL_NAME,
-    amount: MAINTENANCE_FEE_USD,
-    currency: "USD",
+    amount: MAINTENANCE_FEE_BDT,
+    currency: "BDT",
     status: SERVICE_BILL_STATUS,
     issuer: SERVICE_BILL_ISSUER,
     recipient,
