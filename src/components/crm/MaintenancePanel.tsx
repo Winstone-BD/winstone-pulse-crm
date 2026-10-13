@@ -16,7 +16,7 @@ import {
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, moneyLabel } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, futureInvoicePreview, moneyLabel } from "@/lib/maintenance-rules";
 import { downloadVoucher, printVoucher } from "@/lib/voucher";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
@@ -116,6 +116,8 @@ export function MaintenancePanel() {
           </div>
         ))}
       </dl>
+
+      <NextInvoicePreview />
 
       <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed">
         <p className="mb-1 text-sm font-semibold">কীভাবে কাজ করে (ঢাকা সময়)</p>
@@ -312,4 +314,16 @@ function filterAudit<T extends AuditRow>(rows: T[], kind: AuditKind, search: str
     if (!q) return true;
     return [act, a.actor, a.actor_role, a.reason ?? "", a.billing_period ?? "", dhakaTime(a.at)].join(" ").toLowerCase().includes(q);
   });
+}
+
+/** Read-only: shows what the November 2026 invoice will be. Creates nothing, changes nothing. */
+function NextInvoicePreview() {
+  const p = futureInvoicePreview("2026-11");
+  return (
+    <section aria-label="November 2026 invoice preview" className="rounded-lg border border-dashed border-border p-3 text-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preview only · not an invoice</p>
+      <p className="mt-1 font-semibold">{p.period} maintenance invoice: {p.amountLabel}</p>
+      <p className="text-xs text-muted-foreground">Due {dhakaTime(p.dueAt)} · lock {dhakaTime(p.lockAt)} (Asia/Dhaka). Raised automatically when the period starts; payment status is not affected.</p>
+    </section>
+  );
 }

@@ -1,15 +1,15 @@
 /**
  * Pure maintenance billing rules — no I/O, shared by server and tests.
- * Canonical recurring fee (periods raised from 2026-11 onward): integer BDT 4,345, due the 14th.
+ * Canonical recurring fee (periods raised from 2026-11 onward): $35.29 USD, due the 14th.
  * Historical invoices keep their own stored currency/amount snapshot and are displayed from it.
  */
 
-export const MAINTENANCE_CURRENCY = "BDT" as const;
-export const MAINTENANCE_FEE_BDT = 4345;
-/** Stored snapshot in minor units (poisha) so total_cents stays integer for every currency. */
-export const MAINTENANCE_FEE_MINOR = MAINTENANCE_FEE_BDT * 100;
+export const MAINTENANCE_CURRENCY = "USD" as const;
+export const MAINTENANCE_FEE_USD = 35.29;
+/** Stored snapshot in integer cents (decimal-safe). */
+export const MAINTENANCE_FEE_MINOR = 3529;
 export const bdt = (amount: number) => `৳${Math.round(amount).toLocaleString("en-US")}`;
-export const MAINTENANCE_FEE_LABEL = `${bdt(MAINTENANCE_FEE_BDT)} BDT`;
+export const MAINTENANCE_FEE_LABEL = "$35.29 USD";
 /** Formats a stored invoice snapshot in its own currency (historical USD rows stay USD). */
 export function moneyLabel(minor: number | null | undefined, currency: string | null | undefined): string {
   if (minor == null) return "—";
@@ -287,3 +287,18 @@ export function billingStates(input: RuleInput & { dueAt: string; rejectedAt?: s
 
 /** Plain CRM invoice label used in every server message (this app bills plan_code='crm' only). */
 export const CRM_INVOICE_LABEL = MAINTENANCE_FEE_LABEL;
+
+/**
+ * Read-only preview of the invoice the server would raise for a future period.
+ * Pure: computes from the canonical rule only — never inserts a row or touches payment/unlock state.
+ */
+export function futureInvoicePreview(period: string) {
+  return {
+    period,
+    amountMinor: MAINTENANCE_FEE_MINOR,
+    currency: MAINTENANCE_CURRENCY,
+    amountLabel: moneyLabel(MAINTENANCE_FEE_MINOR, MAINTENANCE_CURRENCY),
+    dueAt: defaultDueAt(period),
+    lockAt: defaultLockAt(period),
+  };
+}
