@@ -735,8 +735,14 @@ export function MaintenanceGate() {
       <div className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-background/95 p-4 backdrop-blur">
         <div className="card-elevated w-full max-w-md space-y-4 border-destructive/40 p-6">
           <h1 className="flex items-center gap-2 text-lg font-bold text-destructive">
-            <Lock className="size-5" /> SYSTEM MAINTENANCE LOCKED
+            <Lock className="size-5" /> {data.paymentStatus === "pending" ? "ACCESS PAUSED — VERIFICATION PENDING" : "CRM SUBSCRIPTION ACCESS LOCKED"}
           </h1>
+          <p className="text-xs text-muted-foreground">Winstone Pulse · CRM Subscription Access · Invoice $18.16 USD (VAT included)</p>
+          {data.paymentStatus === "pending" && (
+            <p className="rounded-md border border-border bg-muted/40 p-2 text-sm">
+              {t({ bn: "পেমেন্ট রেফারেন্স জমা হয়েছে এবং যাচাইয়ের অপেক্ষায়। আবার পেমেন্ট করবেন না — যাচাই হলেই অ্যাক্সেস নিজে থেকে ফিরে আসবে। প্রয়োজনে IT Console-এ যোগাযোগ করুন।", en: "Your payment reference was received and is awaiting verification. Do not pay again — access returns automatically once it is verified. Contact IT Console if you need help." })}
+            </p>
+          )}
           <NoticeBody s={data} />
           <LockSignInButton />
           <p className="text-center text-xs text-muted-foreground">
