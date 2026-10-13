@@ -95,7 +95,7 @@ export function parseReport(text: string): StagingRunReport | null {
   for (const c of r.checks as unknown[]) {
     const x = c as Partial<CheckResult>;
     if (!x || !isStr(x.tool) || !isStr(x.check) || typeof x.pass !== "boolean") return null;
-    checks.push({ tool: x.tool.slice(0, 120), check: x.check.slice(0, 200), pass: x.pass, detail: isStr(x.detail) ? x.detail.slice(0, 300) : undefined });
+    checks.push({ tool: x.tool.slice(0, 120), check: x.check.slice(0, 200), pass: x.pass, ...(isStr(x.detail) ? { detail: x.detail.slice(0, 300) } : {}) });
   }
   const listed = Array.isArray(r.tools) ? (r.tools as Partial<ToolSummary>[]).map((t) => t?.tool).filter(isStr) : [];
   return buildReport({
