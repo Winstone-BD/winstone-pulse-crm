@@ -17,6 +17,7 @@ import {
   architectOverview,
 } from "@/lib/maintenance.functions";
 import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
+import { PaymentApprovals } from "@/components/crm/PaymentApprovals";
 import { downloadVoucher, printVoucher, type Voucher } from "@/lib/voucher";
 
 export const Route = createFileRoute("/tech")({
@@ -175,7 +176,7 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
         <p><b>Full operating system unlock:</b> {MAINTENANCE_FEE_LABEL}</p>
         <p className="text-xs text-muted-foreground">Approvals on this page apply to the CRM part only. Keeping the whole operating system unlocked requires the full bill payment.</p>
       </div>
-      <PaymentReview session={session} status={state.paymentStatus} paymentRef={state.paymentRef} period={state.period} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />
+      <PaymentApprovals overview={q.data} session={session} stale={q.isFetching && q.isStale} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />
       <ApprovalLog audit={audit} />
       <h2 className="text-base font-semibold">Maintenance access requests</h2>
       {open.length === 0 && <p className="text-sm text-muted-foreground">No pending request.</p>}
@@ -228,28 +229,6 @@ function RequestCard({ r, session, locked, onDone }: { r: Req; session: string; 
   );
 }
 
-/** Architect-only payment verification. IT can only submit a reference. */
-function PaymentReview({ session, status, paymentRef, period, onDone }: { session: string; status: string; paymentRef: string | null; period: string; onDone: () => void }) {
-  const [reason, setReason] = useState("");
-  const decide = useMutation({
-    mutationFn: (approve: boolean) => architectPaymentDecision({ data: { session, approve, reason } }),
-    onSuccess: (_d, approve) => { toast.success(approve ? "Payment verified — no lock this month" : "Payment rejected"); setReason(""); onDone(); },
-    onError: (e: Error) => toast.error(e.message),
-  });
-  if (status !== "pending" || !paymentRef) return null;
-  return (
-    <div className="card-elevated space-y-2 border-warning/40 p-4 text-sm">
-      <p className="font-bold">Payment submitted for verification — {period}</p>
-      <p>Reference: <b>{paymentRef}</b> · {MAINTENANCE_FEE_LABEL}</p>
-      <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Audit reason (required)" />
-      <div className="flex gap-2">
-        <Button disabled={reason.trim().length < 3 || decide.isPending} onClick={() => decide.mutate(true)}>Verify &amp; mark paid</Button>
-        <Button variant="destructive" disabled={reason.trim().length < 3 || decide.isPending} onClick={() => decide.mutate(false)}>Reject</Button>
-      </div>
-    </div>
-  );
-}
-
 /**
  * Pay → Google → PIN flow (?auto=1): once the server has accepted the authorized
  * Google account AND the PIN, the pending payment and open unlock requests are
@@ -283,7 +262,7 @@ function AutoApprove({ session }: { session: string }) {
       const done: string[] = [];
       let voucher: Voucher | null = null;
       if (plan.paymentRef) {
-        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}` } });
+        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}`, expectedRef: plan.paymentRef ?? undefined } });
         voucher = res.voucher ?? null;
         done.push("payment verified");
       }

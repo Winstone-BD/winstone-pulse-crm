@@ -287,17 +287,21 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
 }
 
 /** System Architect (verified Google identity + session) verifies or rejects the pending reference. */
-export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
+export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string; expectedRef?: string | null }) {
   const state = await maintenanceAccess();
   const client = await db();
   const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status, base_cents, vat_cents, total_cents, currency").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
-  if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
+  if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("Already decided — this payment is no longer awaiting review. Refresh to see the latest status.");
+  // Stale-view guard: the reviewer must be deciding on the reference they actually saw.
+  if (input.expectedRef && input.expectedRef !== row.payment_ref) throw new Error("The submitted reference changed since you opened it — refresh and review again.");
   const at = new Date().toISOString();
   const update = input.approve
     ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active", payment_rejected_at: null, payment_rejected_reason: null }
     : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null, payment_rejected_at: at, payment_rejected_reason: input.reason };
-  const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
+  // Compare-and-set: only one concurrent decision can move the row out of "pending".
+  const { data: changed, error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending").eq("payment_ref", row.payment_ref).select("billing_period");
   if (error) throw new Error("Could not record decision");
+  if (!changed || changed.length === 0) throw new Error("Already decided — another review finished first. Refresh to see the latest status.");
   clearMaintenanceCache();
   const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
   await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
@@ -370,7 +374,7 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 export async function maintenanceHistory() {
   const client = await db();
   const [{ data: periods }, { data: requests }, { data: log }, { data: vouchers }] = await Promise.all([
-    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
+    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, payment_rejected_at, payment_rejected_reason, base_cents, vat_cents, total_cents, currency, due_date, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
     client.from("payment_vouchers").select("voucher_no, billing_period, payment_ref, base_cents, vat_cents, total_cents, currency, verified_by, verified_at").eq("plan_code", PLAN_CODE).order("verified_at", { ascending: false }).limit(50),

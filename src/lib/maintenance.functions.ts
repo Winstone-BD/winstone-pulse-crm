@@ -191,7 +191,7 @@ export const architectOverview = createServerFn({ method: "POST" })
     await architect(data.session);
     const { maintenanceAccess, maintenanceHistory } = await import("@/lib/maintenance.server");
     const [state, history] = await Promise.all([maintenanceAccess(), maintenanceHistory()]);
-    return { state, requests: history.requests, audit: history.audit.slice(0, 60) };
+    return { state, requests: history.requests, periods: history.periods, audit: history.audit.slice(0, 60) };
   });
 
 export const architectDecision = createServerFn({ method: "POST" })
@@ -221,10 +221,10 @@ export const architectDecision = createServerFn({ method: "POST" })
 /** Architect-only: verify or reject the submitted payment reference (audit reason required). */
 export const architectPaymentDecision = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ session: z.string().min(10), approve: z.boolean(), reason: z.string().trim().min(3).max(300) }).parse(input),
+    z.object({ session: z.string().min(10), approve: z.boolean(), reason: z.string().trim().min(3).max(300), expectedRef: z.string().trim().min(1).max(120).optional() }).parse(input),
   )
   .handler(async ({ data }) => {
     const who = await architect(data.session);
     const { architectReviewPayment } = await import("@/lib/maintenance.server");
-    return architectReviewPayment({ actor: `System Architect (${who.email})`, approve: data.approve, reason: data.reason });
+    return architectReviewPayment({ actor: `System Architect (${who.email})`, approve: data.approve, reason: data.reason, expectedRef: data.expectedRef ?? null });
   });
