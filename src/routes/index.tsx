@@ -183,11 +183,6 @@ function EntryHall() {
             aria-expanded={accessOpen}
             aria-controls="workspace-access"
             onClick={() => {
-              if (!selectedMode) {
-                setSelectionRequired(true);
-                document.getElementById("device-selection")?.scrollIntoView({ block: "center", behavior: "instant" });
-                return;
-              }
               setAccessOpen(true);
               window.requestAnimationFrame(() => document.getElementById("workspace-access")?.scrollIntoView({
                 behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start",
@@ -196,7 +191,7 @@ function EntryHall() {
           >
             Get started <ChevronRight className="size-5" />
           </Button>
-          {selectionRequired && <p role="alert" className="mt-3 text-center text-sm font-medium text-foreground">{t({ en: "Choose Android, Web / iOS or Desktop to continue.", bn: "এগিয়ে যেতে Android, Web / iOS অথবা Desktop বেছে নিন।" })}</p>}
+          {selectedMode === null && <p className="mt-3 text-center text-xs text-muted-foreground">{t({ en: "Optional — pick a device above so we remember your preferred view.", bn: "ঐচ্ছিক — উপরে ডিভাইস বেছে নিলে আপনার পছন্দের ভিউ মনে রাখা হবে।" })}</p>}
         </div>
 
         {accessOpen && <div id="workspace-access" className="scroll-mt-6">
