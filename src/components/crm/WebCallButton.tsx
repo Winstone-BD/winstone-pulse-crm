@@ -113,7 +113,7 @@ export function WebCallButton({
     try {
       const recent = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "{}") as Record<string, number>;
       recent[handle] = Date.now();
-      for (const k of Object.keys(recent)) if (Date.now() - recent[k] > COOLDOWN_MS) delete recent[k];
+      for (const k of Object.keys(recent)) if (Date.now() - (recent[k] ?? 0) > COOLDOWN_MS) delete recent[k];
       localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
     } catch { /* ignore */ }
     setLive(next);
