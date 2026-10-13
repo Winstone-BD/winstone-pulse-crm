@@ -18,6 +18,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
+    "check:mcp-js": "node scripts/check-mcp-js-stable.mjs",
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
     "check:colors": "node scripts/check-dashboard-colors.mjs"
