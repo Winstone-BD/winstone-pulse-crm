@@ -19,7 +19,6 @@ const mockPlugin: BunPlugin = {
 
 const result = await Bun.build({
   entrypoints: ["tests/browser/support-inbox.entry.tsx"],
-  outfile: "/tmp/support-inbox.js",
   plugins: [mockPlugin],
   define: { "process.env.NODE_ENV": '"production"' },
 });
@@ -28,3 +27,5 @@ if (!result.success) {
   for (const log of result.logs) console.error(log);
   process.exit(1);
 }
+
+await Bun.write("/tmp/support-inbox.js", await result.outputs[0].text());
