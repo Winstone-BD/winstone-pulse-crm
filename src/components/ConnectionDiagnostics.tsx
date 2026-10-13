@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 
 const LAST_OK_KEY = "pulse:lastHealthOk";
 
-type Result = { ok: boolean; ms: number; at: number; error?: string };
+type Result = { ok: boolean; ms: number; at: number; error?: string | undefined };
 
 export function recordHealthOk() {
   try {
