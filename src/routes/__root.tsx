@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { MustChangePasswordGate } from "@/components/crm/MustChangePasswordGate";
 import { FloorLockGate } from "@/components/crm/FloorLockGate";
 import { MaintenanceGate } from "@/components/crm/MaintenanceNotice";
@@ -112,12 +113,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600;700&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -199,9 +194,25 @@ function RootComponent() {
 
     // A service worker must never cache Vite's development module graph. Mixing
     // modules from two HMR revisions can load two incompatible React runtimes.
-    if (import.meta.env.DEV) {
+    const host = window.location.hostname;
+    const previewHost =
+      /^(id-preview--|preview--)/.test(host) ||
+      /(^|\.)lovableproject(-dev)?\.com$/.test(host) ||
+      /(^|\.)beta\.lovable\.dev$/.test(host);
+    let inFrame = false;
+    try {
+      inFrame = window.self !== window.top;
+    } catch {
+      inFrame = true;
+    }
+    const swOff = new URLSearchParams(window.location.search).get("sw") === "off";
+    if (import.meta.env.DEV || previewHost || inFrame || swOff) {
       void navigator.serviceWorker.getRegistrations().then((registrations) =>
-        Promise.all(registrations.map((registration) => registration.unregister())),
+        Promise.all(
+          registrations
+            .filter((registration) => !registration.active?.scriptURL.includes("firebase-messaging-sw"))
+            .map((registration) => registration.unregister()),
+        ),
       );
       if (typeof caches !== "undefined") {
         void caches.keys().then((keys) =>
@@ -228,6 +239,8 @@ function RootComponent() {
       <MaintenanceGate />
       {/* Temporary IT closure covers home, agent, coordinator, HQ and IT surfaces. */}
       <TemporaryClosureNotice />
+      {/* Site-wide pill that tells internet loss apart from a server problem. */}
+      <ConnectionStatus />
       <Toaster position="top-right" />
     </QueryClientProvider>
   );

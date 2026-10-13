@@ -7,10 +7,46 @@
  * pretends a write reached the server — writes go through the local queue in
  * src/lib/offline-queue.ts and only sync when the network is back.
  */
-const CACHE = "winstone-shell-v3";
+const CACHE = "winstone-shell-v4";
+
+// Editor/preview hosts restart often; an offline shell there only strands the
+// tab on a fallback page. Remove this worker from those hosts entirely.
+const PREVIEW_HOST =
+  /^(id-preview--|preview--)/.test(self.location.hostname) ||
+  /(^|\.)lovableproject(-dev)?\.com$/.test(self.location.hostname) ||
+  /(^|\.)beta\.lovable\.dev$/.test(self.location.hostname) ||
+  self.location.hostname === "localhost";
+
+// Shown only when the page itself could not be fetched and nothing is cached.
+// It retries on its own, so a short server restart never strands the tab.
+const RETRY_PAGE = `<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Winstone Pulse</title>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#fafafa;color:#111;text-align:center;padding:24px}button{margin-top:16px;padding:10px 20px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;font-size:15px}</style></head>
+<body><div><p id="m">সংযোগ হচ্ছে… / Connecting…</p><button onclick="location.reload()">আবার চেষ্টা / Retry</button></div>
+<script>
+var m=document.getElementById("m");
+if(!navigator.onLine){m.textContent="অফলাইন — ইন্টারনেট ফিরলে নিজে থেকেই খুলবে / Offline — will reopen when internet returns";}
+window.addEventListener("online",function(){location.reload();});
+var n=0;(function t(){n++;fetch(location.href,{cache:"no-store"}).then(function(r){if(r.ok)location.reload();else setTimeout(t,Math.min(15000,2000*n));}).catch(function(){setTimeout(t,Math.min(15000,2000*n));});})();
+</script></body></html>`;
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => {
+  if (PREVIEW_HOST) {
+    event.waitUntil(
+      (async () => {
+        try {
+          const keys = await caches.keys();
+          await Promise.allSettled(keys.filter((k) => k.startsWith("winstone-shell-")).map((k) => caches.delete(k)));
+          await self.clients.claim();
+          const clients = await self.clients.matchAll({ type: "window" });
+          await Promise.allSettled(clients.map((c) => c.navigate(c.url)));
+        } finally {
+          await self.registration.unregister();
+        }
+      })(),
+    );
+    return;
+  }
   event.waitUntil(
     caches
       .keys()
@@ -21,7 +57,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
+  if (PREVIEW_HOST || request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   // Never cache API traffic — stale CRM data must not look live.
@@ -52,9 +88,9 @@ self.addEventListener("fetch", (event) => {
             .then(
               (hit) =>
                 hit ??
-                new Response("অফলাইন — ইন্টারনেট ফিরলে আবার চেষ্টা করুন", {
+                new Response(RETRY_PAGE, {
                   status: 503,
-                  headers: { "Content-Type": "text/plain; charset=utf-8" },
+                  headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
                 }),
             ),
         ),

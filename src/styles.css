@@ -1,6 +1,15 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/caveat/500.css";
+@import "@fontsource/caveat/600.css";
+@import "@fontsource/caveat/700.css";
+@import "@fontsource/hind-siliguri/bengali-400.css";
+@import "@fontsource/hind-siliguri/bengali-500.css";
+@import "@fontsource/hind-siliguri/bengali-600.css";
+@import "@fontsource/hind-siliguri/bengali-700.css";
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -74,10 +83,10 @@
   --color-pay-danger-ink: var(--pay-danger-ink);
   --color-pay-danger-body: var(--pay-danger-body);
   --color-pay-danger-fg: var(--pay-danger-fg);
-  --font-display: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-hand: "Caveat", "Segoe Script", cursive;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  --font-display: "Inter Variable", "Inter", "Hind Siliguri", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", "Hind Siliguri", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-hand: "Caveat", "Hind Siliguri", "Segoe Script", cursive;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
   --shadow-glass: var(--shadow-glass);
@@ -260,7 +269,14 @@
   h3,
   h4 {
     font-family: var(--font-display);
+    /* Headings and dashboard UI: Inter, semibold by default. */
+    font-weight: 600;
     letter-spacing: -0.02em;
+  }
+  /* Page hero headings (h1) use Caveat site-wide; h2–h4 stay Inter. */
+  h1 {
+    font-family: var(--font-hand);
+    letter-spacing: 0;
   }
 
   /* One visible gold focus ring everywhere, so keyboard users never lose the
@@ -684,8 +700,15 @@
 html[lang="bn"] body,
 html[lang="bn"] h1,
 html[lang="bn"] h2,
-html[lang="bn"] h3 {
+html[lang="bn"] h3,
+html[lang="bn"] h4 {
   font-family: "Hind Siliguri", var(--font-sans);
+  letter-spacing: 0;
+}
+html[lang="bn"] h1,
+html[lang="bn"] h2 {
+  font-weight: 600;
+  line-height: 1.35;
 }
 :lang(bn) {
   font-family: "Hind Siliguri", var(--font-sans);
