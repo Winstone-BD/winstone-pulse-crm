@@ -124,6 +124,22 @@ export const requestSystemUnlock = createServerFn({ method: "POST" })
     return createUnlockRequest({ actor: label, hours: data.hours, reason: data.reason ?? null });
   });
 
+/** One form: record the real payment reference, then open an unlock request that emails the approver. */
+export const submitReferenceAndRequestUnlock = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    Token.extend({
+      paymentRef: z.string().trim().min(3).max(120),
+      hours: z.number().int().min(1).max(24),
+      reason: z.string().trim().max(300).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { label } = await itCaller(data.adminToken);
+    const { submitPayment, createUnlockRequest } = await import("@/lib/maintenance.server");
+    await submitPayment({ actor: label, paymentRef: data.paymentRef, note: data.reason ?? null });
+    return createUnlockRequest({ actor: label, hours: data.hours, reason: data.reason ?? null, paymentRef: data.paymentRef });
+  });
+
 /* ---------------- System Architect ---------------- */
 
 /** Step 1: is the signed-in Google account the authorised architect? */

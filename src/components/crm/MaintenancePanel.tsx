@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaintenanceCountdown, NoticePreview } from "@/components/crm/MaintenanceNotice";
+import { UnlockRequestCard } from "@/components/crm/UnlockRequestCard";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -94,6 +95,8 @@ export function MaintenancePanel() {
       </header>
 
       <MaintenanceCountdown />
+
+      <UnlockRequestCard state={state} adminToken={adminToken} />
 
       <dl className="grid gap-2 text-sm sm:grid-cols-3">
         {[
