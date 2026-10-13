@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
