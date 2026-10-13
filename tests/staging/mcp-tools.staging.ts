@@ -29,6 +29,9 @@ const token = process.env["STAGING_MCP_TOKEN"];
 const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
 if (!token || !serviceKey) throw new Error("[staging] STAGING_MCP_TOKEN and SUPABASE_SERVICE_ROLE_KEY are required");
 
+/** Per-request timeout; one hung call fails that check only. */
+const TIMEOUT_MS = Math.max(1000, Number(process.env["STAGING_MCP_TIMEOUT_MS"] ?? 15000) || 15000);
+
 const TAG = `STAGING-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 interface ToolDef {
@@ -46,6 +49,7 @@ interface RpcReply {
   status: number;
   json: { id?: number; result?: { isError?: boolean; tools?: ToolDef[]; content?: { type: string; text?: string }[] }; error?: { code: number; message: string } } | null;
   raw: string;
+  timedOut?: boolean;
 }
 
 const results: { tool: string; check: string; pass: boolean; detail?: string }[] = [];
@@ -77,21 +81,28 @@ export function parseRpcBody(raw: string, id: number): RpcReply["json"] {
 
 async function rpc(method: string, params: unknown, auth: string | null = token!): Promise<RpcReply> {
   const id = nextId++;
-  const res = await fetch(`${appUrl}/mcp`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      accept: "application/json, text/event-stream",
-      ...(auth ? { authorization: `Bearer ${auth}` } : {}),
-    },
-    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
-  });
-  const raw = await res.text();
-  return { status: res.status, json: parseRpcBody(raw, id), raw: raw.slice(0, 300) };
+  try {
+    const res = await fetch(`${appUrl}/mcp`, {
+      method: "POST",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...(auth ? { authorization: `Bearer ${auth}` } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
+    });
+    const raw = await res.text();
+    return { status: res.status, json: parseRpcBody(raw, id), raw: raw.slice(0, 300) };
+  } catch (e) {
+    const name = (e as Error).name;
+    const why = name === "TimeoutError" || name === "AbortError" ? `timed out after ${TIMEOUT_MS} ms` : `network error: ${(e as Error).message}`;
+    return { status: 0, json: null, raw: `${method} ${why}`, timedOut: name === "TimeoutError" || name === "AbortError" };
+  }
 }
 
 const callTool = (name: string, args: Record<string, unknown>) => rpc("tools/call", { name, arguments: args });
-const isRejected = (r: RpcReply) => r.status >= 400 || !!r.json?.error || r.json?.result?.isError === true;
+const isRejected = (r: RpcReply) => !r.timedOut && r.status !== 0 && (r.status >= 400 || !!r.json?.error || r.json?.result?.isError === true);
 const succeeded = (r: RpcReply) => r.status === 200 && !!r.json?.result && !r.json.error && r.json.result.isError !== true;
 
 const typeOf = (s: JsonSchema) => (Array.isArray(s.type) ? s.type[0] : s.type);
@@ -217,25 +228,31 @@ describe("MCP on staging — auth", () => {
 });
 
 describe("MCP on staging — every listed tool", () => {
-  it("executes, validates input, and meets its data contract", async () => {
+  it("executes, validates input, and meets its data contract", { timeout: 0 }, async () => {
     for (const tool of tools) {
-      const ok = await callTool(tool.name, minimalArgs(tool));
-      record(tool.name, "executes with minimal valid args", succeeded(ok), succeeded(ok) ? undefined : ok.raw);
+      // Error isolation: anything thrown or hung inside one tool's checks is
+      // recorded against that tool, and the loop moves on to the next tool.
+      try {
+        const ok = await callTool(tool.name, minimalArgs(tool));
+        record(tool.name, "executes with minimal valid args", succeeded(ok), succeeded(ok) ? undefined : ok.raw);
 
-      for (const bad of invalidArgSets(tool)) {
-        const r = await callTool(tool.name, bad.args);
-        record(tool.name, `rejects ${bad.label}`, isRejected(r), isRejected(r) ? undefined : r.raw);
-      }
-
-      const fixture = FIXTURE_CHECKS[tool.name];
-      if (fixture) {
-        try {
-          await fixture(tool.name);
-        } catch (e) {
-          record(tool.name, "fixture checks", false, (e as Error).message.slice(0, 200));
+        for (const bad of invalidArgSets(tool)) {
+          const r = await callTool(tool.name, bad.args);
+          record(tool.name, `rejects ${bad.label}`, isRejected(r), isRejected(r) ? undefined : r.raw);
         }
-      } else {
-        record(tool.name, "data contract", false, "no fixture check written for this tool — add one to FIXTURE_CHECKS");
+
+        const fixture = FIXTURE_CHECKS[tool.name];
+        if (fixture) {
+          try {
+            await fixture(tool.name);
+          } catch (e) {
+            record(tool.name, "fixture checks", false, (e as Error).message.slice(0, 200));
+          }
+        } else {
+          record(tool.name, "data contract", false, "no fixture check written for this tool — add one to FIXTURE_CHECKS");
+        }
+      } catch (e) {
+        record(tool.name, "checks aborted", false, (e as Error).message.slice(0, 200));
       }
     }
     expect(results.filter((r) => !r.pass)).toEqual([]);

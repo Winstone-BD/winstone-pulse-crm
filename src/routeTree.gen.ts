@@ -51,6 +51,7 @@ import { Route as ServiceBillUnlockRouteImport } from './routes/service-bill-unl
 import { Route as SiteVisitsRouteImport } from './routes/site-visits'
 import { Route as SocialPagesRouteImport } from './routes/social-pages'
 import { Route as StaffPortalRouteImport } from './routes/staff-portal'
+import { Route as StagingChecklistRouteImport } from './routes/staging-checklist'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
 import { Route as SystemRouteImport } from './routes/system'
@@ -322,6 +323,11 @@ const SocialPagesRoute = SocialPagesRouteImport.update({
 const StaffPortalRoute = StaffPortalRouteImport.update({
   id: '/staff-portal',
   path: '/staff-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StagingChecklistRoute = StagingChecklistRouteImport.update({
+  id: '/staging-checklist',
+  path: '/staging-checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -700,6 +706,7 @@ export interface FileRoutesByFullPath {
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
+  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -806,6 +813,7 @@ export interface FileRoutesByTo {
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
+  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -913,6 +921,7 @@ export interface FileRoutesById {
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
+  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
@@ -1021,6 +1030,7 @@ export interface FileRouteTypes {
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
+    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1127,6 +1137,7 @@ export interface FileRouteTypes {
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
+    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1233,6 +1244,7 @@ export interface FileRouteTypes {
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
+    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
@@ -1340,6 +1352,7 @@ export interface RootRouteChildren {
   SiteVisitsRoute: typeof SiteVisitsRoute
   SocialPagesRoute: typeof SocialPagesRoute
   StaffPortalRoute: typeof StaffPortalRoute
+  StagingChecklistRoute: typeof StagingChecklistRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
   SystemRoute: typeof SystemRoute
@@ -1698,6 +1711,13 @@ declare module '@tanstack/react-router' {
       path: '/staff-portal'
       fullPath: '/staff-portal'
       preLoaderRoute: typeof StaffPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staging-checklist': {
+      id: '/staging-checklist'
+      path: '/staging-checklist'
+      fullPath: '/staging-checklist'
+      preLoaderRoute: typeof StagingChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -2180,6 +2200,7 @@ const rootRouteChildren: RootRouteChildren = {
   SiteVisitsRoute: SiteVisitsRoute,
   SocialPagesRoute: SocialPagesRoute,
   StaffPortalRoute: StaffPortalRoute,
+  StagingChecklistRoute: StagingChecklistRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,
   SystemRoute: SystemRoute,
