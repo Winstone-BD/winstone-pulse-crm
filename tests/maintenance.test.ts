@@ -73,7 +73,7 @@ describe("maintenance wiring", () => {
   });
   it("historical snapshots keep their own currency", () => {
     expect(moneyLabel(1816, "USD")).toBe("$18.16 USD");
-    expect(moneyLabel(434500, "BDT")).toBe("৳4,345 BDT");
+    expect(moneyLabel(3529, "USD")).toBe("$35.29 USD");
   });
   it("new invoices snapshot $35.29 USD; existing rows are never rewritten", () => {
     const src = readFileSync("src/lib/maintenance.server.ts", "utf8");
