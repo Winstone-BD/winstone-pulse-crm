@@ -27,6 +27,8 @@
     "@lovable.dev/vite-tanstack-config": "2.25.2"
   },
   "dependencies": {
+    "@firebase/app": "^0.16.3",
+    "@firebase/messaging": "^0.13.3",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@lovable.dev/email-js": "0.1.0",
@@ -73,7 +75,6 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "fflate": "^0.8.3",
-    "firebase": "^12.19.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "pdf-lib": "^1.17.1",
@@ -96,7 +97,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.3",
+    "@lovable.dev/vite-tanstack-config": "2.25.2",
     "@types/node": "^22.16.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.0",
