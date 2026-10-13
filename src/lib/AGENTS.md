@@ -18,3 +18,4 @@
 - MCP server uses @lovable.dev/mcp-js 4.x (no @modelcontextprotocol/sdk dependency); MCP tool files import zod from "zod/v4" — why: 2.x/3.x pinned the vulnerable SDK 1.28.0 and 4.x schemas require Zod 4.
 - Unlock requests also email a 2h HMAC link (unlock-email.server.ts) via Hostinger; the /unlock-approve page needs an explicit Confirm and decides through architectDecide — why: scanners must not unlock, and one decision path keeps single-use + audit.
 - Billing states (invoice OPEN/OVERDUE/PAID, payment UNPAID/PENDING_VERIFICATION/VERIFIED/FAILED, access) are derived by billingStates() from the one decide() rule; a pending reference at lock is a recovery state and a second reference is refused — why: no double charge, no fake paid.
+- Public sign-up is off (backend disable_signup); accounts are created only by IT Console createStaffAccount (authority + write) via admin API — why: IT HQ provisions every account and device.
