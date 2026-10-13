@@ -90,11 +90,23 @@ function HelpCentre() {
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             If the app shows a blank screen, an "offline" message while your internet works, or an
-            old design after an update, your device is probably holding a stale saved copy. Follow
-            the steps for your device, then reopen the app.
+            old design after an update, your device is probably holding a stale saved copy. If you
+            are using the preview on your phone, start with the phone preview steps below; otherwise
+            follow the steps for your device, then reopen the app.
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-border bg-background p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <Smartphone className="size-4 text-primary" /> Phone preview (Lovable app)
+              </h3>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+                <li>Close the preview completely — swipe it away so it is no longer open in the background.</li>
+                <li>Open the Lovable app again and reopen the preview from there.</li>
+                <li>If it is still blank, clear the cached data using the steps for your phone below, then reopen the preview.</li>
+              </ol>
+            </div>
+
             <div className="rounded-lg border border-border bg-background p-4">
               <h3 className="flex items-center gap-2 text-sm font-semibold">
                 <Smartphone className="size-4 text-primary" /> Android phone (Chrome)
