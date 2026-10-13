@@ -340,6 +340,15 @@ export const escalateSupportConversation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await writer(data.adminToken);
+    {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: conv } = await supabaseAdmin
+        .from("support_conversations").select("assignee_profile_id").eq("id", data.conversationId).maybeSingle();
+      if (!conv) throw new Error("Conversation not found");
+      if (!canTouch(me.scope, me.profile?.id ?? null, conv.assignee_profile_id)) {
+        throw new Error("This conversation is assigned to another agent");
+      }
+    }
     const { escalateConversation } = await import("@/lib/support.server");
     const { actorLabel } = await import("@/lib/support-access.server");
     const ticket = await escalateConversation({
