@@ -37,3 +37,4 @@
 - Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
 
 - IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
+- System Architect / Super Admin accounts are provisioned only by the profiles-insert trigger from the server-only privileged_account_allowlist (confirmed auth email, first user binds) — why: no UI or API can grant those roles. Payment approval stays architect-identity-only (Google + PIN), never the admin role.
