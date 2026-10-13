@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Active
+- [ ] Require device selection before Get started; present uploaded IT officer portraits after PIN; preserve exclusive billing reviewer authority.
+- [ ] Map Head/Officer to real IT accounts and enable assistant onboarding: blocked on their login emails and verified account identities; never use shared passwords as embedded credentials.
 - [x] Hide signup/portals until Get started; reorder HQ, Agent, LeadHub, IT; require identified IT account after PIN. Phone/desktop reveal and PIN screen checked; 569 tests pass, 5 skipped; no publish.
 - [ ] Verify real IT PIN → authorized officer email/password → console and session audit. Blocked: no authorized officer test credentials/PIN supplied; do not invent accounts or write live test audit records.
 

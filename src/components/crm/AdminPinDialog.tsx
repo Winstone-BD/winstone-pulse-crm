@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ItOfficerPicker } from "@/components/crm/ItOfficerPicker";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ export function AdminPinDialog({
   const [challenge, setChallenge] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedOfficer, setSelectedOfficer] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const unlock = useServerFn(unlockAdmin);
   const complete = useServerFn(completeItAccess);
@@ -90,11 +92,11 @@ export function AdminPinDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) { setPin(""); setChallenge(null); setPassword(""); }
+        if (!next) { setPin(""); setChallenge(null); setPassword(""); setEmail(""); setSelectedOfficer(null); }
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm">
         <DialogHeader className="items-center text-center">
           <span className="grid size-11 place-items-center rounded-full bg-primary/15 text-primary">
             <Lock className="size-5" />
@@ -106,6 +108,7 @@ export function AdminPinDialog({
         </DialogHeader>
         {challenge && surface === "system" ? (
           <form className="grid gap-4 py-2" onSubmit={(event) => { event.preventDefault(); if (!accountLogin.isPending) accountLogin.mutate(); }}>
+            <ItOfficerPicker selected={selectedOfficer} onSelect={setSelectedOfficer} />
             <div className="grid gap-1.5">
               <Label htmlFor="it-login-email">Email</Label>
               <Input id="it-login-email" type="email" autoComplete="username" required maxLength={160} value={email} onChange={(event) => setEmail(event.target.value)} disabled={accountLogin.isPending} />

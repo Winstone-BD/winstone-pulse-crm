@@ -23,6 +23,7 @@ import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -50,6 +51,9 @@ function EntryHall() {
   const { scope } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<"android" | "web" | "desktop" | null>(null);
+  const [selectionRequired, setSelectionRequired] = useState(false);
+  const t = useT();
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
 
   const openPin = (target: "/hq" | "/system" | "/leadhub") => {
@@ -60,6 +64,8 @@ function EntryHall() {
   // One CRM, three layouts: the choice is only a remembered preference.
   // Every mode leads to the same existing access screen below.
   const chooseMode = (mode: "android" | "web" | "desktop") => {
+    setSelectedMode(mode);
+    setSelectionRequired(false);
     try {
       localStorage.setItem("winstone.view-mode", mode);
     } catch {
@@ -142,22 +148,25 @@ function EntryHall() {
           Select the mode you are using — the same Winstone Pulse opens on every device.
         </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-6">
+        <div id="device-selection" className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-6">
           <ModeCard
             illustration={<SmartphoneIllustration />}
             title="Android"
+            selected={selectedMode === "android"}
             subtitle="Mobile-first CRM"
             onClick={() => chooseMode("android")}
           />
           <ModeCard
             illustration={<WebIllustration />}
             title="Web / iOS"
+            selected={selectedMode === "web"}
             subtitle="Responsive CRM"
             onClick={() => chooseMode("web")}
           />
           <ModeCard
             illustration={<DesktopIllustration />}
             title="Desktop"
+            selected={selectedMode === "desktop"}
             subtitle="Full CRM Workspace"
             onClick={() => chooseMode("desktop")}
           />
@@ -174,6 +183,11 @@ function EntryHall() {
             aria-expanded={accessOpen}
             aria-controls="workspace-access"
             onClick={() => {
+              if (!selectedMode) {
+                setSelectionRequired(true);
+                document.getElementById("device-selection")?.scrollIntoView({ block: "center", behavior: "instant" });
+                return;
+              }
               setAccessOpen(true);
               window.requestAnimationFrame(() => document.getElementById("workspace-access")?.scrollIntoView({
                 behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start",
@@ -182,6 +196,7 @@ function EntryHall() {
           >
             Get started <ChevronRight className="size-5" />
           </Button>
+          {selectionRequired && <p role="alert" className="mt-3 text-center text-sm font-medium text-foreground">{t({ en: "Choose Android, Web / iOS or Desktop to continue.", bn: "এগিয়ে যেতে Android, Web / iOS অথবা Desktop বেছে নিন।" })}</p>}
         </div>
 
         {accessOpen && <div id="workspace-access" className="scroll-mt-6">
@@ -336,17 +351,21 @@ function ModeCard({
   title,
   subtitle,
   onClick,
+  selected,
 }: {
   illustration: React.ReactNode;
   title: string;
   subtitle: string;
   onClick: () => void;
+  selected: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      aria-pressed={selected}
       onClick={onClick}
-      className="group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+      className={`group h-auto min-w-0 flex-col items-center gap-2 rounded-xl bg-card p-3 text-center whitespace-normal transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? "border-gold ring-1 ring-gold" : "border-border"}`}
     >
       <span className="text-foreground">
         {illustration}
@@ -356,9 +375,9 @@ function ModeCard({
         <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</span>
       </span>
       <span className="btn-enter mt-auto inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold sm:h-11 sm:px-5 sm:text-sm">
-        Select <ChevronRight className="size-4" />
+        {selected ? "Selected" : "Select"} <ChevronRight className="size-4" />
       </span>
-    </button>
+    </Button>
   );
 }
 
