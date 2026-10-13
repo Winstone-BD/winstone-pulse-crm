@@ -35,3 +35,4 @@
 - Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
 - Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
 - Billing rows (invoices, unlock requests) are keyed by plan_code; this app only touches plan_code='crm' via PLAN_CODE in maintenance.server.ts — why: CRM and OS entitlements are independent.
+- MCP server uses @lovable.dev/mcp-js 4.x (no @modelcontextprotocol/sdk dependency); MCP tool files import zod from "zod/v4" — why: 2.x/3.x pinned the vulnerable SDK 1.28.0 and 4.x schemas require Zod 4.
