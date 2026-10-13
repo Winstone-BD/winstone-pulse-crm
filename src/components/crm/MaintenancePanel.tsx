@@ -17,7 +17,7 @@ import {
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, billingStatusLine, moneyLabel } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, billingStatusLine, moneyLabel, paidInvoiceAudit } from "@/lib/maintenance-rules";
 import { downloadVoucher, printVoucher } from "@/lib/voucher";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
@@ -196,6 +196,27 @@ export function MaintenancePanel() {
         <p className="mb-1 text-sm font-semibold">Billing notice preview</p>
         <p className="mb-2 text-xs text-muted-foreground">How each payment notice looks before publishing — amber, blue, red, and verified. Display-only; nothing here changes the real invoice.</p>
         <NoticePreview />
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-semibold">Paid invoice audit</p>
+        <p className="mb-2 text-xs text-muted-foreground">Who marked each invoice paid, when (Asia/Dhaka), and whether the usual Architect approval was skipped. Read-only.</p>
+        <div className="table-scroll rounded border border-border">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40 text-left"><tr><th className="p-2">Invoice</th><th className="p-2">Marked paid by</th><th className="p-2">When</th><th className="p-2">Approval</th></tr></thead>
+            <tbody>
+              {paidInvoiceAudit(periods, audit).map((r) => (
+                <tr key={r.period} className="border-t border-border">
+                  <td className="p-2 font-semibold">{r.period}</td>
+                  <td className="p-2">{r.markedBy}</td>
+                  <td className="p-2">{r.at ? dhakaTime(r.at) : "—"}</td>
+                  <td className="p-2"><Tone tone={r.approvalSkipped ? "amber" : "green"}>{r.approvalSkipped ? "APPROVAL SKIPPED" : "APPROVED"}</Tone> <span className="text-muted-foreground">{r.how}</span></td>
+                </tr>
+              ))}
+              {paidInvoiceAudit(periods, audit).length === 0 && <tr><td colSpan={4} className="p-2 text-muted-foreground">No paid invoices yet.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div>

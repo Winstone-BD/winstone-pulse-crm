@@ -820,6 +820,13 @@
       "when": 1791930360124,
       "tag": "0116_maintenance_fee_usd_final",
       "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1791933154359,
+      "tag": "0117_require_approval_before_paid",
+      "breakpoints": true
     }
   ]
 }
