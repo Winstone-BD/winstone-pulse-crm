@@ -785,6 +785,13 @@
       "when": 1791924489618,
       "tag": "0111_privileged_account_provisioning",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1791924539038,
+      "tag": "0112_privileged_account_provisioning_role_sync",
+      "breakpoints": true
     }
   ]
 }
