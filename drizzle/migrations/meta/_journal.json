@@ -813,6 +813,13 @@
       "when": 1791930173224,
       "tag": "0115_maintenance_fee_bdt_4345",
       "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1791930360124,
+      "tag": "0116_maintenance_fee_usd_final",
+      "breakpoints": true
     }
   ]
 }
