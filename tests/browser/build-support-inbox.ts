@@ -5,7 +5,7 @@ import { type BunPlugin } from "bun";
 const mockPlugin: BunPlugin = {
   name: "support-inbox-mocks",
   setup(build) {
-    build.onResolve({ filter: /^@tanstack\/react-start$/ }, () => ({
+    build.onResolve({ filter: /^@tanstack\/react-start/ }, () => ({
       path: "/dev-server/tests/browser/support-inbox-mock-start.ts",
     }));
     build.onResolve({ filter: /^@\/lib\/local-session$/ }, () => ({
