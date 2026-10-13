@@ -47,7 +47,8 @@ export function ConnectionStatus() {
       setStatus("offline");
       return;
     }
-    setStatus((s) => (s === "online" ? "checking" : s));
+    // Background probes stay silent: never flip a healthy status to
+    // "checking", or the pill would flash on every page once a minute.
     const ok = await probeServer();
     setStatus((prev) => {
       const next: Status = !navigator.onLine ? "offline" : ok ? "online" : "server-down";
