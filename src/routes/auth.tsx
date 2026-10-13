@@ -66,7 +66,6 @@ function AuthPage() {
   });
 
   void mode;
-  const isSignup = false;
   const busy = signIn.isPending;
   const canSubmit = email.trim().length >= 4 && password.length >= 6;
 
@@ -103,24 +102,22 @@ function AuthPage() {
         </Link>
 
         <h1 className="mt-6 text-xl font-bold tracking-tight">
-          {isSignup ? "Create your account" : "Sign in to your desk"}
+          {"Sign in to your desk"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {isSignup
-            ? "IT Console approves new accounts before the floor data opens up."
-            : "Use your phone number, Employee ID or email."}
+          {"Use your phone number, Employee ID or email."}
         </p>
 
         <div className="mt-5 space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="email">{isSignup ? "Email" : "Phone / Employee ID / Email"}</Label>
+            <Label htmlFor="email">{"Phone / Employee ID / Email"}</Label>
             <Input
               id="email"
-              type={isSignup ? "email" : "text"}
+              type={"text"}
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={isSignup ? "you@winstonebd.com" : "01805049668 or WIN2601"}
+              placeholder={"01805049668 or WIN2601"}
             />
           </div>
 
@@ -129,7 +126,7 @@ function AuthPage() {
             <Input
               id="password"
               type="password"
-              autoComplete={isSignup ? "new-password" : "current-password"}
+              autoComplete={"current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
@@ -151,7 +148,7 @@ function AuthPage() {
             ) : (
               <LogIn className="size-4" />
             )}
-            {isSignup ? "Create account" : "Sign in"}
+            {"Sign in"}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
