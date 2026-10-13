@@ -20,7 +20,7 @@ import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
 import { BrandLockup } from "@/components/BrandLockup";
-import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
+import { MaintenanceFloorNotice, useMaintenance } from "@/components/crm/MaintenanceNotice";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -52,6 +52,7 @@ function EntryHall() {
   const { scope, account } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [workspaceChoice, setWorkspaceChoice] = useState<"hq" | "agent" | "leadhub" | "it" | null>(null);
   const [selectedMode, setSelectedMode] = useState<"android" | "web" | "desktop" | null>(null);
   const t = useT();
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
@@ -73,6 +74,8 @@ function EntryHall() {
   };
 
   const signedInName = account?.profile?.name ?? null;
+  const recommendedWorkspace = account?.itAuthenticated ? "it" : scope === "authority" ? "hq" : scope === "agent" || scope === "coordinator" ? "agent" : null;
+  const activeWorkspace = workspaceChoice ?? recommendedWorkspace;
 
   return (
     <div className="theme-exec min-h-screen bg-background">
@@ -127,6 +130,8 @@ function EntryHall() {
           </dl>
         </section>
 
+        <OperationalStatus account={account} />
+
         <h2 className="mt-7 text-center font-hand text-3xl font-semibold leading-snug tracking-normal sm:mt-8 sm:text-4xl">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
@@ -164,6 +169,22 @@ function EntryHall() {
         </p>
 
         <div className="mx-auto mt-6 w-full max-w-xl sm:mt-8">
+          <fieldset className="mb-5">
+            <legend className="mb-3 text-sm font-semibold">{t({ en: "Your role & workspace", bn: "আপনার দায়িত্ব ও কর্মক্ষেত্র" })}</legend>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Role workspace selector">
+              {([
+                { key: "hq", label: "Executive HQ", icon: BarChart3 },
+                { key: "agent", label: "Sales Agent", icon: Headphones },
+                { key: "leadhub", label: "LeadHub Nexus", icon: Database },
+                { key: "it", label: "IT Console", icon: Server },
+              ] as const).map(({ key, label, icon: Icon }) => (
+                <Button key={key} variant="outline" aria-pressed={activeWorkspace === key} onClick={() => setWorkspaceChoice(key)} className={`h-auto min-h-12 min-w-0 justify-start gap-2 whitespace-normal px-3 text-left text-xs ${activeWorkspace === key ? "border-gold bg-accent text-accent-foreground" : "bg-card"}`}>
+                  <Icon className="size-4 shrink-0" />
+                  <span className="min-w-0">{label}{recommendedWorkspace === key && <span className="block text-[10px] font-medium text-muted-foreground">{t({ en: "Your workspace", bn: "আপনার কর্মক্ষেত্র" })}</span>}</span>
+                </Button>
+              ))}
+            </div>
+          </fieldset>
           <Button
             size="lg"
             className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
@@ -190,6 +211,7 @@ function EntryHall() {
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
+          <div className={activeWorkspace !== null && activeWorkspace !== "hq" ? "hidden" : "contents"}>
           <EntryCard
             icon={<BarChart3 className="size-6" />}
             title="Executive HQ"
@@ -200,6 +222,8 @@ function EntryHall() {
               </Button>
             }
           />
+          </div>
+          <div className={activeWorkspace !== null && activeWorkspace !== "agent" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
@@ -212,7 +236,9 @@ function EntryHall() {
               </Button>
             }
           />
+          </div>
 
+          <div className={activeWorkspace !== null && activeWorkspace !== "leadhub" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Database className="size-6" />}
             title="LeadHub Nexus"
@@ -223,9 +249,11 @@ function EntryHall() {
               </Button>
             }
           />
+          </div>
 
 
 
+          <div className={activeWorkspace !== null && activeWorkspace !== "it" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Server className="size-6" />}
             title="IT Console"
@@ -236,6 +264,7 @@ function EntryHall() {
               </Button>
             }
           />
+          </div>
         </div>
 
         <AgentOnboardingNotice />
@@ -289,6 +318,27 @@ function EntryHall() {
       />
     </div>
   );
+}
+
+function OperationalStatus({ account }: { account: ReturnType<typeof useMyAccount>["account"] }) {
+  const t = useT();
+  const maintenance = useMaintenance();
+  const [online, setOnline] = useState<boolean | null>(null);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
+  }, []);
+  const status = maintenance.data;
+  const access = !status || !status.ok ? t({ en: "Status unavailable", bn: "অবস্থা অনুপলব্ধ" }) : status.locked ? t({ en: "Workspace locked", bn: "কর্মক্ষেত্র লক" }) : status.stage === "unlocked" ? t({ en: "Temporary unlock", bn: "সাময়িক আনলক" }) : t({ en: "Workspace open", bn: "কর্মক্ষেত্র খোলা" });
+  const items = [
+    { label: t({ en: "Device connection", bn: "ডিভাইসের সংযোগ" }), value: online === null ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : online ? t({ en: "Network available", bn: "নেটওয়ার্ক উপলব্ধ" }) : t({ en: "Offline", bn: "অফলাইন" }) },
+    { label: t({ en: "Account", bn: "অ্যাকাউন্ট" }), value: !account ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : account.signedIn ? account.approval === "approved" ? t({ en: "Approved account", bn: "অনুমোদিত অ্যাকাউন্ট" }) : t({ en: "Approval required", bn: "অনুমোদন প্রয়োজন" }) : t({ en: "Sign-in required", bn: "সাইন-ইন প্রয়োজন" }) },
+    { label: t({ en: "System access", bn: "সিস্টেমে প্রবেশ" }), value: access },
+  ];
+  return <section aria-label="Operational status" className="mt-5 border-b border-border pb-5"><dl className="grid gap-4 sm:grid-cols-3">{items.map(({ label, value }) => <div key={label} className="min-w-0"><dt className="text-[11px] text-muted-foreground">{label}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}</dl></section>;
 }
 
 function EntryCard({

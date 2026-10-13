@@ -33,3 +33,4 @@
 - IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
 - Architect/Super Admin roles come only from the profiles-insert trigger + server-only privileged_account_allowlist (confirmed email, first user binds); payment approval stays architect identity (Google+PIN) — why: no UI/API grants them.
 - Subdirectories have their own AGENTS.md; read it before changing files there.
+- Homepage role selection only filters existing entry cards; recommendations use getMyAccount and operational access uses useMaintenance with explicit unavailable states — why: navigation must not grant roles or fabricate health/access.

@@ -23,4 +23,18 @@ describe("homepage reference layout preserves safe entry", () => {
     expect(home).not.toMatch(/All Systems Operational|Systems online|Updated in real time|Sales Progress/);
     expect(home).toContain("<MaintenanceFloorNotice");
   });
+  it("role selection guides existing secure entry without granting roles", () => {
+    expect(home).toContain('aria-label="Role workspace selector"');
+    expect(home).toContain("account?.itAuthenticated");
+    expect(home).toContain("setWorkspaceChoice(key)");
+    expect(home).toContain('openPin("/system")');
+    expect(home).toContain('search={{ role: "agent", mode: "signin" }}');
+    expect(home).not.toContain("updateStaffAccount");
+  });
+  it("operational access comes from maintenance status with honest failure states", () => {
+    expect(home).toContain("const maintenance = useMaintenance()");
+    expect(home).toContain('en: "Status unavailable"');
+    expect(home).toContain("navigator.onLine");
+    expect(home).toContain('aria-label="Operational status"');
+  });
 });
