@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Lock, LockOpen } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, LockOpen } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import logoAsset from "@/assets/winstone-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { ItOfficerPicker } from "@/components/crm/ItOfficerPicker";
 import {
@@ -37,6 +38,7 @@ export function AdminPinDialog({
   const [pin, setPin] = useState("");
   const [attemptNo, setAttemptNo] = useState(0);
   const [challenge, setChallenge] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedOfficer, setSelectedOfficer] = useState<string | null>(null);
@@ -98,11 +100,22 @@ export function AdminPinDialog({
     >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm">
         <DialogHeader className="items-center text-center">
-          <span className="grid size-11 place-items-center rounded-full bg-primary/15 text-primary">
-            <Lock className="size-5" />
-          </span>
-          <DialogTitle>{surface === "system" ? challenge ? "IT Console sign in" : "IT Console PIN" : surface === "leadhub" ? "LeadHub Nexus PIN" : "Control board PIN"}</DialogTitle>
-          <DialogDescription>
+          {challenge && surface === "system" ? (
+            <>
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">IT Console</span>
+              <img src={logoAsset.url} alt="Winstone Properties Ltd." className="mt-2 h-12 w-auto object-contain" />
+              <p className="text-xl font-semibold">Winstone Pulse</p>
+              <DialogTitle className="text-lg">Secure Admin Login</DialogTitle>
+            </>
+          ) : (
+            <>
+              <span className="grid size-11 place-items-center rounded-full bg-primary/15 text-primary">
+                <Lock className="size-5" />
+              </span>
+              <DialogTitle>{surface === "system" ? "IT Console PIN" : surface === "leadhub" ? "LeadHub Nexus PIN" : "Control board PIN"}</DialogTitle>
+            </>
+          )}
+          <DialogDescription className={challenge && surface === "system" ? "sr-only" : undefined}>
             {surface === "system" ? challenge ? "Sign in with your authorized IT officer account." : "Enter the IT PIN, then sign in to your own account." : surface === "leadhub" ? "LeadHub-এর আলাদা PIN দিন।" : "Enter the master PIN to unlock this board on this device."}
           </DialogDescription>
         </DialogHeader>
@@ -110,17 +123,23 @@ export function AdminPinDialog({
           <form className="grid gap-4 py-2" onSubmit={(event) => { event.preventDefault(); if (!accountLogin.isPending) accountLogin.mutate(); }}>
             <ItOfficerPicker selected={selectedOfficer} onSelect={setSelectedOfficer} />
             <div className="grid gap-1.5">
-              <Label htmlFor="it-login-email">Email</Label>
-              <Input id="it-login-email" type="email" autoComplete="username" required maxLength={160} value={email} onChange={(event) => setEmail(event.target.value)} disabled={accountLogin.isPending} />
+              <Label htmlFor="it-login-email">Username or Email</Label>
+              <Input id="it-login-email" type="email" autoComplete="username" required maxLength={160} placeholder="you@winstonebd.com" value={email} onChange={(event) => setEmail(event.target.value)} disabled={accountLogin.isPending} />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="it-login-password">Password</Label>
-              <Input id="it-login-password" type="password" autoComplete="current-password" required maxLength={200} value={password} onChange={(event) => setPassword(event.target.value)} disabled={accountLogin.isPending} />
+              <div className="relative">
+                <Input id="it-login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" required maxLength={200} className="pr-10" value={password} onChange={(event) => setPassword(event.target.value)} disabled={accountLogin.isPending} />
+                <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((v) => !v)} className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
             </div>
-            <Button type="submit" disabled={!email.includes("@") || !password || accountLogin.isPending}>
-              {accountLogin.isPending ? <Loader2 className="size-4 animate-spin" /> : <LockOpen className="size-4" />} Sign in to IT Console
+            <Button type="submit" size="lg" disabled={!email.includes("@") || !password || accountLogin.isPending}>
+              {accountLogin.isPending ? <Loader2 className="size-4 animate-spin" /> : <LockOpen className="size-4" />} Sign In
             </Button>
-            <Button type="button" variant="ghost" disabled={accountLogin.isPending} onClick={() => { setChallenge(null); setPassword(""); }}>Back to PIN</Button>
+            <p className="text-center text-xs text-muted-foreground">Access is restricted to authorized IT administrators only.</p>
+            <Button type="button" variant="ghost" disabled={accountLogin.isPending} onClick={() => { setChallenge(null); setPassword(""); setShowPassword(false); }}>Back to PIN</Button>
           </form>
         ) : <div className="flex flex-col items-center gap-4 py-2">
           <Input
