@@ -92,6 +92,36 @@ export const itMaintenance = createServerFn({ method: "POST" })
     return { state, ...history };
   });
 
+/**
+ * Read-only "Billing & Approvals" summary for the IT Console. canApprove is
+ * derived on the server from the confirmed Google architect identity — it only
+ * decides what to show; every decision still needs the /tech PIN session.
+ */
+export const billingApprovalSummary = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Token.parse(input ?? {}))
+  .handler(async ({ data }) => {
+    await itCaller(data.adminToken);
+    const m = await import("@/lib/maintenance.server");
+    const [state, history, who] = await Promise.all([m.maintenanceAccess(), m.maintenanceHistory(), m.architectFromRequest()]);
+    const openRequests = history.requests
+      .filter((r) => r.status === "requested" && r.billing_period === state.period)
+      .map((r) => ({ id: r.id as string, hours: r.requested_hours as number, reason: (r.reason as string | null) ?? null, requestedBy: r.requested_by as string, requestedAt: r.requested_at as string }));
+    return {
+      period: state.period,
+      feeUsd: state.feeUsd,
+      dueDate: state.dueDate,
+      lockAt: state.lockAt,
+      paymentStatus: state.paymentStatus,
+      paymentRef: state.paymentRef,
+      unlockStatus: state.unlockStatus,
+      unlockExpiresAt: state.unlockExpiresAt,
+      locked: state.locked,
+      rejectedReason: state.rejectedReason,
+      openRequests,
+      canApprove: who !== null,
+    };
+  });
+
 /** IT submits a real reference only; verification belongs to the System Architect. */
 export const submitMaintenancePayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
