@@ -99,24 +99,6 @@ function EntryHall() {
               live sales monitoring, lead management, call activity, follow-up deadlines and team
               performance, all in one place.
             </p>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start">
-              <Button
-                size="lg"
-                className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
-                onClick={() =>
-                  document
-                    .getElementById("workspace-signin")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
-              >
-                Get started <ChevronRight className="size-5" />
-              </Button>
-              <Button asChild size="lg" variant="outline" className="w-full rounded-md px-5 text-base font-medium hover:-translate-y-px hover:border-foreground/40 hover:bg-muted active:translate-y-0 active:bg-muted/80 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none">
-                <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
-                  Sign in
-                </Link>
-              </Button>
-            </div>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 sm:mt-8 sm:gap-x-6 lg:justify-start">
               {[
                 { icon: Headphones, label: "Manage Your Team" },
@@ -152,8 +134,6 @@ function EntryHall() {
           </div>
         </header>
 
-        <HomeSignupForm />
-
         <h2 className="mt-10 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
@@ -186,6 +166,25 @@ function EntryHall() {
         <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
           One CRM. One data layer. Every device.
         </p>
+
+        <div className="mx-auto mt-6 w-full max-w-xl sm:mt-8">
+          <Button
+            size="lg"
+            className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
+            onClick={() =>
+              document
+                .getElementById("workspace-signin")
+                ?.scrollIntoView({
+                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+                  block: "start",
+                })
+            }
+          >
+            Get started <ChevronRight className="size-5" />
+          </Button>
+        </div>
+
+        <HomeSignupForm />
 
         <h2
           id="workspace-signin"
