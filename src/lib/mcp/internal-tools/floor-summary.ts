@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
