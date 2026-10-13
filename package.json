@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "check:mcp-js": "node scripts/check-mcp-js-stable.mjs",
+    "check:mcp-js:compat": "bash scripts/mcp-js-compat-isolated.sh",
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
     "check:colors": "node scripts/check-dashboard-colors.mjs"
