@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Active
-- [ ] Hide signup/portals until Get started; reorder HQ, Agent, LeadHub, IT; require identified IT account after PIN. No publish or live-data tests.
+- [x] Hide signup/portals until Get started; reorder HQ, Agent, LeadHub, IT; require identified IT account after PIN. Phone/desktop reveal and PIN screen checked; 569 tests pass, 5 skipped; no publish.
+- [ ] Verify real IT PIN → authorized officer email/password → console and session audit. Blocked: no authorized officer test credentials/PIN supplied; do not invent accounts or write live test audit records.
 
 - [x] Replace sideways desk navigation with a colour-accented, non-scrolling section picker; mobile global menu opens from below. Browser verified, no overflow.
 - [x] Bring saved notes and prior reports/history into pre-call and active web-call workspace using existing authorised paths; 11 targeted checks passed. Signed-in saving remains unverified.

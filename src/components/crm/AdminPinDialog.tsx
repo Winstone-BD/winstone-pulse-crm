@@ -126,7 +126,7 @@ export function AdminPinDialog({
             inputMode="text"
             autoComplete="off"
             autoFocus
-            placeholder={surface === "leadhub" ? "LeadHub PIN" : "Master PIN"}
+            placeholder={surface === "system" ? "IT PIN" : surface === "leadhub" ? "LeadHub PIN" : "Master PIN"}
             value={pin}
             onChange={(event) => setPin(event.target.value)}
             onKeyDown={(event) => {
