@@ -64,7 +64,6 @@ function EntryHall() {
   // Every mode leads to the same existing access screen below.
   const chooseMode = (mode: "android" | "web" | "desktop") => {
     setSelectedMode(mode);
-    setSelectionRequired(false);
     try {
       localStorage.setItem("winstone.view-mode", mode);
     } catch {
