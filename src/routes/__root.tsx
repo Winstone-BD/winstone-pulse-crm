@@ -193,9 +193,25 @@ function RootComponent() {
 
     // A service worker must never cache Vite's development module graph. Mixing
     // modules from two HMR revisions can load two incompatible React runtimes.
-    if (import.meta.env.DEV) {
+    const host = window.location.hostname;
+    const previewHost =
+      /^(id-preview--|preview--)/.test(host) ||
+      /(^|\.)lovableproject(-dev)?\.com$/.test(host) ||
+      /(^|\.)beta\.lovable\.dev$/.test(host);
+    let inFrame = false;
+    try {
+      inFrame = window.self !== window.top;
+    } catch {
+      inFrame = true;
+    }
+    const swOff = new URLSearchParams(window.location.search).get("sw") === "off";
+    if (import.meta.env.DEV || previewHost || inFrame || swOff) {
       void navigator.serviceWorker.getRegistrations().then((registrations) =>
-        Promise.all(registrations.map((registration) => registration.unregister())),
+        Promise.all(
+          registrations
+            .filter((registration) => !registration.active?.scriptURL.includes("firebase-messaging-sw"))
+            .map((registration) => registration.unregister()),
+        ),
       );
       if (typeof caches !== "undefined") {
         void caches.keys().then((keys) =>
