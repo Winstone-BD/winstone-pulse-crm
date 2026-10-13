@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { submitReferenceAndRequestUnlock } from "@/lib/maintenance.functions";
-import { CRM_ONLY_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
+import { UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
 type State = { period: string; paymentStatus: string; paymentRef?: string | null; lockAt: string; openRequest: boolean };
 
@@ -54,11 +54,11 @@ export function UnlockRequestCard({ state, adminToken }: { state: State; adminTo
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Monthly subscription total</p>
-          <p className="text-4xl font-bold text-destructive sm:text-5xl">{CRM_ONLY_FEE_LABEL.split(" ")[0]}</p>
+          <p className="text-4xl font-bold text-destructive sm:text-5xl">$18.16</p>
           <p className="text-sm text-muted-foreground">Current CRM invoice (VAT included)</p>
         </div>
         <dl className="divide-y divide-border rounded-lg border border-border text-sm">
-          <Row icon={<FileText className="size-4" />} k="Invoice amount" v={CRM_ONLY_FEE_LABEL} />
+          <Row icon={<FileText className="size-4" />} k="Invoice amount" v="$18.16 USD" />
           <Row icon={<Percent className="size-4" />} k="VAT" v="Included" />
           <Row icon={<Wallet className="size-4" />} k="Payment status" v={verified ? "Verified" : pending ? `Pending · ${state.paymentRef ?? ""}` : "Not verified"} tone={verified ? "text-success" : "text-destructive"} />
         </dl>
