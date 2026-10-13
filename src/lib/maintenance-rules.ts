@@ -354,3 +354,29 @@ export function billingStatusLine(s: { paymentStatus: string; locked: boolean; p
   if (s.paymentStatus === "pending") return `${s.period}: payment reference awaiting Architect verification`;
   return `${s.period}: ${s.locked ? "unpaid — workspace locked" : "unpaid — awaiting payment"}`;
 }
+
+/* ---------------- Paid-invoice audit ---------------- */
+export type PaidAuditRow = { period: string; markedBy: string; at: string | null; approvalSkipped: boolean; how: string };
+
+/**
+ * Who marked each verified invoice paid and whether the usual Architect review was used.
+ * Usual path = an audit row "payment_verified" by actor_role "architect" for that period.
+ * Anything else (e.g. owner-instruction entries) is shown as approval skipped.
+ */
+export function paidInvoiceAudit(
+  periods: { billing_period: string; payment_status: string; payment_verified_by: string | null; payment_verified_at: string | null }[],
+  audit: { billing_period: string | null; action: string; actor: string; actor_role: string | null; at: string }[],
+): PaidAuditRow[] {
+  return periods
+    .filter((p) => p.payment_status === "verified")
+    .map((p) => {
+      const review = audit.find((a) => a.billing_period === p.billing_period && a.action === "payment_verified" && a.actor_role === "architect");
+      return {
+        period: p.billing_period,
+        markedBy: p.payment_verified_by ?? review?.actor ?? "Unknown",
+        at: p.payment_verified_at ?? review?.at ?? null,
+        approvalSkipped: !review,
+        how: review ? "Architect review (Google + PIN)" : "Marked paid outside the Architect review",
+      };
+    });
+}
