@@ -30,6 +30,8 @@ import { useT } from "@/lib/i18n";
  * dialler and coming back does not lose the call timer.
  */
 const KEY = "winstone.web.call.v1";
+const RECENT_KEY = "winstone.web.recent-calls.v1";
+const COOLDOWN_MS = 15 * 60_000;
 
 type Live = { leadId: string; startedAt: number };
 
@@ -108,8 +110,30 @@ export function WebCallButton({
   const dial = () => {
     const next: Live = { leadId: handle, startedAt: Date.now() };
     localStorage.setItem(KEY, JSON.stringify(next));
+    try {
+      const recent = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "{}") as Record<string, number>;
+      recent[handle] = Date.now();
+      for (const k of Object.keys(recent)) if (Date.now() - recent[k] > COOLDOWN_MS) delete recent[k];
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    } catch { /* ignore */ }
     setLive(next);
     window.location.href = `tel:${phone}`;
+  };
+
+  // Guard against redialling the same number by mistake within 15 minutes.
+  const confirmRecent = () => {
+    try {
+      const recent = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "{}") as Record<string, number>;
+      const at = recent[handle];
+      if (!at || Date.now() - at > COOLDOWN_MS) return true;
+      const mins = Math.max(1, Math.round((Date.now() - at) / 60000));
+      return window.confirm(t({
+        bn: `এই নম্বরে ${mins} মিনিট আগে কল করা হয়েছে। আবার কল করতে চান?`,
+        en: `This number was called ${mins} min ago. Call again?`,
+      }));
+    } catch {
+      return true;
+    }
   };
 
   const start = useMutation({
@@ -126,6 +150,7 @@ export function WebCallButton({
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const startGuarded = () => { if (confirmRecent()) start.mutate(); };
 
   const end = useMutation({
     mutationFn: () => {
