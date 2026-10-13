@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [x] Simplify homepage using approved reference hierarchy, unframed capabilities, truthful server status and phone-friendly workspace selection; preserve fonts/auth/billing. Browser checked at 1280/828/390/320px, optional reveal/device selection/real IT PIN dialog passed; no deployment or business-record changes.
 - [x] Require device selection before Get started; uploaded IT portraits after PIN; service billing restricted to existing verified architect identity plus user-bound IT token. 572 tests passed/5 skipped; phone/desktop UI checked with mocked PIN response, no live login or publish.
 - [ ] Map Head/Officer to real IT accounts and enable assistant onboarding: blocked on their login emails and verified account identities; never use shared passwords as embedded credentials.
 - [x] Hide signup/portals until Get started; reorder HQ, Agent, LeadHub, IT; require identified IT account after PIN. Phone/desktop reveal and PIN screen checked; 569 tests pass, 5 skipped; no publish.

@@ -11,6 +11,8 @@ import {
   Server,
   Smartphone,
   Database,
+  Check,
+  ArrowUpRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -75,11 +77,11 @@ function EntryHall() {
   return (
     <div className="theme-exec min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="mx-auto grid min-h-16 w-full max-w-6xl grid-cols-1 items-center gap-1 px-4 py-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
             <BrandLockup />
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <SystemStatus />
             {signedInName && (
               <Link to="/desk" className="hidden max-w-[12rem] truncate rounded-full border border-border bg-card px-3 py-1 text-xs font-medium hover:border-gold sm:inline-block">
@@ -89,44 +91,43 @@ function EntryHall() {
           </div>
         </div>
       </header>
-      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-16">
-        <section className="grid items-end gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
-          <div className="text-center lg:text-left">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold">
+      <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl animate-rise flex-col px-4 py-8 sm:px-6 sm:py-10">
+        <section className="border-b border-border pb-8 sm:pb-10">
+          <div className="min-w-0 text-left">
+            <p className="text-[10px] font-semibold uppercase text-gold sm:text-[11px]">
               Winstone Properties Ltd. · Find. Build. Invest.
             </p>
-            <h1 className="mt-5 font-hand text-[2.8rem] font-semibold leading-[1.05] tracking-normal text-foreground sm:text-6xl lg:text-[5.25rem]">
+            <h1 className="mt-4 font-hand text-5xl font-semibold leading-[1.05] tracking-normal text-foreground sm:text-6xl lg:text-[5.25rem]">
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-3 text-xl font-medium tracking-tight text-foreground sm:text-2xl">
+            <p className="mt-3 text-xl font-medium text-foreground sm:text-2xl">
               The Premium Real Estate CRM.
             </p>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-[1.7] text-muted-foreground sm:text-base lg:mx-0">
-              Live sales monitoring, lead management, call activity, follow-up deadlines and team
-              performance — one data layer for the whole sales floor.
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+              {t({ en: "Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.", bn: "লিড, কল, ফলো-আপ ও টিমের পারফরম্যান্স। পুরো সেলস টিমের জন্য এক সংযুক্ত কর্মক্ষেত্র।" })}
             </p>
           </div>
 
-          <dl className="grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-card lg:grid-cols-1 lg:divide-x-0 lg:divide-y">
+          <dl className="mt-7 grid gap-4 sm:grid-cols-3 sm:gap-6">
             {[
-              { icon: Headphones, label: "Team", value: "Every agent, one floor" },
-              { icon: BarChart3, label: "Pipeline", value: "Updated in real time" },
-              { icon: Smartphone, label: "Calls", value: "Synced from agent SIMs" },
+              { icon: Headphones, label: t({ en: "Manage your team", bn: "টিম ব্যবস্থাপনা" }), value: t({ en: "Agents, roles & performance", bn: "এজেন্ট, দায়িত্ব ও পারফরম্যান্স" }) },
+              { icon: BarChart3, label: t({ en: "Track your pipeline", bn: "পাইপলাইন পর্যবেক্ষণ" }), value: t({ en: "Leads, follow-ups & bookings", bn: "লিড, ফলো-আপ ও বুকিং" }) },
+              { icon: Smartphone, label: t({ en: "Review call activity", bn: "কলের কার্যক্রম পর্যালোচনা" }), value: t({ en: "Call reports & customer history", bn: "কল রিপোর্ট ও গ্রাহকের ইতিহাস" }) },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex flex-col items-center gap-2 px-3 py-4 text-center lg:flex-row lg:gap-4 lg:px-5 lg:text-left">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold/50 text-gold">
+              <div key={label} className="flex min-w-0 items-center gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/50 text-gold">
                   <Icon className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</dt>
-                  <dd className="mt-0.5 text-xs font-semibold leading-snug sm:text-sm">{value}</dd>
+                  <dt className="text-sm font-semibold">{label}</dt>
+                  <dd className="mt-1 text-xs leading-snug text-muted-foreground">{value}</dd>
                 </div>
               </div>
             ))}
           </dl>
         </section>
 
-        <h2 className="mt-16 text-center font-hand text-3xl font-semibold leading-snug tracking-normal sm:mt-20 sm:text-4xl sm:tracking-tight">
+        <h2 className="mt-7 text-center font-hand text-3xl font-semibold leading-snug tracking-normal sm:mt-8 sm:text-4xl">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
@@ -134,7 +135,7 @@ function EntryHall() {
           Select the mode you are using — the same Winstone Pulse opens on every device.
         </p>
 
-        <div id="device-selection" className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-6">
+        <div id="device-selection" className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
           <ModeCard
             illustration={<SmartphoneIllustration />}
             title="Android"
@@ -158,7 +159,7 @@ function EntryHall() {
           />
         </div>
 
-        <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
+        <p className="mt-5 text-center text-[10px] font-medium uppercase sm:text-xs text-muted-foreground">
           One CRM. One data layer. Every device.
         </p>
 
@@ -304,7 +305,7 @@ function EntryCard({
   secondary?: React.ReactNode;
 }) {
   return (
-    <section className="group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-gold">
+    <section className="group relative flex flex-col gap-3 rounded-lg border border-border bg-card p-5 transition-colors hover:border-gold">
       <span className="grid size-12 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
         {icon}
       </span>
@@ -333,23 +334,26 @@ function ModeCard({
   onClick: () => void;
   selected: boolean;
 }) {
+  const t = useT();
   return (
     <Button
       type="button"
       variant="outline"
       aria-pressed={selected}
       onClick={onClick}
-      className={`group h-auto min-w-0 flex-col items-center gap-2 rounded-xl bg-card p-3 text-center shadow-none whitespace-normal transition-colors sm:min-h-44 sm:gap-4 sm:p-7 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? "border-gold ring-1 ring-gold" : "border-border"}`}
+      className={`group relative grid h-auto min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-4 rounded-lg bg-card p-4 text-left shadow-none whitespace-normal transition-colors md:min-h-64 md:p-5 hover:border-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? "border-gold bg-accent/30 ring-1 ring-gold" : "border-border"}`}
     >
-      <span className="text-foreground">
-        {illustration}
+      <span className="min-w-0">
+        <span className="mb-4 grid size-9 place-items-center rounded-md border border-border text-gold">
+          {title === "Android" ? <Smartphone className="size-4" /> : title === "Desktop" ? <Monitor className="size-4" /> : <Globe className="size-4" />}
+        </span>
+        <span className="block text-lg font-semibold">{title}</span>
+        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{subtitle}</span>
       </span>
-      <span>
-        <span className="block text-sm font-semibold tracking-tight sm:text-lg">{title}</span>
-        <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</span>
-      </span>
-      <span className="btn-enter mt-auto inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold sm:h-11 sm:px-5 sm:text-sm">
-        {selected ? "Selected" : "Select"} <ChevronRight className="size-4" />
+      <span className="shrink-0 text-foreground">{illustration}</span>
+      <span className={`col-span-2 flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 text-xs font-semibold ${selected ? "border-gold bg-accent text-accent-foreground" : "border-border bg-secondary text-secondary-foreground"}`}>
+        {selected ? t({ en: "Selected workspace", bn: "নির্বাচিত কর্মক্ষেত্র" }) : t({ en: "Select workspace", bn: "কর্মক্ষেত্র নির্বাচন" })}
+        {selected ? <Check className="size-4 shrink-0" /> : <ArrowUpRight className="size-4 shrink-0" />}
       </span>
     </Button>
   );
@@ -357,7 +361,7 @@ function ModeCard({
 
 function DevicePhoto({ src, alt }: { src: string; alt: string }) {
   return (
-    <span className="block h-20 w-24 overflow-hidden rounded-lg border border-border bg-card sm:h-32 sm:w-44">
+    <span className="block h-28 w-28 overflow-hidden md:h-32 md:w-28 lg:w-36">
       <img src={src} alt={alt} loading="lazy" className="h-full w-full object-contain" />
     </span>
   );
@@ -379,6 +383,7 @@ function DesktopIllustration() {
 
 /** Real liveness only: pings the public health probe, never shows invented numbers. */
 function SystemStatus() {
+  const t = useT();
   const [state, setState] = useState<"checking" | "ok" | "down">("checking");
   useEffect(() => {
     let alive = true;
@@ -393,10 +398,10 @@ function SystemStatus() {
       window.clearInterval(id);
     };
   }, []);
-  const label = state === "ok" ? "Systems online" : state === "down" ? "Server not reachable" : "Checking…";
+  const label = state === "ok" ? t({ en: "Server online", bn: "সার্ভার অনলাইন" }) : state === "down" ? t({ en: "Server unavailable", bn: "সার্ভার অনুপলব্ধ" }) : t({ en: "Checking server…", bn: "সার্ভার যাচাই…" });
   const dot = state === "ok" ? "bg-success" : state === "down" ? "bg-destructive" : "bg-muted-foreground";
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground" role="status">
+    <span className="inline-flex w-28 shrink-0 items-center gap-1.5 text-[10px] font-medium text-muted-foreground sm:w-32 sm:justify-end sm:text-[11px]" role="status">
       <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
@@ -406,7 +411,7 @@ function SystemStatus() {
 /** Informational only: agent accounts and devices are provisioned by IT HQ, never self-created. */
 function AgentOnboardingNotice() {
   return (
-    <aside aria-labelledby="agent-onboarding-title" className="mt-4 rounded-xl border border-border bg-card p-5 sm:p-6">
+    <aside aria-labelledby="agent-onboarding-title" className="mt-6 border-y border-border py-5 sm:py-6">
       <h2 id="agent-onboarding-title" className="text-base font-semibold tracking-tight">
         Are you a Winstone sales agent?
       </h2>
