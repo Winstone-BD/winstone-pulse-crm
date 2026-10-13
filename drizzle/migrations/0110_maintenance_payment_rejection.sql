@@ -1,0 +1,2 @@
+ALTER TABLE public.system_maintenance ADD COLUMN IF NOT EXISTS payment_rejected_at timestamptz, ADD COLUMN IF NOT EXISTS payment_rejected_reason text;
+COMMENT ON COLUMN public.system_maintenance.payment_rejected_at IS 'Set when a submitted reference is rejected (payment state FAILED); cleared on next submission.';

@@ -771,6 +771,13 @@
       "when": 1791832684224,
       "tag": "0109_lock_payment_vouchers",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1791918703503,
+      "tag": "0110_maintenance_payment_rejection",
+      "breakpoints": true
     }
   ]
 }
