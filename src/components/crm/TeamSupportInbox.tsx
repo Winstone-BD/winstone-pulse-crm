@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Inbox, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Component, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,50 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 /** Sales Team Admin inbox: agent complaints from web and Android in one list. */
+/** Keeps a crash in the inbox from blanking the whole page. */
+class InboxBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override componentDidCatch(error: unknown) {
+    console.error(error);
+  }
+  override render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <InboxError
+        onRetry={() => this.setState({ failed: false })}
+      />
+    );
+  }
+}
+
+function InboxError({ onRetry, detail }: { onRetry: () => void; detail?: string | undefined }) {
+  return (
+    <section role="alert" className="card-elevated space-y-2 p-4">
+      <h2 className="text-sm font-semibold">Support inbox couldn't load</h2>
+      <p className="text-xs text-muted-foreground">
+        Your tickets are safe. This is usually a brief connection or server restart — try again in a moment.
+        {detail ? ` (${detail})` : ""}
+      </p>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={onRetry}>Try again</Button>
+        <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Reload page</Button>
+      </div>
+    </section>
+  );
+}
+
 export function TeamSupportInbox() {
+  return (
+    <InboxBoundary>
+      <TeamSupportInboxInner />
+    </InboxBoundary>
+  );
+}
+
+function TeamSupportInboxInner() {
   const queryClient = useQueryClient();
   const load = useServerFn(supportInbox);
   const setStatus = useServerFn(setSupportTicketStatus);
@@ -142,6 +185,14 @@ export function TeamSupportInbox() {
   }
 
   if (query.data && !query.data.allowed) return null;
+  if (query.isError && !query.data) {
+    return (
+      <InboxError
+        detail={query.error instanceof Error ? query.error.message : undefined}
+        onRetry={() => void query.refetch()}
+      />
+    );
+  }
 
   return (
     <section className="card-elevated space-y-3 p-4">
