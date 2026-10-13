@@ -112,10 +112,20 @@ export async function readVatRateBps(): Promise<number | null> {
 export async function previewNextInvoice(now: Date = new Date()) {
   const client = await db();
   const { data } = await client
-    .from("system_maintenance").select("billing_period")
+    .from("system_maintenance").select("billing_period, payment_status, unlock_status, unlock_expires_at, lock_at")
     .eq("plan_code", PLAN_CODE).eq("billing_period", dhakaPeriod(now)).maybeSingle();
   const period = nextUngeneratedPeriod(now, Boolean(data));
-  return nextInvoicePreviewFor(period, await readVatRateBps());
+  const status = data
+    ? {
+        period: data.billing_period,
+        paymentStatus: (data.payment_status ?? "unpaid") as string,
+        locked: decide({
+          now, lockAt: data.lock_at, paymentStatus: (data.payment_status ?? "unpaid") as PaymentStatus,
+          unlockStatus: (data.unlock_status ?? "none") as UnlockStatus, unlockExpiresAt: data.unlock_expires_at,
+        }).locked,
+      }
+    : null;
+  return { preview: nextInvoicePreviewFor(period, await readVatRateBps()), status };
 }
 
 async function ensureRow(period: string) {

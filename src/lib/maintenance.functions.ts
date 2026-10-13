@@ -98,9 +98,8 @@ export const nextMaintenanceInvoicePreview = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Token.parse(input))
   .handler(async ({ data }) => {
     await itCaller(data.adminToken);
-    const { previewNextInvoice, maintenanceAccess } = await import("@/lib/maintenance.server");
-    const [preview, state] = await Promise.all([previewNextInvoice(), maintenanceAccess()]);
-    return { preview, status: { period: state.period, paymentStatus: state.paymentStatus, locked: state.locked } };
+    const { previewNextInvoice } = await import("@/lib/maintenance.server");
+    return previewNextInvoice();
   });
 
 /**
