@@ -212,7 +212,7 @@ function ReviewPanel({
   };
   const reasonOk = reason.trim().length >= 3;
   const busy = decide.isPending;
-  const amount = period.total_cents != null ? `${usd(period.total_cents)} ${period.currency}` : "—";
+  const amount = period.total_cents != null ? moneyLabel(period.total_cents, period.currency) : "—";
 
   return (
     <article className="space-y-3 rounded-lg border border-border p-4 text-sm" aria-label={`Review ${period.billing_period}`}>
@@ -227,7 +227,7 @@ function ReviewPanel({
         <dd>
           {amount}
           {period.base_cents != null && period.vat_cents != null && (
-            <span className="text-muted-foreground"> ({usd(period.base_cents)} + {usd(period.vat_cents)} VAT)</span>
+            {period.vat_cents ? <span className="text-muted-foreground"> ({moneyLabel(period.base_cents, period.currency)} + {moneyLabel(period.vat_cents, period.currency)} VAT)</span> : null}
           )}
         </dd>
         <dt className="text-muted-foreground">Submitted by</dt><dd>{submission?.actor ?? "—"}</dd>

@@ -16,7 +16,7 @@ import {
   architectLogin,
   architectOverview,
 } from "@/lib/maintenance.functions";
-import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, moneyLabel } from "@/lib/maintenance-rules";
 import { PaymentApprovals } from "@/components/crm/PaymentApprovals";
 import { downloadVoucher, printVoucher, type Voucher } from "@/lib/voucher";
 
@@ -336,7 +336,7 @@ function VoucherCard({ v }: { v: Voucher }) {
   return (
     <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm">
       <p className="font-semibold">Receipt {v.no}</p>
-      <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref}</p>
+      <p className="text-muted-foreground">{v.period} · {moneyLabel(v.totalCents, v.currency)} paid · ref {v.ref}</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
         <Button size="sm" variant="outline" onClick={() => printVoucher(v)}>Print</Button>

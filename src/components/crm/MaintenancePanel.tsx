@@ -16,7 +16,7 @@ import {
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, moneyLabel } from "@/lib/maintenance-rules";
 import { downloadVoucher, printVoucher } from "@/lib/voucher";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
@@ -121,7 +121,7 @@ export function MaintenancePanel() {
         <p className="mb-1 text-sm font-semibold">কীভাবে কাজ করে (ঢাকা সময়)</p>
         <ol className="list-decimal space-y-0.5 pl-4 text-muted-foreground">
           <li>৯ তারিখ ০০:০০ — সবার স্ক্রিনে পেমেন্ট নোটিশ শুরু।</li>
-          <li>১২ তারিখ ০০:০০ — Renewal Due ($46.29 USD পরিশোধের দিন)।</li>
+          <li>১৪ তারিখ ০০:০০ — Renewal Due ({MAINTENANCE_FEE_LABEL} পরিশোধের দিন)।</li>
           <li>১৪ তারিখ ২৩:৫৯ পর্যন্ত — CRM পুরোপুরি চালু (গ্রেস সময়)।</li>
           <li>১৫ তারিখ ০০:০০ — পেমেন্ট যাচাই না হলে এজেন্ট/HQ লক; IT Console খোলা থাকে।</li>
           <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Submit for verification” চাপুন — মাসটি PENDING হবে।</li>
@@ -210,7 +210,7 @@ export function MaintenancePanel() {
               <details key={p.billing_period} className="rounded border border-border bg-card" open={p.billing_period === state.period}>
                 <summary className="flex cursor-pointer flex-wrap items-center gap-2 p-3 text-xs">
                   <span className="font-semibold">Invoice {p.billing_period}</span>
-                  <span>${Number(p.fee_usd).toFixed(2)} USD incl. VAT</span>
+                  <span>{p.total_cents != null ? moneyLabel(p.total_cents, p.currency) : `$${Number(p.fee_usd).toFixed(2)} USD`}</span>
                   <Tone tone={p.payment_status === "verified" ? "green" : p.payment_status === "pending" ? "amber" : "red"}>
                     {p.payment_status === "verified" ? "VERIFIED" : p.payment_status === "pending" ? "VERIFICATION PENDING" : "UNPAID"}
                   </Tone>
@@ -250,7 +250,7 @@ export function MaintenancePanel() {
             <div key={v.no} className="flex flex-wrap items-center gap-2 rounded border border-success/40 bg-success/5 p-3 text-xs">
               <div className="min-w-0">
                 <p className="font-semibold">Receipt {v.no}</p>
-                <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref} · {v.at}</p>
+                <p className="text-muted-foreground">{v.period} · {moneyLabel(v.totalCents, v.currency)} paid · ref {v.ref} · {v.at}</p>
               </div>
               <div className="ml-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
