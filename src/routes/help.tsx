@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, LifeBuoy, Monitor, RefreshCw, Search, Smartphone } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ConnectionDiagnostics } from "@/components/ConnectionDiagnostics";
 import { Input } from "@/components/ui/input";
 import { listPublishedArticles } from "@/lib/support.functions";
 
@@ -78,6 +79,9 @@ function HelpCentre() {
             />
           </div>
         </header>
+        <div className="mt-8">
+          <ConnectionDiagnostics />
+        </div>
 
         <section className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-base font-semibold">

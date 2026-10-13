@@ -1,6 +1,7 @@
 import { RefreshCw, ServerCrash, Wifi, WifiOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { recordHealthOk } from "@/components/ConnectionDiagnostics";
 import { useT } from "@/lib/i18n";
 
 type Status = "online" | "offline" | "server-down" | "checking";
@@ -19,6 +20,7 @@ async function probeServer(): Promise<boolean> {
       cache: "no-store",
       signal: controller.signal,
     });
+    if (res.ok) recordHealthOk();
     return res.ok;
   } catch {
     return false;
