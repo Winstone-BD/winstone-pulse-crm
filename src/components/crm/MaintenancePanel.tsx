@@ -11,12 +11,13 @@ import { Label } from "@/components/ui/label";
 import { useAdminToken } from "@/lib/local-session";
 import {
   itMaintenance,
+  nextMaintenanceInvoicePreview,
   requestSystemUnlock,
   setMaintenanceLockAt,
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, futureInvoicePreview, moneyLabel } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, billingStatusLine, moneyLabel } from "@/lib/maintenance-rules";
 import { downloadVoucher, printVoucher } from "@/lib/voucher";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
@@ -316,14 +317,32 @@ function filterAudit<T extends AuditRow>(rows: T[], kind: AuditKind, search: str
   });
 }
 
-/** Read-only: shows what the November 2026 invoice will be. Creates nothing, changes nothing. */
+/** Read-only: next not-yet-generated invoice from the canonical rule + configured VAT. Creates nothing, changes nothing. */
 function NextInvoicePreview() {
-  const p = futureInvoicePreview("2026-11");
+  const adminToken = useAdminToken();
+  const q = useQuery({
+    queryKey: ["next-invoice-preview", adminToken],
+    queryFn: () => nextMaintenanceInvoicePreview({ data: { adminToken } }),
+    enabled: Boolean(adminToken),
+  });
+  if (q.isLoading) return <p className="text-xs text-muted-foreground">Loading next invoice preview…</p>;
+  if (q.error || !q.data) return <p className="text-xs text-destructive">Next invoice preview unavailable.</p>;
+  const { preview: p, status } = q.data;
+  const row = (k: string, v: string) => (<div className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="font-medium tabular-nums">{v}</dd></div>);
   return (
-    <section aria-label="November 2026 invoice preview" className="rounded-lg border border-dashed border-border p-3 text-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preview only · not an invoice</p>
-      <p className="mt-1 font-semibold">{p.period} maintenance invoice: {p.amountLabel}</p>
-      <p className="text-xs text-muted-foreground">Due {dhakaTime(p.dueAt)} · lock {dhakaTime(p.lockAt)} (Asia/Dhaka). Raised automatically when the period starts; payment status is not affected.</p>
+    <section aria-label="Next invoice preview" className="rounded-lg border border-dashed border-border p-3 text-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preview only · not an issued invoice</p>
+      <p className="mt-1 text-xs"><span className="text-muted-foreground">Current status: </span><span className="font-semibold">{billingStatusLine(status)}</span></p>
+      <p className="mt-2 font-semibold">Next invoice · {p.period}</p>
+      <dl className="mt-1 space-y-0.5 text-xs">
+        {row("Subtotal", p.subtotalLabel)}
+        {row("VAT rate", p.vatRateLabel)}
+        {row("VAT amount", p.vatLabel ?? "—")}
+        {row("Total", p.totalLabel ?? "— (VAT rate not configured)")}
+        {row("Due (Asia/Dhaka)", dhakaTime(p.dueAt))}
+        {row("Lock (Asia/Dhaka)", dhakaTime(p.lockAt))}
+      </dl>
+      {p.vatRateBps != null && <p className="mt-1 text-[11px] text-muted-foreground">VAT = {p.subtotalLabel} × {p.vatRateLabel} = {p.vatLabel}</p>}
     </section>
   );
 }

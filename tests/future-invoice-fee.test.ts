@@ -21,8 +21,10 @@ describe("future maintenance invoices", () => {
   });
   it("preview is pure — the panel never writes", () => {
     const src = readFileSync("src/components/crm/MaintenancePanel.tsx", "utf8");
-    const fn = src.slice(src.indexOf("function NextInvoicePreview"));
-    expect(fn).not.toMatch(/useServerFn|mutate|insert|update\(/);
+    const start = src.indexOf("function NextInvoicePreview");
+    const fn = src.slice(start, src.indexOf("\n}\n", start));
+    expect(fn).not.toMatch(/useMutation|mutate|insert|upsert|update\(/);
+    expect(fn).toMatch(/Preview only · not an issued invoice/);
   });
 });
 

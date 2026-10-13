@@ -302,3 +302,55 @@ export function futureInvoicePreview(period: string) {
     lockAt: defaultLockAt(period),
   };
 }
+
+/** system_settings key holding the admin-configured maintenance VAT rate: { rate_bps: integer 0..10000 }. */
+export const VAT_SETTING_KEY = "maintenance_vat_rate_bps";
+
+/** Parse the stored VAT setting; null means "not configured" (never silently 0%). */
+export function parseVatSetting(value: unknown): number | null {
+  const bps = (value as { rate_bps?: unknown } | null)?.rate_bps;
+  return typeof bps === "number" && Number.isInteger(bps) && bps >= 0 && bps <= 10000 ? bps : null;
+}
+
+/** Integer-minor-unit totals. VAT rounds half-up to the minor unit. */
+export function invoiceTotals(subtotalMinor: number, vatRateBps: number | null) {
+  if (vatRateBps == null) return { subtotalMinor, vatRateBps: null, vatMinor: null, totalMinor: null };
+  const vatMinor = Math.floor((subtotalMinor * vatRateBps + 5000) / 10000);
+  return { subtotalMinor, vatRateBps, vatMinor, totalMinor: subtotalMinor + vatMinor };
+}
+
+export function nextPeriod(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  return m === 12 ? `${y! + 1}-01` : `${y}-${String(m! + 1).padStart(2, "0")}`;
+}
+
+/** The next invoice that has not been generated yet: this Dhaka month if missing, else the following month. */
+export function nextUngeneratedPeriod(now: Date, currentExists: boolean): string {
+  const p = dhakaPeriod(now);
+  return currentExists ? nextPeriod(p) : p;
+}
+
+/** Full preview of the next invoice from the same canonical rule used by generation. Pure. */
+export function nextInvoicePreviewFor(period: string, vatRateBps: number | null) {
+  const t = invoiceTotals(MAINTENANCE_FEE_MINOR, vatRateBps);
+  const fmt = (n: number | null) => (n == null ? null : moneyLabel(n, MAINTENANCE_CURRENCY));
+  return {
+    period,
+    currency: MAINTENANCE_CURRENCY,
+    ...t,
+    subtotalLabel: fmt(t.subtotalMinor)!,
+    vatLabel: fmt(t.vatMinor),
+    totalLabel: fmt(t.totalMinor),
+    vatRateLabel: vatRateBps == null ? "VAT rate not configured" : `${(vatRateBps / 100).toFixed(2)}%`,
+    dueAt: defaultDueAt(period),
+    lockAt: defaultLockAt(period),
+  };
+}
+
+/** "Billing complete / approved" only for a real verified-paid, unlocked state. */
+export function billingStatusLine(s: { paymentStatus: string; locked: boolean; period: string } | null): string {
+  if (!s) return "Status unavailable";
+  if (s.paymentStatus === "verified" && !s.locked) return "Billing complete / approved";
+  if (s.paymentStatus === "pending") return `${s.period}: payment reference awaiting Architect verification`;
+  return `${s.period}: ${s.locked ? "unpaid — workspace locked" : "unpaid — awaiting payment"}`;
+}
