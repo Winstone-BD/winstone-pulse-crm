@@ -14,6 +14,9 @@ const mockPlugin: BunPlugin = {
     build.onResolve({ filter: /^@\/lib\/team-support\.functions$/ }, () => ({
       path: "/dev-server/tests/browser/support-inbox-mock-functions.ts",
     }));
+    build.onResolve({ filter: /^@\/lib\/web-push$/ }, () => ({
+      path: "/dev-server/tests/browser/support-inbox-mock-web-push.ts",
+    }));
   },
 };
 
