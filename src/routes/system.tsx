@@ -45,6 +45,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
 
+import { BillingApprovalsHub, BillingReminder, useBillingApprovals } from "@/components/crm/BillingApprovalsHub";
+import { pendingCount } from "@/lib/billing-advisor";
+
+/** Persistent, always-visible entry with the real pending count from the server. */
+function ApprovalsShortcut({ active, onOpen }: { active: boolean; onOpen: () => void }) {
+  const q = useBillingApprovals();
+  const n = q.data ? pendingCount(q.data) : 0;
+  if (active) return null;
+  return (
+    <button type="button" onClick={onOpen} className="card-elevated flex w-full items-center justify-between gap-3 p-3 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <span className="flex items-center gap-2 font-semibold"><Lock className="size-4 text-primary" /> Billing &amp; Approvals</span>
+      <span className="text-xs text-muted-foreground">{n > 0 ? <span className="rounded-full bg-primary px-2 py-0.5 font-bold text-primary-foreground">{n} pending</span> : "Open"}</span>
+    </button>
+  );
+}
+
 export const Route = createFileRoute("/system")({
   validateSearch: sectionSearch,
   head: () => ({
@@ -135,6 +151,8 @@ function SystemBoard() {
       </div>
 
       <SystemNoticeBar surface="it" />
+      <BillingReminder onReview={() => setSec("approvals")} />
+      <ApprovalsShortcut active={sec === "approvals"} onOpen={() => setSec("approvals")} />
 
       <nav aria-label="IT Console sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
         {PAGE_SECTIONS["/system"].map((x) => (
@@ -148,6 +166,13 @@ function SystemBoard() {
           </button>
         ))}
       </nav>
+
+      {sec === "approvals" && (
+        <div className="space-y-6">
+          <BillingApprovalsHub />
+          <MaintenancePanel />
+        </div>
+      )}
 
       {sec === "health" && (
         <div className="space-y-6">

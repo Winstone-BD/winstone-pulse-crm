@@ -35,6 +35,7 @@ export const PAGE_SECTIONS = {
   ],
   "/system": [
     { key: "health", label: "সিস্টেম হেলথ", en: "System Health" },
+    { key: "approvals", label: "বিল ও অনুমোদন", en: "Billing & Approvals" },
     { key: "leads", label: "লিড ডেটাবেস", en: "Lead Database" },
     { key: "calls", label: "কল ও রেকর্ডিং", en: "Calls & Recordings" },
     { key: "knowledge", label: "নলেজ (ওয়েবসাইট ও ড্রাইভ)", en: "Knowledge (Website & Drive)" },
