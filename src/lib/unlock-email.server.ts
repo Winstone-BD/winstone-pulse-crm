@@ -33,12 +33,12 @@ export function verifyUnlockEmailToken(token: string, now = Date.now()): { reque
   return { requestId: id, expiresAt: exp };
 }
 
-export async function sendUnlockApprovalEmail(input: { requestId: string; requestedBy: string; hours: number; reason: string | null; paymentVerified: boolean }) {
+export async function sendUnlockApprovalEmail(input: { requestId: string; requestedBy: string; hours: number; reason: string | null; paymentVerified: boolean; paymentRef?: string | null }) {
   const { sendHostingerText } = await import("@/lib/email-templates/hostinger-send.server");
   const { audit } = await import("@/lib/maintenance.server");
   const to = approverEmail();
   const link = `${APP_URL}/unlock-approve?t=${encodeURIComponent(mintUnlockEmailToken(input.requestId))}`;
-  const text = `WINSTONE PULSE — CRM UNLOCK REQUEST\n\nRequested by: ${input.requestedBy}\nDuration: ${input.hours} hour(s)\nPayment verified: ${input.paymentVerified ? "Yes" : "NO"}\nReason: ${input.reason ?? "-"}\n\nApprove & Unlock CRM (link valid 2 hours, single use):\n${link}\n\nOpening the link does not unlock anything; you must press "Confirm" on the page. If you did not expect this, ignore this email.`;
+  const text = `WINSTONE PULSE — CRM UNLOCK REQUEST\n\nRequested by: ${input.requestedBy}\nPayment reference: ${input.paymentRef ?? "-"}\nDuration: ${input.hours} hour(s)\nPayment verified: ${input.paymentVerified ? "Yes" : "NO"}\nReason: ${input.reason ?? "-"}\n\nApprove & Unlock CRM (link valid 2 hours, single use):\n${link}\n\nOpening the link does not unlock anything; you must press "Confirm" on the page. If you did not expect this, ignore this email.`;
   try {
     await sendHostingerText(to, "Approve CRM Unlock — Winstone Pulse", text, `unlock-email-${input.requestId}`);
     await audit({ actor: "system", actorRole: "system", action: "unlock_email_sent", requestId: input.requestId, metadata: { recipient: to } });

@@ -314,7 +314,7 @@ export async function setLockAt(input: { actor: string; lockAt: string }) {
   return { ok: true };
 }
 
-export async function createUnlockRequest(input: { actor: string; hours: number; reason: string | null }) {
+export async function createUnlockRequest(input: { actor: string; hours: number; reason: string | null; paymentRef?: string | null }) {
   const state = await maintenanceAccess();
   const client = await db();
   const { data, error } = await client
@@ -338,7 +338,7 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "unlock_requested", period: state.period, next: "requested", reason: input.reason, requestId: data.id, durationMinutes: input.hours * 60, metadata: { payment_status: state.paymentStatus } });
   const { sendUnlockApprovalEmail } = await import("@/lib/unlock-email.server");
-  const mail = await sendUnlockApprovalEmail({ requestId: data.id, requestedBy: input.actor, hours: input.hours, reason: input.reason, paymentVerified: state.paymentStatus === "verified" });
+  const mail = await sendUnlockApprovalEmail({ requestId: data.id, requestedBy: input.actor, hours: input.hours, reason: input.reason, paymentVerified: state.paymentStatus === "verified", paymentRef: input.paymentRef ?? state.paymentRef ?? null });
   return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified", emailed: mail.emailed };
 }
 
