@@ -211,7 +211,7 @@ function EntryHall() {
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
-          <div hidden={activeWorkspace !== null && activeWorkspace !== "hq"} className="contents">
+          <div className={activeWorkspace !== null && activeWorkspace !== "hq" ? "hidden" : "contents"}>
           <EntryCard
             icon={<BarChart3 className="size-6" />}
             title="Executive HQ"
@@ -223,7 +223,7 @@ function EntryHall() {
             }
           />
           </div>
-          <div hidden={activeWorkspace !== null && activeWorkspace !== "agent"} className="contents">
+          <div className={activeWorkspace !== null && activeWorkspace !== "agent" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
@@ -238,7 +238,7 @@ function EntryHall() {
           />
           </div>
 
-          <div hidden={activeWorkspace !== null && activeWorkspace !== "leadhub"} className="contents">
+          <div className={activeWorkspace !== null && activeWorkspace !== "leadhub" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Database className="size-6" />}
             title="LeadHub Nexus"
@@ -253,7 +253,7 @@ function EntryHall() {
 
 
 
-          <div hidden={activeWorkspace !== null && activeWorkspace !== "it"} className="contents">
+          <div className={activeWorkspace !== null && activeWorkspace !== "it" ? "hidden" : "contents"}>
           <EntryCard
             icon={<Server className="size-6" />}
             title="IT Console"
