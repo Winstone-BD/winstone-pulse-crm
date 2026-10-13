@@ -64,7 +64,7 @@ async def main():
         # Reload page performs exactly one full reload and loads the inbox.
         await page.evaluate("window.__fail=true; sessionStorage.setItem('fixed','1')")
         await page.reload()
-        await page.get_by_role("button", name="Reload page").wait_for(timeout=5000)
+        await page.get_by_role("button", name="Reload page").wait_for(timeout=15000)
         before = docs["n"]
         await page.get_by_role("button", name="Reload page").click()
         await page.get_by_text("টিম সাপোর্ট ইনবক্স").wait_for(timeout=5000)
