@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
- * Monthly maintenance ($46.29 USD) endpoints. The lock itself is decided in
+ * CRM subscription invoice ($18.16 USD, VAT included) endpoints. The lock itself is decided in
  * maintenance.server.ts; these functions only read it or move it through the
  * IT Console → System Architect workflow.
  */
@@ -42,11 +42,16 @@ export const getMaintenanceStatus = createServerFn({ method: "POST" })
         openRequest: s.openRequest,
         locked: s.locked,
         stage: s.stage,
+        invoiceStatus: s.invoiceStatus,
+        paymentState: s.paymentState,
+        accessStatus: s.accessStatus,
+        recoveryPending: s.recoveryPending,
+        rejectedReason: s.rejectedReason,
         exempt,
       };
     } catch (error) {
       console.error("maintenance status failed", error);
-      return { ok: false as const, locked: true, stage: "locked" as const, exempt, feeUsd: 46.29, paymentStatus: "unpaid" as const, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
+      return { ok: false as const, locked: true, stage: "locked" as const, exempt, feeUsd: 18.16, paymentStatus: "unpaid" as const, invoiceStatus: "OPEN" as const, paymentState: "UNPAID" as const, accessStatus: "LOCKED" as const, recoveryPending: false, rejectedReason: null as string | null, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
     }
   });
 
@@ -73,7 +78,7 @@ export const requestPaymentHelp = createServerFn({ method: "POST" })
       code: "maintenance_payment_help",
       severity: "critical",
       title: "Maintenance payment / unlock requested",
-      detail: `${caller.profile?.name ?? "Executive HQ"} asked IT Console to settle the ${state.period} maintenance fee ($46.29 USD).`,
+      detail: `${caller.profile?.name ?? "Executive HQ"} asked IT Console to settle the ${state.period} CRM invoice ($18.16 USD, VAT included).`,
     });
     return { ok: true };
   });
