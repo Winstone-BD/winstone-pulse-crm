@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { MustChangePasswordGate } from "@/components/crm/MustChangePasswordGate";
 import { FloorLockGate } from "@/components/crm/FloorLockGate";
 import { MaintenanceGate } from "@/components/crm/MaintenanceNotice";
@@ -238,6 +239,8 @@ function RootComponent() {
       <MaintenanceGate />
       {/* Temporary IT closure covers home, agent, coordinator, HQ and IT surfaces. */}
       <TemporaryClosureNotice />
+      {/* Site-wide pill that tells internet loss apart from a server problem. */}
+      <ConnectionStatus />
       <Toaster position="top-right" />
     </QueryClientProvider>
   );
