@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/public/hooks/service-billing")({
         }
 
         // Daily (10:00 Dhaka) maintenance reminders for HQ/IT: renewal day
-        // (12th) and each grace day (13th, 14th) while payment is not verified.
+        // (14th) and the days before it while payment is not verified.
         // Deduped per period+day; never pays or approves anything.
         const m = await import("@/lib/maintenance.server");
         const state = await m.maintenanceAccess();

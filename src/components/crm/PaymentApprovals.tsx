@@ -226,8 +226,8 @@ function ReviewPanel({
         <dt className="text-muted-foreground">Amount</dt>
         <dd>
           {amount}
-          {period.base_cents != null && period.vat_cents != null && (
-            {period.vat_cents ? <span className="text-muted-foreground"> ({moneyLabel(period.base_cents, period.currency)} + {moneyLabel(period.vat_cents, period.currency)} VAT)</span> : null}
+          {period.base_cents != null && !!period.vat_cents && (
+            <span className="text-muted-foreground"> ({moneyLabel(period.base_cents, period.currency)} + {moneyLabel(period.vat_cents, period.currency)} VAT)</span>
           )}
         </dd>
         <dt className="text-muted-foreground">Submitted by</dt><dd>{submission?.actor ?? "—"}</dd>
