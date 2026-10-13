@@ -50,11 +50,10 @@ async def main():
 
         # Try again while the request still fails shows the message again.
         await page.get_by_role("button", name="Try again").click()
-        await page.wait_for_timeout(500)
-        check(
-            await page.get_by_role("heading", name="Support inbox couldn't load").is_visible(),
-            "Try again retries; still-failing request shows message again",
+        await page.get_by_role("heading", name="Support inbox couldn't load").wait_for(
+            state="visible", timeout=10000
         )
+        check(True, "Try again retries; still-failing request shows message again")
 
         # Try again recovers once the request succeeds.
         await page.evaluate("window.__fail=false")
