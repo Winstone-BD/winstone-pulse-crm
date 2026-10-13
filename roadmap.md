@@ -163,3 +163,4 @@
 - [x] Verify real sign-in for both accounts (both approved admins)
 
 - [ ] Smart lead scoring + neglected high-potential lead flags for coordinators (from workspace chat)
+- [ ] Lead scoring v1: transparent score (engagement, duration, AI sentiment), coordinator neglected high-potential list, manual reassignment + transfer safeguards
