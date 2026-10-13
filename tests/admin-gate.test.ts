@@ -20,7 +20,7 @@ describe("PIN unlock and admin token scopes", () => {
   });
 
   it("mints distinct tokens for the HQ (read-only) and IT (full) surfaces", () => {
-    const full = gate.mintAdminToken("full");
+    const full = gate.mintItAccountToken("test-user");
     const hq = gate.mintAdminToken("hq");
     expect(full).not.toBe(hq);
     expect(gate.adminTokenScope(full)).toBe("full");
@@ -33,9 +33,14 @@ describe("PIN unlock and admin token scopes", () => {
     expect(gate.adminTokenValid("")).toBe(false);
   });
 
-  it("refuses an HQ token where a full IT token is required", () => {
-    expect(() => gate.requireAdminToken(gate.mintAdminToken("hq"))).toThrow();
-    expect(() => gate.requireAdminToken(gate.mintAdminToken("full"))).not.toThrow();
+  it("rejects legacy PIN-only authority and keeps challenges separate", () => {
+    expect(gate.adminTokenScope(gate.mintAdminToken("full"))).toBeNull();
+    const challenge = gate.mintItChallenge();
+    expect(gate.itChallengeValid(challenge)).toBe(true);
+    expect(gate.adminTokenScope(challenge)).toBeNull();
+    expect(gate.itAccountTokenUser(gate.mintItAccountToken("test-user"))).toBe("test-user");
+    expect(gate.itAccountTokenUser(challenge)).toBeNull();
+    expect(gate.itChallengeValid(challenge + "tampered")).toBe(false);
   });
 });
 

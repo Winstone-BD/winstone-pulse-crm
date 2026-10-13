@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Lead assignment only via LeadHub Nexus (server PIN scope); imports land unassigned; claimLead retired — why: one canonical path, no quota bypass.
-- agent_accountability_reviews is server-only; approval needs HQ PIN, never IT — why: Executive HQ final approval.
+- Accountability reviews are server-only; final approval needs HQ PIN, never IT.
 - 9:05 Dhaka briefing ack enforced server-side on every agent mutation (web + Android) — why: UI notices are bypassable.
 - History is append-only: follow_up_events never deleted, contact-close via DB trigger + immutable lead_events — why: UI checks can be bypassed.
 - Staff names cleaned by profiles trigger; legal_name never shown — why: one rule everywhere.
@@ -34,4 +34,6 @@
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
 - Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
-- Billing rows (invoices, unlock requests) are keyed by plan_code; this app only touches plan_code='crm' via PLAN_CODE in maintenance.server.ts — why: CRM and OS entitlements are independent.
+- Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
+
+- IT PIN yields a 10m challenge; completeItAccess checks an active approved admin-role account and issues an 8h user-bound token; await requireAdminToken — why: PIN alone cannot identify or authorize IT staff.

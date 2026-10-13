@@ -79,7 +79,7 @@ function SystemPage() {
         allow={["authority"]}
         icon={<Database className="size-7" />}
         title="আইটি কনসোল"
-        description="সিস্টেম সেটিং, অ্যাকাউন্ট অনুমোদন, ডেটার অবস্থা আর বিল। মাস্টার পিন লাগবে।"
+        description="সিস্টেম সেটিং, অ্যাকাউন্ট অনুমোদন, ডেটার অবস্থা আর বিল। প্রথমে IT PIN, তারপর নিজের অনুমোদিত ইমেইল ও পাসওয়ার্ড।"
       >
         <div className="mb-4"><HubSyncStatusPanel /></div>
         <div className="hq-luxe rounded-3xl p-3 sm:p-5"><SystemBoard /></div>

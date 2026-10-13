@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { getMyAccount, registerMyAccount } from "@/lib/accounts.functions";
@@ -62,6 +63,13 @@ export type Account = Awaited<ReturnType<typeof getMyAccount>>;
 /** Who is using this device: PIN authority, coordinator, agent, or nobody. */
 export function useMyAccount() {
   const token = useAdminToken();
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      void queryClient.invalidateQueries({ queryKey: ["my-account"] });
+    });
+    return () => data.subscription.unsubscribe();
+  }, [queryClient]);
   const query = useQuery({
     queryKey: ["my-account", token ? "pin" : "session"],
     queryFn: () => getMyAccount({ data: { adminToken: token } }),

@@ -74,8 +74,9 @@ export function mintAdminToken(scope: AdminScope = "full"): string {
 /** Which scope this token carries, or null when it is not one of ours. */
 export function adminTokenScope(token: string | null | undefined): AdminScope | null {
   if (!token) return null;
+  if (itAccountTokenUser(token)) return "full";
   try {
-    for (const scope of ["full", "hq", "leadhub"] as AdminScope[]) {
+    for (const scope of ["hq", "leadhub"] as AdminScope[]) {
       if (timingSafeEqual(sha(token), sha(mintAdminToken(scope)))) return scope;
     }
   } catch {
@@ -89,6 +90,39 @@ export function adminTokenValid(token: string | null | undefined): boolean {
 }
 
 /** Throws unless the caller presents a full (IT Console) admin token. */
-export function requireAdminToken(token: string | null | undefined): void {
-  if (adminTokenScope(token) !== "full") throw new Error("Admin PIN required");
+export async function requireAdminToken(token: string | null | undefined): Promise<void> {
+  const { resolveCaller, requireAuthority, requireWrite } = await import("@/lib/access.server");
+  const caller = await resolveCaller(token);
+  if (!itAccountTokenUser(token) || !caller.userId) throw new Error("IT PIN and personal account sign-in required");
+  requireAuthority(caller);
+  requireWrite(caller);
+}
+
+function signedItPayload(kind: "challenge" | "account", userId: string | null, duration: number) {
+  const secret = process.env["ADMIN_TOKEN_SECRET"];
+  if (!secret) throw new Error("ADMIN_TOKEN_SECRET is not configured");
+  const payload = Buffer.from(JSON.stringify({ kind, userId, expires: Date.now() + duration })).toString("base64url");
+  return `${payload}.${createHmac("sha256", secret).update(payload).digest("hex")}`;
+}
+
+function readItPayload(token: string | null | undefined): { kind: string; userId: string | null; expires: number } | null {
+  if (!token || token.length > 1000) return null;
+  try {
+    const [payload, signature] = token.split(".");
+    const secret = process.env["ADMIN_TOKEN_SECRET"];
+    if (!payload || !signature || !secret) return null;
+    const expected = createHmac("sha256", secret).update(payload).digest("hex");
+    if (!timingSafeEqual(sha(signature), sha(expected))) return null;
+    const value = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (typeof value.expires !== "number" || value.expires <= Date.now()) return null;
+    return value;
+  } catch { return null; }
+}
+
+export function mintItChallenge() { return signedItPayload("challenge", null, 10 * 60_000); }
+export function itChallengeValid(token: string) { return readItPayload(token)?.kind === "challenge"; }
+export function mintItAccountToken(userId: string) { return signedItPayload("account", userId, 8 * 60 * 60_000); }
+export function itAccountTokenUser(token: string | null | undefined): string | null {
+  const value = readItPayload(token);
+  return value?.kind === "account" && typeof value.userId === "string" ? value.userId : null;
 }

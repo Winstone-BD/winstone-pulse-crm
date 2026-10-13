@@ -148,12 +148,12 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
+    const { pinMatchesLive, leadHubPinMatches, mintAdminToken, mintItChallenge } = await import("@/lib/admin-gate.server");
     const matches = data.surface === "leadhub" ? await leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
     if (!matches) return { ok: false as const };
     return {
       ok: true as const,
-      token: mintAdminToken(data.surface === "hq" ? "hq" : data.surface === "leadhub" ? "leadhub" : "full"),
+      token: data.surface === "system" ? mintItChallenge() : mintAdminToken(data.surface === "hq" ? "hq" : "leadhub"),
       readOnly: data.surface === "hq",
     };
   });
@@ -417,7 +417,7 @@ export const reanalyzeRecording = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ReanalyzeInput.parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { processRecording } = await import("@/lib/call-intel.server");
     await processRecording(data.recordingId);
     const { logAudit } = await import("@/lib/audit.server");

@@ -25,7 +25,7 @@ export const saveAppConfig = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_config")
@@ -39,7 +39,7 @@ export const resetAppConfig = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ adminToken: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_config")

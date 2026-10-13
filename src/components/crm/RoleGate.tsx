@@ -29,11 +29,11 @@ export function RoleGate({
   /** Which board is behind this gate — HQ unlocks read-only. */
   surface?: "hq" | "system";
 }) {
-  const { scope, isPending } = useMyAccount();
+  const { scope, account, isPending } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
 
   if (isPending) return <SnapshotSkeleton />;
-  if (allow.includes(scope)) return <>{children}</>;
+  if (allow.includes(scope) && (surface !== "system" || !allow.includes("authority") || account?.itAuthenticated)) return <>{children}</>;
 
   const pinAllowed = allow.includes("authority");
 
