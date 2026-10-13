@@ -101,7 +101,7 @@ export function MaintenancePanel() {
       <dl className="grid gap-2 text-sm sm:grid-cols-3">
         {[
           ["Billing period", state.period],
-          ["Maintenance fee", MAINTENANCE_FEE_LABEL],
+          ["Maintenance fee", state.amountLabel],
           ["Due date", dhakaTime(state.dueDate)],
           ["Lock time", dhakaTime(state.lockAt)],
           ["Verified by", state.paymentVerifiedBy ?? "—"],

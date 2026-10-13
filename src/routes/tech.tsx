@@ -168,7 +168,7 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
         <tbody>
           {[
             ["CRM Status", state.locked ? "LOCKED" : "ACTIVE"],
-            ["Maintenance Fee", MAINTENANCE_FEE_LABEL],
+            ["Maintenance Fee", state.amountLabel],
             ["Billing Period", state.period],
             ["Due Date", dhakaTime(state.dueDate)],
             ["Payment Status", state.paymentStatus.toUpperCase()],
@@ -186,9 +186,9 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
         </tbody>
       </table>
       <div className="card-elevated space-y-1 p-4 text-sm">
-        <p className="font-bold">Unlock pricing (15% VAT included)</p>
-        <p><b>CRM only — installation files:</b> {CRM_ONLY_FEE_LABEL}</p>
-        <p><b>Full operating system unlock:</b> {MAINTENANCE_FEE_LABEL}</p>
+        <p className="font-bold">Monthly maintenance fee</p>
+        <p><b>Recurring fee (due every 14th, Asia/Dhaka):</b> {MAINTENANCE_FEE_LABEL}</p>
+        <p className="text-xs text-muted-foreground">Invoices raised before this rule keep their original stored amount and currency.</p>
         <p className="text-xs text-muted-foreground">Approvals on this page apply to the CRM part only. Keeping the whole operating system unlocked requires the full bill payment.</p>
       </div>
       <PaymentApprovals overview={q.data} session={session} stale={q.isFetching && q.isStale} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />

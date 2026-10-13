@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { architectPaymentDecision, type architectOverview } from "@/lib/maintenance.functions";
-import { dhakaTime, usd } from "@/lib/maintenance-rules";
+import { dhakaTime, moneyLabel } from "@/lib/maintenance-rules";
 
 type Overview = Awaited<ReturnType<typeof architectOverview>>;
 type Period = Overview["periods"][number];
