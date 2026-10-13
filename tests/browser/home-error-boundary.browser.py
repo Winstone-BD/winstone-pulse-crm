@@ -15,7 +15,7 @@ async def main():
         b=await p.chromium.launch(headless=True); ctx=await b.new_context(); docs={"n":0}
         async def h(r):
             docs["n"]+=1; await r.fulfill(status=200,content_type="text/html",body=PAGE)
-        await ctx.route(ORIGIN+"/**",h); page=await ctx.new_page()
+        await ctx.route(ORIGIN+"/**",h); page=await ctx.new_page(); page.on("pageerror",lambda e: print("PAGEERR",e)); page.on("console",lambda m: print("CON",m.text[:200]))
         await page.goto(ORIGIN+"/")
         await page.get_by_role("heading",name="This page didn't load").wait_for(timeout=5000)
         check(True,"forced failure shows recovery message instead of white screen")
