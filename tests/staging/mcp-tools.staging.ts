@@ -22,7 +22,12 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { mkdirSync, writeFileSync } from "node:fs";
+
+import { buildReport, reportToCsv, reportToJson } from "@/lib/staging-report";
+
 import { assertStaging, verifyAppBackend } from "./guard";
+import { parseRpc } from "./rpc";
 
 const { supabaseUrl, ref, appUrl } = assertStaging(); // throws before anything else
 const token = process.env["STAGING_MCP_TOKEN"];
@@ -59,26 +64,7 @@ function record(tool: string, check: string, pass: boolean, detail?: string) {
 }
 
 let nextId = 1;
-/** Parses a plain JSON body or an SSE stream (picks the message with our id). Never throws on bad bodies. */
-export function parseRpcBody(raw: string, id: number): RpcReply["json"] {
-  const tryParse = (s: string) => {
-    try {
-      return JSON.parse(s) as RpcReply["json"];
-    } catch {
-      return null;
-    }
-  };
-  const trimmed = raw.trim();
-  if (trimmed.startsWith("{")) return tryParse(trimmed);
-  const messages = trimmed
-    .split(/\r?\n\r?\n/)
-    .map((evt) => evt.split(/\r?\n/).filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trimStart()).join("\n"))
-    .filter(Boolean)
-    .map(tryParse)
-    .filter((m): m is NonNullable<RpcReply["json"]> => !!m);
-  return messages.find((m) => m.id === id) ?? null;
-}
-
+const startedAt = new Date().toISOString();
 async function rpc(method: string, params: unknown, auth: string | null = token!): Promise<RpcReply> {
   const id = nextId++;
   try {
@@ -93,7 +79,8 @@ async function rpc(method: string, params: unknown, auth: string | null = token!
       body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
     });
     const raw = await res.text();
-    return { status: res.status, json: parseRpcBody(raw, id), raw: raw.slice(0, 300) };
+    const parsed = parseRpc(raw, id);
+    return { status: res.status, json: parsed.kind === "ok" ? (parsed.message as RpcReply["json"]) : null, raw: parsed.kind === "ok" ? raw.slice(0, 300) : `${parsed.kind}: ${parsed.detail} | ${raw.slice(0, 240)}` };
   } catch (e) {
     const name = (e as Error).name;
     const why = name === "TimeoutError" || name === "AbortError" ? `timed out after ${TIMEOUT_MS} ms` : `network error: ${(e as Error).message}`;
@@ -193,17 +180,21 @@ afterAll(async () => {
     const { error, count } = await db.from("market_facts").delete({ count: "exact" }).like("metric", `${TAG}%`);
     console.log(error ? `[staging] cleanup failed: ${error.message} — rows tagged ${TAG} remain` : `[staging] cleanup removed ${count ?? 0} rows tagged ${TAG}`);
   }
-  const byTool = new Map<string, { pass: number; fail: number; failures: string[] }>();
-  for (const r of results) {
-    const e = byTool.get(r.tool) ?? { pass: 0, fail: 0, failures: [] };
-    if (r.pass) e.pass++;
-    else {
-      e.fail++;
-      e.failures.push(`${r.check}${r.detail ? ` — ${r.detail}` : ""}`);
-    }
-    byTool.set(r.tool, e);
-  }
-  for (const t of tools) if (!byTool.has(t.name)) byTool.set(t.name, { pass: 0, fail: 1, failures: ["no checks ran"] });
+  const report = buildReport({
+    runId: TAG,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    appHost: new URL(appUrl).hostname,
+    timeoutMs: TIMEOUT_MS,
+    checks: results,
+    listedTools: tools.map((t) => t.name),
+  });
+  const dir = process.env["STAGING_REPORT_DIR"] ?? "staging-reports";
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(`${dir}/${TAG}.json`, reportToJson(report));
+  writeFileSync(`${dir}/${TAG}.csv`, reportToCsv([report]));
+  console.log(`[staging] report saved: ${dir}/${TAG}.json (import it on /staging-checklist → Run history)`);
+  const byTool = new Map(report.tools.map((t) => [t.tool, { pass: t.passed, fail: t.failed, failures: t.failures }]));
   console.log("\n===== MCP STAGING SUMMARY =====");
   for (const [tool, e] of byTool) {
     console.log(`${e.fail === 0 ? "PASS" : "FAIL"}  ${tool}  (${e.pass} passed, ${e.fail} failed)`);

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Circle, ClipboardCheck, Copy, Loader2, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Circle, ClipboardCheck, Copy, Download, History, Loader2, ShieldAlert, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkStagingUrl } from "@/lib/staging-check";
+import { parseReport, reportToCsv, reportToJson, type StagingRunReport } from "@/lib/staging-report";
 import { checkStagingIsolation } from "@/lib/staging-check.functions";
 
 export const Route = createFileRoute("/staging-checklist")({
@@ -108,6 +109,25 @@ function Checklist() {
           Complete every step before running connector tests. Progress is saved on this device only; nothing is written to the CRM.
         </p>
       </header>
+      <section aria-label="Readiness" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          ["Address", urlOk],
+          ["Separate database", isolated],
+          ["Approved list", s.allowListed],
+          ["Connector approved", s.approved],
+        ].map(([label, done]) => (
+          <div key={String(label)} className="rounded-lg border border-border bg-card p-3">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className={`text-sm font-medium ${done ? "text-primary" : "text-muted-foreground"}`}>{done ? "Done" : "Not done"}</p>
+          </div>
+        ))}
+        <div className={`col-span-2 rounded-lg border p-3 sm:col-span-4 ${ready ? "border-primary bg-primary/10" : "border-border bg-muted"}`}>
+          <p className="text-sm font-semibold">
+            {ready ? "Ready to run connector tests" : `Not ready — ${[urlOk, isolated, s.allowListed, s.approved].filter(Boolean).length} of 4 steps complete`}
+          </p>
+          {s.isolation === "live" && <p className="text-sm text-destructive">Blocked: the staging copy uses the live database.</p>}
+        </div>
+      </section>
       <ol className="space-y-3">
         <Step done={urlOk} title="1. Staging app address">
           <Input
@@ -158,6 +178,113 @@ function Checklist() {
       <Button variant="ghost" size="sm" onClick={() => { localStorage.removeItem(KEY); setS(EMPTY); }}>
         Reset checklist
       </Button>
+      <RunHistory />
     </div>
+  );
+}
+
+const HISTORY_KEY = "winstone-staging-runs-v1";
+const MAX_RUNS = 50;
+
+function download(name: string, body: string, type: string) {
+  const url = URL.createObjectURL(new Blob([body], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function RunHistory() {
+  const [runs, setRuns] = useState<StagingRunReport[]>([]);
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as unknown[];
+      setRuns(raw.map((r) => parseReport(JSON.stringify(r))).filter((r): r is StagingRunReport => !!r));
+    } catch {
+      /* ignore corrupt history */
+    }
+  }, []);
+  const persist = (next: StagingRunReport[]) => {
+    const sorted = [...next].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, MAX_RUNS);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(sorted));
+    setRuns(sorted);
+  };
+
+  async function importFiles(files: FileList | null) {
+    if (!files) return;
+    let added = 0;
+    let bad = 0;
+    const next = [...runs];
+    for (const f of Array.from(files)) {
+      if (f.size > 2_000_000) { bad++; continue; }
+      const r = parseReport(await f.text());
+      if (!r) { bad++; continue; }
+      const i = next.findIndex((x) => x.runId === r.runId);
+      if (i >= 0) next[i] = r;
+      else next.push(r);
+      added++;
+    }
+    persist(next);
+    if (added) toast.success(`Saved ${added} run${added > 1 ? "s" : ""}`);
+    if (bad) toast.error(`${bad} file${bad > 1 ? "s were" : " was"} not a staging test report`);
+  }
+
+  return (
+    <section className="space-y-3 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-semibold"><History className="size-5" /> Run history</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline">
+            <label className="cursor-pointer">
+              <Upload className="size-4" /> Add report
+              <input type="file" accept=".json,application/json" multiple className="sr-only" onChange={(e) => { void importFiles(e.target.files); e.target.value = ""; }} />
+            </label>
+          </Button>
+          <Button size="sm" variant="outline" disabled={!runs.length} onClick={() => download("staging-connector-runs.json", JSON.stringify(runs, null, 2), "application/json")}>
+            <Download className="size-4" /> All JSON
+          </Button>
+          <Button size="sm" variant="outline" disabled={!runs.length} onClick={() => download("staging-connector-runs.csv", reportToCsv(runs), "text/csv")}>
+            <Download className="size-4" /> All CSV
+          </Button>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground">Each test run saves a report file in the staging-reports folder. Add it here to keep its history on this device.</p>
+      {runs.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">No test runs saved yet.</p>
+      ) : (
+        <ul className="space-y-2">
+          {runs.map((r) => (
+            <li key={r.runId} className="rounded-lg border border-border bg-card p-3">
+              <button type="button" className="flex w-full flex-wrap items-center justify-between gap-2 text-left" onClick={() => setOpen(open === r.runId ? null : r.runId)}>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">{new Date(r.startedAt).toLocaleString()}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {r.appHost} · {Math.round((Date.parse(r.finishedAt) - Date.parse(r.startedAt)) / 1000)}s · {r.tools.length} tool{r.tools.length === 1 ? "" : "s"}
+                  </span>
+                </span>
+                <span className={`rounded px-2 py-0.5 text-xs font-semibold ${r.overall === "PASS" ? "bg-primary/15 text-primary" : "bg-destructive/15 text-destructive"}`}>{r.overall}</span>
+              </button>
+              {open === r.runId && (
+                <div className="mt-3 space-y-2">
+                  {r.tools.map((t) => (
+                    <div key={t.tool} className="text-sm">
+                      <p><span className={t.status === "PASS" ? "text-primary" : "text-destructive"}>{t.status}</span> <span className="font-medium">{t.tool}</span> ({t.passed} passed, {t.failed} failed)</p>
+                      {t.failures.map((f) => <p key={f} className="pl-4 text-xs text-destructive break-words">x {f}</p>)}
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button size="sm" variant="outline" onClick={() => download(`${r.runId}.json`, reportToJson(r), "application/json")}><Download className="size-4" /> JSON</Button>
+                    <Button size="sm" variant="outline" onClick={() => download(`${r.runId}.csv`, reportToCsv([r]), "text/csv")}><Download className="size-4" /> CSV</Button>
+                    <Button size="sm" variant="ghost" onClick={() => persist(runs.filter((x) => x.runId !== r.runId))}><Trash2 className="size-4" /> Remove</Button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
