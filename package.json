@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "check:mcp-js": "node scripts/check-mcp-js-stable.mjs",
+    "check:mcp-js:compat": "bash scripts/mcp-js-compat-isolated.sh",
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
     "check:colors": "node scripts/check-dashboard-colors.mjs"
@@ -98,7 +99,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.3",
+    "@lovable.dev/vite-tanstack-config": "2.25.2",
     "@types/node": "^22.16.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.0",
