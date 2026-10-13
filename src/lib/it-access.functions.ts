@@ -12,7 +12,7 @@ export const completeItAccess = createServerFn({ method: "POST" })
     if (error || !allowed) throw new Error("This account is not authorized for IT Console");
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(null, { skipMaintenance: true });
-    if (caller.approval !== "approved" || !caller.profile) throw new Error("An active approved IT account is required");
+    if (caller.approval !== "approved" || !caller.profile || caller.readOnly || caller.scope !== "authority") throw new Error("An active approved IT account is required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: auditError } = await supabaseAdmin.from("audit_logs").insert({
       action: "it_account_signed_in", entity_type: "it_session", actor_profile_id: caller.profile.id,
