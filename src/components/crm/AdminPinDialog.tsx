@@ -155,7 +155,7 @@ export function AdminPinDialog({
             {selectedOfficer && (
               <div className="flex min-w-0 items-center justify-between gap-2 rounded-md border border-gold/30 bg-gold/10 px-3 py-2 text-sm">
                 <span className="inline-flex min-w-0 items-center gap-2 truncate"><CheckCircle2 className="size-4 shrink-0 text-gold" /><span className="hidden sm:inline">Selected:</span> <strong className="truncate">{selectedOfficer}</strong></span>
-                <button type="button" className="shrink-0 text-xs font-medium text-gold underline-offset-2 hover:underline" onClick={() => { setSelectedOfficer(null); setEmail(""); requestAnimationFrame(() => emailRef.current?.focus()); }}>Use a different account</button>
+                <button type="button" className="shrink-0 text-xs font-medium text-gold underline-offset-2 hover:underline" onClick={() => { setSelectedOfficer(null); setEmail(""); requestAnimationFrame(() => emailRef.current?.focus()); }}><span className="sm:hidden">Change</span><span className="hidden sm:inline">Use a different account</span></button>
               </div>
             )}
             <div className="grid gap-1.5">
