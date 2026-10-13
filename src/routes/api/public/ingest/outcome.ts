@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/public/ingest/outcome")({
         const { lead_id, outcome, notes, connected } = parsed.data;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { leadHeldByOther, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+        const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
 
         const { data: lead } = await supabaseAdmin
           .from("leads")
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/public/ingest/outcome")({
           .maybeSingle();
         if (!lead) return json({ error: "Unknown lead" }, 404);
         // A phone may only close out a lead that belongs to its own agent.
-        if (caller.kind === "device" && leadHeldByOther(lead, caller.profile.id)) {
+        if (caller.kind === "device" && leadNotAssignedTo(lead, caller.profile.id)) {
           return json({ error: LEAD_NOT_YOURS }, 403);
         }
 
