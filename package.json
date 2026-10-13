@@ -4,6 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "test:recovery-browser": "python3 tests/browser/deploy-recovery.browser.py",
     "test:restart": "python3 scripts/restart-recovery-check.py",
     "test:smoke": "python3 scripts/production-smoke-check.py",
     "test:recovery": "python3 scripts/module-recovery-check.py",

@@ -55,6 +55,7 @@ async def scenario(browser, module_ready_after_probes, probe_tries_override=None
     if probe_tries_override is not None:
         async def handle2(route):
             if route.request.url.startswith(ORIGIN + "/assets/"): return await handle(route)
+            if route.request.method == "GET": state["docs"] += 1
             await route.fulfill(status=200, content_type="text/html", body=html)
         await ctx.unroute(ORIGIN + "/**"); await ctx.route(ORIGIN + "/**", handle2)
     await page.goto(ORIGIN + "/", wait_until="domcontentloaded")
