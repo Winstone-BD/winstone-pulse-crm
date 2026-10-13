@@ -4,7 +4,7 @@ const PLAN_CODE = "crm" as const;
 
 import {
   MAINTENANCE_CURRENCY,
-  MAINTENANCE_FEE_USD,
+  MAINTENANCE_FEE_BDT,
   MAINTENANCE_FEE_MINOR,
   moneyLabel,
   clampUnlockMinutes,
@@ -109,7 +109,8 @@ async function ensureRow(period: string) {
     {
       billing_period: period,
       plan_code: PLAN_CODE,
-      fee_usd: MAINTENANCE_FEE_USD,
+      fee_usd: 0,
+      fee_bdt: MAINTENANCE_FEE_BDT,
       base_cents: MAINTENANCE_FEE_MINOR,
       vat_rate_bps: 0,
       vat_cents: 0,

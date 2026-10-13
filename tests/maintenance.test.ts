@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MAINTENANCE_CURRENCY,
-  MAINTENANCE_FEE_USD,
+  MAINTENANCE_FEE_BDT,
   MAINTENANCE_FEE_LABEL,
   RENEWAL_DAY,
   moneyLabel,
@@ -64,20 +64,21 @@ describe("maintenance wiring", () => {
     "src/components/crm/MaintenancePanel.tsx",
     "src/routes/tech.tsx",
   ];
-  it("canonical fee is $35.29 USD due the 14th, no stale fee amounts", () => {
-    expect(MAINTENANCE_FEE_USD).toBe(35.29);
-    expect(MAINTENANCE_CURRENCY).toBe("USD");
-    expect(MAINTENANCE_FEE_LABEL).toBe("$35.29 USD");
+  it("canonical fee is integer BDT 4345 due the 14th, no stale USD fee amounts", () => {
+    expect(MAINTENANCE_FEE_BDT).toBe(4345);
+    expect(Number.isInteger(MAINTENANCE_FEE_BDT)).toBe(true);
+    expect(MAINTENANCE_CURRENCY).toBe("BDT");
+    expect(MAINTENANCE_FEE_LABEL).toBe("৳4,345 BDT");
     expect(RENEWAL_DAY).toBe(14);
     for (const f of files) expect(readFileSync(f, "utf8")).not.toMatch(/46\.29|18\.16|53\.23|15\.79/);
   });
   it("historical snapshots keep their own currency", () => {
     expect(moneyLabel(1816, "USD")).toBe("$18.16 USD");
-    expect(moneyLabel(3529, "USD")).toBe("$35.29 USD");
+    expect(moneyLabel(434500, "BDT")).toBe("৳4,345 BDT");
   });
-  it("new invoices snapshot $35.29 USD; existing rows are never rewritten", () => {
+  it("new invoices snapshot BDT 4345; existing rows are never rewritten", () => {
     const src = readFileSync("src/lib/maintenance.server.ts", "utf8");
-    expect(src).toMatch(/fee_usd: MAINTENANCE_FEE_USD/);
+    expect(src).toMatch(/fee_bdt: MAINTENANCE_FEE_BDT/);
     expect(src).toMatch(/currency: MAINTENANCE_CURRENCY/);
     expect(src).toMatch(/ignoreDuplicates: true/);
   });
