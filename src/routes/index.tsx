@@ -52,7 +52,6 @@ function EntryHall() {
   const [pinOpen, setPinOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<"android" | "web" | "desktop" | null>(null);
-  const [selectionRequired, setSelectionRequired] = useState(false);
   const t = useT();
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
 
