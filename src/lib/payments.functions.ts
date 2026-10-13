@@ -95,7 +95,7 @@ export const openBillingPortal = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin

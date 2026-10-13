@@ -49,6 +49,7 @@ function EntryHall() {
   const navigate = useNavigate();
   const { scope } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
+  const [accessOpen, setAccessOpen] = useState(false);
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
 
   const openPin = (target: "/hq" | "/system" | "/leadhub") => {
@@ -64,7 +65,6 @@ function EntryHall() {
     } catch {
       // storage blocked: layout still adapts to the screen
     }
-    document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -171,21 +171,20 @@ function EntryHall() {
           <Button
             size="lg"
             className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
-            onClick={() =>
-              document
-                .getElementById("workspace-signin")
-                ?.scrollIntoView({
-                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
-                  block: "start",
-                })
-            }
+            aria-expanded={accessOpen}
+            aria-controls="workspace-access"
+            onClick={() => {
+              setAccessOpen(true);
+              window.requestAnimationFrame(() => document.getElementById("workspace-access")?.scrollIntoView({
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start",
+              }));
+            }}
           >
             Get started <ChevronRight className="size-5" />
           </Button>
         </div>
 
-        <HomeSignupForm />
-
+        {accessOpen && <div id="workspace-access" className="scroll-mt-6">
         <h2
           id="workspace-signin"
           className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
@@ -194,6 +193,16 @@ function EntryHall() {
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
+          <EntryCard
+            icon={<BarChart3 className="size-6" />}
+            title="Executive HQ"
+            description="Live floor performance, leaderboards and ask-anything reports and charts."
+            primary={
+              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
+                <Lock className="size-4" /> Unlock PIN
+              </Button>
+            }
+          />
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
@@ -225,16 +234,7 @@ function EntryHall() {
             }
           />
 
-          <EntryCard
-            icon={<BarChart3 className="size-6" />}
-            title="Executive HQ"
-            description="Live floor performance, leaderboards and ask-anything reports and charts."
-            primary={
-              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
-                <Lock className="size-4" /> Unlock PIN
-              </Button>
-            }
-          />
+
 
           <EntryCard
             icon={<Server className="size-6" />}
@@ -247,6 +247,9 @@ function EntryHall() {
             }
           />
         </div>
+
+        <HomeSignupForm />
+        </div>}
 
         {scope !== "none" && (
           <p className="mt-8 text-center text-sm text-muted-foreground">

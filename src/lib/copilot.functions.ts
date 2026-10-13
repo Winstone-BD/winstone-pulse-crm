@@ -19,7 +19,7 @@ export const askCopilot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { runCopilot } = await import("@/lib/copilot.server");
     return runCopilot(data.messages);
   });

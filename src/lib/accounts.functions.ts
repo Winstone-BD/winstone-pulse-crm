@@ -172,6 +172,7 @@ export const getMyAccount = createServerFn({ method: "POST" })
       deck: deckAccess(caller),
       approval: caller.approval,
       signedIn: caller.userId !== null,
+      itAuthenticated: Boolean(caller.userId && data.adminToken && (await import("@/lib/admin-gate.server")).itAccountTokenUser(data.adminToken) === caller.userId && caller.scope === "authority"),
       profile: caller.profile
         ? {
             id: caller.profile.id,

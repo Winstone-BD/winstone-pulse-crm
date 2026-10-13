@@ -10,6 +10,8 @@ export const getPinVault = createServerFn({ method: "GET" })
     const { adminTokenScope } = await import("@/lib/admin-gate.server");
     // HQ/LeadHub/expired tokens: no vault, and no page crash.
     if (adminTokenScope(data.adminToken) !== "full") return null;
+    const { requireAdminToken } = await import("@/lib/admin-gate.server");
+    await requireAdminToken(data.adminToken);
     const { vaultOverview } = await import("@/lib/pin-vault.server");
     return vaultOverview();
   });
@@ -21,7 +23,7 @@ export const revealPinValue = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { revealVault } = await import("@/lib/pin-vault.server");
     const pin = await revealVault(data.surface);
     const { logAudit } = await import("@/lib/audit.server");
@@ -50,7 +52,7 @@ export const rotatePinValue = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    requireAdminToken(data.adminToken);
+    await requireAdminToken(data.adminToken);
     const { rotateVault } = await import("@/lib/pin-vault.server");
     const entry = await rotateVault({
       surface: data.surface,
