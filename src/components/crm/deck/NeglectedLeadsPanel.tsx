@@ -88,6 +88,11 @@ function ReassignmentAudit({ token }: { token: string | null }) {
         <input type="date" aria-label={t({ bn: "শেষ তারিখ", en: "To date" })} className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
       {rows.length === 0 && <p className="text-xs text-muted-foreground">{t({ bn: "এই ফিল্টারে কিছু পাওয়া যায়নি।", en: "Nothing matches these filters." })}</p>}
+      {rows.length > 0 && (
+        <Button size="sm" variant="outline" onClick={() => exportReassignmentCsv(rows)}>
+          {t({ bn: "CSV ডাউনলোড", en: "Download CSV" })} ({rows.length})
+        </Button>
+      )}
       <ul className="divide-y divide-border text-sm">
         {rows.map((r) => (
           <li key={r.id} className="py-2">
@@ -160,4 +165,23 @@ function ReassignDialog({ row, targets, token, onClose }: { row: Row; targets: D
       </DialogContent>
     </Dialog>
   );
+}
+
+function exportReassignmentCsv(rows: Array<{ at: string; leadName: string; fromName: string; toName: string; by: string; reason: string; bypass: string | null }>) {
+  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
+  const header = ["When (Dhaka)", "Lead", "From agent", "To agent", "Changed by", "Reason", "Bypass reason"];
+  const lines = rows.map((r) => [
+    new Date(r.at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }),
+    r.leadName, r.fromName, r.toName, r.by, r.reason, r.bypass ?? "",
+  ].map(esc).join(","));
+  const csv = "﻿" + [header.map(esc).join(","), ...lines].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `reassignment-history-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
