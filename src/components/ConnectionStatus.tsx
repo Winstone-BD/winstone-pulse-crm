@@ -106,7 +106,9 @@ export function ConnectionStatus() {
       const delay = statusRef.current === "online" ? HEALTHY_INTERVAL_MS : PROBLEM_INTERVAL_MS;
       timerRef.current = setTimeout(() => void check().finally(schedule), delay);
     };
-    void check().finally(schedule);
+    watchAppTraffic();
+    if (!navigator.onLine) setStatus("offline");
+    timerRef.current = setTimeout(() => void check().finally(schedule), FIRST_PROBE_DELAY_MS);
     const onOnline = () => void check();
     const onOffline = () => setStatus("offline");
     window.addEventListener("online", onOnline);
