@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
 
 const whatsappLimiter = createRateLimiter(180, 60_000);
 
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
       },
       POST: async ({ request }) => {
         if (!whatsappLimiter(requestSourceKey(request)))
-          return new Response("rate limited", { status: 429 });
+          return rateLimitedResponse(whatsappLimiter.retryAfter(requestSourceKey(request)), { error: "rate_limited" });
         const rawBody = await request.text();
         const signature = request.headers.get("x-hub-signature-256");
         const { getWhatsAppProvider } = await import("@/lib/whatsapp-provider.server");

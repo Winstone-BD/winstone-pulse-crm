@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
 
 /** 120 requests per minute per source address. */
 const osLimiter = createRateLimiter(120, 60_000);
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/public/os/events")({
           return json(503, { ok: false, error: "receiver_not_configured", retryable: true });
 
         if (!osLimiter(requestSourceKey(request)))
-          return json(429, { ok: false, error: "rate_limited", retryable: true });
+          return rateLimitedResponse(osLimiter.retryAfter(requestSourceKey(request)), { error: "rate_limited" });
 
         const rawBody = await request.text();
         if (rawBody.length > 64_000) return json(413, { ok: false, error: "payload_too_large" });
