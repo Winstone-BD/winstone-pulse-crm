@@ -64,7 +64,7 @@ describe("outreach templates", () => {
     const sms = smsComposeUrl("01712-345678", text)!;
     expect(sms.startsWith("sms:+8801712345678?body=")).toBe(true);
     expect(decodeURIComponent(sms.split("body=")[1]!)).toBe(text);
-    expect(sms).not.toMatch(/[ &?](?!body=)/.source ? / |&/ : /x/);
+    expect(sms).not.toMatch(/[ &]/);
     const wa = whatsAppDeepLink("8801712345678", text);
     expect(wa.startsWith("https://wa.me/8801712345678?text=")).toBe(true);
     expect(decodeURIComponent(wa.split("text=")[1]!)).toBe(text);
