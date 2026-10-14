@@ -44,7 +44,7 @@ export function OutreachTemplates({ leadId, phone, name, project, agentName }: {
 }) {
   const send = (tplKey: string, channel: "whatsapp" | "sms") => {
     const tpl = OUTREACH_TEMPLATES.find((x) => x.key === tplKey)!;
-    const text = tpl.build({ name: name || "স্যার/ম্যাডাম", project, agentName });
+    const text = tpl.build({ name: name || "স্যার/ম্যাডাম", project: project ?? null, agentName: agentName ?? null });
     let msisdn: string | null = null;
     if (channel === "whatsapp") {
       const r = openWhatsApp(phone, text);
