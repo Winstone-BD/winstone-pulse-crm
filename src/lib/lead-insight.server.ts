@@ -172,3 +172,43 @@ export async function reassignLead(input: { leadId: string; toAgentId: string; r
   await db.from("lead_events").insert({ lead_id: lead.id, agent_id: input.toAgentId, kind: "reassigned", detail });
   return { ok: true as const };
 }
+
+export type ReassignmentAuditRow = {
+  id: string; at: string; leadId: string | null; leadName: string;
+  fromName: string; toName: string; by: string; reason: string; bypass: string | null;
+};
+
+/** Recent reassignment audit trail, newest first. LeadHub-only (enforced by the server fn). */
+export async function reassignmentAudit(limit = 50): Promise<ReassignmentAuditRow[]> {
+  const db = await admin();
+  const { data: events } = await db.from("lead_events").select("id, lead_id, agent_id, detail, created_at")
+    .eq("kind", "reassigned").order("created_at", { ascending: false }).limit(limit);
+  const rows = events ?? [];
+  if (!rows.length) return [];
+
+  const parsed = rows.map((e) => {
+    let d: { from?: string; to?: string; reason?: string; bypass?: string | null; by?: string } = {};
+    try { d = e.detail ? JSON.parse(e.detail) : {}; } catch { /* keep defaults */ }
+    return { e, d };
+  });
+  const agentIds = [...new Set(parsed.flatMap((p) => [p.d.from, p.d.to]).filter((x): x is string => !!x))];
+  const leadIds = [...new Set(rows.map((e) => e.lead_id).filter((x): x is string => !!x))];
+  const [{ data: profs }, { data: leads }] = await Promise.all([
+    agentIds.length ? db.from("profiles").select("id, name").in("id", agentIds) : Promise.resolve({ data: [] }),
+    leadIds.length ? db.from("leads").select("id, name, phone_number").in("id", leadIds) : Promise.resolve({ data: [] }),
+  ]);
+  const agentName = new Map((profs ?? []).map((p) => [p.id, p.name ?? "—"]));
+  const leadName = new Map((leads ?? []).map((l) => [l.id, l.name ?? l.phone_number]));
+
+  return parsed.map(({ e, d }) => ({
+    id: e.id,
+    at: e.created_at,
+    leadId: e.lead_id,
+    leadName: (e.lead_id && leadName.get(e.lead_id)) || "—",
+    fromName: (d.from && agentName.get(d.from)) || "—",
+    toName: (d.to && agentName.get(d.to)) || (e.agent_id && agentName.get(e.agent_id)) || "—",
+    by: d.by ?? "—",
+    reason: d.reason ?? "",
+    bypass: d.bypass ?? null,
+  }));
+}

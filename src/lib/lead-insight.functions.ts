@@ -28,6 +28,15 @@ export const listNeglectedHighPotential = createServerFn({ method: "POST" })
     return { leads, targets };
   });
 
+export const listReassignmentAudit = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: z.string().nullable().optional() }).parse(i))
+  .handler(async ({ data }) => {
+    const { requireLeadHub } = await import("@/lib/access.server");
+    await requireLeadHub(data.adminToken);
+    const { reassignmentAudit } = await import("@/lib/lead-insight.server");
+    return { rows: await reassignmentAudit() };
+  });
+
 export const reassignNeglectedLead = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({
     adminToken: z.string().nullable().optional(),

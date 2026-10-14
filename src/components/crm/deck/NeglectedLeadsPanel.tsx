@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ScoreBreakdown } from "@/components/crm/LeadInsightScoreCard";
-import { listNeglectedHighPotential, reassignNeglectedLead } from "@/lib/lead-insight.functions";
+import { listNeglectedHighPotential, listReassignmentAudit, reassignNeglectedLead } from "@/lib/lead-insight.functions";
 import { useLeadHubToken } from "@/lib/local-session";
 import { HIGH_POTENTIAL_SCORE, MIN_REASON, OVERDUE_FOLLOW_UP_HOURS } from "@/lib/lead-insight-score";
 import { useT } from "@/lib/i18n";
@@ -53,7 +53,32 @@ export function NeglectedLeadsPanel() {
         ))}
       </ul>
       {open && q.data && <ReassignDialog row={open} targets={q.data.targets} token={token} onClose={() => setOpen(null)} />}
+      <ReassignmentAudit token={token} />
     </section>
+  );
+}
+
+function ReassignmentAudit({ token }: { token: string | null }) {
+  const t = useT();
+  const fn = useServerFn(listReassignmentAudit);
+  const q = useQuery({ queryKey: ["reassign-audit", token], queryFn: () => fn({ data: { adminToken: token } }), retry: false });
+  if (q.isPending || q.isError || !q.data?.rows.length) return null;
+  return (
+    <div className="space-y-2 border-t border-border pt-3">
+      <h3 className="text-sm font-semibold">{t({ bn: "বদলের ইতিহাস", en: "Reassignment history" })}</h3>
+      <ul className="divide-y divide-border text-sm">
+        {q.data.rows.map((r) => (
+          <li key={r.id} className="py-2">
+            <p className="font-medium">{r.leadName}: {r.fromName} → {r.toName}</p>
+            <p className="text-xs text-muted-foreground">
+              {new Date(r.at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} · {t({ bn: "করেছেন", en: "by" })} {r.by}
+            </p>
+            {r.reason && <p className="mt-0.5 text-xs text-muted-foreground">{t({ bn: "কারণ", en: "Reason" })}: {r.reason}</p>}
+            {r.bypass && <p className="mt-0.5 text-xs text-destructive">{t({ bn: "বাইপাস", en: "Bypass" })}: {r.bypass}</p>}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
