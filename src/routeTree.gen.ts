@@ -46,6 +46,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RuntimeErrorsRouteImport } from './routes/runtime-errors'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SecurityFindingsRouteImport } from './routes/security-findings'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
 import { Route as ServiceBillUnlockRouteImport } from './routes/service-bill-unlock'
 import { Route as SiteVisitsRouteImport } from './routes/site-visits'
@@ -301,6 +302,11 @@ const SalesIntelRoute = SalesIntelRouteImport.update({
 const SecurityRoute = SecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityFindingsRoute = SecurityFindingsRouteImport.update({
+  id: '/security-findings',
+  path: '/security-findings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServiceBillAlertRoute = ServiceBillAlertRouteImport.update({
@@ -719,6 +725,7 @@ export interface FileRoutesByFullPath {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
@@ -829,6 +836,7 @@ export interface FileRoutesByTo {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
@@ -940,6 +948,7 @@ export interface FileRoutesById {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
+  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
@@ -1052,6 +1061,7 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
+    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
@@ -1162,6 +1172,7 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
+    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
@@ -1272,6 +1283,7 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
+    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
@@ -1383,6 +1395,7 @@ export interface RootRouteChildren {
   RuntimeErrorsRoute: typeof RuntimeErrorsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
+  SecurityFindingsRoute: typeof SecurityFindingsRoute
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
   ServiceBillUnlockRoute: typeof ServiceBillUnlockRoute
   SiteVisitsRoute: typeof SiteVisitsRoute
@@ -1715,6 +1728,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security'
       preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security-findings': {
+      id: '/security-findings'
+      path: '/security-findings'
+      fullPath: '/security-findings'
+      preLoaderRoute: typeof SecurityFindingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/service-bill-alert': {
@@ -2255,6 +2275,7 @@ const rootRouteChildren: RootRouteChildren = {
   RuntimeErrorsRoute: RuntimeErrorsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
+  SecurityFindingsRoute: SecurityFindingsRoute,
   ServiceBillAlertRoute: ServiceBillAlertRoute,
   ServiceBillUnlockRoute: ServiceBillUnlockRoute,
   SiteVisitsRoute: SiteVisitsRoute,
