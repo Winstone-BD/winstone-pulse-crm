@@ -30,6 +30,7 @@ import { ContactSuppressionNotice } from "@/components/crm/ContactSuppressionNot
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { Button } from "@/components/ui/button";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
+import { OutreachTemplates } from "@/components/crm/OutreachTemplates";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type {
@@ -131,6 +132,7 @@ export function LeadDossier({
                   className="h-12 min-w-[140px] flex-1"
                 />
               </div>
+              <div className="mt-3"><OutreachTemplates leadId={lead.id} phone={lead.phone_number} name={lead.name} agentName={agent?.name ?? null} /></div>
               {/* No bypass dial: every call from the desk must end in a report. */}
               <p className="mt-2 text-xs text-muted-foreground">
                 {lead.phone_number} — কল শেষে রিপোর্টের পপ-আপ আসবে।
