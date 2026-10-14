@@ -203,7 +203,7 @@ export async function sweepReminders(now = new Date()) {
       // Upcoming follow-ups buzz once when the reminder window opens; a missed
       // (overdue) follow-up buzzes again every 3 hours until done or backlog.
       const overdueBucket = Math.floor(now.getTime() / (3 * 3_600_000));
-      const eventKey =
+      const eventKey = item.kind === "site_visit" ? `site_visit:${item.id}:${overdueBucket}` :
         item.kind === "follow_up"
           ? item.overdue
             ? `follow_up_overdue:${item.id}:${overdueBucket}`
@@ -217,7 +217,7 @@ export async function sweepReminders(now = new Date()) {
         payload: {
           title: item.kind === "follow_up" && item.overdue ? `⚠️ ${item.title}` : item.title,
           body: item.detail,
-          path: item.kind === "follow_up" ? "/desk" : "/desk",
+          path: item.kind === "site_visit" ? "/site-visits" : "/desk",
           data: { reminder_kind: item.kind, reminder_id: item.id, lead_id: item.leadId ?? "" },
         },
       });
