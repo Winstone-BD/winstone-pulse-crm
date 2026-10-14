@@ -3944,6 +3944,10 @@ export type Database = {
           id: string
           lead_id: string
           notes: string | null
+          outcome: string | null
+          outcome_at: string | null
+          outcome_by: string | null
+          outcome_interest: string | null
           project: string | null
           status: string
           team_calendar_added_at: string | null
@@ -3960,6 +3964,10 @@ export type Database = {
           id?: string
           lead_id: string
           notes?: string | null
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_by?: string | null
+          outcome_interest?: string | null
           project?: string | null
           status?: string
           team_calendar_added_at?: string | null
@@ -3976,6 +3984,10 @@ export type Database = {
           id?: string
           lead_id?: string
           notes?: string | null
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_by?: string | null
+          outcome_interest?: string | null
           project?: string | null
           status?: string
           team_calendar_added_at?: string | null
