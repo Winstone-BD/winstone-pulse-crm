@@ -118,5 +118,8 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Split each route into its own chunk so heavy code (charts, HQ dashboards)
+    // loads only when that page is visited, not on the homepage.
+    autoCodeSplitting: true,
   },
 });
