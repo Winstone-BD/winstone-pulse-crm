@@ -165,3 +165,6 @@
 - [ ] Smart lead scoring + neglected high-potential lead flags for coordinators (from workspace chat)
 - [ ] Lead scoring v1: transparent score (engagement, duration, AI sentiment), coordinator neglected high-potential list, manual reassignment + transfer safeguards
 - [x] Insight score (25/40/35) beside locked V2 score, in dossier/desk; LeadHub neglected high-potential list + safeguarded manual reassignment
+
+- [ ] Reconnect Firebase Cloud Messaging in new workspace
+- [ ] Review AgentForge project; port useful agent persona/skills parts
