@@ -15,6 +15,8 @@ export const billQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/service-bill-alert")({
+  // Admin-only data: load in the browser so the signed-in session is attached.
+  ssr: false,
   loader: ({ context }) => context.queryClient.ensureQueryData(billQuery),
   head: () => ({
     meta: [

@@ -23,7 +23,10 @@ async function requireReviewer(context: {
   return { userId: context.userId, email };
 }
 
-export const getServiceBillAlert = createServerFn({ method: "GET" }).handler(async () => {
+export const getServiceBillAlert = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+  await requireReviewer(context);
   const { currentServiceBill } = await import("@/lib/service-bill-review.server");
   const bill = await currentServiceBill("Authorized Winstone reviewer", null);
   return {
