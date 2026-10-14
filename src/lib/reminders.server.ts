@@ -172,9 +172,24 @@ export async function remindersFor(profileId: string, now = new Date(), opts: { 
   });
 }
 
+/** Profile ids of HQ/IT coordinators (admin role) — same rule as the web bell's authority scope. */
+export async function coordinatorProfileIds(): Promise<Set<string>> {
+  const supabaseAdmin = await admin();
+  const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+  const userIds = (roles ?? []).map((r) => r.user_id);
+  if (userIds.length === 0) return new Set();
+  const { data: profiles } = await supabaseAdmin.from("profiles").select("id").in("user_id", userIds);
+  return new Set((profiles ?? []).map((p) => p.id));
+}
+
+export async function isCoordinatorProfile(profileId: string): Promise<boolean> {
+  return (await coordinatorProfileIds()).has(profileId);
+}
+
 /**
  * Sends the due reminders to every active agent's devices. Safe to run on a
- * schedule: an item already notified is skipped.
+ * schedule: an item already notified is skipped. Coordinators also get every
+ * agent's site-visit reminders, matching the web bell.
  */
 export async function sweepReminders(now = new Date()) {
   const supabaseAdmin = await admin();
@@ -185,13 +200,14 @@ export async function sweepReminders(now = new Date()) {
     .select("id")
     .eq("is_active", true)
     .eq("approval_status", "approved");
+  const coordinators = await coordinatorProfileIds();
 
   const hourBucket = now.toISOString().slice(0, 13);
   let followUpPushes = 0;
   let reportPushes = 0;
 
   for (const agent of agents ?? []) {
-    const all = await remindersFor(agent.id, now);
+    const all = await remindersFor(agent.id, now, { allVisits: coordinators.has(agent.id) });
     // Only fresh items buzz the phone: a follow-up older than the window is
     // backlog, and it is still listed in the app. Cap the burst per sweep.
     const fresh = all.filter(
