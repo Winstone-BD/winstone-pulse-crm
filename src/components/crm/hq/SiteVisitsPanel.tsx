@@ -39,7 +39,7 @@ export function SiteVisitReminder({ leads: given }: { leads?: Lead[] }) {
           const late = new Date(v.visit_at).getTime() < now;
           return (
             <li key={v.id} className="flex flex-wrap justify-between gap-2">
-              <span className="min-w-0 truncate font-medium">{leadName.get(v.lead_id) ?? "লিড"}{v.project ? ` · ${v.project}` : ""}</span>
+              <span className="min-w-0 truncate font-medium">{v.lead_name ?? leadName.get(v.lead_id) ?? "লিড"}{v.project ? ` · ${v.project}` : ""}</span>
               <span className={late ? "text-destructive" : "text-muted-foreground"}>{when(v.visit_at)}{v.status === "completed" ? " · ফলাফল লিখুন" : late ? " · সময় পেরিয়েছে, অবস্থা আপডেট করুন" : ""}</span>
             </li>
           );
@@ -151,7 +151,7 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
             {rows.map((v) => (
               <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-2.5 text-xs">
                 <span className="min-w-0">
-                  <span className="block truncate font-semibold">{leadById.get(v.lead_id)?.name ?? "লিড"}</span>
+                  <span className="block truncate font-semibold">{v.lead_name ?? leadById.get(v.lead_id)?.name ?? "লিড"}</span>
                   <span className="text-muted-foreground">{when(v.visit_at)}{v.project ? ` · ${v.project}` : ""}</span>
                 </span>
                 <span className="flex items-center gap-2">

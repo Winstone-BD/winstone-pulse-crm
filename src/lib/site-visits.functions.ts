@@ -169,7 +169,7 @@ export const leadProjectLabel = createServerFn({ method: "POST" })
     if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
     const { data: v } = await q.order("visit_at", { ascending: false }).limit(1).maybeSingle();
     if (v?.project) return { project: v.project };
-    const { data: r } = await supabaseAdmin.from("call_reports").select("project_interest").eq("lead_id", data.leadId)
-      .not("project_interest", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
-    return { project: (r as { project_interest?: string | null } | null)?.project_interest ?? null };
+    const { data: r } = await supabaseAdmin.from("call_reports").select("requirement").eq("lead_id", data.leadId)
+      .not("requirement", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    return { project: r?.requirement ?? null };
   });
