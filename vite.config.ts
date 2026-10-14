@@ -89,8 +89,17 @@ export default defineConfig({
     define: {
       __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      // Deployment ID from whatever the hosting platform provides at build time.
+      // Checked in priority order; empty when the platform exposes none.
       __BUILD_DEPLOYMENT_ID__: JSON.stringify(
-        process.env["LOVABLE_DEPLOYMENT_ID"] || process.env["DEPLOYMENT_ID"] || "",
+        process.env["LOVABLE_DEPLOYMENT_ID"] ||
+          process.env["DEPLOYMENT_ID"] ||
+          process.env["VERCEL_DEPLOYMENT_ID"] ||
+          process.env["CF_PAGES_COMMIT_SHA"] ||
+          process.env["RENDER_GIT_COMMIT"] ||
+          process.env["NETLIFY_DEPLOY_ID"] ||
+          process.env["DEPLOY_ID"] ||
+          "",
       ),
     },
     // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
