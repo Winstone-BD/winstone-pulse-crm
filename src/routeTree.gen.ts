@@ -59,6 +59,7 @@ import { Route as TechRouteImport } from './routes/tech'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TicketsRouteImport } from './routes/tickets'
 import { Route as UnlockApproveRouteImport } from './routes/unlock-approve'
+import { Route as VersionRouteImport } from './routes/version'
 import { Route as VoiceTranscriptionRouteImport } from './routes/voice-transcription'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
@@ -365,6 +366,11 @@ const TicketsRoute = TicketsRouteImport.update({
 const UnlockApproveRoute = UnlockApproveRouteImport.update({
   id: '/unlock-approve',
   path: '/unlock-approve',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VersionRoute = VersionRouteImport.update({
+  id: '/version',
+  path: '/version',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VoiceTranscriptionRoute = VoiceTranscriptionRouteImport.update({
@@ -726,6 +732,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/unlock-approve': typeof UnlockApproveRoute
+  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -835,6 +842,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/unlock-approve': typeof UnlockApproveRoute
+  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -945,6 +953,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
   '/unlock-approve': typeof UnlockApproveRoute
+  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs_/$slug': typeof DocsSlugRoute
@@ -1056,6 +1065,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tickets'
     | '/unlock-approve'
+    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tickets'
     | '/unlock-approve'
+    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
@@ -1274,6 +1285,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tickets'
     | '/unlock-approve'
+    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs_/$slug'
@@ -1384,6 +1396,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TicketsRoute: typeof TicketsRoute
   UnlockApproveRoute: typeof UnlockApproveRoute
+  VersionRoute: typeof VersionRoute
   VoiceTranscriptionRoute: typeof VoiceTranscriptionRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DocsSlugRoute: typeof DocsSlugRoute
@@ -1793,6 +1806,13 @@ declare module '@tanstack/react-router' {
       path: '/unlock-approve'
       fullPath: '/unlock-approve'
       preLoaderRoute: typeof UnlockApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/version': {
+      id: '/version'
+      path: '/version'
+      fullPath: '/version'
+      preLoaderRoute: typeof VersionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/voice-transcription': {
@@ -2248,6 +2268,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TicketsRoute: TicketsRoute,
   UnlockApproveRoute: UnlockApproveRoute,
+  VersionRoute: VersionRoute,
   VoiceTranscriptionRoute: VoiceTranscriptionRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,

@@ -1,3 +1,4 @@
+import { SHORT_COMMIT } from "@/lib/build-info";
 import { BrandLockup } from "@/components/BrandLockup";
 import { Link } from "@tanstack/react-router";
 import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";

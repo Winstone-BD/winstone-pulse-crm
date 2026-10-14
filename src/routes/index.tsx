@@ -1,3 +1,4 @@
+import { SHORT_COMMIT } from "@/lib/build-info";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,

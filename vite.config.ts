@@ -90,7 +90,7 @@ export default defineConfig({
       __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
       __BUILD_DEPLOYMENT_ID__: JSON.stringify(
-        process.env["LOVABLE_DEPLOYMENT_ID"] || process.env["DEPLOYMENT_ID"] || process.env["CF_PAGES_COMMIT_SHA"] && "" || "",
+        process.env["LOVABLE_DEPLOYMENT_ID"] || process.env["DEPLOYMENT_ID"] || "",
       ),
     },
     // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
