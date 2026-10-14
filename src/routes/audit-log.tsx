@@ -48,7 +48,16 @@ const csv = (v: unknown) => { const s = String(v ?? ""); return /[",\n\r]/.test(
 
 function Page() {
   const [tab, setTab] = useState<"log" | "security" | "assignments" | "backups" | "ai">("log");
-...
+  return (
+    <AppShell>
+      <RoleGate surface="hq" allow={["authority"]} icon={<History className="size-7" />}
+        title="Audit log & backups" description="Only HQ / IT can view the full change history and backups. Master PIN required.">
+        <div className="space-y-4">
+          <PageHeader title="Audit log & backups" description="Every create, edit and archive — who and when. Entries are permanent." />
+          <div className="flex flex-wrap gap-2">
+            <Button variant={tab === "log" ? "default" : "outline"} size="sm" onClick={() => setTab("log")}><History className="size-4" /> Audit log</Button>
+            <Button variant={tab === "security" ? "default" : "outline"} size="sm" onClick={() => setTab("security")}><ShieldAlert className="size-4" /> Security</Button>
+            <Button variant={tab === "backups" ? "default" : "outline"} size="sm" onClick={() => setTab("backups")}><DatabaseBackup className="size-4" /> Backups</Button>
             <Button variant={tab === "assignments" ? "default" : "outline"} size="sm" onClick={() => setTab("assignments")}><UserSwitch className="size-4" /> Assignments</Button>
             <Button variant={tab === "ai" ? "default" : "outline"} size="sm" onClick={() => setTab("ai")}><Sparkles className="size-4" /> AI</Button>
           </div>
