@@ -431,7 +431,7 @@ export async function runCommandAgent(
               type: "input_text",
               text: `allowed_actions: ${JSON.stringify(allowed)}\nlive_data: ${JSON.stringify(
                 facts,
-              )}\n\nপ্রশ্ন/নির্দেশ: ${question}`,
+              )}\n\nপ্রশ্ন/নির্দেশ:\n${sanitizeNotes(question, 1000).wrapped}`,
             },
           ],
         },
