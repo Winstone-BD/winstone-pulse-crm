@@ -21,6 +21,7 @@ import { toast } from "sonner";
 
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
 import { PreCallBriefCard } from "@/components/crm/PreCallBriefCard";
+import { LeadInsightScoreCard } from "@/components/crm/LeadInsightScoreCard";
 import { LeadNotesPanel } from "@/components/crm/LeadNotesPanel";
 import { LeadProjectFacts, VisitRequestsPanel } from "@/components/crm/KnowledgeHubCards";
 import { LeadProjectSales } from "@/components/crm/ProjectCatalog";
@@ -153,6 +154,7 @@ export function LeadDossier({
             <div className="space-y-4 px-5 py-5">
               <div id="lead-brief" className="scroll-mt-14">
                 <PreCallBriefCard leadId={lead.id} />
+                <div className="mt-4"><LeadInsightScoreCard leadId={lead.id} /></div>
               </div>
 
               <section id="lead-overview" className="scroll-mt-14 space-y-1 rounded-xl border bg-card p-4 text-sm">

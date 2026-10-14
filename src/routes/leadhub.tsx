@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Database, FileUp, History, KeyRound, Send, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Database, FileUp, History, KeyRound, Send, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
@@ -13,6 +13,7 @@ import { AllocationTable, AssignLeadsWorkspace } from "@/components/crm/deck/Ass
 import { DeckKpis } from "@/components/crm/deck/DeckKpis";
 import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
 import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
+import { NeglectedLeadsPanel } from "@/components/crm/deck/NeglectedLeadsPanel";
 import { Button } from "@/components/ui/button";
 import { checkLeadHubAccess } from "@/lib/leadhub.functions";
 import { LeadHubTokenScope, useLeadHubToken } from "@/lib/local-session";
@@ -25,6 +26,7 @@ const SECTIONS = [
   { key: "import", label: { bn: "লিড ইমপোর্ট", en: "Import Leads" }, icon: FileUp },
   { key: "database", label: { bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" }, icon: Database },
   { key: "assign", label: { bn: "এজেন্ট ও সংখ্যা অনুযায়ী বণ্টন", en: "Assign by Agent + Quantity" }, icon: Send },
+  { key: "neglected", label: { bn: "অবহেলিত উচ্চ-সম্ভাবনা", en: "Neglected high-potential" }, icon: AlertTriangle },
   { key: "history", label: { bn: "বণ্টনের ইতিহাস / মান যাচাই", en: "Distribution History / Quality" }, icon: History },
 ] as const;
 type Section = (typeof SECTIONS)[number]["key"];
@@ -101,6 +103,7 @@ function LeadHubWorkspace() {
       {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
       {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title={t({ bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" })} />}
       {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
+      {section === "neglected" && <NeglectedLeadsPanel />}
       {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title={t({ bn: "ডুপ্লিকেট / আলাদা রাখা রেকর্ড", en: "Duplicate / parked records" })} /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title={t({ bn: "ডেটার মান যাচাই", en: "Data quality review" })} /></div>}
     </div>
   );
