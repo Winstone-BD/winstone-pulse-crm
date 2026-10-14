@@ -22,7 +22,7 @@ export const myReminders = createServerFn({ method: "POST" })
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none" || !caller.profile) return { reminders: [] };
     const { remindersFor } = await import("@/lib/reminders.server");
-    return { reminders: await remindersFor(caller.profile.id) };
+    return { reminders: await remindersFor(caller.profile.id, new Date(), { allVisits: caller.scope === "authority" }) };
   });
 
 /** Stores this browser's Firebase token so reminders arrive with the tab closed. */

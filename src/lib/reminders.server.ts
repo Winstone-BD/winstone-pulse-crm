@@ -16,7 +16,7 @@
 
 export type Reminder = {
   id: string;
-  kind: "report" | "follow_up";
+  kind: "report" | "follow_up" | "site_visit";
   leadId: string | null;
   title: string;
   detail: string;
@@ -61,7 +61,7 @@ function bnTime(iso: string): string {
 }
 
 /** Everything one agent should be reminded about right now, soonest first. */
-export async function remindersFor(profileId: string, now = new Date()): Promise<Reminder[]> {
+export async function remindersFor(profileId: string, now = new Date(), opts: { allVisits?: boolean } = {}): Promise<Reminder[]> {
   const supabaseAdmin = await admin();
   const nowMs = now.getTime();
   const out: Reminder[] = [];
@@ -122,10 +122,45 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     });
   }
 
+  // Site visits: due within 24h / late and not updated, or completed with no outcome.
+  // Agents get their own; coordinators (HQ/IT) get every agent's.
+  let vq = supabaseAdmin.from("site_visits")
+    .select("id, lead_id, project, visit_at, status, outcome_at, leads(name, phone_number)")
+    .in("status", ["scheduled", "confirmed", "completed"])
+    .lte("visit_at", new Date(nowMs + 24 * 3600_000).toISOString())
+    .gte("visit_at", new Date(nowMs - 14 * 86400_000).toISOString())
+    .order("visit_at", { ascending: true }).limit(50);
+  if (!opts.allVisits) vq = vq.eq("agent_id", profileId);
+  const { data: visits } = await vq;
+  for (const v of visits ?? []) {
+    if (v.status === "completed" && v.outcome_at) continue;
+    const lead = (v as { leads?: { name?: string; phone_number?: string } | null }).leads;
+    const who = lead?.name ?? "ক্রেতা";
+    const proj = v.project ? ` · ${v.project}` : "";
+    const late = new Date(v.visit_at).getTime() < nowMs;
+    const needOutcome = v.status === "completed";
+    out.push({
+      id: v.id,
+      kind: "site_visit",
+      leadId: v.lead_id,
+      title: needOutcome ? "সাইট ভিজিটের ফলাফল লিখুন" : late ? "সাইট ভিজিটের অবস্থা আপডেট করুন" : "আসন্ন সাইট ভিজিট",
+      detail: `${who} — ${bnTime(v.visit_at)}${proj}`,
+      titleEn: needOutcome ? "Log the site visit outcome" : late ? "Update the site visit status" : "Upcoming site visit",
+      detailEn: `${lead?.name ?? "Customer"} — ${enTime(v.visit_at)}${proj}`,
+      phone: lead?.phone_number ?? null,
+      dueAt: v.visit_at,
+      overdue: late,
+      priority: null,
+    });
+  }
+
   const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
   return out.sort((a, b) => {
     // Unfinished reports remain mandatory and stay pinned before follow-ups.
-    if (a.kind !== b.kind) return a.kind === "report" ? -1 : 1;
+    if (a.kind !== b.kind) {
+      if (a.kind === "report") return -1;
+      if (b.kind === "report") return 1;
+    }
     if (a.kind === "follow_up" && b.kind === "follow_up") {
       return compareFollowUpPriority(
         { id: a.id, scheduled_at: a.dueAt, priority: a.priority },

@@ -17,13 +17,13 @@ export const listSiteVisits = createServerFn({ method: "POST" })
     const c = await siCaller(data.adminToken).catch(() => null);
     if (!c) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null; team_calendar_event_id: string | null; team_calendar_added_at: string | null; outcome: string | null; outcome_interest: string | null; outcome_at: string | null; outcome_by: string | null }> = [];
+    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null; team_calendar_event_id: string | null; team_calendar_added_at: string | null; outcome: string | null; outcome_interest: string | null; outcome_at: string | null; outcome_by: string | null; lead_name: string | null }> = [];
     for (let a = 0; ; a += 1000) {
-      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by, team_calendar_event_id, team_calendar_added_at, outcome, outcome_interest, outcome_at, outcome_by");
+      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by, team_calendar_event_id, team_calendar_added_at, outcome, outcome_interest, outcome_at, outcome_by, leads(name)");
       if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
       const { data: rows, error } = await q.order("visit_at", { ascending: false }).order("id").range(a, a + 999);
       if (error) throw new Error("সাইট ভিজিট পড়া যায়নি");
-      out.push(...(rows ?? []));
+      for (const r of rows ?? []) { const { leads, ...rest } = r as typeof r & { leads?: { name?: string } | null }; out.push({ ...rest, lead_name: leads?.name ?? null }); }
       if (!rows || rows.length < 1000) return out;
     }
   });
@@ -155,4 +155,21 @@ export const logSiteVisitOutcome = createServerFn({ method: "POST" })
     await logLeadEvent({ leadId: v.lead_id, agentId: v.agent_id, kind: "site_visit_outcome",
       detail: `ভিজিটের ফলাফল (${data.interest}${data.offerMade ? " · অফার দেওয়া হয়েছে" : ""}): ${data.outcome}` });
     return { ok: true };
+  });
+
+/** Project label for outreach: the lead's most recent site visit project, if any. Owner/HQ only. */
+export const leadProjectLabel = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: Token, leadId: z.string().uuid() }).parse(i))
+  .handler(async ({ data }) => {
+    const { siCaller } = await import("@/lib/sales-intel.server");
+    const c = await siCaller(data.adminToken).catch(() => null);
+    if (!c) return { project: null };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin.from("site_visits").select("project").eq("lead_id", data.leadId).not("project", "is", null);
+    if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
+    const { data: v } = await q.order("visit_at", { ascending: false }).limit(1).maybeSingle();
+    if (v?.project) return { project: v.project };
+    const { data: r } = await supabaseAdmin.from("call_reports").select("project_interest").eq("lead_id", data.leadId)
+      .not("project_interest", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    return { project: (r as { project_interest?: string | null } | null)?.project_interest ?? null };
   });
