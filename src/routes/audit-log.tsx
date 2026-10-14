@@ -337,3 +337,69 @@ function RestoreRecord({ dates }: { dates: string[] }) {
     </section>
   );
 }
+
+const SOURCE_LABEL: Record<string, string> = {
+  leadhub_reassign: "LeadHub reassign", import: "Import", leadhub: "LeadHub", neglect_recall: "Neglect recall",
+};
+
+function AssignmentHistory() {
+  const adminToken = useAdminToken();
+  const list = useServerFn(listAssignmentHistory);
+  const [from, setFrom] = useState(dhaka(Date.now() - 29 * 86_400_000));
+  const [to, setTo] = useState(dhaka(Date.now()));
+  const [lead, setLead] = useState("");
+  const [page, setPage] = useState(0);
+  const q = useQuery({
+    queryKey: ["assignment-history", from, to, lead.trim(), page, adminToken ? "pin" : "s"],
+    queryFn: () => list({ data: { adminToken, from, to, lead: lead.trim() || null, page } }),
+    placeholderData: (p) => p,
+  });
+  const rows = q.data?.rows ?? [];
+
+  const exportCsv = () => {
+    const lines = [["When (Dhaka)", "Lead", "Phone", "From", "To", "Changed by", "How", "Reason"].join(",")];
+    for (const r of rows) lines.push([when(r.at), r.leadName, r.leadPhone, r.fromAgent, r.toAgent, r.changedBy, SOURCE_LABEL[r.source] ?? r.source, r.note ?? ""].map(csv).join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([`﻿${lines.join("\n")}`], { type: "text/csv" }));
+    a.download = `assignment-history-${from}-to-${to}.csv`;
+    a.click();
+  };
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <p className="text-sm text-muted-foreground">Every time a lead changed owners — who it moved from and to, who made the change, and why. Entries are permanent.</p>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <Input type="date" aria-label="From" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} />
+        <Input type="date" aria-label="To" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} />
+        <Input placeholder="Lead name or phone" aria-label="Lead name or phone" value={lead} onChange={(e) => { setLead(e.target.value); setPage(0); }} />
+        <Button variant="outline" onClick={exportCsv} disabled={!rows.length}><Download className="size-4" /> CSV</Button>
+      </div>
+
+      {q.isPending ? (
+        <p className="flex items-center gap-2 py-8 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading history…</p>
+      ) : q.isError ? (
+        <p role="alert" className="py-8 text-sm text-destructive">Couldn't load the assignment history. {(q.error as Error).message}</p>
+      ) : !rows.length ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">No ownership changes in this period.</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.id} className="grid gap-1 py-2.5 text-sm md:grid-cols-[10rem_1fr_1fr]">
+              <span className="text-muted-foreground">{when(r.at)}</span>
+              <div className="min-w-0">
+                <p className="truncate font-medium">{r.leadName} <span className="font-mono text-xs text-muted-foreground">{r.leadPhone}</span></p>
+                <p className="text-xs text-muted-foreground">{SOURCE_LABEL[r.source] ?? r.source} · by <span className="font-semibold text-foreground">{r.changedBy}</span></p>
+                {r.note ? <p className="mt-0.5 truncate text-xs text-muted-foreground">Reason: {r.note}</p> : null}
+              </div>
+              <p className="truncate font-semibold">{r.fromAgent} → {r.toAgent}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex justify-between">
+        <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Newer</Button>
+        <Button size="sm" variant="outline" disabled={rows.length < 100} onClick={() => setPage((p) => p + 1)}>Older</Button>
+      </div>
+    </section>
+  );
+}
