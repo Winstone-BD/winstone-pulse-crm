@@ -41,11 +41,12 @@ export const draftReportSummary = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "You summarise a Bangladeshi tele-sales agent's own call notes. Reply in Bengali, 2-3 short bullet lines starting with '• ', covering what the customer said and the next step. Use ONLY facts present in the notes; never invent prices, names or promises. If the notes are too thin, reply exactly: NOT_ENOUGH",
+              "You summarise a Bangladeshi tele-sales agent's own call notes. Reply in Bengali, 2-3 short bullet lines starting with '• ', covering what the customer said and the next step. Use ONLY facts present in the notes; never invent prices, names or promises. If the notes are too thin, reply exactly: NOT_ENOUGH. " +
+              UNTRUSTED_RULE,
           },
           {
             role: "user",
-            content: `${data.category ? `ক্যাটাগরি: ${data.category}\n` : ""}নোট:\n${data.text}`,
+            content: `${data.category ? `ক্যাটাগরি: ${data.category}\n` : ""}নোট:\n${sanitizeNotes(data.text).wrapped}`,
           },
         ],
       }),
