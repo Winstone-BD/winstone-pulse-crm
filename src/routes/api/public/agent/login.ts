@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/integrations/supabase/types";
-import { createFailureLimiter, requestSourceKey } from "@/lib/rate-limit";
+import { createFailureLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
 
 // Only failed attempts count: a whole sales floor shares one office IP, so
 // successful sign-ins must never consume the budget.
@@ -109,7 +109,7 @@ export const Route = createFileRoute("/api/public/agent/login")({
         const sourceKey = requestSourceKey(request);
         if (!loginLimiter.check(sourceKey)) {
           void recordLoginFailure(sourceKey, request, null, "locked");
-          return json({ error: "অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পরে আবার চেষ্টা করুন" }, 429);
+          return rateLimitedResponse(loginLimiter.retryAfter(sourceKey));
         }
         // Bootstrap endpoint: the only credential is the agent's own CRM
         // email + password. Nothing privileged is shipped inside the APK.
