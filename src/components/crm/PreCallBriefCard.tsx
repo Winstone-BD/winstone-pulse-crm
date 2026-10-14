@@ -87,7 +87,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
         </div>
       )}
     </section>
-    <AgentTemplates facts={{ name: data?.leadName }} />
+    <AgentTemplates facts={{ name: data?.leadName ?? null }} />
     <LeadProjectFacts leadId={leadId} />
     </>
   );
