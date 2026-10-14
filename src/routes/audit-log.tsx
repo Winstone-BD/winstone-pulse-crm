@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { DatabaseBackup, Download, History, Loader2, RotateCcw, Sparkles } from "lucide-react";
+import { DatabaseBackup, Download, History, Loader2, RotateCcw, ShieldAlert, Sparkles } from "lucide-react";
+import { listSecurityAudit, type SecurityGroup } from "@/lib/security-audit.functions";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -45,19 +46,20 @@ const short = (v: unknown) => { const s = v == null ? "—" : typeof v === "stri
 const csv = (v: unknown) => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 function Page() {
-  const [tab, setTab] = useState<"log" | "backups" | "ai">("log");
+  const [tab, setTab] = useState<"log" | "security" | "backups" | "ai">("log");
   return (
     <AppShell>
       <RoleGate surface="hq" allow={["authority"]} icon={<History className="size-7" />}
         title="Audit log & backups" description="Only HQ / IT can view the full change history and backups. Master PIN required.">
         <div className="space-y-4">
           <PageHeader title="Audit log & backups" description="Every create, edit and archive — who and when. Entries are permanent." />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant={tab === "log" ? "default" : "outline"} size="sm" onClick={() => setTab("log")}><History className="size-4" /> Audit log</Button>
+            <Button variant={tab === "security" ? "default" : "outline"} size="sm" onClick={() => setTab("security")}><ShieldAlert className="size-4" /> Security</Button>
             <Button variant={tab === "backups" ? "default" : "outline"} size="sm" onClick={() => setTab("backups")}><DatabaseBackup className="size-4" /> Backups</Button>
             <Button variant={tab === "ai" ? "default" : "outline"} size="sm" onClick={() => setTab("ai")}><Sparkles className="size-4" /> AI</Button>
           </div>
-          {tab === "log" ? <AuditLog /> : tab === "backups" ? <Backups /> : <AiTeamSummary />}
+          {tab === "log" ? <AuditLog /> : tab === "security" ? <SecurityLog /> : tab === "backups" ? <Backups /> : <AiTeamSummary />}
         </div>
       </RoleGate>
     </AppShell>
@@ -132,6 +134,71 @@ function AuditLog() {
                   <p className="text-xs text-muted-foreground">{short(r.changes)}</p>
                 ) : null}
               </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex justify-between">
+        <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Newer</Button>
+        <Button size="sm" variant="outline" disabled={rows.length < 100} onClick={() => setPage((p) => p + 1)}>Older</Button>
+      </div>
+    </section>
+  );
+}
+
+const GROUP_LABEL: Record<SecurityGroup, string> = {
+  access: "Sign-ins & PIN attempts", accounts: "Accounts & roles", devices: "Devices & SIMs",
+  pins: "PINs & floor lock", billing: "Billing & unlocks", data: "Exports & settings",
+};
+const RISKY = new Set(["coordinator_pin_failed", "agent_login_failed", "agent_login_locked", "pin_revealed", "role_changed", "device_revoked", "migration_export", "unlock_approved"]);
+
+function SecurityLog() {
+  const adminToken = useAdminToken();
+  const list = useServerFn(listSecurityAudit);
+  const [from, setFrom] = useState(dhaka(Date.now() - 6 * 86_400_000));
+  const [to, setTo] = useState(dhaka(Date.now()));
+  const [group, setGroup] = useState<SecurityGroup | "">("");
+  const [page, setPage] = useState(0);
+  const q = useQuery({
+    queryKey: ["security-audit", from, to, group, page, adminToken ? "pin" : "s"],
+    queryFn: () => list({ data: { adminToken, from, to, group: group || null, page } }),
+    placeholderData: (p) => p,
+  });
+  const rows = q.data?.rows ?? [];
+  const exportCsv = () => {
+    const lines = [["When (Dhaka)", "Who", "Action", "Target", "Details"].join(",")];
+    for (const r of rows) lines.push([when(r.created_at), r.actor_label ?? "System", r.action, `${r.entity_type}${r.entity_id ? ` ${r.entity_id}` : ""}`, JSON.stringify(r.metadata)].map(csv).join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv" }));
+    a.download = `security-log-${from}-to-${to}.csv`;
+    a.click();
+  };
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <p className="text-sm text-muted-foreground">Sign-ins, failed PIN attempts, role and account changes, device changes, PIN reveals, billing unlocks and data exports. Entries are permanent.</p>
+      <div className="grid gap-2 sm:grid-cols-4">
+        <Input type="date" aria-label="From" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} />
+        <Input type="date" aria-label="To" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} />
+        <select aria-label="Category" className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={group} onChange={(e) => { setGroup(e.target.value as SecurityGroup | ""); setPage(0); }}>
+          <option value="">All categories</option>
+          {(Object.keys(GROUP_LABEL) as SecurityGroup[]).map((g) => <option key={g} value={g}>{GROUP_LABEL[g]}</option>)}
+        </select>
+        <Button variant="outline" onClick={exportCsv} disabled={!rows.length}><Download className="size-4" /> CSV</Button>
+      </div>
+      {q.isPending ? (
+        <p className="flex items-center gap-2 py-8 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading security log…</p>
+      ) : q.isError ? (
+        <p role="alert" className="py-8 text-sm text-destructive">Couldn't load the security log. {(q.error as Error).message}</p>
+      ) : !rows.length ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">No security actions in this period.</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {rows.map((r) => (
+            <li key={r.id} className="grid gap-1 py-2.5 text-sm md:grid-cols-[10rem_9rem_14rem_1fr]">
+              <span className="text-muted-foreground">{when(r.created_at)}</span>
+              <span className="font-semibold">{r.actor_label || "System"}</span>
+              <span><span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${RISKY.has(r.action) ? "bg-destructive/15 text-destructive" : "bg-muted"}`}>{r.action.replace(/_/g, " ")}</span></span>
+              <p className="min-w-0 truncate text-xs text-muted-foreground"><span className="font-medium text-foreground">{r.entity_type}</span>{r.entity_id ? ` ${r.entity_id}` : ""} · {short(r.metadata)}</p>
             </li>
           ))}
         </ul>
