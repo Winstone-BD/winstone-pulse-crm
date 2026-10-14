@@ -36,7 +36,7 @@ export const listAssignmentHistory = createServerFn({ method: "POST" })
     if (term) {
       const like = `%${term.replace(/[%_,]/g, " ")}%`;
       const { data: hits, error: le } = await supabaseAdmin
-        .from("leads").select("id").or(`name.ilike.${like},phone.ilike.${like}`).limit(200);
+        .from("leads").select("id").or(`name.ilike.${like},phone_number.ilike.${like}`).limit(200);
       if (le) throw new Error(le.message);
       leadIds = (hits ?? []).map((h) => h.id);
       if (!leadIds.length) return { rows: [] as AssignmentHistoryRow[] };
@@ -61,11 +61,11 @@ export const listAssignmentHistory = createServerFn({ method: "POST" })
       for (const a of [r.from_agent_id, r.to_agent_id, r.changed_by]) if (a) agentIds.add(a);
     }
     const [{ data: leads }, { data: people }] = await Promise.all([
-      supabaseAdmin.from("leads").select("id,name,phone").in("id", [...ids]),
-      supabaseAdmin.from("profiles").select("id,full_name").in("id", [...agentIds]),
+      supabaseAdmin.from("leads").select("id,name,phone_number").in("id", [...ids]),
+      supabaseAdmin.from("profiles").select("id,name").in("id", [...agentIds]),
     ]);
     const leadMap = new Map((leads ?? []).map((l) => [l.id, l]));
-    const nameMap = new Map((people ?? []).map((p) => [p.id, p.full_name]));
+    const nameMap = new Map((people ?? []).map((p) => [p.id, p.name]));
     const who = (id: string | null) => (id ? nameMap.get(id) ?? "Staff" : "System");
 
     return {
@@ -74,7 +74,7 @@ export const listAssignmentHistory = createServerFn({ method: "POST" })
         at: r.created_at,
         leadId: r.lead_id,
         leadName: leadMap.get(r.lead_id)?.name ?? "Lead",
-        leadPhone: leadMap.get(r.lead_id)?.phone ?? "",
+        leadPhone: leadMap.get(r.lead_id)?.phone_number ?? "",
         fromAgent: r.from_agent_id ? who(r.from_agent_id) : "Unassigned",
         toAgent: who(r.to_agent_id),
         changedBy: who(r.changed_by),

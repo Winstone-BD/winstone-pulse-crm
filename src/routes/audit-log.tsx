@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { DatabaseBackup, Download, History, Loader2, RotateCcw, ShieldAlert, Sparkles, UserSwitch } from "lucide-react";
+import { DatabaseBackup, Download, History, Loader2, RotateCcw, ShieldAlert, Sparkles, ArrowLeftRight } from "lucide-react";
 import { listAssignmentHistory } from "@/lib/assignment-history.functions";
 import { listSecurityAudit, type SecurityGroup } from "@/lib/security-audit.functions";
 import { useState } from "react";
@@ -58,7 +58,7 @@ function Page() {
             <Button variant={tab === "log" ? "default" : "outline"} size="sm" onClick={() => setTab("log")}><History className="size-4" /> Audit log</Button>
             <Button variant={tab === "security" ? "default" : "outline"} size="sm" onClick={() => setTab("security")}><ShieldAlert className="size-4" /> Security</Button>
             <Button variant={tab === "backups" ? "default" : "outline"} size="sm" onClick={() => setTab("backups")}><DatabaseBackup className="size-4" /> Backups</Button>
-            <Button variant={tab === "assignments" ? "default" : "outline"} size="sm" onClick={() => setTab("assignments")}><UserSwitch className="size-4" /> Assignments</Button>
+            <Button variant={tab === "assignments" ? "default" : "outline"} size="sm" onClick={() => setTab("assignments")}><ArrowLeftRight className="size-4" /> Assignments</Button>
             <Button variant={tab === "ai" ? "default" : "outline"} size="sm" onClick={() => setTab("ai")}><Sparkles className="size-4" /> AI</Button>
           </div>
           {tab === "log" ? <AuditLog /> : tab === "security" ? <SecurityLog /> : tab === "assignments" ? <AssignmentHistory /> : tab === "backups" ? <Backups /> : <AiTeamSummary />}
