@@ -209,6 +209,8 @@ export type TimelineEntry =
 
 /** Bengali labels for the automatic call lifecycle trail. */
 export const LEAD_EVENT_LABELS: Record<string, string> = {
+  site_visit_outcome: "সাইট ভিজিটের ফলাফল",
+  sms_handoff: "SMS পাঠানো (নিজের SIM)",
   call_started: "কল শুরু হয়েছে",
   call_connected: "কল সংযুক্ত হয়েছে",
   call_ended: "কল শেষ হয়েছে",
