@@ -1,9 +1,12 @@
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { getAdminToken } from "@/lib/local-session";
 import { normalizeWhatsAppNumber, openWhatsApp } from "@/lib/whatsapp";
 import { logWhatsappHandoff } from "@/lib/whatsapp.functions";
+import { leadProjectLabel } from "@/lib/site-visits.functions";
 
 /**
  * One-tap Bengali outreach templates. Text is filled only with real lead data
@@ -42,9 +45,15 @@ function openSms(phone: string, text: string): boolean {
 export function OutreachTemplates({ leadId, phone, name, project, agentName }: {
   leadId: string; phone: string | null | undefined; name: string; project?: string | null; agentName?: string | null;
 }) {
+  const lookup = useServerFn(leadProjectLabel);
+  const known = useQuery({
+    queryKey: ["lead-project", leadId], enabled: !project, staleTime: 5 * 60_000,
+    queryFn: () => lookup({ data: { adminToken: getAdminToken(), leadId } }),
+  });
+  const proj = project || known.data?.project || null;
   const send = (tplKey: string, channel: "whatsapp" | "sms") => {
     const tpl = OUTREACH_TEMPLATES.find((x) => x.key === tplKey)!;
-    const text = tpl.build({ name: name || "স্যার/ম্যাডাম", project: project ?? null, agentName: agentName ?? null });
+    const text = tpl.build({ name: name || "স্যার/ম্যাডাম", project: proj, agentName: agentName ?? null });
     let msisdn: string | null = null;
     if (channel === "whatsapp") {
       const r = openWhatsApp(phone, text);
@@ -59,7 +68,7 @@ export function OutreachTemplates({ leadId, phone, name, project, agentName }: {
   };
   return (
     <div className="space-y-1.5">
-      <p className="text-[11px] font-semibold text-muted-foreground">দ্রুত বার্তা (খুলে যাবে — পাঠানোর আগে দেখে নিন)</p>
+      <p className="text-[11px] font-semibold text-muted-foreground">দ্রুত বার্তা{proj ? ` · ${proj}` : ""} (খুলে যাবে — পাঠানোর আগে দেখে নিন)</p>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {OUTREACH_TEMPLATES.map((t) => (
           <div key={t.key} className="flex items-center justify-between gap-1 rounded-lg border border-border bg-card px-2 py-1.5">

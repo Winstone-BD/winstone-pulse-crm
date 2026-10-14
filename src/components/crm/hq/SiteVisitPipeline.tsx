@@ -57,7 +57,7 @@ export function SiteVisitPipeline({ leads }: { leads: Lead[] }) {
                   const late = (stage === "scheduled" || stage === "confirmed") && new Date(v.visit_at).getTime() < Date.now();
                   return (
                     <li key={v.id} className="space-y-1.5 rounded-lg border border-border bg-card p-2 text-xs">
-                      <p className="truncate font-semibold">{leadName.get(v.lead_id) ?? "লিড"}</p>
+                      <p className="truncate font-semibold">{v.lead_name ?? leadName.get(v.lead_id) ?? "লিড"}</p>
                       <p className={late ? "text-destructive" : "text-muted-foreground"}>{when(v.visit_at)}{v.project ? ` · ${v.project}` : ""}</p>
                       {v.outcome && <p className="rounded bg-muted px-1.5 py-1 text-[11px]">ফলাফল: {v.outcome}</p>}
                       <div className="flex flex-wrap gap-1">
