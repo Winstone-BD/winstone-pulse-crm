@@ -76,8 +76,8 @@ describe.skipIf(!hasDb)("database role access matrix", () => {
 
   it("history tables cannot be deleted by anyone from the app", () => {
     for (const t of APPEND_ONLY) {
-      const del = pol(t, ["DELETE", "ALL"]).filter((p) => !/^has_role\(auth\.uid\(\), 'admin'::app_role\)$/.test(p.qual.trim()) || t !== "call_recordings");
-      expect(del.filter((p) => p.cmd === "DELETE" || p.cmd === "ALL"), t).toEqual([]);
+      const del = pol(t, ["DELETE", "ALL"]);
+      expect(del, t).toEqual([]);
     }
   });
 
