@@ -3674,6 +3674,80 @@ export type Database = {
           },
         ]
       }
+      security_findings: {
+        Row: {
+          created_at: string
+          entered_by: string
+          finding_key: string
+          id: string
+          is_new: boolean
+          level: string
+          report_id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          entered_by: string
+          finding_key: string
+          id?: string
+          is_new?: boolean
+          level: string
+          report_id: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string
+          finding_key?: string
+          id?: string
+          is_new?: boolean
+          level?: string
+          report_id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_findings_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "security_scan_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      security_scan_reports: {
+        Row: {
+          created_at: string
+          entered_by: string
+          id: string
+          notes: string | null
+          scanned_at: string
+          scanner: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          entered_by: string
+          id?: string
+          notes?: string | null
+          scanned_at: string
+          scanner: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string
+          id?: string
+          notes?: string | null
+          scanned_at?: string
+          scanner?: string
+          status?: string
+        }
+        Relationships: []
+      }
       service_bill_review_attempts: {
         Row: {
           actor_email: string | null
