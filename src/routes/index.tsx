@@ -1,3 +1,4 @@
+import { SHORT_COMMIT } from "@/lib/build-info";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -285,6 +286,7 @@ function EntryHall() {
         <MaintenanceFloorNotice className="pt-8" />
 
         <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
+          <p className="mb-2 font-mono text-[10px] opacity-70">Build {SHORT_COMMIT}</p>
           <p className="inline-flex items-center gap-1.5">
             <LifeBuoy className="size-3.5" /> Need help?{" "}
             <Link to="/support" className="font-semibold text-gold hover:underline">

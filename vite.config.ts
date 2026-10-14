@@ -9,6 +9,17 @@ import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
+import { execSync } from "node:child_process";
+
+const BUILD_COMMIT = (() => {
+  const fromEnv = process.env["COMMIT_SHA"] || process.env["GIT_COMMIT"] || process.env["VERCEL_GIT_COMMIT_SHA"];
+  if (fromEnv) return fromEnv;
+  try {
+    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+  } catch {
+    return "unknown";
+  }
+})();
 
 // Load non-VITE_ env vars into process.env for server-side code only (email API keys,
 // service role key). These are never injected into the client bundle.
@@ -73,6 +84,15 @@ function browserAsyncHooksStub() {
 export default defineConfig({
   plugins: [mcpPlugin(), browserAsyncHooksStub()],
   vite: {
+    // Build stamp for /version and the footer. Falls back to "unknown" when the
+    // build environment has no git metadata — never invented.
+    define: {
+      __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      __BUILD_DEPLOYMENT_ID__: JSON.stringify(
+        process.env["LOVABLE_DEPLOYMENT_ID"] || process.env["DEPLOYMENT_ID"] || "",
+      ),
+    },
     // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
     // function ID" after a restart: Vite discovered these deps late on every cold
     // start, re-optimized and force-reloaded, invalidating chunk hashes that open

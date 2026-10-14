@@ -1,3 +1,4 @@
+import { SHORT_COMMIT } from "@/lib/build-info";
 import { BrandLockup } from "@/components/BrandLockup";
 import { Link } from "@tanstack/react-router";
 import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
@@ -239,6 +240,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
         <p>© 2026 TrendFlux Digital. All Rights Reserved.</p>
         <p className="mt-1">Developed &amp; Powered by Zahid Hasan Emon.</p>
+        <p className="mt-1 font-mono text-[10px] opacity-70">Build {SHORT_COMMIT}</p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <Link
             to="/privacy"
