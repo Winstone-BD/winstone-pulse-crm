@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import serverEntry from "@tanstack/react-start/server-entry";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -7,13 +8,13 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+// Static import: a dynamic import here split the framework into two circular server
+// chunks, crashing the live Worker at startup ("createCsrfMiddleware is not a function").
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
-    serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => (m.default ?? m) as ServerEntry,
-    );
+    serverEntryPromise = Promise.resolve(serverEntry as unknown as ServerEntry);
   }
   return serverEntryPromise;
 }
