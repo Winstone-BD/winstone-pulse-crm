@@ -64,7 +64,14 @@ export const setSiteVisitStatus = createServerFn({ method: "POST" })
     const { siCaller } = await import("@/lib/sales-intel.server");
     const c = await siCaller(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin.from("site_visits").update({ status: data.status, updated_by: c.actor }).eq("id", data.id);
+    const { canMoveVisit } = await import("@/lib/site-visit-rules");
+    let read = supabaseAdmin.from("site_visits").select("status").eq("id", data.id);
+    if (c.scope === "agent") read = read.eq("agent_id", c.agentId!);
+    const { data: cur } = await read.maybeSingle();
+    if (!cur) throw new Error("অবস্থা বদলানো যায়নি");
+    if (!canMoveVisit(cur.status, data.status)) throw new Error("এই অবস্থা থেকে এভাবে বদলানো যায় না");
+    // Compare-and-set on the read status so two taps never skip a stage.
+    let q = supabaseAdmin.from("site_visits").update({ status: data.status, updated_by: c.actor }).eq("id", data.id).eq("status", cur.status);
     if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
     const { data: rows, error } = await q.select("id");
     if (error || !rows?.length) throw new Error("অবস্থা বদলানো যায়নি");
