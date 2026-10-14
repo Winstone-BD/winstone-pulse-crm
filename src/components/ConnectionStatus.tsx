@@ -7,33 +7,65 @@ import { useT } from "@/lib/i18n";
 type Status = "online" | "offline" | "server-down" | "checking";
 
 const PROBE_URL = "/api/public/health";
-const PROBE_TIMEOUT_MS = 5000;
+const PROBE_TIMEOUT_MS = 10_000;
 const HEALTHY_INTERVAL_MS = 60_000;
 const PROBLEM_INTERVAL_MS = 15_000;
+const FIRST_PROBE_DELAY_MS = 4000;
+const RETRY_DELAYS_MS = [3000, 5000];
+const RECENT_TRAFFIC_MS = 45_000;
 
-async function probeServer(): Promise<boolean> {
+// Any successful same-origin response proves the server is answering, so real
+// CRM traffic keeps the banner away even if one health probe is slow.
+let lastServerOkAt = 0;
+let fetchPatched = false;
+function watchAppTraffic() {
+  if (fetchPatched || typeof window === "undefined" || !window.fetch) return;
+  fetchPatched = true;
+  const original = window.fetch.bind(window);
+  window.fetch = async (...args) => {
+    const res = await original(...args);
+    try {
+      const raw = args[0];
+      const url = new URL(
+        typeof raw === "string" ? raw : raw instanceof URL ? raw.href : raw.url,
+        location.href,
+      );
+      if (url.origin === location.origin && res.status < 500) lastServerOkAt = Date.now();
+    } catch {
+      /* ignore */
+    }
+    return res;
+  };
+}
+
+async function probeOnce(method: "HEAD" | "GET"): Promise<Response | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    const res = await fetch(PROBE_URL, {
-      method: "GET",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (res.ok) recordHealthOk();
-    return res.ok;
+    return await fetch(PROBE_URL, { method, cache: "no-store", signal: controller.signal });
   } catch {
-    return false;
+    return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
+async function probeServer(): Promise<boolean> {
+  let res = await probeOnce("HEAD");
+  if (res && (res.status === 405 || res.status === 501)) res = await probeOnce("GET");
+  const ok = !!res && res.ok;
+  if (ok) {
+    lastServerOkAt = Date.now();
+    recordHealthOk();
+  }
+  return ok;
+}
+
 /**
  * Site-wide connection indicator. Hidden while everything is healthy; appears
  * as a small pill at the top when the device loses internet (amber) or when
- * the internet is fine but the server does not answer (red). Re-checks on its
- * own and disappears once the connection is back.
+ * the internet is fine but the server does not answer three times in a row
+ * and no real app request has succeeded recently (red).
  */
 export function ConnectionStatus() {
   const t = useT();
@@ -44,26 +76,25 @@ export function ConnectionStatus() {
   const statusRef = useRef<Status>("online");
   statusRef.current = status;
 
-  const check = useCallback(async () => {
+  const check = useCallback(async (manual = false) => {
     if (!navigator.onLine) {
       setStatus("offline");
       return;
     }
-    // Background probes stay silent: never flip a healthy status to
-    // "checking", or the pill would flash on every page once a minute.
-    // One slow/cold probe is not an outage: confirm with a second probe
-    // before showing the red banner, so it never contradicts "Server online".
-    let ok = await probeServer();
-    if (!ok && navigator.onLine) {
-      await new Promise((r) => setTimeout(r, 3000));
-      ok = await probeServer();
+    const recent = () => Date.now() - lastServerOkAt < RECENT_TRAFFIC_MS;
+    let ok = !manual && statusRef.current === "online" && recent();
+    if (!ok) ok = await probeServer();
+    for (const delay of RETRY_DELAYS_MS) {
+      if (ok || !navigator.onLine) break;
+      await new Promise((r) => setTimeout(r, delay));
+      ok = recent() || (await probeServer());
     }
     setStatus((prev) => {
       const next: Status = !navigator.onLine ? "offline" : ok ? "online" : "server-down";
       if (next === "online" && prev !== "online" && prev !== "checking") {
         setJustBack(true);
         if (backFlashRef.current) clearTimeout(backFlashRef.current);
-        backFlashRef.current = setTimeout(() => setJustBack(false), 5000);
+        backFlashRef.current = setTimeout(() => setJustBack(false), 3000);
       }
       return next;
     });
