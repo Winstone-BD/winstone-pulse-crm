@@ -35,10 +35,16 @@ export const OUTREACH_TEMPLATES: { key: string; label: string; build: (c: Ctx) =
   },
 ];
 
-function openSms(phone: string, text: string): boolean {
+/** Compose-only SMS link for the phone's own SMS app; null when the number is invalid. */
+export function smsComposeUrl(phone: string | null | undefined, text: string): string | null {
   const n = normalizeWhatsAppNumber(phone);
-  if (!n) return false;
-  window.location.href = `sms:+${n}?body=${encodeURIComponent(text)}`;
+  return n ? `sms:+${n}?body=${encodeURIComponent(text)}` : null;
+}
+
+function openSms(phone: string, text: string): boolean {
+  const url = smsComposeUrl(phone, text);
+  if (!url) return false;
+  window.location.href = url;
   return true;
 }
 

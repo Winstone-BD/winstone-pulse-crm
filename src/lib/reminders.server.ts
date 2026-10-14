@@ -132,25 +132,32 @@ export async function remindersFor(profileId: string, now = new Date(), opts: { 
     .order("visit_at", { ascending: true }).limit(50);
   if (!opts.allVisits) vq = vq.eq("agent_id", profileId);
   const { data: visits } = await vq;
+  const { visitReminderStage } = await import("@/lib/site-visit-rules");
   for (const v of visits ?? []) {
-    if (v.status === "completed" && v.outcome_at) continue;
+    const stage = visitReminderStage(v, nowMs);
+    if (!stage) continue;
     const lead = (v as { leads?: { name?: string; phone_number?: string } | null }).leads;
     const who = lead?.name ?? "ক্রেতা";
     const proj = v.project ? ` · ${v.project}` : "";
-    const late = new Date(v.visit_at).getTime() < nowMs;
-    const needOutcome = v.status === "completed";
+    const late = stage === "late" || stage === "outcome";
+    const titles: Record<typeof stage, [string, string]> = {
+      "24h": ["২৪ ঘণ্টার মধ্যে সাইট ভিজিট", "Site visit within 24 hours"],
+      "2h": ["২ ঘণ্টার মধ্যে সাইট ভিজিট", "Site visit within 2 hours"],
+      late: ["সাইট ভিজিটের অবস্থা আপডেট করুন", "Update the site visit status"],
+      outcome: ["সাইট ভিজিটের ফলাফল লিখুন", "Log the site visit outcome"],
+    };
     out.push({
       id: v.id,
       kind: "site_visit",
       leadId: v.lead_id,
-      title: needOutcome ? "সাইট ভিজিটের ফলাফল লিখুন" : late ? "সাইট ভিজিটের অবস্থা আপডেট করুন" : "আসন্ন সাইট ভিজিট",
+      title: titles[stage][0],
       detail: `${who} — ${bnTime(v.visit_at)}${proj}`,
-      titleEn: needOutcome ? "Log the site visit outcome" : late ? "Update the site visit status" : "Upcoming site visit",
+      titleEn: titles[stage][1],
       detailEn: `${lead?.name ?? "Customer"} — ${enTime(v.visit_at)}${proj}`,
       phone: lead?.phone_number ?? null,
       dueAt: v.visit_at,
       overdue: late,
-      priority: null,
+      priority: stage,
     });
   }
 
@@ -194,6 +201,8 @@ export async function isCoordinatorProfile(profileId: string): Promise<boolean> 
 export async function sweepReminders(now = new Date()) {
   const supabaseAdmin = await admin();
   const { sendPush } = await import("@/lib/push.server");
+  const { visitReminderKey } = await import("@/lib/site-visit-rules");
+  type VisitReminderStage = import("@/lib/site-visit-rules").VisitReminderStage;
 
   const { data: agents } = await supabaseAdmin
     .from("profiles")
@@ -219,7 +228,8 @@ export async function sweepReminders(now = new Date()) {
       // Upcoming follow-ups buzz once when the reminder window opens; a missed
       // (overdue) follow-up buzzes again every 3 hours until done or backlog.
       const overdueBucket = Math.floor(now.getTime() / (3 * 3_600_000));
-      const eventKey = item.kind === "site_visit" ? `site_visit:${item.id}:${agent.id}:${overdueBucket}` :
+      const eventKey = item.kind === "site_visit"
+        ? visitReminderKey({ id: item.id, visit_at: item.dueAt }, item.priority as VisitReminderStage, agent.id, now.getTime()) :
         item.kind === "follow_up"
           ? item.overdue
             ? `follow_up_overdue:${item.id}:${overdueBucket}`
