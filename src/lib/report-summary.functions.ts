@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
+
 /**
  * Smart summary from the agent's own report text — no transcript, no recording
  * needed. Reuses the project's existing Lovable AI gateway path (same model as
