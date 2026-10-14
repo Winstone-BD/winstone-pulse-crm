@@ -60,7 +60,7 @@ function Dashboard() {
     mutationFn: () => {
       const findings = lines.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
         const [level, key, ...rest] = l.split("|").map((s) => s.trim());
-        const lv = (["error", "warn", "info"].includes(level) ? level : "warn") as "error" | "warn" | "info";
+        const lv = (["error", "warn", "info"].includes(level ?? "") ? level : "warn") as "error" | "warn" | "info";
         return { level: lv, finding_key: key || l.slice(0, 200), title: rest.join(" | ") || key || l };
       });
       return add({ data: { adminToken, scanner, scanned_at: new Date(scannedAt).toISOString(), status, notes, findings } });
