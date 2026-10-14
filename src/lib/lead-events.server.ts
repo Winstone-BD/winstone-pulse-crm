@@ -22,7 +22,9 @@ export type LeadEventKind =
   | "evaluation_recorded"
   | "neglect_warning"
   | "neglect_recalled"
-  | "reassigned";
+  | "reassigned"
+  | "site_visit_outcome"
+  | "sms_handoff";
 
 export async function logLeadEvent(input: {
   leadId: string | null;

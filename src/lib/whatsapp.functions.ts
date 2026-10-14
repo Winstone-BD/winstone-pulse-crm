@@ -12,6 +12,7 @@ const HandoffInput = z.object({
   leadId: z.string().uuid().nullable().optional(),
   phone: z.string().trim().min(4).max(24),
   note: z.string().trim().max(400).nullable().optional(),
+  channel: z.enum(["whatsapp", "sms"]).optional(),
 });
 
 /**
@@ -42,8 +43,8 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
     await logLeadEvent({
       leadId: data.leadId,
       agentId: caller.profile?.id ?? null,
-      kind: "whatsapp_message",
-      detail: `হোয়াটসঅ্যাপ খোলা হয়েছে (${data.phone})${data.note ? ` · ${data.note}` : ""}`,
+      kind: data.channel === "sms" ? "sms_handoff" : "whatsapp_message",
+      detail: `${data.channel === "sms" ? "SMS অ্যাপ খোলা হয়েছে" : "হোয়াটসঅ্যাপ খোলা হয়েছে"} (${data.phone})${data.note ? ` · ${data.note}` : ""}`,
     });
     return { ok: true as const, logged: true };
   });

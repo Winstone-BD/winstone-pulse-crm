@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { createSaveLatch, matchCallShortcut, SHORTCUT_LABELS } from "@/lib/call-shortcuts";
 import { useLang, useT, type Lang } from "@/lib/i18n";
+import { OutreachTemplates } from "@/components/crm/OutreachTemplates";
 import { DictateButton } from "@/components/crm/DictateButton";
 import { DEFAULT_RETRY_PICK, NoAnswerRetryPicker, type RetryPick } from "@/components/crm/NoAnswerRetryPicker";
 import { Button } from "@/components/ui/button";
@@ -950,6 +951,9 @@ function ReportDialog({
               {detail.report.connected ? "" : ` · ${t({ bn: "কথা হয়নি", en: "No answer" })}`}
             </p>
           </div>
+          {(detail.lead as { id?: string } | null)?.id ? (
+            <OutreachTemplates leadId={(detail.lead as { id: string }).id} phone={detail.lead?.phone_number ?? detail.report.phone_number} name={detail.lead?.name ?? ""} />
+          ) : null}
           {(detail.queuedCount ?? 0) > 0 ? (
             <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
               {t({ bn: `আরও ${detail.queuedCount}টি কলের রিপোর্ট অপেক্ষায় — এটি জমা দিলেই পরেরটি খুলবে।`, en: `${detail.queuedCount} more call report(s) pending — the next one opens once this is submitted.` })}
