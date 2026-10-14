@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Staff read project photos" ON storage.objects;
