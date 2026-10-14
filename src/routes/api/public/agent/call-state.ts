@@ -50,7 +50,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
         const at = body.at ?? new Date().toISOString();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { leadHeldByOther, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+        const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
 
         const { data: lead } = await supabaseAdmin
           .from("leads")
@@ -58,7 +58,8 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           .eq("id", body.lead_id)
           .maybeSingle();
         if (!lead) return json({ error: "Unknown lead" }, 404);
-        if (leadHeldByOther(lead, caller.profile.id)) {
+        // Calls sync only onto leads assigned to this agent — unassigned pool leads are LeadHub-only.
+        if (leadNotAssignedTo(lead, caller.profile.id)) {
           return json({ error: LEAD_NOT_YOURS }, 403);
         }
 

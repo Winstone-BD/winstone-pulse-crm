@@ -15,6 +15,8 @@ export function checkStagingUrl(raw: string): StagingUrlCheck {
   const host = u.hostname.toLowerCase();
   if (host === "localhost" || /^[\d.]+$/.test(host) || host.includes(":")) return { ok: false, reason: "Use the staging app's public address." };
   if (LIVE_HOST_HINTS.some((h) => host.includes(h))) return { ok: false, reason: "That is the live CRM (or its preview), not a staging copy." };
+  // Staging copies are Lovable apps: never let the server contact arbitrary hosts.
+  if (!/^[a-z0-9-]+\.lovable\.app$/.test(host)) return { ok: false, reason: "Use the staging copy's *.lovable.app address." };
   return { ok: true, origin: u.origin, host };
 }
 
