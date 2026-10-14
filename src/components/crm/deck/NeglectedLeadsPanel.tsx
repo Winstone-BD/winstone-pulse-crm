@@ -88,6 +88,11 @@ function ReassignmentAudit({ token }: { token: string | null }) {
         <input type="date" aria-label={t({ bn: "শেষ তারিখ", en: "To date" })} className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
       {rows.length === 0 && <p className="text-xs text-muted-foreground">{t({ bn: "এই ফিল্টারে কিছু পাওয়া যায়নি।", en: "Nothing matches these filters." })}</p>}
+      {rows.length > 0 && (
+        <Button size="sm" variant="outline" onClick={() => exportReassignmentCsv(rows)}>
+          {t({ bn: "CSV ডাউনলোড", en: "Download CSV" })} ({rows.length})
+        </Button>
+      )}
       <ul className="divide-y divide-border text-sm">
         {rows.map((r) => (
           <li key={r.id} className="py-2">
