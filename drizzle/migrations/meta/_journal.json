@@ -834,6 +834,13 @@
       "when": 1791956413400,
       "tag": "0118_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1791957606999,
+      "tag": "0119_create_crm_activities",
+      "breakpoints": true
     }
   ]
 }

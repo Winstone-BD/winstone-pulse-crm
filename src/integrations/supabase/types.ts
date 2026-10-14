@@ -1174,6 +1174,57 @@ export type Database = {
           },
         ]
       }
+      crm_activities: {
+        Row: {
+          actor_user_id: string
+          agent_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          lead_id: string | null
+          occurred_at: string
+          summary: string
+        }
+        Insert: {
+          actor_user_id?: string
+          agent_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          lead_id?: string | null
+          occurred_at?: string
+          summary: string
+        }
+        Update: {
+          actor_user_id?: string
+          agent_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          occurred_at?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_backup_runs: {
         Row: {
           backup_date: string
