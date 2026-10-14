@@ -524,12 +524,15 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
     const caller = await access.resolveCaller(data.adminToken ?? null);
     access.requireAuthority(caller);
     access.requireWrite(caller);
-    const allowed = ["https://crm.winstonebd.com", "https://winstone-crm-v01.lovable.app"];
+    // Exact trusted hosts only — recovery tokens must never be redirected to other subdomains.
+    const allowed = [
+      "https://crm.winstonebd.com",
+      "https://winstone-pulse-crm.lovable.app",
+      "https://winstone-crm-v01.lovable.app",
+      "https://id-preview--990267f3-4198-4d83-ae21-7d9c802617f4.lovable.app",
+    ];
     const origin = new URL(data.origin).origin;
-    const safeOrigin =
-      allowed.includes(origin) || origin.endsWith(".lovable.app") || origin.startsWith("http://localhost")
-        ? origin
-        : allowed[0]!;
+    const safeOrigin = allowed.includes(origin) ? origin : allowed[0]!;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profile } = await supabaseAdmin
       .from("profiles")

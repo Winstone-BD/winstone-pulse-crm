@@ -68,8 +68,13 @@ async function writeState(next: FloorLockState) {
  * press anything. Safe to call repeatedly: a delivered batch is never redone.
  */
 async function releaseDueGrants(state: FloorLockState): Promise<FloorLockState> {
+  // Re-check HQ approval at delivery time: a revoked or re-restricted desk never receives the batch.
   const due = state.pendingGrants.filter(
-    (grant) => !grant.deliveredAt && grant.releaseAt && Date.now() >= new Date(grant.releaseAt).getTime(),
+    (grant) =>
+      !grant.deliveredAt &&
+      grant.releaseAt &&
+      Date.now() >= new Date(grant.releaseAt).getTime() &&
+      state.approved.includes(grant.employeeId),
   );
   if (due.length === 0) return state;
 
@@ -116,7 +121,9 @@ export const getFloorLock = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    const state = await releaseDueGrants(await readState());
+    // Only signed-in staff reads may trigger delivery of due batches; anonymous reads only observe.
+    const stored = await readState();
+    const state = caller.scope === "none" ? stored : await releaseDueGrants(stored);
 
     const beforeOpen = state.enabled && Date.now() < new Date(state.openAt).getTime();
     const employeeId = caller.profile?.employee_id ?? null;
@@ -194,6 +201,10 @@ export const setFloorLock = createServerFn({ method: "POST" })
       );
     } else if (data.action === "revoke" && id) {
       next.approved = state.approved.filter((x) => x !== id);
+      // Revoking stops the clock: undelivered batches wait for a fresh approval.
+      next.pendingGrants = state.pendingGrants.map((grant) =>
+        grant.employeeId === id && !grant.deliveredAt ? { ...grant, releaseAt: null } : grant,
+      );
     } else if (data.action === "restrict" && id) {
       next.restricted = [...new Set([...state.restricted, id])];
       next.approved = state.approved.filter((x) => x !== id);
