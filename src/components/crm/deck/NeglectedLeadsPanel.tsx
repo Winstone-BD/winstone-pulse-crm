@@ -166,3 +166,22 @@ function ReassignDialog({ row, targets, token, onClose }: { row: Row; targets: D
     </Dialog>
   );
 }
+
+function exportReassignmentCsv(rows: Array<{ at: string; leadName: string; fromName: string; toName: string; by: string; reason: string; bypass: string | null }>) {
+  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
+  const header = ["When (Dhaka)", "Lead", "From agent", "To agent", "Changed by", "Reason", "Bypass reason"];
+  const lines = rows.map((r) => [
+    new Date(r.at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }),
+    r.leadName, r.fromName, r.toName, r.by, r.reason, r.bypass ?? "",
+  ].map(esc).join(","));
+  const csv = "﻿" + [header.map(esc).join(","), ...lines].join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `reassignment-history-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
