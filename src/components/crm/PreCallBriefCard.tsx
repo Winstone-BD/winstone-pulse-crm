@@ -8,6 +8,7 @@ import { getPreCallBrief } from "@/lib/precall.functions";
 import { getAdminToken } from "@/lib/local-session";
 import { clockTime } from "@/lib/crm-format";
 import { LeadProjectFacts } from "@/components/crm/KnowledgeHubCards";
+import { AgentTemplates } from "@/components/crm/AgentTemplates";
 
 /** AI pre-call briefing: what to say on this lead's next call. */
 export function PreCallBriefCard({ leadId }: { leadId: string }) {
@@ -86,6 +87,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
         </div>
       )}
     </section>
+    <AgentTemplates facts={{ name: data?.leadName }} />
     <LeadProjectFacts leadId={leadId} />
     </>
   );
