@@ -33,7 +33,7 @@ export type ScoreInputs = {
 };
 
 export type ScoreLine = { label: string; points: number };
-export type ScorePart = { points: number; max: number; lines: ScoreLine[]; note?: string };
+export type ScorePart = { points: number; max: number; lines: ScoreLine[]; note?: string | undefined };
 export type LeadInsightScore = {
   total: number;
   duration: ScorePart;

@@ -111,7 +111,7 @@ export async function neglectedHighPotential(now = Date.now()): Promise<Neglecte
   return rows.sort((a, b) => b.score.total - a.score.total);
 }
 
-export type ReassignTarget = { id: string; name: string; presence: string; assignedToday: number; quota: number; available: boolean; why?: string };
+export type ReassignTarget = { id: string; name: string; presence: string; assignedToday: number; quota: number; available: boolean; why?: string | undefined };
 
 export async function reassignTargets(): Promise<ReassignTarget[]> {
   const pool = await import("@/lib/lead-pool.server");
@@ -133,7 +133,7 @@ export async function reassignTargets(): Promise<ReassignTarget[]> {
   });
 }
 
-export async function reassignLead(input: { leadId: string; toAgentId: string; reason: string; bypassReason?: string | null; actorLabel: string }) {
+export async function reassignLead(input: { leadId: string; toAgentId: string; reason: string; bypassReason?: string | null | undefined; actorLabel: string }) {
   const db = await admin();
   const reason = input.reason.trim();
   if (reason.length < MIN_REASON) throw new Error(`Write a reason of at least ${MIN_REASON} characters`);
