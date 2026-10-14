@@ -219,7 +219,7 @@ export async function sweepReminders(now = new Date()) {
       // Upcoming follow-ups buzz once when the reminder window opens; a missed
       // (overdue) follow-up buzzes again every 3 hours until done or backlog.
       const overdueBucket = Math.floor(now.getTime() / (3 * 3_600_000));
-      const eventKey = item.kind === "site_visit" ? `site_visit:${item.id}:${overdueBucket}` :
+      const eventKey = item.kind === "site_visit" ? `site_visit:${item.id}:${agent.id}:${overdueBucket}` :
         item.kind === "follow_up"
           ? item.overdue
             ? `follow_up_overdue:${item.id}:${overdueBucket}`
