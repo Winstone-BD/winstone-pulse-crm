@@ -19,7 +19,7 @@ export function recordHealthOk() {
 async function runProbe(): Promise<Result> {
   const start = performance.now();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
+  const timer = setTimeout(() => controller.abort(), 10000);
   try {
     const res = await fetch("/api/public/health", { cache: "no-store", signal: controller.signal });
     const ms = Math.round(performance.now() - start);
