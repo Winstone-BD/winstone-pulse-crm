@@ -51,7 +51,13 @@ export function ConnectionStatus() {
     }
     // Background probes stay silent: never flip a healthy status to
     // "checking", or the pill would flash on every page once a minute.
-    const ok = await probeServer();
+    // One slow/cold probe is not an outage: confirm with a second probe
+    // before showing the red banner, so it never contradicts "Server online".
+    let ok = await probeServer();
+    if (!ok && navigator.onLine) {
+      await new Promise((r) => setTimeout(r, 3000));
+      ok = await probeServer();
+    }
     setStatus((prev) => {
       const next: Status = !navigator.onLine ? "offline" : ok ? "online" : "server-down";
       if (next === "online" && prev !== "online" && prev !== "checking") {
