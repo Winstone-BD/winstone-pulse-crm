@@ -62,12 +62,34 @@ function ReassignmentAudit({ token }: { token: string | null }) {
   const t = useT();
   const fn = useServerFn(listReassignmentAudit);
   const q = useQuery({ queryKey: ["reassign-audit", token], queryFn: () => fn({ data: { adminToken: token } }), retry: false });
+  const [leadQ, setLeadQ] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   if (q.isPending || q.isError || !q.data?.rows.length) return null;
+  const needle = leadQ.trim().toLowerCase();
+  const rows = q.data.rows.filter((r) => {
+    if (needle && !r.leadName.toLowerCase().includes(needle)) return false;
+    const day = new Date(r.at).toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
+    if (from && day < from) return false;
+    if (to && day > to) return false;
+    return true;
+  });
   return (
     <div className="space-y-2 border-t border-border pt-3">
       <h3 className="text-sm font-semibold">{t({ bn: "বদলের ইতিহাস", en: "Reassignment history" })}</h3>
+      <div className="flex flex-wrap gap-2">
+        <input
+          className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
+          placeholder={t({ bn: "লিডের নাম বা ফোন…", en: "Lead name or phone…" })}
+          value={leadQ}
+          onChange={(e) => setLeadQ(e.target.value)}
+        />
+        <input type="date" aria-label={t({ bn: "শুরুর তারিখ", en: "From date" })} className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <input type="date" aria-label={t({ bn: "শেষ তারিখ", en: "To date" })} className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
+      </div>
+      {rows.length === 0 && <p className="text-xs text-muted-foreground">{t({ bn: "এই ফিল্টারে কিছু পাওয়া যায়নি।", en: "Nothing matches these filters." })}</p>}
       <ul className="divide-y divide-border text-sm">
-        {q.data.rows.map((r) => (
+        {rows.map((r) => (
           <li key={r.id} className="py-2">
             <p className="font-medium">{r.leadName}: {r.fromName} → {r.toName}</p>
             <p className="text-xs text-muted-foreground">
