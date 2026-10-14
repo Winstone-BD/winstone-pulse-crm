@@ -9,7 +9,7 @@ async function authority(token: string | null | undefined, write = false) {
   if (c.scope !== "authority") throw new Error("Only HQ / IT admins can manage security findings");
   if (write && c.readOnly) throw new Error("This HQ viewing session is read-only; sign in through the IT Console to record findings");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const label = (c as { label?: string; name?: string }).label ?? (c as { name?: string }).name ?? "HQ / IT admin";
+  const label = c.profile?.name || c.profile?.email || c.label || "HQ / IT admin (PIN session)";
   return { db: supabaseAdmin, label };
 }
 
