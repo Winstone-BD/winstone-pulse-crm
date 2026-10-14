@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 
 import { AppShell } from "@/components/crm/AppShell";
 import { VisitRequestsPanel } from "@/components/crm/KnowledgeHubCards";
+import { SiteVisitPipeline } from "@/components/crm/hq/SiteVisitPipeline";
 import { SiteVisitsPanel } from "@/components/crm/hq/SiteVisitsPanel";
 import { useSnapshot } from "@/lib/crm-data";
 
@@ -25,7 +26,7 @@ function SiteVisitsPage() {
   return (
     <AppShell>
       <div className="mb-4"><VisitRequestsPanel /></div>
-      <div className="mx-auto w-full max-w-4xl space-y-4 px-3 py-5 sm:px-5">
+      <div className="mx-auto w-full max-w-6xl space-y-4 px-3 py-5 sm:px-5">
         <header className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><MapPin className="size-5" /></span>
           <div className="min-w-0">
@@ -33,6 +34,7 @@ function SiteVisitsPage() {
             <p className="text-xs text-muted-foreground">আপনার নিজের লিডে ভিজিট যোগ করুন ও অবস্থা আপডেট করুন</p>
           </div>
         </header>
+        <SiteVisitPipeline leads={leads} />
         <SiteVisitsPanel leads={leads} />
       </div>
     </AppShell>

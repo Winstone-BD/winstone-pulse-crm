@@ -133,7 +133,7 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
         </form>
       )}
 
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {SITE_VISIT_STATUSES.map((s) => (
           <div key={s} className="rounded-xl border border-border p-2.5">
             <span className="block text-[11px] text-muted-foreground">{VISIT_LABEL[s]}</span>
