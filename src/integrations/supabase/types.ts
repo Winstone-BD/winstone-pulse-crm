@@ -2842,36 +2842,6 @@ export type Database = {
         }
         Relationships: []
       }
-      objection_answers: {
-        Row: {
-          answer: string
-          approved_at: string
-          approved_by: string | null
-          id: string
-          objection: string
-          objection_key: string
-          updated_at: string
-        }
-        Insert: {
-          answer: string
-          approved_at?: string
-          approved_by?: string | null
-          id?: string
-          objection: string
-          objection_key: string
-          updated_at?: string
-        }
-        Update: {
-          answer?: string
-          approved_at?: string
-          approved_by?: string | null
-          id?: string
-          objection?: string
-          objection_key?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       os_event_receipts: {
         Row: {
           api_version: string | null
@@ -3703,45 +3673,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      sales_drafts: {
-        Row: {
-          agent_id: string
-          ai_output: string
-          created_at: string
-          edited_at: string | null
-          edited_output: string | null
-          id: string
-          injection_flagged: boolean
-          lead_id: string | null
-          model: string
-          workflow: string
-        }
-        Insert: {
-          agent_id: string
-          ai_output: string
-          created_at?: string
-          edited_at?: string | null
-          edited_output?: string | null
-          id?: string
-          injection_flagged?: boolean
-          lead_id?: string | null
-          model: string
-          workflow: string
-        }
-        Update: {
-          agent_id?: string
-          ai_output?: string
-          created_at?: string
-          edited_at?: string | null
-          edited_output?: string | null
-          id?: string
-          injection_flagged?: boolean
-          lead_id?: string | null
-          model?: string
-          workflow?: string
-        }
-        Relationships: []
       }
       security_findings: {
         Row: {
