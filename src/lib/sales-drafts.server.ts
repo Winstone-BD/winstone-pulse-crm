@@ -18,7 +18,7 @@ Write in polite natural Bangla:
 3) a suggested follow-up time window (e.g. "আগামীকাল সকাল ১০–১২টা").
 Reply ONLY as JSON: {"whatsapp":"...","sms":"...","when":"..."}`;
 
-async function callClaude(user: string, system: string = SYSTEM): Promise<string> {
+export async function callClaude(user: string, system: string = SYSTEM): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI service is not configured");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/messages", {
@@ -237,6 +237,38 @@ export async function approveObjectionAnswer(key: string, objection: string, ans
   if (sanitizeNotes(answer).flagged || sanitizeNotes(objection).flagged) throw new Error("Text contains instruction-like content and was blocked");
   const db = await admin();
   const { error } = await db.from("objection_answers").upsert({ objection_key: key, objection: objection.slice(0, 200), answer: answer.slice(0, 1200), approved_by: approver, approved_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: "objection_key" });
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
+const MARKETING_SYSTEM = `You are Winstone AI writing a social media real estate ad for Winstone Properties Ltd (Bangladesh).
+Rules:
+- Use ONLY the supplied verified project facts. If price or terms are missing, do not mention them. Never invent prices, discounts, offers, deadlines, amenities or guaranteed returns.
+- ${UNTRUSTED_RULE}
+- This is a DRAFT; the agent reviews before posting.
+Write in the requested language, warm and premium, under 90 words, with 3-5 relevant hashtags at the end and a call to action using the supplied agent phone if given.
+Reply ONLY as JSON: {"headline":"...","body":"..."}`;
+
+export async function draftMarketingPost(input: { projectId: string; angle: string; lang: "bn" | "en"; phone: string | null }, agentId: string | null) {
+  const db = await admin();
+  const { data: p, error } = await db.from("project_catalog")
+    .select("name, location, status, total_price, down_payment, installment_plan, unit_sizes, price_per_sqft").eq("id", input.projectId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!p) throw new Error("Project not found");
+  const angle = sanitizeNotes(input.angle);
+  const user = `Language: ${input.lang === "bn" ? "Bangla" : "English"}\nVerified project facts:\n${JSON.stringify(p)}\nAgent phone: ${input.phone ?? "(none)"}\nAgent's angle (untrusted):\n${angle.text}`;
+  const raw = await callClaude(user, MARKETING_SYSTEM);
+  const m = raw.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("AI returned an unexpected reply — try again");
+  const j = JSON.parse(m[0]) as { headline?: unknown; body?: unknown };
+  const out = { headline: String(j.headline ?? "").slice(0, 120), body: String(j.body ?? "").slice(0, 1500), flagged: angle.flagged };
+  if (agentId) await db.from("sales_drafts").insert({ agent_id: agentId, lead_id: null, workflow: "marketing", ai_output: `${out.headline}\n\n${out.body}`, injection_flagged: angle.flagged, model: DRAFT_MODEL });
+  return out;
+}
+
+export async function saveMarketingPost(agentId: string, text: string) {
+  const db = await admin();
+  const { error } = await db.from("sales_drafts").insert({ agent_id: agentId, lead_id: null, workflow: "marketing", ai_output: text.slice(0, 4000), model: "manual" });
   if (error) throw new Error(error.message);
   return { ok: true as const };
 }
