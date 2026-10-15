@@ -28,7 +28,7 @@ export async function leadAccess(adminToken: string | null | undefined, leadId: 
 }
 
 /** Load a note the caller may edit or delete (author only). */
-export async function ownNote(data: { adminToken?: string | null; leadId: string; noteId: string }) {
+export async function ownNote(data: { adminToken?: string | null | undefined; leadId: string; noteId: string }) {
   const access = await leadAccess(data.adminToken, data.leadId);
   if (!access || access.caller.readOnly) throw new Error("অনুমতি নেই");
   const { data: row } = await access.db
