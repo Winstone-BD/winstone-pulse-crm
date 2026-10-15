@@ -71,7 +71,8 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
 const SendInput = z.object({
   adminToken: z.string().nullable().optional(),
   leadId: z.string().uuid(),
-  body: z.string().trim().min(1).max(4000),
+  /** Only HQ-approved templates may be sent; the server builds the text. */
+  templateKey: z.string().min(1).max(40),
 });
 
 /**
@@ -101,7 +102,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, assigned_to, assigned_agent_id, phone_number")
+      .select("id, name, assigned_to, assigned_agent_id, phone_number")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
@@ -131,7 +132,13 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const to = normalizeWhatsAppNumber(lead.phone_number);
     if (!to) throw new Error("নম্বরটি সঠিক নয়");
 
-    const result = await provider.sendMessage({ to, body: data.body, leadId: lead.id });
+    const { OUTREACH_TEMPLATES } = await import("@/lib/outreach-templates");
+    const tpl = OUTREACH_TEMPLATES.find((t) => t.key === data.templateKey);
+    if (!tpl) throw new Error("শুধু অনুমোদিত টেমপ্লেট পাঠানো যায়");
+    const { data: visit } = await supabaseAdmin.from("site_visits").select("project").eq("lead_id", lead.id)
+      .not("project", "is", null).order("visit_at", { ascending: false }).limit(1).maybeSingle();
+    const body = tpl.build({ name: lead.name, project: visit?.project ?? null, agentName: caller.profile.name ?? null });
+    const result = await provider.sendMessage({ to, body, leadId: lead.id });
     if (!result.ok) return { ok: false as const, status: "failed" as const, error: result.error };
 
     await supabaseAdmin.from("whatsapp_interactions").insert({
@@ -139,7 +146,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
       agent_id: caller.profile?.id ?? null,
       sender_type: "agent",
       message_type: "text",
-      message_content: data.body,
+      message_content: body,
       provider: "meta-cloud-api",
       provider_message_id: result.providerMessageId || null,
       // Meta's webhook moves this to delivered / read / failed.
