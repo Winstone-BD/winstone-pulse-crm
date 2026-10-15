@@ -18,7 +18,8 @@ export function StaffAvatar({
     queryKey: ["staff-photo", profile.id, profile.photo_updated_at ?? null],
     queryFn: () => fetchUrls({ data: { adminToken, profileIds: [profile.id] } }),
     enabled: Boolean(profile.photo_updated_at),
-    staleTime: 50 * 60_000,
+    staleTime: 90_000,
+    refetchInterval: 100_000,
   });
   const url = data?.[profile.id];
   if (url) return <img src={url} alt={profile.name} className={`${className} shrink-0 rounded-full object-cover`} />;

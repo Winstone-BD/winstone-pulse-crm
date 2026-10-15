@@ -38,7 +38,7 @@ export type DayCallRow = {
 
 const SIGNED_URL_SECONDS = 6 * 60 * 60;
 /** Live recent-calls list: links expire quickly and are re-minted on each refresh. */
-const RECENT_LINK_SECONDS = 15 * 60;
+const RECENT_LINK_SECONDS = 2 * 60;
 const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
 
 function dhakaLabel(iso: string) {
