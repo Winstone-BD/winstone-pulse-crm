@@ -176,3 +176,5 @@
 - [x] /daily-sheet HQ page, one row per lead, CSV
 - [ ] Google Drive (recordings) + Google Sheets (daily sheet) sync — blocked: connections not linked yet
 - [ ] Run Gemini buyer-check on a real call note and save — needs an agent to confirm in the app (live data)
+- [ ] Marketing Content draft + social-post-style preview (copy only, labelled draft, no publishing) — next release
+- [ ] Reference-project website checks (AgentForge, Social Post Preview) — waiting on their public website URLs; on-demand only, no continuous tracking
