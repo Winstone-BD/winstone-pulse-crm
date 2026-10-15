@@ -11,6 +11,7 @@ import { LeadProjectFacts } from "@/components/crm/KnowledgeHubCards";
 import { AgentTemplates } from "@/components/crm/AgentTemplates";
 import { SalesToolkit } from "@/components/crm/SalesToolkit";
 import { NegotiationCoach } from "@/components/crm/NegotiationCoach";
+import { CallCoach } from "@/components/crm/CallCoach";
 import { HandoverChecklist } from "@/components/crm/HandoverChecklist";
 
 /** AI pre-call briefing: what to say on this lead's next call. */
@@ -93,6 +94,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
     <AgentTemplates leadId={leadId} facts={{ name: data?.leadName ?? null }} />
     <SalesToolkit leadId={leadId} />
     <NegotiationCoach leadId={leadId} />
+    <CallCoach leadId={leadId} />
     <HandoverChecklist leadId={leadId} />
     <LeadProjectFacts leadId={leadId} />
     </>
