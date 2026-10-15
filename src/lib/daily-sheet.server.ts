@@ -73,7 +73,7 @@ export async function syncDailySheet(date: string) {
     ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
     ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
   ];
-  values[0][9] = `Synced ${new Date().toISOString()}`;
+  (values[0] as unknown[])[9] = `Synced ${new Date().toISOString()}`;
   // RAW: values are stored as text, never evaluated as formulas.
   await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
   return { rows: rows.length, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
