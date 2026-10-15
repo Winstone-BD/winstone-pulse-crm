@@ -49,8 +49,8 @@ function Summary() {
       {q.data && q.data.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No leads with a site visit or booking yet.</p> : null}
       {q.data && q.data.length > 0 ? (
         <div className="table-scroll mt-4">
-          <table className="w-full min-w-[820px] border-collapse text-xs">
-            <thead><tr>{["Lead", "Agent", "Verified stage", "Documents outstanding", "Payments outstanding", "Next step"].map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
+          <table className="w-full min-w-[920px] border-collapse text-xs">
+            <thead><tr>{["Lead", "Agent", "Verified stage", "Documents outstanding", "Payments outstanding", "Due date", "Next step"].map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
             <tbody>
               {q.data.map((r) => {
                 const approved = r.booking?.approval === "approved";
@@ -62,6 +62,11 @@ function Summary() {
                     <td className="border border-border p-2 align-top">{STAGES[stage]}{r.booking?.project ? ` · ${r.booking.project}` : ""}</td>
                     <td className="border border-border p-2 align-top">{stage >= 2 ? "NID copy, photo, TIN (if applicable), nominee NID & photo — verify with customer" : "Not yet due"}</td>
                     <td className="border border-border p-2 align-top">{r.booking ? (approved ? "Down payment and instalment schedule — confirm via office receipt" : `Booking money awaiting HQ check (${r.booking.approval}); down payment; instalment schedule`) : "None until booking"}</td>
+                    <td className="border border-border p-2 align-top">{r.due.length ? r.due.map((d) => (
+                      <div key={d.kind} className={d.state === "overdue" ? "font-semibold text-destructive" : ""}>
+                        {d.kind === "documents" ? "Documents" : "Booking payment"}: {d.dueDate}{d.state === "overdue" ? ` · ${-d.daysLeft}d overdue` : d.state === "today" ? " · today" : ` · ${d.daysLeft}d left`}
+                      </div>
+                    )) : "—"}</td>
                     <td className="border border-border p-2 align-top">{NEXT[stage]}</td>
                   </tr>
                 );
