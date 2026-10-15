@@ -256,7 +256,7 @@ export async function draftMarketingPost(input: { projectId: string; angle: stri
   if (error) throw new Error(error.message);
   if (!p) throw new Error("Project not found");
   const angle = sanitizeNotes(input.angle);
-  const user = `Language: ${input.lang === "bn" ? "Bangla" : "English"}\nVerified project facts:\n${JSON.stringify(p)}\nAgent phone: ${input.phone ?? "(none)"}\nAgent's angle (untrusted):\n${angle.text}`;
+  const user = `Language: ${input.lang === "bn" ? "Bangla" : "English"}\nVerified project facts:\n${JSON.stringify(p)}\nAgent phone: ${input.phone ?? "(none)"}\nAgent angle (untrusted):\n${angle.wrapped}`;
   const raw = await callClaude(user, MARKETING_SYSTEM);
   const m = raw.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("AI returned an unexpected reply — try again");
