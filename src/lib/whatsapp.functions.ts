@@ -46,7 +46,25 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
       kind: data.channel === "sms" ? "sms_handoff" : "whatsapp_message",
       detail: `${data.channel === "sms" ? "SMS অ্যাপ খোলা হয়েছে" : "হোয়াটসঅ্যাপ খোলা হয়েছে"} (${data.phone})${data.note ? ` · ${data.note}` : ""}`,
     });
-    return { ok: true as const, logged: true };
+    // Every WhatsApp contact by an agent opens the same mandatory report as a
+    // call (connected or not, the agent must report). Reuses the one report path.
+    let reportOpened = false;
+    if (caller.scope === "agent" && caller.profile && data.channel !== "sms") {
+      try {
+        const { openCallReport } = await import("@/lib/call-reports.server");
+        await openCallReport({
+          leadId: data.leadId,
+          agentId: caller.profile.id,
+          phoneNumber: data.phone,
+          durationSeconds: 0,
+          connected: true,
+        });
+        reportOpened = true;
+      } catch (error) {
+        console.error("[whatsapp] report open failed", error);
+      }
+    }
+    return { ok: true as const, logged: true, reportOpened };
   });
 
 const SendInput = z.object({
