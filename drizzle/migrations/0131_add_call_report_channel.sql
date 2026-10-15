@@ -1,0 +1,1 @@
+ALTER TABLE public.call_reports ADD COLUMN channel text NOT NULL DEFAULT 'call'; COMMENT ON COLUMN public.call_reports.channel IS 'Report origin: call = phone call, whatsapp = mandatory WhatsApp contact report';

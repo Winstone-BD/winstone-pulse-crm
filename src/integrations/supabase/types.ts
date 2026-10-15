@@ -978,6 +978,7 @@ export type Database = {
           call_ended_at: string
           call_started_at: string | null
           category: string | null
+          channel: string
           connected: boolean
           connection_verified: boolean
           created_at: string
@@ -1018,6 +1019,7 @@ export type Database = {
           call_ended_at?: string
           call_started_at?: string | null
           category?: string | null
+          channel?: string
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
@@ -1058,6 +1060,7 @@ export type Database = {
           call_ended_at?: string
           call_started_at?: string | null
           category?: string | null
+          channel?: string
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
