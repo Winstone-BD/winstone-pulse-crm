@@ -18,7 +18,7 @@ const SERVER_ONLY_TABLES = [
   "runtime_error_issues", "runtime_error_occurrences", "sales_drafts", "security_findings", "security_scan_reports",
   "service_bill_review_attempts", "sheet_change_proposals", "site_visits", "support_canned_replies", "support_csat",
   "support_customers", "support_notes", "support_settings", "support_ticket_events", "system_maintenance",
-  "website_pages", "website_visit_requests",
+  "website_pages", "website_visit_requests", "website_enquiries",
 ];
 
 const migrations = ["supabase/migrations", "drizzle/migrations"]

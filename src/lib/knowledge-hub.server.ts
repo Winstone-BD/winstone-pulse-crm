@@ -105,6 +105,63 @@ export async function applyVisitRequested(key: string, p: VisitRequestPayload, p
   return { outcome, leadId };
 }
 
+/* ---------------- Buyer-portal enquiries ---------------- */
+
+const fmtBdt = (n: number | null | undefined) => (n == null ? null : `৳${n.toLocaleString("en-IN")}`);
+
+export async function applyEnquirySubmitted(key: string, p: import("@/lib/os-bridge").EnquirySubmitted, phone: string) {
+  const db = await admin();
+  const { data: status } = await db.rpc("lead_phone_status", { _raw: phone });
+  let leadId = (status as { existing_lead_id: string | null }[] | null)?.[0]?.existing_lead_id ?? null;
+  let outcome = "enquiry_on_existing_lead";
+  if (!leadId) {
+    const budget = [fmtBdt(p.budget_min_bdt), fmtBdt(p.budget_max_bdt)].filter(Boolean).join(" – ");
+    const { intakeLead } = await import("@/lib/lead-intake.server");
+    const r = await intakeLead({
+      name: p.name, phoneNumber: phone, ownerId: null, source: "web_enquiry", actorLabel: "Winstone Website",
+      notes: [
+        "Website enquiry",
+        p.project ? `Project: ${p.project}` : null,
+        p.property_type ? `Type: ${p.property_type}` : null,
+        budget ? `Budget: ${budget}` : null,
+        p.facing ? `Facing: ${p.facing.replace("_", "-")}` : null,
+        p.amenities?.length ? `Amenities: ${p.amenities.join(", ")}` : null,
+        p.message ? `Message: ${p.message}` : null,
+      ].filter(Boolean).join("\n"),
+    });
+    leadId = r.leadId;
+    outcome = r.duplicate ? "enquiry_on_existing_lead" : "enquiry_new_lead";
+  }
+  const { error } = await db.from("website_enquiries").insert({
+    hub_request_id: p.request_id, lead_id: leadId, outcome, customer_name: p.name, phone, project: p.project ?? null,
+    property_type: p.property_type ?? null, budget_min_bdt: p.budget_min_bdt ?? null, budget_max_bdt: p.budget_max_bdt ?? null,
+    facing: p.facing ?? null, amenities: p.amenities ?? [], message: p.message ?? null, page_url: p.page_url ?? null,
+    utm_source: p.utm_source ?? null, utm_medium: p.utm_medium ?? null, utm_campaign: p.utm_campaign ?? null,
+  });
+  if (error && error.code !== "23505") throw error;
+  await db.from("os_event_receipts" as never)
+    .update({ status: "processed", outcome, lead_id: leadId, processed_at: new Date().toISOString() } as never)
+    .eq("idempotency_key", key);
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({ action: "os_event_received", entityType: "lead", entityId: leadId, actorLabel: "Winstone Website", metadata: { event_type: "enquiry.submitted", request_id: p.request_id, outcome } });
+  return { outcome, leadId };
+}
+
+/** HQ/IT dashboard rows: enquiry + the lead's live status/stage/owner. Phone masked. */
+export async function listEnquiries(days: number) {
+  const db = await admin();
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const { data, error } = await db.from("website_enquiries")
+    .select("id, created_at, customer_name, phone, project, property_type, budget_min_bdt, budget_max_bdt, facing, amenities, utm_source, utm_campaign, outcome, leads(status, pipeline_stage, assigned_to)")
+    .gte("created_at", since).order("created_at", { ascending: false }).limit(1000);
+  if (error) throw new Error("Enquiries could not be loaded");
+  type Row = NonNullable<typeof data>[number] & { leads: { status: string | null; pipeline_stage: string | null; assigned_to: string | null } | null };
+  return ((data ?? []) as Row[]).map(({ leads, phone, ...r }) => ({
+    ...r, phone: `…${phone.slice(-4)}`,
+    lead_status: leads?.status ?? null, stage: leads?.pipeline_stage ?? null, assigned: Boolean(leads?.assigned_to),
+  }));
+}
+
 export async function listVisitRequests(c: SiCaller, opts: { leadId?: string | null; openOnly?: boolean }) {
   const db = await admin();
   let q = db.from("website_visit_requests")
