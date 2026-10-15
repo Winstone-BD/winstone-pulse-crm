@@ -5746,6 +5746,14 @@ export type Database = {
       }
       lead_phone_was_ever_worked: { Args: { _raw: string }; Returns: boolean }
       normalize_bd_phone: { Args: { _raw: string }; Returns: string }
+      project_photos_exposure: {
+        Args: never
+        Returns: {
+          bucket_public: boolean
+          policy_count: number
+          policy_names: string[]
+        }[]
+      }
     }
     Enums: {
       agent_presence: "on_call" | "idle" | "offline"

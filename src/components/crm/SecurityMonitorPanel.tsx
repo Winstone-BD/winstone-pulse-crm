@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useAdminToken } from "@/lib/local-session";
-import { getLoginFailures, saveMonthlySummary } from "@/lib/it-monitor.functions";
+import { getLoginFailures, getProjectPhotoExposure, saveMonthlySummary } from "@/lib/it-monitor.functions";
 import { dhakaTime } from "@/lib/maintenance-rules";
 
 const REASON: Record<string, string> = {
@@ -90,6 +90,36 @@ export function MonthlySummaryPanel() {
           </a>
         ) : null}
       </div>
+    </section>
+  );
+}
+
+/** IT Console → alert if project photos ever become downloadable without CRM sign-off. */
+export function ProjectPhotoExposurePanel() {
+  const adminToken = useAdminToken();
+  const q = useQuery({
+    queryKey: ["project-photo-exposure", adminToken],
+    queryFn: () => getProjectPhotoExposure({ data: { adminToken } }),
+    refetchInterval: 5 * 60_000,
+  });
+  const d = q.data;
+  return (
+    <section className={`space-y-2 rounded-xl border p-4 ${d?.exposed ? "border-destructive/50 bg-destructive/10" : "bg-card"}`}>
+      <h2 className="flex items-center gap-2 text-base font-semibold">
+        <ShieldAlert className="size-4" /> Project photo access
+      </h2>
+      {q.isLoading ? <Loader2 className="size-4 animate-spin" /> : q.error ? (
+        <p className="text-sm text-destructive">{(q.error as Error).message}</p>
+      ) : d?.exposed ? (
+        <div className="text-sm text-destructive">
+          ALERT: project photos can be downloaded without the CRM.
+          {d.bucketPublic ? " The photo store is public." : ""}
+          {d.policies.length ? ` Direct-download rules: ${d.policies.join(", ")}.` : ""}
+        </div>
+      ) : d ? (
+        <p className="text-sm text-success">Safe — photos open only through short-lived CRM links.</p>
+      ) : null}
+      {d ? <p className="text-xs text-muted-foreground">Checked {dhakaTime(d.checkedAt)} · rechecks every 5 min</p> : null}
     </section>
   );
 }
