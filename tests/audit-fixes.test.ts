@@ -33,7 +33,10 @@ describe("policy-less RLS inventory (offline)", () => {
   it("no allowlisted table is ever granted a policy in migrations", () => {
     const withPolicy = SERVER_ONLY_TABLES.filter((t) =>
       new RegExp(`create\\s+policy[\\s\\S]{0,300}?\\bon\\s+(public\\.)?"?${t}"?\\b`, "i").test(migrations));
-    expect(withPolicy).toEqual([]);
+    // Policies created and later dropped by a recorded migration.
+    const droppedLater = ["lead_phone_keys"];
+    for (const t of droppedLater) expect(migrations).toMatch(new RegExp(`drop\\s+policy[^;]*on\\s+public\\.${t}`, "i"));
+    expect(withPolicy.filter((t) => !droppedLater.includes(t))).toEqual([]);
   });
   it("browser code never queries an allowlisted table directly", () => {
     const files = ["src/components", "src/routes", "src/hooks"].flatMap(function walk(d: string): string[] {
