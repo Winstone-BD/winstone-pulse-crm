@@ -43,13 +43,13 @@ export function overdueByAgent(rows: FU[], now: Date) {
 }
 
 /** Daily sheet row per lead. */
-export type SheetRow = { leadId: string; lead: string; phone: string; agent: string | null; status: string; visits: number; visitsCompleted: number; bookings: number; paymentStatus: string; lastActivity: string | null };
+export type SheetRow = { leadId: string; lead: string; phone: string; agent: string | null; status: string; stage: string; visits: number; visitsCompleted: number; bookings: number; paymentStatus: string; lastActivity: string | null };
 export function sheetCsv(rows: SheetRow[]): string {
   const esc = (v: unknown) => {
     const s = String(v ?? "");
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s; // block spreadsheet formula injection
     return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
   };
-  const head = ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)"];
-  return [head, ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? ""])].map((r) => r.map(esc).join(",")).join("\n");
+  const head = ["Lead", "Phone", "Agent", "Status", "Stage", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)"];
+  return [head, ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.stage, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? ""])].map((r) => r.map(esc).join(",")).join("\n");
 }

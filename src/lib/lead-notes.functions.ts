@@ -4,7 +4,7 @@ import { z } from "zod";
 const Base = z.object({ adminToken: z.string().nullable().optional() });
 
 /** Resolve the caller and confirm they may see this lead (agents: own leads only). */
-async function leadAccess(adminToken: string | null | undefined, leadId: string) {
+export async function leadAccess(adminToken: string | null | undefined, leadId: string) {
   const { resolveCaller } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
   if (caller.scope === "none") return null;
