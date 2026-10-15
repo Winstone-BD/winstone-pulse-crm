@@ -30,6 +30,12 @@ describe("deployment recovery bootstrap", () => {
     expect(deployRecoveryScript).toMatch(/failingUrl=u/);
   });
 
+  it("treats React stale-bundle null reads as recoverable", () => {
+    // "Cannot read properties of null (reading 'use')" — a tab holding a mix of
+    // old and new dependency bundles. It must trigger the same recovery reload.
+    expect(deployRecoveryScript).toMatch(/Cannot read properties of \(\?:null\|undefined\)/);
+  });
+
   it("keeps every availability probe bounded", () => {
     expect(deployRecoveryScript).toMatch(/setTimeout\(function\(\)\{controller\.abort\(\)\},4000\)/);
   });

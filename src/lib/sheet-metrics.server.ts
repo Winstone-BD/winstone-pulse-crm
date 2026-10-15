@@ -5,7 +5,7 @@
  * without digging through server logs.
  */
 
-export type SheetSurface = "lead_import" | "shift_summary" | "report_sheet";
+export type SheetSurface = "lead_import" | "shift_summary" | "report_sheet" | "daily_sheet";
 export type SheetOutcome = "success" | "retry" | "failure";
 
 type EventInput = {
@@ -75,7 +75,7 @@ export type SheetSyncHealth = {
   }[];
 };
 
-const SURFACES: SheetSurface[] = ["lead_import", "shift_summary", "report_sheet"];
+const SURFACES: SheetSurface[] = ["lead_import", "shift_summary", "report_sheet", "daily_sheet"];
 
 /** Aggregated sync health over the last `windowHours` (default 24). */
 export async function readSheetSyncHealth(windowHours = 24): Promise<SheetSyncHealth> {

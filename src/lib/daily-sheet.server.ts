@@ -1,6 +1,9 @@
 // Server-only: builds the daily one-row-per-lead report and mirrors it into
 // one company Google Spreadsheet (one tab per Dhaka date, rewritten on sync).
+// Every attempt (manual button or cron) records a sheet_sync_events row so the
+// IT Console shows failures and the last success.
 import type { SheetRow } from "@/lib/pipeline-intel";
+import { recordSheetSyncEvent } from "@/lib/sheet-metrics.server";
 
 const GW = "https://connector-gateway.lovable.dev/google_sheets/v4";
 const CONFIG_ID = "daily_sheet_google";
@@ -61,20 +64,33 @@ async function spreadsheetId(): Promise<string> {
 }
 
 export async function syncDailySheet(date: string) {
-  const rows = await buildDailySheet(date);
-  const id = await spreadsheetId();
-  const meta = await gw(`/spreadsheets/${id}?fields=sheets.properties.title`);
-  const titles: string[] = (meta.sheets ?? []).map((s: { properties: { title: string } }) => s.properties.title);
-  if (!titles.includes(date)) {
-    await gw(`/spreadsheets/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ addSheet: { properties: { title: date } } }] }) });
+  const startedAt = Date.now();
+  try {
+    const rows = await buildDailySheet(date);
+    const id = await spreadsheetId();
+    const meta = await gw(`/spreadsheets/${id}?fields=sheets.properties.title`);
+    const titles: string[] = (meta.sheets ?? []).map((s: { properties: { title: string } }) => s.properties.title);
+    if (!titles.includes(date)) {
+      await gw(`/spreadsheets/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ addSheet: { properties: { title: date } } }] }) });
+    }
+    await gw(`/spreadsheets/${id}/values/'${date}'!A:J:clear`, { method: "POST", body: "{}" });
+    const values = [
+      ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
+      ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
+    ];
+    (values[0] as unknown[])[9] = `Synced ${new Date().toISOString()}`;
+    // RAW: values are stored as text, never evaluated as formulas.
+    await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
+    await recordSheetSyncEvent({ surface: "daily_sheet", operation: "sync", outcome: "success", durationMs: Date.now() - startedAt });
+    return { rows: rows.length, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
+  } catch (e) {
+    await recordSheetSyncEvent({
+      surface: "daily_sheet",
+      operation: "sync",
+      outcome: "failure",
+      durationMs: Date.now() - startedAt,
+      errorText: e instanceof Error ? e.message : String(e),
+    });
+    throw e;
   }
-  await gw(`/spreadsheets/${id}/values/'${date}'!A:J:clear`, { method: "POST", body: "{}" });
-  const values = [
-    ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
-    ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
-  ];
-  (values[0] as unknown[])[9] = `Synced ${new Date().toISOString()}`;
-  // RAW: values are stored as text, never evaluated as formulas.
-  await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
-  return { rows: rows.length, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
 }
