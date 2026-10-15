@@ -75,3 +75,19 @@ export const approveObjection = createServerFn({ method: "POST" })
     const c = await resolveCaller(data.token ?? null);
     return (await import("@/lib/sales-drafts.server")).approveObjectionAnswer(data.key, data.objection, data.answer, c.profile?.id ?? null);
   });
+
+export const draftMarketingPost = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Tok, projectId: z.string().uuid(), angle: z.string().max(500), lang: z.enum(["bn", "en"]), phone: z.string().max(20).nullable() }).parse(i))
+  .handler(async ({ data }) => {
+    const s = await scope(data.token);
+    if (s.readOnly) throw new Error("Read-only access");
+    return (await import("@/lib/sales-drafts.server")).draftMarketingPost(data, s.agentId);
+  });
+
+export const saveMarketingPost = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Tok, text: z.string().min(1).max(4000) }).parse(i))
+  .handler(async ({ data }) => {
+    const s = await scope(data.token);
+    if (s.readOnly || !s.agentId) throw new Error("Only agents save their own marketing drafts");
+    return (await import("@/lib/sales-drafts.server")).saveMarketingPost(s.agentId, data.text);
+  });

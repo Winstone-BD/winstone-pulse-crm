@@ -37,6 +37,7 @@ import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LeadhubRouteImport } from './routes/leadhub'
 import { Route as LiveLeadsRouteImport } from './routes/live-leads'
 import { Route as ManualRouteImport } from './routes/manual'
+import { Route as MarketingRouteImport } from './routes/marketing'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
@@ -261,6 +262,11 @@ const LiveLeadsRoute = LiveLeadsRouteImport.update({
 const ManualRoute = ManualRouteImport.update({
   id: '/manual',
   path: '/manual',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -741,6 +747,7 @@ export interface FileRoutesByFullPath {
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
+  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -856,6 +863,7 @@ export interface FileRoutesByTo {
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
+  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -972,6 +980,7 @@ export interface FileRoutesById {
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
+  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
@@ -1089,6 +1098,7 @@ export interface FileRouteTypes {
     | '/leadhub'
     | '/live-leads'
     | '/manual'
+    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -1204,6 +1214,7 @@ export interface FileRouteTypes {
     | '/leadhub'
     | '/live-leads'
     | '/manual'
+    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -1319,6 +1330,7 @@ export interface FileRouteTypes {
     | '/leadhub'
     | '/live-leads'
     | '/manual'
+    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
@@ -1435,6 +1447,7 @@ export interface RootRouteChildren {
   LeadhubRoute: typeof LeadhubRoute
   LiveLeadsRoute: typeof LiveLeadsRoute
   ManualRoute: typeof ManualRoute
+  MarketingRoute: typeof MarketingRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
   MigrationExportRoute: typeof MigrationExportRoute
@@ -1718,6 +1731,13 @@ declare module '@tanstack/react-router' {
       path: '/manual'
       fullPath: '/manual'
       preLoaderRoute: typeof ManualRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketing': {
+      id: '/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof MarketingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -2347,6 +2367,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeadhubRoute: LeadhubRoute,
   LiveLeadsRoute: LiveLeadsRoute,
   ManualRoute: ManualRoute,
+  MarketingRoute: MarketingRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
   MigrationExportRoute: MigrationExportRoute,
