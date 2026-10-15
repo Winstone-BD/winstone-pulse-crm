@@ -174,7 +174,7 @@
 - [x] Call coach shows HQ-approved objection answers (exact match only)
 - [x] Handover due dates (docs 7 days after first completed visit, payment on booking day) + bell/push reminders
 - [x] /daily-sheet HQ page, one row per lead, CSV
-- [ ] Google Drive (recordings) + Google Sheets (daily sheet) sync — blocked: connections not linked yet
+- [ ] Google Drive (recordings) + Google Sheets (daily sheet) sync — in progress: opening connect cards for both in the new workspace; sync code follows once linked
 - [ ] Run Gemini buyer-check on a real call note and save — needs an agent to confirm in the app (live data)
 - [ ] Marketing Content draft + social-post-style preview (copy only, labelled draft, no publishing) — next release
 - [ ] Reference-project website checks (AgentForge, Social Post Preview) — waiting on their public website URLs; on-demand only, no continuous tracking
