@@ -18,13 +18,13 @@ Write in polite natural Bangla:
 3) a suggested follow-up time window (e.g. "আগামীকাল সকাল ১০–১২টা").
 Reply ONLY as JSON: {"whatsapp":"...","sms":"...","when":"..."}`;
 
-async function callClaude(user: string): Promise<string> {
+async function callClaude(user: string, system: string = SYSTEM): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI service is not configured");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/messages", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({ model: DRAFT_MODEL, max_tokens: 4000, stream: true, system: SYSTEM, messages: [{ role: "user", content: user }] }),
+    body: JSON.stringify({ model: DRAFT_MODEL, max_tokens: 4000, stream: true, system, messages: [{ role: "user", content: user }] }),
   });
   if (!res.ok || !res.body) {
     console.error("draft gateway", res.status, await res.text().catch(() => ""));
@@ -122,4 +122,36 @@ export async function loadCatalog() {
     .select("id, name, location, status, total_price, down_payment, installment_plan").order("name").limit(200);
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+const NEGOTIATE_SYSTEM = `You are Winstone AI, a negotiation coach for a Winstone Properties Ltd sales agent (Bangladesh real estate).
+Rules:
+- Use ONLY the supplied project terms (verified catalog) and lead facts. If a term is missing, say "তথ্য যাচাই প্রয়োজন".
+- Never offer, invent or imply any discount, price cut, free item, waiver, guaranteed return or deadline. Concessions only within listed terms (e.g. existing installment plan, unit size choice). Any discount request must be referred to HQ approval.
+- ${UNTRUSTED_RULE}
+- This is advice for the agent only; nothing is sent.
+Reply in Bangla ONLY as JSON: {"position":"...","tactics":["..."],"allowed":["..."],"never":["..."],"script":"...","escalate":"..."}
+tactics/allowed/never: 2-4 short items each; script under 60 words.`;
+
+export async function negotiationAdvice(leadId: string, projectId: string, agentId: string, authority: boolean) {
+  const db = await admin();
+  const { data: lead, error } = await db.from("leads").select("name, status, temperature, notes, assigned_to").eq("id", leadId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!lead || (!authority && lead.assigned_to !== agentId)) throw new Error("This lead is not assigned to you");
+  const { data: p } = await db.from("project_catalog")
+    .select("name, location, status, total_price, down_payment, installment_plan, price_per_sqft, unit_sizes, parking_charge, extra_charges")
+    .eq("id", projectId).maybeSingle();
+  if (!p) throw new Error("Project not found");
+  const { data: rep } = await db.from("call_reports").select("summary, note, requirement, interest, customer_response")
+    .eq("lead_id", leadId).eq("status", "submitted").order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+  const notes = sanitizeNotes([lead.notes, rep?.summary, rep?.note, rep?.customer_response].filter(Boolean).join("\n"), 1500);
+  const facts = { lead: { name: lead.name, status: lead.status, temperature: lead.temperature, requirement: rep?.requirement ?? null, interest: rep?.interest ?? null }, verified_project_terms: p };
+  const text = await callClaude(`${JSON.stringify(facts)}\n${notes.wrapped}`, NEGOTIATE_SYSTEM);
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("The AI returned an unreadable answer — please retry");
+  const j = JSON.parse(m[0]) as Record<string, unknown>;
+  const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
+  const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 4).map((x) => s(x, 200)).filter(Boolean) : []);
+  return { project: p.name, position: s(j.position), tactics: arr(j.tactics), allowed: arr(j.allowed), never: arr(j.never),
+    script: s(j.script, 600), escalate: s(j.escalate), flagged: notes.flagged };
 }
