@@ -40,11 +40,14 @@ export const staffPhotoUrls = createServerFn({ method: "POST" })
     const { resolveCaller } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
     if (caller.scope === "none" || !data.profileIds.length) return {} as Record<string, string>;
+    // Agents may only load their own photo; HQ / IT authority may load any staff photo.
+    const ids = caller.scope === "authority" ? data.profileIds : data.profileIds.filter((id) => id === caller.profile?.id);
+    if (!ids.length) return {} as Record<string, string>;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin.from("profiles").select("id, photo_path").in("id", data.profileIds).not("photo_path", "is", null);
+    const { data: rows } = await supabaseAdmin.from("profiles").select("id, photo_path").in("id", ids).not("photo_path", "is", null);
     const paths = (rows ?? []).map((r) => r.photo_path!);
     if (!paths.length) return {} as Record<string, string>;
-    const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 3600);
+    const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 900);
     const byPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
     const out: Record<string, string> = {};
     for (const r of rows ?? []) {
