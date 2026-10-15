@@ -1,7 +1,8 @@
 /**
  * Browser bootstrap that recovers a tab whose modules stopped loading. The usual
  * cause is a restart or a new build while the tab is open: the tab still holds
- * module URLs that no longer answer.
+ * module URLs that no longer answer, or a mix of old and new bundles where React
+ * internals read as null ("Cannot read properties of null (reading 'use')").
  *
  * The tab reloads itself, but only once the page *and* the module that failed
  * actually serve again. A server that is coming back answers its document long
@@ -64,7 +65,7 @@ if(attempted()&&c>=MAX_RELOADS){log("fallback-shown",detail);fallback();return}
 mark();setStore(K+":n",String(c+1));
 notice();waitThenReload();
 }
-function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError/i.test(String(m||""))}
+function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError|Cannot read properties of (?:null|undefined) (?:reading|setting) '(?:use|H|ReactCurrentDispatcher|_currentValue|useState|useContext)'/i.test(String(m||""))}
 function urlFrom(m){
 var s=String(m||"");
 var i=s.indexOf(".js");
