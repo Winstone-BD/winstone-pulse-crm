@@ -5464,6 +5464,77 @@ export type Database = {
         }
         Relationships: []
       }
+      website_enquiries: {
+        Row: {
+          amenities: string[]
+          budget_max_bdt: number | null
+          budget_min_bdt: number | null
+          created_at: string
+          customer_name: string
+          facing: string | null
+          hub_request_id: string
+          id: string
+          lead_id: string | null
+          message: string | null
+          outcome: string
+          page_url: string | null
+          phone: string
+          project: string | null
+          property_type: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          amenities?: string[]
+          budget_max_bdt?: number | null
+          budget_min_bdt?: number | null
+          created_at?: string
+          customer_name: string
+          facing?: string | null
+          hub_request_id: string
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          outcome: string
+          page_url?: string | null
+          phone: string
+          project?: string | null
+          property_type?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          amenities?: string[]
+          budget_max_bdt?: number | null
+          budget_min_bdt?: number | null
+          created_at?: string
+          customer_name?: string
+          facing?: string | null
+          hub_request_id?: string
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          outcome?: string
+          page_url?: string | null
+          phone?: string
+          project?: string | null
+          property_type?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_enquiries_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_pages: {
         Row: {
           content: string

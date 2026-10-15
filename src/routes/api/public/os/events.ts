@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/public/os/events")({
             "payment.updated",
             "lead_ingested",
             "site_visit.requested",
+            "enquiry.submitted",
           ],
         }),
       POST: async ({ request }) => {
@@ -111,6 +112,11 @@ export const Route = createFileRoute("/api/public/os/events")({
               if (claim.status !== "failed" || !(await bridge.releaseFailedClaim(key))) {
                 return json(409, { ok: true, status: "duplicate_ignored", outcome: claim.outcome });
               }
+            }
+            if (v2.kind === "enquiry.submitted") {
+              const { applyEnquirySubmitted } = await import("@/lib/knowledge-hub.server");
+              const er = await applyEnquirySubmitted(key, v2.enquiry, v2.phone);
+              return json(201, { ok: true, status: er.outcome, lead_id: er.leadId });
             }
             if (v2.kind === "site_visit.requested") {
               const { applyVisitRequested, notifyVisitRequestAgent } = await import("@/lib/knowledge-hub.server");

@@ -25,6 +25,7 @@ import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsAdminRouteImport } from './routes/docs-admin'
+import { Route as EnquiriesRouteImport } from './routes/enquiries'
 import { Route as HandoverRouteImport } from './routes/handover'
 import { Route as HandoverSummaryRouteImport } from './routes/handover-summary'
 import { Route as HelpRouteImport } from './routes/help'
@@ -203,6 +204,11 @@ const DocsRoute = DocsRouteImport.update({
 const DocsAdminRoute = DocsAdminRouteImport.update({
   id: '/docs-admin',
   path: '/docs-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnquiriesRoute = EnquiriesRouteImport.update({
+  id: '/enquiries',
+  path: '/enquiries',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HandoverRoute = HandoverRouteImport.update({
@@ -741,6 +747,7 @@ export interface FileRoutesByFullPath {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
   '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
@@ -858,6 +865,7 @@ export interface FileRoutesByTo {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
   '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
@@ -976,6 +984,7 @@ export interface FileRoutesById {
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
+  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
   '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
@@ -1095,6 +1104,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/enquiries'
     | '/handover'
     | '/handover-summary'
     | '/help'
@@ -1212,6 +1222,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/enquiries'
     | '/handover'
     | '/handover-summary'
     | '/help'
@@ -1329,6 +1340,7 @@ export interface FileRouteTypes {
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
+    | '/enquiries'
     | '/handover'
     | '/handover-summary'
     | '/help'
@@ -1447,6 +1459,7 @@ export interface RootRouteChildren {
   DispatchRoute: typeof DispatchRoute
   DocsRoute: typeof DocsRoute
   DocsAdminRoute: typeof DocsAdminRoute
+  EnquiriesRoute: typeof EnquiriesRoute
   HandoverRoute: typeof HandoverRoute
   HandoverSummaryRoute: typeof HandoverSummaryRoute
   HelpRoute: typeof HelpRoute
@@ -1660,6 +1673,13 @@ declare module '@tanstack/react-router' {
       path: '/docs-admin'
       fullPath: '/docs-admin'
       preLoaderRoute: typeof DocsAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enquiries': {
+      id: '/enquiries'
+      path: '/enquiries'
+      fullPath: '/enquiries'
+      preLoaderRoute: typeof EnquiriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/handover': {
@@ -2375,6 +2395,7 @@ const rootRouteChildren: RootRouteChildren = {
   DispatchRoute: DispatchRoute,
   DocsRoute: DocsRoute,
   DocsAdminRoute: DocsAdminRoute,
+  EnquiriesRoute: EnquiriesRoute,
   HandoverRoute: HandoverRoute,
   HandoverSummaryRoute: HandoverSummaryRoute,
   HelpRoute: HelpRoute,
