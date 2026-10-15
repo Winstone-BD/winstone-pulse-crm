@@ -169,3 +169,10 @@
 
 - [x] Reconnect Firebase Cloud Messaging in new workspace
 - [x] Review AgentForge project; port useful agent persona/skills parts
+
+- [x] Pipeline answers (whitelisted questions, real counts, role-scoped) next to Winstone AI
+- [x] Call coach shows HQ-approved objection answers (exact match only)
+- [x] Handover due dates (docs 7 days after first completed visit, payment on booking day) + bell/push reminders
+- [x] /daily-sheet HQ page, one row per lead, CSV
+- [ ] Google Drive (recordings) + Google Sheets (daily sheet) sync — blocked: connections not linked yet
+- [ ] Run Gemini buyer-check on a real call note and save — needs an agent to confirm in the app (live data)
