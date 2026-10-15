@@ -203,7 +203,7 @@ export async function appendShiftSummaryToSheetQuietly(
     });
     await gatewayFetch(
       `/spreadsheets/${SHEET_ID}/values/${TAB}!A2:K${1 + block.length}?valueInputOption=USER_ENTERED`,
-      { method: "PUT", body: JSON.stringify({ values: block }) },
+      { method: "PUT", body: JSON.stringify({ values: block.map((r) => r.map(neutraliseFormula)) }) },
     );
 
     await logShiftSheetSync(shiftKey, block.length);
@@ -242,4 +242,9 @@ async function logShiftSheetSync(shiftKey: string, rowsWritten: number) {
 
 export function shiftSheetUrl() {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
+}
+
+/** USER_ENTERED evaluates formulas, so text cells starting with = + - @ are prefixed with '. */
+function neutraliseFormula(v: string): string {
+  return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
 }

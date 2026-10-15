@@ -44,7 +44,7 @@ describe("project photo links", () => {
       const r = await listProjects({ data: { adminToken: null } });
       expect(r.projects[0].image_url).toContain("/object/sign/project-photos/");
     }
-    expect(signed).toEqual(["project-photos/p1.jpg@3600", "project-photos/p1.jpg@3600"]);
+    expect(signed).toEqual(["project-photos/p1.jpg@120", "project-photos/p1.jpg@120"]);
   });
 
   it("a signed-in user who is not approved staff gets no projects and no links", async () => {
