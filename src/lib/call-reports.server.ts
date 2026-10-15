@@ -226,6 +226,8 @@ export async function openCallReport(input: {
   callStartedAt?: string | null;
   durationSeconds?: number;
   connected?: boolean;
+  /** Report origin. "whatsapp" marks the mandatory report opened by a WhatsApp contact. */
+  channel?: "call" | "whatsapp";
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -238,6 +240,15 @@ export async function openCallReport(input: {
           .from("call_reports")
           .update({ recording_id: input.recordingId })
           .eq("id", open.id);
+      }
+      // A WhatsApp contact on the same lead upgrades the open report's origin
+      // (never downgrades it): the channel only ever gains the WhatsApp mark.
+      if (input.channel === "whatsapp") {
+        await supabaseAdmin
+          .from("call_reports")
+          .update({ channel: "whatsapp" })
+          .eq("id", open.id)
+          .eq("channel", "call");
       }
       return { id: open.id, reused: true as const };
     }
@@ -272,6 +283,7 @@ export async function openCallReport(input: {
         call_started_at: input.callStartedAt ?? null,
         duration_seconds: input.durationSeconds ?? 0,
         connected: input.connected ?? true,
+        channel: input.channel ?? "call",
         status: "queued",
       })
       .select("id")
@@ -302,6 +314,7 @@ export async function openCallReport(input: {
       call_started_at: input.callStartedAt ?? null,
       duration_seconds: input.durationSeconds ?? 0,
       connected: input.connected ?? true,
+      channel: input.channel ?? "call",
       status: "pending",
     })
     .select("id")
