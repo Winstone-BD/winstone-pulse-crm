@@ -98,7 +98,22 @@ function TeamSupportInboxInner() {
     // A temporary failure throws so the last good tickets stay on screen
     // while the next 15s poll retries.
     queryFn: async () => {
-      const res = await load({ data: { adminToken: getAdminToken() } });
+      let res;
+      try {
+        res = await load({ data: { adminToken: getAdminToken() } });
+      } catch (e) {
+        // After a server restart an open tab holds stale server-function IDs;
+        // reload once (at most every 2 minutes) to pick up the new version.
+        const msg = e instanceof Error ? e.message : String(e);
+        if (/Invalid server function ID|returned 500/i.test(msg) && typeof window !== "undefined") {
+          const last = Number(sessionStorage.getItem("support-inbox-reload") ?? 0);
+          if (Date.now() - last > 120_000) {
+            sessionStorage.setItem("support-inbox-reload", String(Date.now()));
+            window.location.reload();
+          }
+        }
+        throw e;
+      }
       if (res.error === "unavailable") throw new Error("unavailable");
       return res;
     },
