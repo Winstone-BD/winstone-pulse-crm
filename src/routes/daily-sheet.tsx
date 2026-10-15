@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { dhakaDate } from "@/lib/handover-due";
 import { getAdminToken } from "@/lib/local-session";
-import { getDailySheet } from "@/lib/pipeline-intel.functions";
+import { getDailySheet, syncDailySheetToGoogle } from "@/lib/pipeline-intel.functions";
 import { sheetCsv } from "@/lib/pipeline-intel";
 
 export const Route = createFileRoute("/daily-sheet")({
@@ -28,6 +28,18 @@ function DailySheet() {
   const [date, setDate] = useState(() => dhakaDate(new Date()));
   const run = useServerFn(getDailySheet);
   const q = useQuery({ queryKey: ["daily-sheet", date], queryFn: () => run({ data: { token: getAdminToken(), date } }) });
+  const sync = useServerFn(syncDailySheetToGoogle);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string; url?: string } | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const pushToGoogle = async () => {
+    setSyncing(true); setSyncMsg(null);
+    try {
+      const r = await sync({ data: { token: getAdminToken(), date } });
+      setSyncMsg({ ok: true, text: `${r.rows} rows written to Google Sheets (tab ${date}).`, url: r.url });
+    } catch (e) {
+      setSyncMsg({ ok: false, text: e instanceof Error ? e.message : "Sync failed" });
+    } finally { setSyncing(false); }
+  };
   const download = () => {
     if (!q.data) return;
     const url = URL.createObjectURL(new Blob(["\uFEFF" + sheetCsv(q.data)], { type: "text/csv;charset=utf-8" }));
@@ -44,8 +56,11 @@ function DailySheet() {
         <div className="flex items-center gap-2">
           <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-sm" aria-label="Report date" />
           <button onClick={download} disabled={!q.data?.length} className="rounded-md border border-primary px-3 py-1.5 text-sm font-semibold text-primary disabled:opacity-50">Download CSV</button>
+          <button onClick={pushToGoogle} disabled={syncing} className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{syncing ? "Syncing…" : "Sync to Google Sheets"}</button>
         </div>
       </header>
+      {syncMsg ? <p className={`mt-3 text-sm ${syncMsg.ok ? "text-primary" : "text-destructive"}`}>{syncMsg.text} {syncMsg.url ? <a href={syncMsg.url} target="_blank" rel="noreferrer" className="underline">Open sheet</a> : null}</p> : null}
+      <p className="mt-2 text-xs text-muted-foreground">The CRM also refreshes today's Google Sheet tab automatically every evening.</p>
       {q.isError ? <p className="mt-4 text-sm text-destructive">{(q.error as Error).message}</p> : null}
       {q.isLoading ? <p className="mt-4 text-sm text-muted-foreground">Loading…</p> : null}
       {q.data && q.data.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No lead activity recorded on {date}.</p> : null}
