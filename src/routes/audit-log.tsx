@@ -44,7 +44,7 @@ const ACTION_STYLE: Record<string, string> = {
 const dhaka = (ms: number) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka" }).format(new Date(ms));
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Asia/Dhaka", dateStyle: "medium", timeStyle: "short" });
 const short = (v: unknown) => { const s = v == null ? "—" : typeof v === "string" ? v : JSON.stringify(v); return s.length > 60 ? `${s.slice(0, 60)}…` : s; };
-const csv = (v: unknown) => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const csv = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 
 function Page() {
   const [tab, setTab] = useState<"log" | "security" | "assignments" | "backups" | "ai">("log");

@@ -24,17 +24,17 @@ import {
 } from "@/lib/crm-config";
 import { useAdminToken } from "@/lib/local-session";
 
-export const appConfigQuery = {
-  queryKey: ["app-config"] as const,
-  queryFn: () => getAppConfig(),
+const appConfigQuery = (adminToken: string | null | undefined) => ({
+  queryKey: ["app-config", adminToken ? "pin" : "session"] as const,
+  queryFn: () => getAppConfig({ data: { adminToken: adminToken ?? null } }),
   staleTime: 30_000,
-};
+});
 
 /** IT customizer: extra lead fields, floor rules and agent permissions. */
 export function SystemCustomizer() {
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
-  const { data, isPending } = useQuery(appConfigQuery);
+  const { data, isPending } = useQuery(appConfigQuery(adminToken));
   const [draft, setDraft] = useState<AppConfig>(DEFAULT_CONFIG);
   const [dirty, setDirty] = useState(false);
 
