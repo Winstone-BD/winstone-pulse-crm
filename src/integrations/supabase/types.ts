@@ -1486,6 +1486,57 @@ export type Database = {
         }
         Relationships: []
       }
+      drive_recording_imports: {
+        Row: {
+          agent_id: string | null
+          call_recording_id: string | null
+          created_at: string
+          drive_file_id: string
+          drive_link: string | null
+          file_created_at: string | null
+          file_name: string
+          id: string
+          lead_id: string | null
+          linked_by: string | null
+          match_method: string | null
+          mime_type: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          call_recording_id?: string | null
+          created_at?: string
+          drive_file_id: string
+          drive_link?: string | null
+          file_created_at?: string | null
+          file_name: string
+          id?: string
+          lead_id?: string | null
+          linked_by?: string | null
+          match_method?: string | null
+          mime_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          call_recording_id?: string | null
+          created_at?: string
+          drive_file_id?: string
+          drive_link?: string | null
+          file_created_at?: string | null
+          file_name?: string
+          id?: string
+          lead_id?: string | null
+          linked_by?: string | null
+          match_method?: string | null
+          mime_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_event_receipts: {
         Row: {
           event_key: string
@@ -2411,6 +2462,7 @@ export type Database = {
           assigned_agent_id: string | null
           assigned_to: string | null
           assignment_source: string | null
+          buyer_profile: Json
           call_attempts: number
           call_count: number | null
           carried_from_date: string | null
@@ -2445,6 +2497,7 @@ export type Database = {
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null
+          buyer_profile?: Json
           call_attempts?: number
           call_count?: number | null
           carried_from_date?: string | null
@@ -2479,6 +2532,7 @@ export type Database = {
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null
+          buyer_profile?: Json
           call_attempts?: number
           call_count?: number | null
           carried_from_date?: string | null
@@ -3929,6 +3983,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sheet_change_proposals: {
+        Row: {
+          created_at: string
+          current_value: string | null
+          decided_at: string | null
+          decided_by: string | null
+          fingerprint: string
+          id: string
+          kind: string
+          lead_id: string | null
+          proposed: Json
+          result_note: string | null
+          sheet_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          fingerprint: string
+          id?: string
+          kind: string
+          lead_id?: string | null
+          proposed: Json
+          result_note?: string | null
+          sheet_date: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          fingerprint?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          proposed?: Json
+          result_note?: string | null
+          sheet_date?: string
+          status?: string
+        }
+        Relationships: []
       }
       sheet_sync_events: {
         Row: {
