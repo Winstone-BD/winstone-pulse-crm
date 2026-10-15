@@ -62,6 +62,7 @@ export const NAV = [
   { to: "/migration-export", label: "Migration Export", scopes: ["authority"] },
   { to: "/security", label: "PIN & Access", scopes: ["authority", "coordinator", "agent"] },
   { to: "/security-findings", label: "Security Findings", scopes: ["authority"] },
+  { to: "/enquiries", label: "Website Enquiries", scopes: ["authority"] },
   { to: "/docs", label: "Docs", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/docs-admin", label: "Docs Admin", scopes: ["authority", "coordinator"] },
   { to: "/inbox", label: "Support Inbox", scopes: ["authority", "coordinator", "agent"] },
