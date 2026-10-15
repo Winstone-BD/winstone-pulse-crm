@@ -184,11 +184,27 @@ export async function callCoach(leadId: string, agentId: string, authority: bool
   const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
   const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 7).map((x) => s(x, 120)).filter(Boolean) : []);
   const score = Math.max(0, Math.min(100, Math.round(Number(j.score) || 0)));
-  const out = { score, covered: arr(j.covered), missing: arr(j.missing), praise: s(j.praise), improve: s(j.improve), next: s(j.next_follow_up), when: s(j.when, 120), flagged: notes.flagged };
+  const approved = await approvedAnswersForLead(leadId);
+  const out = { score, covered: arr(j.covered), missing: arr(j.missing), praise: s(j.praise), improve: s(j.improve), next: s(j.next_follow_up), when: s(j.when, 120), flagged: notes.flagged, approved };
   const owner = authority ? lead.assigned_to : agentId;
   if (owner) await db.from("sales_drafts").insert({ agent_id: owner, lead_id: leadId, workflow: "call_coach", model: DRAFT_MODEL, injection_flagged: notes.flagged,
     ai_output: `কল কোচ — স্কোর ${score}/100\nজানা গেছে: ${out.covered.join("; ")}\nবাকি: ${out.missing.join("; ")}\nভালো: ${out.praise}\nউন্নতি: ${out.improve}\nপরের ফলো-আপ: ${out.next} (${out.when})` });
   return out;
+}
+
+/** HQ-approved answers for objections this lead actually raised (exact key match only; never AI-chosen). */
+export async function approvedAnswersForLead(leadId: string) {
+  const db = await admin();
+  const { data: recs } = await db.from("call_recordings").select("customer_objections").eq("lead_id", leadId).order("created_at", { ascending: false }).limit(10);
+  const keys = new Map<string, string>();
+  for (const r of recs ?? []) for (const o of r.customer_objections ?? []) {
+    const t = String(o ?? "").trim();
+    if (!t || sanitizeNotes(t).flagged) continue;
+    keys.set(objectionKey(t), t);
+  }
+  if (!keys.size) return [] as { objection: string; answer: string; approvedAt: string }[];
+  const { data } = await db.from("objection_answers").select("objection_key, objection, answer, approved_at").in("objection_key", [...keys.keys()]);
+  return (data ?? []).map((a) => ({ objection: a.objection, answer: a.answer, approvedAt: a.approved_at }));
 }
 
 export const objectionKey = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 120);

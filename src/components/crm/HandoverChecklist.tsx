@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, ClipboardCheck, Clock } from "lucide-react";
 
 import { getAdminToken } from "@/lib/local-session";
 import { getHandoverSignals } from "@/lib/handover.functions";
+import { DUE_LABEL, dueText } from "@/lib/handover-due";
 
 type Item = { label: string; state: "done" | "pending" | "todo"; note?: string | undefined };
 
@@ -57,6 +58,15 @@ export function HandoverChecklist({ leadId }: { leadId: string }) {
         ))}
       </ol>
       <p className="mt-3 text-sm"><span className="text-muted-foreground">পরের পদক্ষেপ: </span>{next}</p>
+      {s.due.length ? (
+        <ul className="mt-2 space-y-1" aria-label="হস্তান্তরের শেষ তারিখ">
+          {s.due.map((d) => (
+            <li key={d.kind} className={`rounded-md border px-2 py-1 text-xs ${d.state === "overdue" ? "border-destructive/50 bg-destructive/10 text-destructive" : d.state === "upcoming" ? "border-border text-muted-foreground" : "border-primary/40 bg-primary/10 text-primary"}`}>
+              <b>{DUE_LABEL[d.kind].bn}:</b> {dueText(d)}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {groups.filter((g) => g.items.length).map((g) => (
         <div key={g.title} className="mt-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">{g.title}</p>
@@ -67,7 +77,7 @@ export function HandoverChecklist({ leadId }: { leadId: string }) {
           </ul>
         </div>
       ))}
-      <p className="mt-3 text-xs text-muted-foreground">টিক শুধু সংরক্ষিত CRM রেকর্ড থেকে আসে; নথি ও পেমেন্ট নিজে যাচাই করুন।</p>
+      <p className="mt-3 text-xs text-muted-foreground">টিক শুধু সংরক্ষিত CRM রেকর্ড থেকে আসে; নথি ও পেমেন্ট নিজে যাচাই করুন। নিয়ম: নথি সাইট ভিজিটের ৭ দিনের মধ্যে, বুকিং পেমেন্ট বুকিংয়ের দিনেই।</p>
     </section>
   );
 }

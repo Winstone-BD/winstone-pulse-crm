@@ -35,3 +35,4 @@
 - Subdirectories have their own AGENTS.md; read it before changing files there.
 - Homepage role selection only filters existing entry cards; recommendations use getMyAccount and operational access uses useMaintenance with explicit unavailable states — why: navigation must not grant roles or fabricate health/access.
 - Client IP for limits/logs comes only from cf-connecting-ip via requestSourceKey; 429s use rateLimitedResponse (Retry-After, no internals); no IP allowlists/office binding — why: X-Forwarded-For is spoofable and staff work from any network.
+- Handover due dates come only from pure rules in src/lib/handover-due.ts (no stored due dates); pipeline answers use whitelisted question IDs with server counts, never model-generated numbers — why: one rule, no invented figures.

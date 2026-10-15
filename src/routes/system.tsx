@@ -32,6 +32,7 @@ import { RoleGate } from "@/components/crm/RoleGate";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
+import { PipelinePanel } from "@/components/crm/PipelinePanel";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { SystemCustomizer } from "@/components/crm/SystemCustomizer";
 import { SystemNoticeBar } from "@/components/crm/SystemNoticeBar";
@@ -182,6 +183,7 @@ function SystemBoard() {
           <SheetSyncHealthPanel />
           <VersionDataPanel />
           <CommandAgentPanel surface="system" />
+          <PipelinePanel />
         </div>
       )}
 

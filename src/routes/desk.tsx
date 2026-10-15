@@ -23,6 +23,7 @@ import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { SiteVisitReminder } from "@/components/crm/hq/SiteVisitsPanel";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
+import { PipelinePanel } from "@/components/crm/PipelinePanel";
 import { MyCallLog } from "@/components/crm/MyCallLog";
 import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
@@ -425,6 +426,7 @@ function DeskPage() {
         )}
 
         <CommandAgentPanel surface="desk" />
+        <PipelinePanel />
 
         <TeamSupportInbox />
 

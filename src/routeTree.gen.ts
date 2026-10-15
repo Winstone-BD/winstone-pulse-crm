@@ -19,6 +19,7 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as ContributionsRouteImport } from './routes/contributions'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as DailySheetRouteImport } from './routes/daily-sheet'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DispatchRouteImport } from './routes/dispatch'
@@ -169,6 +170,11 @@ const CreditsRoute = CreditsRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailySheetRoute = DailySheetRouteImport.update({
+  id: '/daily-sheet',
+  path: '/daily-sheet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeskRoute = DeskRouteImport.update({
@@ -710,6 +716,7 @@ export interface FileRoutesByFullPath {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
+  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
@@ -823,6 +830,7 @@ export interface FileRoutesByTo {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
+  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
@@ -937,6 +945,7 @@ export interface FileRoutesById {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
+  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
@@ -1052,6 +1061,7 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
+    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
@@ -1165,6 +1175,7 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
+    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
@@ -1278,6 +1289,7 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
+    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
@@ -1392,6 +1404,7 @@ export interface RootRouteChildren {
   ContributionsRoute: typeof ContributionsRoute
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
+  DailySheetRoute: typeof DailySheetRoute
   DeskRoute: typeof DeskRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   DispatchRoute: typeof DispatchRoute
@@ -1565,6 +1578,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily-sheet': {
+      id: '/daily-sheet'
+      path: '/daily-sheet'
+      fullPath: '/daily-sheet'
+      preLoaderRoute: typeof DailySheetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/desk': {
@@ -2288,6 +2308,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContributionsRoute: ContributionsRoute,
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
+  DailySheetRoute: DailySheetRoute,
   DeskRoute: DeskRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   DispatchRoute: DispatchRoute,
