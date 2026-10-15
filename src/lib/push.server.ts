@@ -86,6 +86,8 @@ export async function sendPush(input: {
   entityId?: string | null;
   profileIds: string[];
   payload: PushPayload;
+  /** validate_only: FCM checks the message, nothing is delivered. */
+  dryRun?: boolean;
 }): Promise<{ sent: number; failed: number; skipped?: string }> {
   const supabaseAdmin = await admin();
 
@@ -118,20 +120,22 @@ export async function sendPush(input: {
   let failed = 0;
   let lastError: string | null = null;
 
+  const { fetchWithTimeout, redact, stringifyData, isDeadTokenResponse } = await import("@/lib/outbound-guard");
   for (const row of tokens) {
     const message = {
+      ...(input.dryRun ? { validate_only: true } : {}),
       message: {
         token: row.token,
-        notification: { title: input.payload.title, body: input.payload.body },
-        data: {
+        notification: { title: input.payload.title.slice(0, 200), body: input.payload.body.slice(0, 1000) },
+        data: stringifyData({
           ...(input.payload.data ?? {}),
           kind: input.kind,
           path: input.payload.path ?? "/desk",
-        },
+        }),
       },
     };
     try {
-      const response = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
+      const response = await fetchWithTimeout(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${creds.lovableKey}`,
@@ -139,19 +143,19 @@ export async function sendPush(input: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(message),
-      });
+      }, 8_000);
       if (response.ok) {
         sent += 1;
         continue;
       }
       const text = await response.text();
       failed += 1;
-      lastError = `[${response.status}] ${text}`;
-      // A dead token is dropped instead of retried forever.
-      if (response.status === 404 || response.status === 400) await revokePushToken(row.token);
+      lastError = `[${response.status}] ${redact(text)}`;
+      // Only a dead token is dropped; a bad payload never revokes the device.
+      if (isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
     } catch (error) {
       failed += 1;
-      lastError = error instanceof Error ? error.message : "push failed";
+      lastError = error instanceof Error && error.name === "AbortError" ? "timeout" : "push failed";
     }
   }
 
