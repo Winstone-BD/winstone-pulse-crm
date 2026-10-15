@@ -37,13 +37,6 @@ function Page() {
   );
 }
 
-export const _BADGE: Record<string, { text: string; cls: string; Icon: typeof Circle }> = {
-  ready: { text: "Saved", cls: "bg-success/15 text-success", Icon: CheckCircle2 },
-  partial: { text: "Incomplete", cls: "bg-warning/15 text-warning", Icon: AlertTriangle },
-  missing: { text: "Missing", cls: "bg-destructive/15 text-destructive", Icon: XCircle },
-  not_used: { text: "Not set up (optional)", cls: "bg-muted text-muted-foreground", Icon: Circle },
-};
-
 const GUIDE: Record<string, string[]> = {
   sheets: ["Linked through the Google Sheets connector.", "Daily report syncs at 6:30 PM Dhaka; delivery is logged in sync health."],
   drive: ["Share a normal Drive folder (drive.google.com/drive/folders/…) with the connected account.", "Recording files should contain the customer phone number."],
