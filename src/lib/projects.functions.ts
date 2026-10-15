@@ -9,12 +9,21 @@ import { z } from "zod";
 const Token = z.string().nullable().optional();
 const txt = (n: number) => z.string().trim().max(n).nullish().transform((v) => v ?? null);
 export const INTERESTS = ["interested", "negotiating", "not_now"] as const;
+export const FACINGS = ["north", "south", "east", "west", "north_east", "north_west", "south_east", "south_west"] as const;
+export const AMENITIES = ["lift", "generator", "parking", "gas", "security", "rooftop", "gym", "pool", "community_hall", "near_school", "near_hospital", "main_road"] as const;
+const filterFields = {
+  price_min: z.number().nonnegative().max(100_000_000_000).nullish().transform((v) => v ?? null),
+  price_max: z.number().nonnegative().max(100_000_000_000).nullish().transform((v) => v ?? null),
+  facing: z.array(z.enum(FACINGS)).max(8).default([]),
+  amenities: z.array(z.enum(AMENITIES)).max(20).default([]),
+};
 export const PARTIES = ["client", "land_owner", "flat_seller"] as const;
 
 export type CatalogProject = {
   id: string; name: string; location: string | null; status: string; price_per_sqft: number | null;
   unit_sizes: string | null; total_price: string | null; down_payment: string | null; installment_plan: string | null;
-  parking_charge: string | null; extra_charges: string | null; notes: string | null; image_url: string | null; updated_by: string; updated_at: string;
+  parking_charge: string | null; extra_charges: string | null; notes: string | null; image_url: string | null;
+  price_min: number | null; price_max: number | null; facing: string[]; amenities: string[]; updated_by: string; updated_at: string;
 };
 
 async function ctx(token: string | null | undefined) {
@@ -80,8 +89,8 @@ export const saveProject = createServerFn({ method: "POST" })
       location: txt(200), status: z.enum(["active", "archived"]).default("active"),
       price_per_sqft: z.number().nonnegative().max(10_000_000).nullish().transform((v) => v ?? null),
       unit_sizes: txt(300), total_price: txt(300), down_payment: txt(300), installment_plan: txt(500),
-      parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000), image_url: txt(500),
-    }).parse(i),
+      parking_charge: txt(200), extra_charges: txt(500), notes: txt(1000), image_url: txt(500), ...filterFields,
+    }).refine((v) => v.price_min == null || v.price_max == null || v.price_min <= v.price_max, { message: "price_min > price_max" }).parse(i),
   )
   .handler(async ({ data }) => {
     const { c, db } = await ctx(data.adminToken);
