@@ -76,7 +76,7 @@ function Readiness() {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</h2>
           <div className="grid gap-3 md:grid-cols-2">
             {g.items.map((it) => {
-              const b = BADGE[it.status] ?? BADGE.missing!;
+              const b = BADGE[it.status] ?? BADGE['missing']!;
               const r = results[it.id];
               return (
                 <div key={it.id} className="rounded-lg border bg-card p-4">
