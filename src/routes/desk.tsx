@@ -14,8 +14,10 @@ import {
   Timer,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLang, useT } from "@/lib/i18n";
+import { autoRefillMyLeads } from "@/lib/lead-pool.functions";
 
 
 import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
@@ -261,9 +263,6 @@ function Tile({
 }
 
 function QueueLockedNote() {
-  const t = useT();
-  return (
-    <div role="status" className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full border border-warning/40 bg-gradient-to-r from-warning/20 to-destructive/20 px-4 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur-md sm:text-sm">
       <span className="size-2 shrink-0 animate-pulse rounded-full bg-warning" aria-hidden />
       {t({ bn: "আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে", en: "Today's lead queue is awaiting HQ review — follow-ups and reports remain open" })}
     </div>
