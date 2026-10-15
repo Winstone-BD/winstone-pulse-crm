@@ -5,7 +5,7 @@ import { CheckCircle2, Circle, ClipboardCheck, Clock } from "lucide-react";
 import { getAdminToken } from "@/lib/local-session";
 import { getHandoverSignals } from "@/lib/handover.functions";
 
-type Item = { label: string; state: "done" | "pending" | "todo"; note?: string };
+type Item = { label: string; state: "done" | "pending" | "todo"; note?: string | undefined };
 
 /** Handover checklist: ticks come only from saved records; documents/payments are reminders to verify. */
 export function HandoverChecklist({ leadId }: { leadId: string }) {
