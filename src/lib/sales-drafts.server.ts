@@ -180,7 +180,7 @@ export async function callCoach(leadId: string, agentId: string, authority: bool
   const facts = { connected: rep.connected, seconds: rep.duration_seconds, grade: rep.grade, next_action: rep.next_action, status: lead.status, temperature: lead.temperature };
   const m = (await callClaude(`${JSON.stringify(facts)}\n${notes.wrapped}`, COACH_SYSTEM)).match(/\{[\s\S]*\}/);
   if (!m) throw new Error("The AI returned an unreadable answer — please retry");
-  const j = JSON.parse(m[0]) as Record<string, unknown>;
+  const j = JSON.parse(m[0]) as { score?: unknown; covered?: unknown; missing?: unknown; praise?: unknown; improve?: unknown; next_follow_up?: unknown; when?: unknown };
   const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
   const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 7).map((x) => s(x, 120)).filter(Boolean) : []);
   const score = Math.max(0, Math.min(100, Math.round(Number(j.score) || 0)));

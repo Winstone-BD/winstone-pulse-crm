@@ -40,6 +40,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as ObjectionsRouteImport } from './routes/objections'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -273,6 +274,11 @@ const MigrationExportRoute = MigrationExportRouteImport.update({
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObjectionsRoute = ObjectionsRouteImport.update({
+  id: '/objections',
+  path: '/objections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -725,6 +731,7 @@ export interface FileRoutesByFullPath {
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
+  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -837,6 +844,7 @@ export interface FileRoutesByTo {
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
+  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -950,6 +958,7 @@ export interface FileRoutesById {
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
+  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -1064,6 +1073,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/migration-export'
     | '/news'
+    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1176,6 +1186,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/migration-export'
     | '/news'
+    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1288,6 +1299,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/migration-export'
     | '/news'
+    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1401,6 +1413,7 @@ export interface RootRouteChildren {
   MigrationRoute: typeof MigrationRoute
   MigrationExportRoute: typeof MigrationExportRoute
   NewsRoute: typeof NewsRoute
+  ObjectionsRoute: typeof ObjectionsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
@@ -1699,6 +1712,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/objections': {
+      id: '/objections'
+      path: '/objections'
+      fullPath: '/objections'
+      preLoaderRoute: typeof ObjectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -2289,6 +2309,7 @@ const rootRouteChildren: RootRouteChildren = {
   MigrationRoute: MigrationRoute,
   MigrationExportRoute: MigrationExportRoute,
   NewsRoute: NewsRoute,
+  ObjectionsRoute: ObjectionsRoute,
   PrivacyRoute: PrivacyRoute,
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
