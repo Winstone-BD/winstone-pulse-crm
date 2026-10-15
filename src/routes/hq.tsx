@@ -10,6 +10,7 @@ import { AgentDossier } from "@/components/crm/AgentDossier";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
 import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
+import { PipelinePanel } from "@/components/crm/PipelinePanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
 import { ExecutiveBrief } from "@/components/crm/ExecutiveBrief";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
@@ -301,6 +302,7 @@ function ControlBoard() {
                 <FloorLockAdminPanel />
                 <ShiftSummaryPanel scope="hq" />
                 <CommandAgentPanel surface="hq" />
+                <PipelinePanel />
                 <AskHqPanel />
               </div>
             )}
