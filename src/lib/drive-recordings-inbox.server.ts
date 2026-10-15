@@ -18,7 +18,7 @@ async function db() {
 export function phoneFromFileName(name: string): string | null {
   const digits = name.replace(/[\s\-_.()]/g, "");
   const m = digits.match(/(?:\+?88)?(01[3-9]\d{8})(?!\d)/);
-  return m ? m[1] : null;
+  return m?.[1] ?? null;
 }
 
 export async function getInboxFolder(): Promise<{ id: string; url: string } | null> {
