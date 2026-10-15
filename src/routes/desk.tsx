@@ -272,6 +272,35 @@ function QueueLockedNote() {
   );
 }
 
+/**
+ * Empty desk + today's work logged → the server may hand a small fresh batch
+ * from the head database (auto-refill). Every rule lives server-side
+ * (lead-refill.rules.ts): empty queue, at least one report logged today,
+ * briefing acknowledged, small fixed batch, twice a day at most, never on
+ * Friday/holidays. This component only asks — once a minute while the queue is
+ * empty — and refreshes the desk when leads arrive.
+ */
+function AutoLeadRefill() {
+  const { account, scope } = useMyAccount();
+  const { leads } = useSnapshot();
+  const queryClient = useQueryClient();
+  const lastAsk = useRef<{ agent: string; at: number } | null>(null);
+  const agentId = account?.profile?.id ?? null;
+
+  useEffect(() => {
+    if (scope !== "agent" || !agentId || leads.length > 0) return;
+    if (lastAsk.current?.agent === agentId && Date.now() - lastAsk.current.at < 60_000) return;
+    lastAsk.current = { agent: agentId, at: Date.now() };
+    void autoRefillMyLeads()
+      .then((result) => {
+        if (result.moved > 0) void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
+      })
+      .catch(() => {});
+  }, [scope, agentId, leads.length, queryClient]);
+
+  return null;
+}
+
 function DeskPage() {
   const t = useT();
   const { account, scope, isPending } = useMyAccount();
@@ -404,6 +433,8 @@ function DeskPage() {
         {tab === "today" && (
           <div className="space-y-4 sm:space-y-6">
         <DeskStats />
+
+        <AutoLeadRefill />
 
         <SmartInsightStrip scope="desk" />
 
