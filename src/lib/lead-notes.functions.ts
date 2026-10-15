@@ -3,23 +3,9 @@ import { z } from "zod";
 
 const Base = z.object({ adminToken: z.string().nullable().optional() });
 
-/** Resolve the caller and confirm they may see this lead (agents: own leads only). */
-export async function leadAccess(adminToken: string | null | undefined, leadId: string) {
-  const { resolveCaller } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
-  if (caller.scope === "none") return null;
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  if (caller.scope === "agent") {
-    const { data: lead } = await supabaseAdmin
-      .from("leads")
-      .select("assigned_to, assigned_agent_id")
-      .eq("id", leadId)
-      .maybeSingle();
-    const me = caller.profile?.id;
-    if (!lead || !me || (lead.assigned_to !== me && lead.assigned_agent_id !== me)) return null;
-  }
-  return { caller, db: supabaseAdmin };
-}
+// The server-side access helpers live in lead-notes.server.ts and are loaded
+// dynamically inside the handlers below, so no server-only module ever enters
+// the browser bundle (the build's import protection enforces this).
 
 export type LeadNote = {
   id: string;
@@ -33,6 +19,7 @@ export type LeadNote = {
 export const listLeadNotes = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ leadId: z.string().uuid() }).parse(input))
   .handler(async ({ data }): Promise<LeadNote[]> => {
+    const { leadAccess } = await import("@/lib/lead-notes.server");
     const access = await leadAccess(data.adminToken, data.leadId);
     if (!access) return [];
     const { data: rows, error } = await access.db
@@ -73,6 +60,7 @@ export const addLeadNote = createServerFn({ method: "POST" })
     Base.extend({ leadId: z.string().uuid(), body: z.string().trim().min(1).max(4000) }).parse(input),
   )
   .handler(async ({ data }) => {
+    const { leadAccess } = await import("@/lib/lead-notes.server");
     const access = await leadAccess(data.adminToken, data.leadId);
     if (!access || access.caller.readOnly) throw new Error("এই লিডে নোট লেখার অনুমতি নেই");
     const { error } = await access.db.from("lead_personal_notes").insert({
@@ -87,25 +75,12 @@ export const addLeadNote = createServerFn({ method: "POST" })
 
 const NoteEdit = Base.extend({ leadId: z.string().uuid(), noteId: z.string().uuid() });
 
-async function ownNote(data: z.infer<typeof NoteEdit>) {
-  const access = await leadAccess(data.adminToken, data.leadId);
-  if (!access || access.caller.readOnly) throw new Error("অনুমতি নেই");
-  const { data: row } = await access.db
-    .from("lead_personal_notes")
-    .select("id, author_profile_id, lead_id, deleted_at")
-    .eq("id", data.noteId)
-    .maybeSingle();
-  if (!row || row.lead_id !== data.leadId || row.deleted_at) throw new Error("নোট পাওয়া যায়নি");
-  if (!noteOwnedBy(row, access.caller.profile?.id ?? null, access.caller.scope))
-    throw new Error("শুধু নিজের নোট বদলানো যায়");
-  return access;
-}
-
 export const updateLeadNote = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     NoteEdit.extend({ body: z.string().trim().min(1).max(4000) }).parse(input),
   )
   .handler(async ({ data }) => {
+    const { ownNote } = await import("@/lib/lead-notes.server");
     const access = await ownNote(data);
     const { error } = await access.db
       .from("lead_personal_notes")
@@ -119,6 +94,7 @@ export const updateLeadNote = createServerFn({ method: "POST" })
 export const deleteLeadNote = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => NoteEdit.parse(input))
   .handler(async ({ data }) => {
+    const { ownNote } = await import("@/lib/lead-notes.server");
     const access = await ownNote(data);
     const { error } = await access.db
       .from("lead_personal_notes")
@@ -132,6 +108,7 @@ export const deleteLeadNote = createServerFn({ method: "POST" })
 export const listLeadReports = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Base.extend({ leadId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
+    const { leadAccess } = await import("@/lib/lead-notes.server");
     const access = await leadAccess(data.adminToken, data.leadId);
     if (!access) return [];
     const { data: rows, error } = await access.db

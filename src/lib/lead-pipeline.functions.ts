@@ -19,7 +19,7 @@ export const setLeadPipelineStage = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { leadAccess } = await import("@/lib/lead-notes.functions");
+    const { leadAccess } = await import("@/lib/lead-notes.server");
     const access = await leadAccess(data.adminToken, data.leadId);
     if (!access || access.caller.readOnly) throw new Error("এই লিডের ধাপ বদলানোর অনুমতি নেই");
     const { error } = await access.db
