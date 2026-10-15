@@ -1,48 +1,70 @@
 // Buyer-check and call-prep templates adapted from AgentForge's sales workflows.
-// Pure text: nothing is sent or saved. Lead-supplied text is screened with the
-// same prompt guard used for AI, so pasted instructions are flagged, not trusted.
+// Pure text: nothing is sent or saved. Known fields come from the lead's saved
+// CRM record; anything not stored shows "তথ্য যাচাই প্রয়োজন". Lead-supplied text
+// is screened with the same prompt guard used for AI.
 import { sanitizeNotes } from "@/lib/prompt-guard";
 
 export type TemplateId = "buyer_check" | "call_prep";
 
-export type TemplateFacts = { name?: string | null; requirement?: string | null };
+export type TemplateFacts = {
+  name?: string | null;
+  requirement?: string | null;
+  area?: string | null;
+  interest?: string | null;
+  temperature?: string | null;
+  grade?: string | null;
+  customerResponse?: string | null;
+  nextAction?: string | null;
+  lastCallAt?: string | null;
+  attempts?: number | null;
+};
 
-const VERIFY = "তথ্য যাচাই প্রয়োজন";
+export const VERIFY = "তথ্য যাচাই প্রয়োজন";
 
-function clean(value: string | null | undefined, max = 80) {
+function clean(value: string | null | undefined, max = 120) {
   const raw = (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
   const { flagged } = sanitizeNotes(raw, max);
   return { text: flagged ? "" : raw.replace(/[<>]/g, ""), flagged };
 }
 
 export function buildTemplate(id: TemplateId, facts: TemplateFacts) {
-  const name = clean(facts.name);
-  const req = clean(facts.requirement, 120);
-  const who = name.text || "গ্রাহক";
-  const need = req.text || VERIFY;
+  const f = {
+    name: clean(facts.name, 80), requirement: clean(facts.requirement), area: clean(facts.area),
+    interest: clean(facts.interest, 60), response: clean(facts.customerResponse, 160), next: clean(facts.nextAction, 160),
+  };
+  const flagged = Object.values(f).some((v) => v.flagged);
+  const known = (v: { text: string }) => v.text || VERIFY;
+  const who = f.name.text || "গ্রাহক";
+  const heat = facts.temperature || facts.grade
+    ? `${(facts.temperature ?? "?").toUpperCase()}/${facts.grade ?? "?"} (CRM)` : VERIFY;
+  const last = facts.lastCallAt
+    ? new Date(facts.lastCallAt).toLocaleDateString("en-GB", { timeZone: "Asia/Dhaka" }) : "এখনো কল হয়নি";
+
   const text =
     id === "buyer_check"
       ? [
           `ক্রেতা যাচাই — ${who}`,
-          `প্রয়োজন: ${need}`,
+          `প্রয়োজন: ${known(f.requirement)}`,
+          `এলাকা: ${known(f.area)}`,
+          `আগ্রহ: ${known(f.interest)}`,
+          `CRM শ্রেণি: ${heat}`,
+          `শেষ কল: ${last}${facts.attempts ? ` · মোট ${facts.attempts}টি চেষ্টা` : ""}`,
+          `গ্রাহকের শেষ কথা: ${known(f.response)}`,
+          `পরের কাজ (আগের রিপোর্ট): ${known(f.next)}`,
           "",
-          `১. বাজেট (সর্বোচ্চ ৳): ${VERIFY}`,
-          "২. পছন্দের এলাকা / প্রকল্প: ",
-          "৩. ধরন: ফ্ল্যাট / জমি / কমার্শিয়াল / রিসোর্ট শেয়ার",
-          "৪. কবে কিনতে চান (সময়সীমা): ",
-          "৫. সিদ্ধান্ত কে নেবেন: ",
-          "৬. কিস্তি লাগবে? কত মাস: ",
-          "৭. প্রবাসী (NRB) কি না: ",
-          "",
-          "জানা বাকি — পরের কলে জিজ্ঞেস করুন:",
-          "- ",
+          `বাজেট (সর্বোচ্চ ৳): ${VERIFY}`,
+          "ধরন (ফ্ল্যাট / জমি / কমার্শিয়াল / রিসোর্ট শেয়ার): " + VERIFY,
+          `কবে কিনতে চান: ${VERIFY}`,
+          `সিদ্ধান্ত কে নেবেন: ${VERIFY}`,
+          `কিস্তি লাগবে? কত মাস: ${VERIFY}`,
+          `প্রবাসী (NRB) কি না: ${VERIFY}`,
           "",
           "প্রস্তাবিত গ্রেড: A+ HOT | B Follow-up | C Low Intent (শুধু পরামর্শ — CRM গ্রেডই চূড়ান্ত)",
           "দাম, স্টক বা ছাড় যাচাই ছাড়া বলবেন না।",
         ].join("\n")
       : [
           `কল প্রস্তুতি — ${who}`,
-          `প্রয়োজন: ${need}`,
+          `প্রয়োজন: ${known(f.requirement)}`,
           "",
           "কলের উদ্দেশ্য: ",
           "",
@@ -63,5 +85,5 @@ export function buildTemplate(id: TemplateId, facts: TemplateFacts) {
           "",
           "কোনো দাম, ছাড় বা রিটার্নের নিশ্চয়তা দেবেন না।",
         ].join("\n");
-  return { text, flagged: name.flagged || req.flagged };
+  return { text, flagged };
 }
