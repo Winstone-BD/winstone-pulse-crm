@@ -25,13 +25,13 @@ export async function buildDailySheet(date: string): Promise<SheetRow[]> {
   for (const r of visits.data ?? []) { const e = get(r.lead_id); e.visits++; if (r.status === "completed") e.done++; touch(e, r.visit_at); }
   for (const r of books.data ?? []) { const e = get(r.lead_id); e.bookings++; e.pay.push(r.approval_status === "approved" ? "HQ approved" : `awaiting HQ (${r.approval_status})`); touch(e, r.booked_at); }
   const ids = [...agg.keys()].slice(0, 1000);
-  const leads = ids.length ? (await db.from("leads").select("id, name, phone_number, status, assigned_to").in("id", ids)).data ?? [] : [];
+  const leads = ids.length ? (await db.from("leads").select("id, name, phone_number, status, assigned_to, pipeline_stage").in("id", ids)).data ?? [] : [];
   const owners = [...new Set(leads.map((l) => l.assigned_to).filter(Boolean))] as string[];
   const pn = new Map(((owners.length ? (await db.from("profiles").select("id, name").in("id", owners)).data : []) ?? []).map((p) => [p.id, p.name as string]));
   const fmt = (t: string | null) => (t ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Dhaka", hour: "2-digit", minute: "2-digit" }).format(new Date(t)) : null);
   return leads.map((l) => {
     const e = agg.get(l.id)!;
-    return { leadId: l.id, lead: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, status: String(l.status), visits: e.visits, visitsCompleted: e.done, bookings: e.bookings, paymentStatus: e.pay.join("; ") || "—", lastActivity: fmt(e.last) };
+    return { leadId: l.id, lead: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, status: String(l.status), stage: String(l.pipeline_stage), visits: e.visits, visitsCompleted: e.done, bookings: e.bookings, paymentStatus: e.pay.join("; ") || "—", lastActivity: fmt(e.last) };
   }).sort((a, b) => (b.lastActivity ?? "").localeCompare(a.lastActivity ?? ""));
 }
 
@@ -73,12 +73,12 @@ export async function syncDailySheet(date: string) {
     if (!titles.includes(date)) {
       await gw(`/spreadsheets/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ addSheet: { properties: { title: date } } }] }) });
     }
-    await gw(`/spreadsheets/${id}/values/'${date}'!A:J:clear`, { method: "POST", body: "{}" });
+    await gw(`/spreadsheets/${id}/values/'${date}'!A:K:clear`, { method: "POST", body: "{}" });
     const values = [
-      ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
-      ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
+      ["Lead", "Phone", "Agent", "Status", "Stage", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
+      ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.stage, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
     ];
-    (values[0] as unknown[])[9] = `Synced ${new Date().toISOString()}`;
+    (values[0] as unknown[])[10] = `Synced ${new Date().toISOString()}`;
     // RAW: values are stored as text, never evaluated as formulas.
     await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
     await recordSheetSyncEvent({ surface: "daily_sheet", operation: "sync", outcome: "success", durationMs: Date.now() - startedAt });

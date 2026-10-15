@@ -36,7 +36,8 @@ describe("pipeline calculations", () => {
     expect(r).toEqual([["b", 2], ["a", 1]]);
   });
   it("CSV escapes quotes and blocks formula injection", () => {
-    const csv = sheetCsv([{ leadId: "1", lead: '=HYPERLINK("x")', phone: "+8801", agent: null, status: "pending", visits: 1, visitsCompleted: 0, bookings: 0, paymentStatus: "—", lastActivity: null }]);
-    expect(csv.split("\n")[1]).toBe(`"'=HYPERLINK(""x"")",'+8801,,pending,1,0,0,—,`);
+    const csv = sheetCsv([{ leadId: "1", lead: '=HYPERLINK("x")', phone: "+8801", agent: null, status: "pending", stage: "proposal", visits: 1, visitsCompleted: 0, bookings: 0, paymentStatus: "—", lastActivity: null }]);
+    expect(csv.split("\n")[0]).toBe(`Lead,Phone,Agent,Status,Stage,Visits,Visits completed,Bookings,Payment status,Last activity (Dhaka)`);
+    expect(csv.split("\n")[1]).toBe(`"'=HYPERLINK(""x"")",'+8801,,pending,proposal,1,0,0,—,`);
   });
 });

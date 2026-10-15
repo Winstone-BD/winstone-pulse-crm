@@ -67,13 +67,14 @@ function DailySheet() {
       {q.data && q.data.length > 0 ? (
         <div className="table-scroll mt-4">
           <table className="w-full min-w-[860px] border-collapse text-xs">
-            <thead><tr>{["Lead", "Agent", "Status", "Visits", "Completed", "Bookings", "Payment", "Last activity"].map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
+            <thead><tr>{["Lead", "Agent", "Status", "Stage", "Visits", "Completed", "Bookings", "Payment", "Last activity"].map((h) => <th key={h} className="border border-border bg-muted p-2 text-left">{h}</th>)}</tr></thead>
             <tbody>
               {q.data.map((r) => (
                 <tr key={r.leadId}>
                   <td className="border border-border p-2"><b>{r.lead}</b><br />{r.phone}</td>
                   <td className="border border-border p-2">{r.agent ?? "Unassigned"}</td>
                   <td className="border border-border p-2">{r.status}</td>
+                  <td className="border border-border p-2 capitalize">{r.stage}</td>
                   <td className="border border-border p-2">{r.visits}</td>
                   <td className="border border-border p-2">{r.visitsCompleted}</td>
                   <td className="border border-border p-2">{r.bookings}</td>
