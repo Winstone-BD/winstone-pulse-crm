@@ -285,7 +285,7 @@ export async function sweepReminders(now = new Date()) {
         payload: {
           title: item.kind === "follow_up" && item.overdue ? `⚠️ ${item.title}` : item.title,
           body: item.detail,
-          path: item.kind === "site_visit" ? "/site-visits" : item.kind === "handover" && item.leadId ? `/leads/${item.leadId}` : "/desk",
+          path: item.kind === "site_visit" ? "/site-visits" : "/desk",
           data: { reminder_kind: item.kind, reminder_id: item.id, lead_id: item.leadId ?? "" },
         },
       });
