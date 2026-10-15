@@ -46,6 +46,8 @@ export const getNegotiationAdvice = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ token: Tok, leadId: z.string().uuid(), projectId: z.string().uuid() }).parse(i))
   .handler(async ({ data }) => {
     const s = await scope(data.token);
+    // negotiationAdvice stores a sales_drafts row, so read-only viewers may not run it.
+    if (s.readOnly) throw new Error("Read-only access");
     const m = await import("@/lib/sales-drafts.server");
     return m.negotiationAdvice(data.leadId, data.projectId, s.agentId ?? "", s.authority);
   });
