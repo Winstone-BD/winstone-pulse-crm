@@ -37,6 +37,8 @@ export type DayCallRow = {
 };
 
 const SIGNED_URL_SECONDS = 6 * 60 * 60;
+/** Live recent-calls list: links expire quickly and are re-minted on each refresh. */
+const RECENT_LINK_SECONDS = 15 * 60;
 const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
 
 function dhakaLabel(iso: string) {
@@ -213,7 +215,7 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
     if (paths.length > 0) {
       const { data: signed } = await supabaseAdmin.storage
         .from("call-audio")
-        .createSignedUrls([...new Set(paths)], SIGNED_URL_SECONDS);
+        .createSignedUrls([...new Set(paths)], RECENT_LINK_SECONDS);
       for (const item of signed ?? []) {
         if (item.path && item.signedUrl) signedByPath.set(item.path, item.signedUrl);
       }
