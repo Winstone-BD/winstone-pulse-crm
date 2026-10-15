@@ -58,6 +58,7 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
           phoneNumber: data.phone,
           durationSeconds: 0,
           connected: true,
+          channel: "whatsapp",
         });
         reportOpened = true;
       } catch (error) {
