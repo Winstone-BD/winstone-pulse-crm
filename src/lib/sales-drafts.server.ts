@@ -149,7 +149,7 @@ export async function negotiationAdvice(leadId: string, projectId: string, agent
   const text = await callClaude(`${JSON.stringify(facts)}\n${notes.wrapped}`, NEGOTIATE_SYSTEM);
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("The AI returned an unreadable answer — please retry");
-  const j = JSON.parse(m[0]) as Record<string, unknown>;
+  const j = JSON.parse(m[0]) as { position?: unknown; tactics?: unknown; allowed?: unknown; never?: unknown; script?: unknown; escalate?: unknown };
   const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
   const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 4).map((x) => s(x, 200)).filter(Boolean) : []);
   return { project: p.name, position: s(j.position), tactics: arr(j.tactics), allowed: arr(j.allowed), never: arr(j.never),
