@@ -160,9 +160,7 @@ export function LeadQuickFilter({
             </Button>
           );
         })}
-      </div>
-
-      {dirty && (
+        {dirty && (
           <Button
             size="sm"
             variant="ghost"
