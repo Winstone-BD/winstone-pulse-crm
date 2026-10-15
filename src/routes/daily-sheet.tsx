@@ -7,6 +7,7 @@ import { dhakaDate } from "@/lib/handover-due";
 import { getAdminToken } from "@/lib/local-session";
 import { getDailySheet, syncDailySheetToGoogle } from "@/lib/pipeline-intel.functions";
 import { sheetCsv } from "@/lib/pipeline-intel";
+import { RecordingsInbox, SheetProposals } from "@/components/crm/HqSyncPanels";
 
 export const Route = createFileRoute("/daily-sheet")({
   head: () => ({
@@ -35,7 +36,7 @@ function DailySheet() {
     setSyncing(true); setSyncMsg(null);
     try {
       const r = await sync({ data: { token: getAdminToken(), date } });
-      setSyncMsg({ ok: true, text: `${r.rows} rows written to Google Sheets (tab ${date}).`, url: r.url });
+      setSyncMsg({ ok: true, text: `${r.rows} rows written to Google Sheets (tab ${date}). ${r.pending ? `${r.pending} HQ edits found — review below.` : ""}`, url: r.url });
     } catch (e) {
       setSyncMsg({ ok: false, text: e instanceof Error ? e.message : "Sync failed" });
     } finally { setSyncing(false); }
@@ -86,6 +87,8 @@ function DailySheet() {
           </table>
         </div>
       ) : null}
+      <SheetProposals />
+      <RecordingsInbox />
     </main>
   );
 }

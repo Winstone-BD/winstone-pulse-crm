@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyExtraction, buildTemplate, EXTRACT_FIELDS, EXTRACT_LABELS, type TemplateFacts, type TemplateId } from "@/lib/agent-templates";
 import { getBuyerCheckFacts } from "@/lib/buyer-facts.functions";
-import { extractBuyerCheck } from "@/lib/buyer-extract.functions";
+import { extractBuyerCheck, saveBuyerCheck } from "@/lib/buyer-extract.functions";
 import { getAdminToken } from "@/lib/local-session";
 
 type Extracted = Awaited<ReturnType<typeof extractBuyerCheck>>["fields"];
@@ -16,6 +16,8 @@ type Extracted = Awaited<ReturnType<typeof extractBuyerCheck>>["fields"];
 export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: TemplateFacts }) {
   const loadFacts = useServerFn(getBuyerCheckFacts);
   const runExtract = useServerFn(extractBuyerCheck);
+  const runSave = useServerFn(saveBuyerCheck);
+  const [saving, setSaving] = useState(false);
   const [text, setText] = useState("");
   const [tpl, setTpl] = useState<TemplateId | null>(null);
   const [flagged, setFlagged] = useState(false);
@@ -60,6 +62,22 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
   };
 
   const found = ai ? EXTRACT_FIELDS.filter((k) => ai[k]) : [];
+
+  const confirmSave = async () => {
+    if (!leadId || !ai) return;
+    if (!window.confirm("এই তথ্যগুলো লিডে সেভ হবে (শুধু খালি ঘর পূরণ হবে)। নিশ্চিত?")) return;
+    setSaving(true);
+    try {
+      const r = await runSave({ data: { token: getAdminToken(), leadId, fields: ai as Record<string, { value: string; evidence?: string }> } });
+      setText(applyExtraction(text, ai));
+      if (r.saved.length) toast.success(`${r.saved.length}টি ঘর লিডে সেভ হয়েছে${r.skipped.length ? ` — ${r.skipped.length}টি আগে থেকেই পূরণ ছিল, বদলানো হয়নি` : ""}`);
+      else toast.info("সব ঘর আগে থেকেই পূরণ — কিছু বদলানো হয়নি");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "সেভ করা যায়নি");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -106,7 +124,10 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
                       </li>
                     ))}
                   </ul>
-                  <Button size="sm" onClick={() => { setText(applyExtraction(text, ai)); toast.success("সাজেশন খসড়ায় বসানো হয়েছে — মিলিয়ে দেখে সম্পাদনা করুন"); }}>
+                  <Button size="sm" variant="default" disabled={saving || !leadId} onClick={() => void confirmSave()}>
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : null} নিশ্চিত করে লিডে সেভ করুন
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setText(applyExtraction(text, ai)); toast.success("সাজেশন খসড়ায় বসানো হয়েছে — মিলিয়ে দেখে সম্পাদনা করুন"); }}>
                     যাচাইয়ের ঘরে বসান
                   </Button>
                 </>

@@ -15,7 +15,6 @@
 - Staff names cleaned by profiles trigger; legal_name never shown — why: one rule everywhere.
 - Android V2 sends six raw yes/no answers, server scores; nearby-lead GPS never uploaded — why: one scoring rule, no staff tracking.
 - Project = inventory requirement labels; site visits/bookings only from saved report signals — why: no invented facts.
-- Staging E2E (tests/staging) is opt-in and refuses the live project ref — why: preview and live share one DB.
 - Server-module rules (maintenance, Sales Intel, Market News, notes, service bills, telemetry, AI cache, contributions, desk range) live in src/lib/AGENTS.md.
 - Dense CRM data views use compact cards below `md` and full tables at `md+`; lower-frequency wide tables scroll only inside `.table-scroll` — why: phone usability without weakening desktop comparison views.
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
@@ -25,8 +24,6 @@
 - Bookings start `approval_status='pending'`; only HQ/IT approval (server-checked authority, decision final via trigger) queues the signed OS relay event — why: HQ gatekeeps what reaches Winstone OS.
 - Knowledge Hub (winstonebd.com) data enters the CRM only as public pages (website_pages), verbatim official RSS news (market_news origin='official') and signed `site_visit.requested` events on /api/public/os/events into server-only website_visit_requests; a request becomes a site_visit only when the agent/HQ confirms it — why: no invented facts, one verified bridge.
 - Stale-tab recovery: vite.config pre-bundles React + TanStack router deps (optimizeDeps.include), and src/lib/deploy-recovery.ts (injected by __root) coalesces failures, bounds probes, reloads only once the failed module serves again, and treats React null reads from mixed old/new bundles as recoverable — why: a restart or re-optimization otherwise strands blank tabs with stale chunks.
-- Restart recovery: `bun run test:restart` (sandbox-only; --account/--self/--list-accounts); post-publish: `bun run test:smoke` (live, signed out, read-only) — why: blank screens need real restarts/loads, not unit tests.
-- Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
 - Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
 - Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
 - IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
