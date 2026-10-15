@@ -499,7 +499,10 @@ export async function grantExtraLeads(input: {
   reason?: string | null;
   actorProfileId?: string | null;
   actorLabel?: string | null;
+  /** Ledger source — "manual_extra" (LeadHub/IT) or "auto_refill" (empty desk). */
+  source?: "manual_extra" | "auto_refill";
 }): Promise<{ moved: number; remaining: number; workDate: string }> {
+  const source = input.source ?? "manual_extra";
   const { assertDistributionDay } = await import("@/lib/business-day");
   assertDistributionDay();
   const supabaseAdmin = await admin();
@@ -582,7 +585,7 @@ export async function grantExtraLeads(input: {
     work_date: today,
     quantity: moved,
     reason: input.reason ?? null,
-    source: "manual_extra",
+    source,
     granted_by: input.actorProfileId ?? null,
     granted_by_label: input.actorLabel ?? "IT Console",
   });
@@ -618,4 +621,105 @@ export async function extraGrantsToday(): Promise<Record<string, number>> {
     totals[row.agent_profile_id] = (totals[row.agent_profile_id] ?? 0) + row.quantity;
   }
   return totals;
+}
+
+export type AutoRefillResult = {
+  give: boolean;
+  reason: "has_leads" | "work_not_logged" | "daily_cap" | "briefing" | "no_pool" | null;
+  moved: number;
+  quantity: number;
+  workDate: string;
+};
+
+/**
+ * System-driven auto-refill for an empty desk. The rules live in
+ * lead-refill.rules.ts; this function gathers the facts and, when the agent is
+ * cleared to receive more, hands a small batch through the same guarded
+ * `grantExtraLeads` path (duplicate protection, LeadHub ledger, audit trail).
+ * Never call this from a client without the agent-session checks in
+ * lead-pool.functions.ts.
+ */
+export async function autoRefillLeadsForAgent(
+  agentProfileId: string,
+): Promise<AutoRefillResult> {
+  const { assertDistributionDay } = await import("@/lib/business-day");
+  assertDistributionDay();
+  const supabaseAdmin = await admin();
+  const today = dhakaToday();
+
+  const { data: agent } = await supabaseAdmin
+    .from("profiles")
+    .select("id, name, is_active, approval_status")
+    .eq("id", agentProfileId)
+    .maybeSingle();
+  if (!agent || !agent.is_active || agent.approval_status !== "approved") {
+    throw new Error("এই এজেন্ট সক্রিয় নয়");
+  }
+
+  // The 9:05 Dhaka briefing gate: no new batch before the day's briefing is
+  // acknowledged (same rule the call screen enforces).
+  const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+  const briefingBlock = await requireAgentBriefing(agentProfileId);
+  if (briefingBlock) {
+    return { give: false, reason: "briefing", moved: 0, quantity: 0, workDate: today };
+  }
+
+  const dayStart = new Date(`${today}T00:00:00+06:00`).toISOString();
+  const head = () => supabaseAdmin.from("leads").select("id", { count: "exact", head: true });
+  const [activeRes, assignedRes, reportsRes, refillsRes] = await Promise.all([
+    // Still-open leads: not closed, not snoozed/unresponsive, not completed.
+    head()
+      .eq("assigned_to", agentProfileId)
+      .eq("work_date", today)
+      .not("work_state", "in", "(snoozed,unresponsive,completed)")
+      .neq("status", "closed"),
+    head().eq("assigned_to", agentProfileId).eq("work_date", today),
+    supabaseAdmin
+      .from("call_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("agent_id", agentProfileId)
+      .not("submitted_at", "is", null)
+      .gte("submitted_at", dayStart),
+    supabaseAdmin
+      .from("lead_extra_grants")
+      .select("id", { count: "exact", head: true })
+      .eq("agent_profile_id", agentProfileId)
+      .eq("work_date", today)
+      .eq("source", "auto_refill"),
+  ]);
+
+  const { decideAutoRefill } = await import("@/lib/lead-refill.rules");
+  const decision = decideAutoRefill({
+    activeLeads: activeRes.count ?? 0,
+    assignedToday: assignedRes.count ?? 0,
+    reportsToday: reportsRes.count ?? 0,
+    refillsToday: refillsRes.count ?? 0,
+  });
+  if (!decision.give) {
+    return { give: false, reason: decision.reason, moved: 0, quantity: 0, workDate: today };
+  }
+
+  try {
+    const result = await grantExtraLeads({
+      agentProfileId,
+      quantity: decision.quantity,
+      reason: "স্বয়ংক্রিয় রিফিল — কিউ খালি ও আজকের কাজ লগ হয়েছে",
+      actorProfileId: null,
+      actorLabel: "Auto refill",
+      source: "auto_refill",
+    });
+    return {
+      give: true,
+      reason: null,
+      moved: result.moved,
+      quantity: decision.quantity,
+      workDate: today,
+    };
+  } catch (err) {
+    // Head database empty — nothing to give; not an error the desk should see.
+    if (err instanceof Error && err.message.includes("নতুন লিড নেই")) {
+      return { give: false, reason: "no_pool", moved: 0, quantity: 0, workDate: today };
+    }
+    throw err;
+  }
 }

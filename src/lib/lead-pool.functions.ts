@@ -337,6 +337,35 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
     });
   });
 
+/**
+ * Auto-refill for the signed-in agent's own empty desk. The server decides
+ * whether a batch is due (see lead-refill.rules.ts) — the agent cannot choose
+ * leads or amounts. Friday/holiday, briefing-ack and the daily cap all apply.
+ */
+export const autoRefillMyLeads = createServerFn({ method: "POST" }).handler(
+  async (): Promise<{
+    give: boolean;
+    reason: string | null;
+    moved: number;
+    quantity: number;
+    workDate: string | null;
+  }> => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller();
+    if (caller.scope !== "agent" || !caller.profile || caller.readOnly || caller.approval !== "approved") {
+      return { give: false, reason: "not_agent", moved: 0, quantity: 0, workDate: null };
+    }
+    try {
+      const { autoRefillLeadsForAgent } = await import("@/lib/lead-pool.server");
+      return await autoRefillLeadsForAgent(caller.profile.id);
+    } catch {
+      // Distribution day closed (Friday/holiday), maintenance lock, or any other
+      // gate — the desk simply gets nothing; never surface an error here.
+      return { give: false, reason: "unavailable", moved: 0, quantity: 0, workDate: null };
+    }
+  },
+);
+
 /** Base quota vs extra leads for today, per agent. */
 export const quotaOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
