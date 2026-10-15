@@ -25,6 +25,7 @@ import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsAdminRouteImport } from './routes/docs-admin'
 import { Route as HandoverRouteImport } from './routes/handover'
+import { Route as HandoverSummaryRouteImport } from './routes/handover-summary'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HqRouteImport } from './routes/hq'
 import { Route as ImportRouteImport } from './routes/import'
@@ -197,6 +198,11 @@ const DocsAdminRoute = DocsAdminRouteImport.update({
 const HandoverRoute = HandoverRouteImport.update({
   id: '/handover',
   path: '/handover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HandoverSummaryRoute = HandoverSummaryRouteImport.update({
+  id: '/handover-summary',
+  path: '/handover-summary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -704,6 +710,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
   '/handover': typeof HandoverRoute
+  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -815,6 +822,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
   '/handover': typeof HandoverRoute
+  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -927,6 +935,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
   '/handover': typeof HandoverRoute
+  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
@@ -1040,6 +1049,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/docs-admin'
     | '/handover'
+    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
@@ -1151,6 +1161,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/docs-admin'
     | '/handover'
+    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
@@ -1262,6 +1273,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/docs-admin'
     | '/handover'
+    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
@@ -1374,6 +1386,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   DocsAdminRoute: typeof DocsAdminRoute
   HandoverRoute: typeof HandoverRoute
+  HandoverSummaryRoute: typeof HandoverSummaryRoute
   HelpRoute: typeof HelpRoute
   HqRoute: typeof HqRoute
   ImportRoute: typeof ImportRoute
@@ -1581,6 +1594,13 @@ declare module '@tanstack/react-router' {
       path: '/handover'
       fullPath: '/handover'
       preLoaderRoute: typeof HandoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/handover-summary': {
+      id: '/handover-summary'
+      path: '/handover-summary'
+      fullPath: '/handover-summary'
+      preLoaderRoute: typeof HandoverSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -2254,6 +2274,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   DocsAdminRoute: DocsAdminRoute,
   HandoverRoute: HandoverRoute,
+  HandoverSummaryRoute: HandoverSummaryRoute,
   HelpRoute: HelpRoute,
   HqRoute: HqRoute,
   ImportRoute: ImportRoute,
