@@ -181,3 +181,4 @@
 - [ ] Run Gemini buyer-check on a real call note and save — needs an agent to confirm in the app (live data)
 - [ ] Marketing Content draft + social-post-style preview (copy only, labelled draft, no publishing) — next release
 - [ ] Reference-project website checks (AgentForge, Social Post Preview) — waiting on their public website URLs; on-demand only, no continuous tracking
+- [x] Lead pipeline stage (2026-10-15): leads gain enquiry→proposal→offer→booking→close stage (default enquiry, indexed, audited); stage picker in lead dossier (lead-scoped, read-only refused, server-enforced); Stage column added to daily sheet page, CSV and Google Sheet sync. No publish.
