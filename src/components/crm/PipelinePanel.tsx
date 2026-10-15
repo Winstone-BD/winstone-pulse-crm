@@ -10,7 +10,7 @@ import { useLang } from "@/lib/i18n";
 /** Winstone AI · Pipeline: fixed questions answered from real database counts (no model guesses). */
 export function PipelinePanel() {
   const run = useServerFn(askPipeline);
-  const { lang } = useLang();
+  const lang = useLang();
   const m = useMutation({ mutationFn: (q: PipelineQuestion) => run({ data: { token: getAdminToken(), question: q } }) });
   const asked = m.variables ? PIPELINE_QUESTIONS.find((q) => q.id === m.variables) : null;
   return (
