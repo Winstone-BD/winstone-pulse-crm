@@ -253,11 +253,7 @@ export function WhatsappInbox() {
                     onChange={(e) => setDraft(e.target.value)}
                     rows={2}
                     className="resize-none"
-                    placeholder={
-                      integrationStatus === "configured"
-                        ? "মেসেজ লিখে পাঠান"
-                        : "যে মেসেজটি পাঠিয়েছেন তা এখানে লিখে রাখুন"
-                    }
+                    placeholder="যে মেসেজটি পাঠিয়েছেন তা এখানে লিখে রাখুন"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
