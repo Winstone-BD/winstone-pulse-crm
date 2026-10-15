@@ -29,6 +29,18 @@ export function CallCoach({ leadId }: { leadId: string }) {
           {r.praise ? <p><span className="text-muted-foreground">ভালো দিক: </span>{r.praise}</p> : null}
           {r.improve ? <p><span className="text-muted-foreground">উন্নতি: </span>{r.improve}</p> : null}
           <p className="rounded-md bg-primary/10 p-2"><b>পরের ফলো-আপ:</b> {r.next}{r.when ? ` (${r.when})` : ""}</p>
+          {r.approved?.length ? (
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">এই ক্রেতার আপত্তির HQ-অনুমোদিত উত্তর</p>
+              {r.approved.map((a) => (
+                <div key={a.objection} className="rounded-md border border-primary/30 p-2 text-sm">
+                  <span className="mr-1 rounded bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">Approved answer</span>
+                  <b>{a.objection}</b>
+                  <p className="mt-1">{a.answer}</p>
+                </div>
+              ))}
+            </div>
+          ) : <p className="text-xs text-muted-foreground">এই ক্রেতার আপত্তির জন্য এখনো কোনো HQ-অনুমোদিত উত্তর নেই।</p>}
         </div>
       ) : null}
     </section>
