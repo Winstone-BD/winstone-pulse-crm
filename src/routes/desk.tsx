@@ -32,6 +32,7 @@ import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
 import { ActivitiesView, OutlookView, PipelineBoard, TasksView } from "@/components/crm/desk/WorkViews";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
+import { VisitCalendar } from "@/components/crm/VisitCalendar";
 import { FollowUpWeek } from "@/components/crm/FollowUpWeek";
 import { DocSummaryPanel } from "@/components/crm/DocSummaryPanel";
 import { MyReports } from "@/components/crm/MyReports";
@@ -478,6 +479,7 @@ function DeskPage() {
           <TabsContent value="calendar" className="space-y-4">
             <FollowUpsInRange />
             <FollowUpWeek />
+            <VisitCalendar />
             <FollowUpCalendar />
           </TabsContent>
           <TabsContent value="reports" className="space-y-4">
