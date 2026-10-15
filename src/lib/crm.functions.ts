@@ -198,7 +198,7 @@ export const getAudioUrl = createServerFn({ method: "POST" })
     }
     const { data: signed, error } = await supabaseAdmin.storage
       .from("call-audio")
-      .createSignedUrl(recording.audio_url, 5 * 60);
+      .createSignedUrl(recording.audio_url, 2 * 60);
     if (error || !signed) throw new Error("Could not create playback link");
     return { url: signed.signedUrl };
   });
