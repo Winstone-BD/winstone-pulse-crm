@@ -191,13 +191,17 @@ export function ProjectCatalogPanel() {
   const [budget, setBudget] = useState("");
   const [fFacing, setFFacing] = useState<string[]>([]);
   const [fAmen, setFAmen] = useState<string[]>([]);
+  const [missing, setMissing] = useState<null | "price" | "facing" | "amen">(null);
   const budgetN = Number(budget.replace(/,/g, "")) || 0;
+  const isMissing = (p: CatalogProject, k: string) =>
+    k === "price" ? p.price_min == null && p.price_max == null : k === "facing" ? !(p.facing ?? []).length : !(p.amenities ?? []).length;
   // Only HQ-entered facts filter: a project with no price/facing saved is hidden when that filter is on.
   const shownProjects = (q.data?.projects ?? []).filter((p) =>
+    (!missing || isMissing(p, missing)) &&
     (!budgetN || (p.price_min != null && p.price_min <= budgetN)) &&
     (!fFacing.length || fFacing.some((f) => (p.facing ?? []).includes(f))) &&
     fAmen.every((a) => (p.amenities ?? []).includes(a)));
-  const filtering = budgetN > 0 || fFacing.length > 0 || fAmen.length > 0;
+  const filtering = budgetN > 0 || fFacing.length > 0 || fAmen.length > 0 || missing != null;
   const canEdit = q.data?.canEdit ?? false;
   return (
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4" aria-labelledby="catalog-h">
@@ -212,20 +216,28 @@ export function ProjectCatalogPanel() {
       {q.data?.projects.length ? (() => {
         const all = q.data.projects;
         const rows = [
-          { k: "price", label: { bn: "মূল্য সীমা", en: "Price range" }, n: all.filter((p) => p.price_min != null || p.price_max != null).length },
-          { k: "facing", label: { bn: "মুখ", en: "Facing" }, n: all.filter((p) => (p.facing ?? []).length > 0).length },
-          { k: "amen", label: { bn: "সুবিধা", en: "Amenities" }, n: all.filter((p) => (p.amenities ?? []).length > 0).length },
-        ];
+          { k: "price" as const, label: { bn: "মূল্য সীমা", en: "Price range" } },
+          { k: "facing" as const, label: { bn: "মুখ", en: "Facing" } },
+          { k: "amen" as const, label: { bn: "সুবিধা", en: "Amenities" } },
+        ].map((r) => ({ ...r, gap: all.filter((p) => isMissing(p, r.k)).length }));
         return (
-          <div className="grid grid-cols-3 gap-2" aria-label={t({ bn: "তথ্য পূরণের অবস্থা", en: "Data coverage" })}>
-            {rows.map((r) => (
-              <div key={r.k} className="rounded-xl border border-border bg-muted/30 p-2">
-                <p className="text-[11px] text-muted-foreground">{t(r.label)}</p>
-                <p className="tabular text-sm font-semibold">{r.n}/{all.length}</p>
-                <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.round((r.n / all.length) * 100)}%` }} /></div>
-                {all.length - r.n > 0 ? <p className="mt-1 text-[11px] text-muted-foreground">{all.length - r.n} {t({ bn: "বাকি", en: "missing" })}</p> : null}
-              </div>
-            ))}
+          <div className="space-y-1">
+            <div className="grid grid-cols-3 gap-2" aria-label={t({ bn: "তথ্য পূরণের অবস্থা", en: "Data coverage" })}>
+              {rows.map((r) => {
+                const n = all.length - r.gap;
+                const on = missing === r.k;
+                return (
+                  <button type="button" key={r.k} aria-pressed={on} onClick={() => setMissing(on ? null : r.k)}
+                    className={`rounded-xl border p-2 text-left ${on ? "border-primary bg-primary/10" : "border-border bg-muted/30"}`}>
+                    <p className="text-[11px] text-muted-foreground">{t(r.label)}</p>
+                    <p className="tabular text-sm font-semibold">{n}/{all.length}</p>
+                    <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.round((n / all.length) * 100)}%` }} /></div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{r.gap} {t({ bn: "বাকি", en: "missing" })}{r.gap ? ` · ${on ? t({ bn: "সব দেখান", en: "show all" }) : t({ bn: "দেখান", en: "show" })}` : ""}</p>
+                  </button>
+                );
+              })}
+            </div>
+            {missing ? <p role="status" className="text-xs text-muted-foreground">{t({ bn: "শুধু যেগুলোতে এই তথ্য নেই", en: "Showing only projects missing this detail" })} · {shownProjects.length}</p> : null}
           </div>
         );
       })() : null}
