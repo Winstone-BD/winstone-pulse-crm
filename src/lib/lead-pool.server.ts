@@ -499,7 +499,10 @@ export async function grantExtraLeads(input: {
   reason?: string | null;
   actorProfileId?: string | null;
   actorLabel?: string | null;
+  /** Ledger source — "manual_extra" (LeadHub/IT) or "auto_refill" (empty desk). */
+  source?: "manual_extra" | "auto_refill";
 }): Promise<{ moved: number; remaining: number; workDate: string }> {
+  const source = input.source ?? "manual_extra";
   const { assertDistributionDay } = await import("@/lib/business-day");
   assertDistributionDay();
   const supabaseAdmin = await admin();
