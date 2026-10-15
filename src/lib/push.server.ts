@@ -133,7 +133,7 @@ export async function sendPush(input: {
   const { fetchWithTimeout, redact, stringifyData, isDeadTokenResponse } = await import("@/lib/outbound-guard");
   for (const row of tokens) {
     const message = {
-      ...(input.dryRun ? { validate_only: true } : {}),
+      ...(dry ? { validate_only: true } : {}),
       message: {
         token: row.token,
         notification: { title: input.payload.title.slice(0, 200), body: input.payload.body.slice(0, 1000) },
@@ -162,17 +162,19 @@ export async function sendPush(input: {
       failed += 1;
       lastError = `[${response.status}] ${redact(text)}`;
       // Only a dead token is dropped; a bad payload never revokes the device.
-      if (isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
+      if (!dry && isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
     } catch (error) {
       failed += 1;
       lastError = error instanceof Error && error.name === "AbortError" ? "timeout" : "push failed";
     }
   }
 
-  await supabaseAdmin
-    .from("push_deliveries")
-    .update({ delivered: sent, failed, error_message: lastError })
-    .eq("event_key", input.eventKey);
+  if (!dry) {
+    await supabaseAdmin
+      .from("push_deliveries")
+      .update({ delivered: sent, failed, error_message: lastError })
+      .eq("event_key", input.eventKey);
+  }
 
   return { sent, failed };
 }

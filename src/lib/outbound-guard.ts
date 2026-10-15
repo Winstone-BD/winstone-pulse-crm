@@ -1,45 +1,7 @@
 /**
- * Pure guards for server-side outbound calls (Firecrawl, Maps, FCM).
+ * Pure helpers for server-side FCM sends (timeout, redaction, data coercion, dead-token rule).
  * No network, no secrets — safe to unit test.
  */
-
-const DEFAULT_ALLOWED = ["winstonebd.com"];
-
-function isPrivateIpv4(host: string) {
-  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (!m) return false;
-  return true; // any IPv4 literal is refused; only names on the allowlist pass
-}
-
-/**
- * SSRF guard: https only, default port, no credentials, no IP literals,
- * no internal names, and the host must be on (or under) the allowlist.
- */
-export function checkOutboundUrl(
-  raw: string,
-  allowed: string[] = DEFAULT_ALLOWED,
-): { ok: true; url: string } | { ok: false; reason: string } {
-  if (typeof raw !== "string" || raw.length > 2048) return { ok: false, reason: "invalid_url" };
-  let u: URL;
-  try {
-    u = new URL(raw.trim());
-  } catch {
-    return { ok: false, reason: "invalid_url" };
-  }
-  if (u.protocol !== "https:") return { ok: false, reason: "https_only" };
-  if (u.username || u.password) return { ok: false, reason: "credentials_in_url" };
-  if (u.port && u.port !== "443") return { ok: false, reason: "port_not_allowed" };
-  const host = u.hostname.toLowerCase().replace(/\.$/, "");
-  if (!host || host.startsWith("[") || host.includes(":") || isPrivateIpv4(host) || /^\d+$/.test(host) || /^0x/i.test(host)) {
-    return { ok: false, reason: "ip_literal_not_allowed" };
-  }
-  if (host === "localhost" || /\.(local|internal|localhost|lan|home|corp)$/.test(host) || !host.includes(".")) {
-    return { ok: false, reason: "internal_host" };
-  }
-  const ok = allowed.some((d) => host === d || host.endsWith(`.${d}`));
-  if (!ok) return { ok: false, reason: "host_not_allowlisted" };
-  return { ok: true, url: u.toString() };
-}
 
 /** Removes keys/tokens from provider error text and caps its length. */
 export function redact(text: string, max = 300): string {
@@ -74,7 +36,9 @@ export function stringifyData(data: Record<string, unknown>): Record<string, str
 
 /** Only a truly dead token is revoked; a bad payload must not drop the device. */
 export function isDeadTokenResponse(status: number, body: string): boolean {
-  if (status === 404) return true;
-  if (status === 400) return /UNREGISTERED|registration[- ]token|message\.token/i.test(body);
+  // FCM v1 envelope: error.details[].errorCode === "UNREGISTERED" (usually 404),
+  // or a 400 INVALID_ARGUMENT whose message names the registration token.
+  if (/"errorCode"\s*:\s*"UNREGISTERED"/.test(body)) return status === 404 || status === 400;
+  if (status === 400) return /registration token/i.test(body);
   return false;
 }
