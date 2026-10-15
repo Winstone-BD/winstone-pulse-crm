@@ -1,3 +1,4 @@
+import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
 import { assignmentReasons, clampBrief, followUpScript, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
@@ -117,9 +118,9 @@ export async function buildPreCallBrief(leadId: string): Promise<PreCallBrief> {
         messages: [
           {
             role: "system",
-            content: `${SYSTEM}\nToday is ${new Date().toISOString().slice(0, 10)}.`,
+            content: `${SYSTEM}\n${UNTRUSTED_RULE}\nToday is ${new Date().toISOString().slice(0, 10)}.`,
           },
-          { role: "user", content: JSON.stringify(evidence) },
+          { role: "user", content: sanitizeNotes(JSON.stringify(evidence), 12000).wrapped },
         ],
         response_format: { type: "json_object" },
       }),
@@ -236,8 +237,8 @@ async function aiBrief(facts: BriefFacts, key: string): Promise<QuickBrief | nul
       store: false,
       reasoning: { effort: "low" },
       input: [
-        { role: "system", content: [{ type: "input_text", text: QUICK_SYSTEM }] },
-        { role: "user", content: [{ type: "input_text", text: JSON.stringify(facts) }] },
+        { role: "system", content: [{ type: "input_text", text: `${QUICK_SYSTEM}\n${UNTRUSTED_RULE}` }] },
+        { role: "user", content: [{ type: "input_text", text: sanitizeNotes(JSON.stringify(facts), 6000).wrapped }] },
       ],
       text: {
         format: {
