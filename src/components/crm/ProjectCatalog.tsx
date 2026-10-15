@@ -209,6 +209,26 @@ export function ProjectCatalogPanel() {
       {q.isLoading ? <p role="status" className="text-sm text-muted-foreground">{t(L.loading)}</p> : null}
       {q.isError ? <p role="alert" className="text-sm text-destructive">{(q.error as Error).message}</p> : null}
       {q.data && !q.data.projects.length ? <p className="text-sm text-muted-foreground">{t(L.empty)}</p> : null}
+      {q.data?.projects.length ? (() => {
+        const all = q.data.projects;
+        const rows = [
+          { k: "price", label: { bn: "মূল্য সীমা", en: "Price range" }, n: all.filter((p) => p.price_min != null || p.price_max != null).length },
+          { k: "facing", label: { bn: "মুখ", en: "Facing" }, n: all.filter((p) => (p.facing ?? []).length > 0).length },
+          { k: "amen", label: { bn: "সুবিধা", en: "Amenities" }, n: all.filter((p) => (p.amenities ?? []).length > 0).length },
+        ];
+        return (
+          <div className="grid grid-cols-3 gap-2" aria-label={t({ bn: "তথ্য পূরণের অবস্থা", en: "Data coverage" })}>
+            {rows.map((r) => (
+              <div key={r.k} className="rounded-xl border border-border bg-muted/30 p-2">
+                <p className="text-[11px] text-muted-foreground">{t(r.label)}</p>
+                <p className="tabular text-sm font-semibold">{r.n}/{all.length}</p>
+                <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.round((r.n / all.length) * 100)}%` }} /></div>
+                {all.length - r.n > 0 ? <p className="mt-1 text-[11px] text-muted-foreground">{all.length - r.n} {t({ bn: "বাকি", en: "missing" })}</p> : null}
+              </div>
+            ))}
+          </div>
+        );
+      })() : null}
       {q.data?.projects.length ? (
         <details className="rounded-xl border border-border bg-muted/30 p-3" open={filtering || undefined}>
           <summary className="cursor-pointer text-sm font-semibold">{t({ bn: "ফিল্টার", en: "Filters" })} · {shownProjects.length}/{q.data.projects.length}</summary>
