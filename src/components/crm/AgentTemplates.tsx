@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyExtraction, buildTemplate, EXTRACT_FIELDS, EXTRACT_LABELS, type TemplateFacts, type TemplateId } from "@/lib/agent-templates";
 import { getBuyerCheckFacts } from "@/lib/buyer-facts.functions";
-import { extractBuyerCheck } from "@/lib/buyer-extract.functions";
+import { extractBuyerCheck, saveBuyerCheck } from "@/lib/buyer-extract.functions";
 import { getAdminToken } from "@/lib/local-session";
 
 type Extracted = Awaited<ReturnType<typeof extractBuyerCheck>>["fields"];
