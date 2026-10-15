@@ -149,7 +149,7 @@ describe("server push send", () => {
     const fetchMock = vi.fn(async (_u: string, init: RequestInit) => {
       const body = JSON.parse(String(init.body));
       return body.message.token === "stale"
-        ? new Response("UNREGISTERED", { status: 404 })
+        ? new Response(JSON.stringify({ error: { code: 404, status: "NOT_FOUND", details: [{ errorCode: "UNREGISTERED" }] } }), { status: 404 })
         : new Response("{}", { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);

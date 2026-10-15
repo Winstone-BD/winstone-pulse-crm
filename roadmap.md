@@ -189,4 +189,4 @@
 - [ ] Create Drive recordings folder (Drive card dismissed — needs approval)
 - [ ] SAML Entra — waiting on Tenant ID
 
-- [x] 2026-10-15 Integration audit: FCM hardened (dry-run, timeout, redaction, dead-token rule); Firecrawl + Google Places server-only foundations (HQ/IT, rate-limited, SSRF allowlist, field mask). Live verification blocked: FIREBASE/FIRECRAWL/MAPS keys not present.
+- [x] 2026-10-15 FCM send hardening (8s timeout, redacted errors, string data, revoke only on confirmed UNREGISTERED/bad-token, internal dry-run with no ledger/revoke). Firecrawl and Google Maps: NOT built, NOT configured — needs a confirmed product use case plus DNS-validated outbound protection first.

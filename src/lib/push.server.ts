@@ -90,28 +90,38 @@ export async function sendPush(input: {
   dryRun?: boolean;
 }): Promise<{ sent: number; failed: number; skipped?: string }> {
   const supabaseAdmin = await admin();
+  // Dry run: internal primitive only (no caller exposes it yet). It writes no
+  // ledger row, never revokes a token, and targets exactly one profile.
+  const dry = input.dryRun === true;
+  if (dry && input.profileIds.length !== 1) return { sent: 0, failed: 0, skipped: "dry_run_single_profile_only" };
 
-  // Idempotency: the ledger row is the claim. A duplicate event does nothing.
-  const { error: claimError } = await supabaseAdmin.from("push_deliveries").insert({
-    event_key: input.eventKey,
-    kind: input.kind,
-    entity_id: input.entityId ?? null,
-    provider: "firebase_messaging",
-  });
-  if (claimError) return { sent: 0, failed: 0, skipped: "already_sent" };
+  if (!dry) {
+    // Idempotency: the ledger row is the claim. A duplicate event does nothing.
+    const { error: claimError } = await supabaseAdmin.from("push_deliveries").insert({
+      event_key: input.eventKey,
+      kind: input.kind,
+      entity_id: input.entityId ?? null,
+      provider: "firebase_messaging",
+    });
+    if (claimError) return { sent: 0, failed: 0, skipped: "already_sent" };
+  }
 
   const creds = credentials();
   const tokens = await tokensFor(input.profileIds);
-  await supabaseAdmin
-    .from("push_deliveries")
-    .update({ recipients: tokens.length })
-    .eq("event_key", input.eventKey);
-
-  if (!creds) {
+  if (!dry) {
     await supabaseAdmin
       .from("push_deliveries")
-      .update({ error_message: "firebase_not_connected" })
+      .update({ recipients: tokens.length })
       .eq("event_key", input.eventKey);
+  }
+
+  if (!creds) {
+    if (!dry) {
+      await supabaseAdmin
+        .from("push_deliveries")
+        .update({ error_message: "firebase_not_connected" })
+        .eq("event_key", input.eventKey);
+    }
     return { sent: 0, failed: 0, skipped: "firebase_not_connected" };
   }
   if (tokens.length === 0) return { sent: 0, failed: 0, skipped: "no_devices" };
@@ -123,7 +133,7 @@ export async function sendPush(input: {
   const { fetchWithTimeout, redact, stringifyData, isDeadTokenResponse } = await import("@/lib/outbound-guard");
   for (const row of tokens) {
     const message = {
-      ...(input.dryRun ? { validate_only: true } : {}),
+      ...(dry ? { validate_only: true } : {}),
       message: {
         token: row.token,
         notification: { title: input.payload.title.slice(0, 200), body: input.payload.body.slice(0, 1000) },
@@ -152,17 +162,19 @@ export async function sendPush(input: {
       failed += 1;
       lastError = `[${response.status}] ${redact(text)}`;
       // Only a dead token is dropped; a bad payload never revokes the device.
-      if (isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
+      if (!dry && isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
     } catch (error) {
       failed += 1;
       lastError = error instanceof Error && error.name === "AbortError" ? "timeout" : "push failed";
     }
   }
 
-  await supabaseAdmin
-    .from("push_deliveries")
-    .update({ delivered: sent, failed, error_message: lastError })
-    .eq("event_key", input.eventKey);
+  if (!dry) {
+    await supabaseAdmin
+      .from("push_deliveries")
+      .update({ delivered: sent, failed, error_message: lastError })
+      .eq("event_key", input.eventKey);
+  }
 
   return { sent, failed };
 }
