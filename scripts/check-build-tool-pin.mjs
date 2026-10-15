@@ -19,6 +19,15 @@ if (declared !== PINNED) {
   console.log(`OK: package.json pins ${PKG}@${PINNED}`);
 }
 
+// Report every reference (deps, overrides, resolutions) so drift is visible before publish.
+for (const section of ["dependencies", "devDependencies", "overrides", "resolutions"]) {
+  const v = pkg[section]?.[PKG];
+  if (v !== undefined && v !== PINNED) {
+    console.error(`FAIL: package.json ${section} has ${PKG}@${v} — changed from ${PINNED}`);
+    failed = true;
+  }
+}
+
 // Verify lockfiles resolve to exactly the pinned version.
 // package-lock.json: packages["node_modules/<pkg>"].version
 try {
