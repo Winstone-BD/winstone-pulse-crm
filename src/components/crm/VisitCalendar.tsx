@@ -14,7 +14,7 @@ const fmt = (d: Date) => d.toLocaleString("en-GB", { timeZone: "Asia/Dhaka", wee
 /** Booked site visits (next 30 days) with their 2-hour reminder time, read from the scoped visit list. */
 export function VisitCalendar() {
   const adminToken = useAdminToken();
-  const { lang } = useLang();
+  const lang = useLang();
   const en = lang === "en";
   const fetchVisits = useServerFn(listSiteVisits);
   const q = useQuery({
