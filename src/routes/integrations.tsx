@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/crm/AppShell";
 import { RoleGate } from "@/components/crm/RoleGate";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAdminToken } from "@/lib/local-session";
 import { getIntegrationReadiness, verifyIntegration } from "@/lib/integration-readiness.functions";
 
@@ -36,14 +37,33 @@ function Page() {
   );
 }
 
-const BADGE: Record<string, { text: string; cls: string; Icon: typeof Circle }> = {
+export const _BADGE: Record<string, { text: string; cls: string; Icon: typeof Circle }> = {
   ready: { text: "Saved", cls: "bg-success/15 text-success", Icon: CheckCircle2 },
   partial: { text: "Incomplete", cls: "bg-warning/15 text-warning", Icon: AlertTriangle },
   missing: { text: "Missing", cls: "bg-destructive/15 text-destructive", Icon: XCircle },
   not_used: { text: "Not set up (optional)", cls: "bg-muted text-muted-foreground", Icon: Circle },
 };
 
+const GUIDE: Record<string, string[]> = {
+  sheets: ["Linked through the Google Sheets connector.", "Daily report syncs at 6:30 PM Dhaka; delivery is logged in sync health."],
+  drive: ["Share a normal Drive folder (drive.google.com/drive/folders/…) with the connected account.", "Recording files should contain the customer phone number."],
+  push: ["Agents must allow notifications in the Android app."],
+  email: ["Sender domain notify.crm.winstonebd.com needs the TXT and NS records verified at your DNS host."],
+  os: ["CRM_BRIDGE_SECRET must match the value saved in Winstone OS.", "Inbound events arrive signed at /api/public/os/events."],
+  cron: ["Jobs must point at crm.winstonebd.com (two older jobs used crm1.winstonebd.com)."],
+  ai: ["Uses the built-in AI service; no outside key needed."],
+};
+
+function stage(status: string, optional: boolean | undefined, r?: { outcome: string }) {
+  if (r?.outcome === "failed") return { text: "Error", cls: "bg-destructive/15 text-destructive", Icon: XCircle };
+  if (status === "ready" && r?.outcome === "verified") return { text: "Verified", cls: "bg-success/15 text-success", Icon: CheckCircle2 };
+  if (status === "not_used" || (optional && status === "missing")) return { text: "Not required", cls: "bg-muted text-muted-foreground", Icon: Circle };
+  if (status === "ready") return { text: "Configured", cls: "bg-success/15 text-success", Icon: CheckCircle2 };
+  return { text: "Pending setup", cls: "bg-warning/15 text-warning", Icon: AlertTriangle };
+}
+
 function Readiness() {
+  const [open, setOpen] = useState<string | null>(null);
   const adminToken = useAdminToken();
   const get = useServerFn(getIntegrationReadiness);
   const verify = useServerFn(verifyIntegration);
@@ -76,10 +96,10 @@ function Readiness() {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</h2>
           <div className="grid gap-3 md:grid-cols-2">
             {g.items.map((it) => {
-              const b = BADGE[it.status] ?? BADGE['missing']!;
               const r = results[it.id];
+              const b = stage(it.status, it.optional, r);
               return (
-                <div key={it.id} className="rounded-lg border bg-card p-4">
+                <div key={it.id} className="cursor-pointer rounded-lg border bg-card p-4 hover:border-primary/50" onClick={() => setOpen(it.id)}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="font-medium">{it.label}</div>
@@ -97,7 +117,7 @@ function Readiness() {
                   {it.note && <div className="mt-2 text-xs text-warning">{it.note}</div>}
                   {it.verifiable && (
                     <div className="mt-3 flex items-center gap-2">
-                      <Button size="sm" variant="outline" disabled={m.isPending && m.variables === it.id} onClick={() => m.mutate(it.id)}>
+                      <Button size="sm" variant="outline" disabled={m.isPending && m.variables === it.id} onClick={(e) => { e.stopPropagation(); m.mutate(it.id); }}>
                         {m.isPending && m.variables === it.id ? <Loader2 className="size-3 animate-spin" /> : "Verify"}
                       </Button>
                       {r && <span className={`text-xs ${r.outcome === "verified" ? "text-success" : r.outcome === "skipped" ? "text-muted-foreground" : "text-destructive"}`}>{r.detail} · {r.at}</span>}
@@ -109,6 +129,33 @@ function Readiness() {
           </div>
         </section>
       ))}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Identity & access</h2>
+        <div className="rounded-lg border bg-card p-4 text-sm">
+          <div className="flex items-start justify-between gap-2"><div className="font-medium">Microsoft Entra ID (SAML)</div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-xs text-warning"><AlertTriangle className="size-3" />Pending setup</span></div>
+          <p className="mt-1 text-xs text-muted-foreground">Waiting for the Entra Tenant ID (GUID). The domain-based metadata link returned "not found". Existing sign-in keeps working.</p>
+        </div>
+      </section>
+      <Sheet open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
+        <SheetContent>
+          {(() => { const it = all.find((i) => i.id === open); if (!it) return null; const r = results[it.id]; return (
+            <div className="space-y-4">
+              <SheetHeader><SheetTitle>{it.label}</SheetTitle></SheetHeader>
+              <p className="text-sm text-muted-foreground">{it.purpose}</p>
+              <div><div className="text-xs font-semibold">Needed keys</div>
+                <ul className="mt-1 space-y-1 font-mono text-xs">{it.keys.map((k) => <li key={k.name}>{k.saved ? "✓" : "✗"} {k.name}</li>)}</ul></div>
+              {(GUIDE[it.id] ?? []).length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm">{GUIDE[it.id]!.map((g) => <li key={g}>{g}</li>)}</ul>}
+              {it.verifiable ? (
+                <div className="space-y-2">
+                  <Button onClick={() => m.mutate(it.id)} disabled={m.isPending}>{m.isPending ? <Loader2 className="size-4 animate-spin" /> : "Test connection now"}</Button>
+                  {r && <div className="rounded-md border p-2 text-xs">{r.outcome}: {r.detail} · {r.at}</div>}
+                </div>
+              ) : <p className="text-xs text-muted-foreground">This service can't be test-called safely; only key presence is shown.</p>}
+            </div>
+          ); })()}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
