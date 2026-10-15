@@ -73,16 +73,33 @@ export async function syncDailySheet(date: string) {
     if (!titles.includes(date)) {
       await gw(`/spreadsheets/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ addSheet: { properties: { title: date } } }] }) });
     }
-    await gw(`/spreadsheets/${id}/values/'${date}'!A:K:clear`, { method: "POST", body: "{}" });
+    // Pull HQ edits first so the rewrite never loses them; they become proposals
+    // that HQ confirms in the CRM. HQ note/payment cells and HQ-added rows are kept.
+    let pending = 0;
+    const hq = new Map<string, [string, string]>();
+    const extraRows: string[][] = [];
+    if (titles.includes(date)) {
+      const cur = await gw(`/spreadsheets/${id}/values/'${date}'!A:N`);
+      const vals = (cur.values ?? []) as string[][];
+      const { parseSheetEdits, recordProposals } = await import("@/lib/sheet-pull.server");
+      pending = await recordProposals(date, parseSheetEdits(vals));
+      for (const r of vals.slice(1)) {
+        const lid = String(r[13] ?? "").trim();
+        if (lid) hq.set(lid, [String(r[11] ?? ""), String(r[12] ?? "")]);
+        else if (String(r[0] ?? "").trim()) extraRows.push(r.map(String));
+      }
+    }
+    await gw(`/spreadsheets/${id}/values/'${date}'!A:N:clear`, { method: "POST", body: "{}" });
     const values = [
-      ["Lead", "Phone", "Agent", "Status", "Stage", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
-      ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.stage, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
+      ["Lead", "Phone", "Agent", "Status", "Stage", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at", "HQ note", "HQ payment (USD)", "Lead ID"],
+      ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.stage, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", "", ...(hq.get(r.leadId) ?? ["", ""]), r.leadId]),
+      ...extraRows,
     ];
     (values[0] as unknown[])[10] = `Synced ${new Date().toISOString()}`;
     // RAW: values are stored as text, never evaluated as formulas.
     await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
     await recordSheetSyncEvent({ surface: "daily_sheet", operation: "sync", outcome: "success", durationMs: Date.now() - startedAt });
-    return { rows: rows.length, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
+    return { rows: rows.length, pending, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
   } catch (e) {
     await recordSheetSyncEvent({
       surface: "daily_sheet",
