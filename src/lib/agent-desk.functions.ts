@@ -177,7 +177,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { LEAD_OWNER_COLUMNS, leadHeldByOther, leadOwnedBy, LEAD_NOT_YOURS } = await import(
+    const { LEAD_OWNER_COLUMNS, leadNotAssignedTo, LEAD_NOT_YOURS } = await import(
       "@/lib/lead-access.server"
     );
 
@@ -187,7 +187,7 @@ export const triageMyLead = createServerFn({ method: "POST" })
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error(LEAD_NOT_YOURS);
-    if (caller.scope === "agent" && (!caller.profile || leadHeldByOther(lead, caller.profile.id) || !leadOwnedBy(lead, caller.profile.id))) {
+    if (caller.scope === "agent" && (!caller.profile || leadNotAssignedTo(lead, caller.profile.id))) {
       throw new Error(LEAD_NOT_YOURS);
     }
 
@@ -254,7 +254,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { LEAD_OWNER_COLUMNS, leadHeldByOther, leadOwnedBy, LEAD_NOT_YOURS } = await import(
+    const { LEAD_OWNER_COLUMNS, leadNotAssignedTo, LEAD_NOT_YOURS } = await import(
       "@/lib/lead-access.server"
     );
 
@@ -264,7 +264,7 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error(LEAD_NOT_YOURS);
-    if (caller.scope === "agent" && (!caller.profile || leadHeldByOther(lead, caller.profile.id) || !leadOwnedBy(lead, caller.profile.id))) {
+    if (caller.scope === "agent" && (!caller.profile || leadNotAssignedTo(lead, caller.profile.id))) {
       throw new Error(LEAD_NOT_YOURS);
     }
 
