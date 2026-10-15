@@ -85,7 +85,7 @@ function useT() {
 export function useProjects() {
   const adminToken = useAdminToken();
   const fn = useServerFn(listProjects);
-  return useQuery({ queryKey: ["project-catalog", adminToken ? "pin" : "s"], queryFn: () => fn({ data: { adminToken } }), staleTime: 60_000 });
+  return useQuery({ queryKey: ["project-catalog", adminToken ? "pin" : "s"], queryFn: () => fn({ data: { adminToken } }), staleTime: 60_000, refetchInterval: 100_000 });
 }
 
 function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | null; onDone: () => void }) {

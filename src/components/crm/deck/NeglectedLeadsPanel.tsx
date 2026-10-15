@@ -168,7 +168,11 @@ function ReassignDialog({ row, targets, token, onClose }: { row: Row; targets: D
 }
 
 function exportReassignmentCsv(rows: Array<{ at: string; leadName: string; fromName: string; toName: string; by: string; reason: string; bypass: string | null }>) {
-  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
+  const esc = (raw: string) => {
+    // Neutralise spreadsheet formulas (=, +, -, @, tab, CR) before quoting.
+    const v = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    return `"${v.replaceAll('"', '""')}"`;
+  };
   const header = ["When (Dhaka)", "Lead", "From agent", "To agent", "Changed by", "Reason", "Bypass reason"];
   const lines = rows.map((r) => [
     new Date(r.at).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" }),

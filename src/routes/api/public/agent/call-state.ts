@@ -72,6 +72,21 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
               ? "pending"
               : "unknown";
 
+        // Talk time feeds performance rankings, so the phone's number is never
+        // trusted on its own: it is capped by the time the server has actually
+        // seen this call exist (first state push → now), plus a small slack.
+        const { data: seen } = await supabaseAdmin
+          .from("call_recordings")
+          .select("created_at")
+          .eq("external_call_id", body.call_uid)
+          .maybeSingle();
+        const serverElapsed = seen?.created_at
+          ? Math.max(0, Math.floor((Date.now() - new Date(seen.created_at).getTime()) / 1000))
+          : 0;
+        const durationCap = seen ? serverElapsed + 60 : 0;
+        const durationSeconds =
+          body.duration_seconds === undefined ? undefined : Math.min(body.duration_seconds, durationCap);
+
         const patch = {
           call_status: body.state,
           agent_phone: body.agent_phone ?? caller.profile.phone ?? null,
@@ -81,9 +96,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           ...(body.state === "completed" || body.state === "failed" || body.state === "no_answer"
             ? { finished_at: at }
             : {}),
-          ...(body.duration_seconds !== undefined
-            ? { duration_seconds: body.duration_seconds }
-            : {}),
+          ...(durationSeconds !== undefined ? { duration_seconds: durationSeconds } : {}),
         };
 
         const { data: existing } = await supabaseAdmin
@@ -108,7 +121,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
               device_id: caller.device.id,
               phone_number: lead.phone_number,
               call_direction: "outgoing",
-              duration_seconds: body.duration_seconds ?? 0,
+              duration_seconds: durationSeconds ?? 0,
               is_two_sided: false,
               sync_status: "uploaded",
               analysis_status: "pending",
@@ -171,7 +184,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
             recordingId,
             deviceId: caller.device.id,
             phoneNumber: lead.phone_number,
-            durationSeconds: body.duration_seconds ?? 0,
+            durationSeconds: durationSeconds ?? 0,
             connected: body.state === "completed",
           });
           reportId = report.id;

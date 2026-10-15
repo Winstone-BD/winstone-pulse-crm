@@ -72,7 +72,7 @@ export const listProjects = createServerFn({ method: "POST" })
     await Promise.all(projects.map(async (p) => {
       if (!p.image_url?.startsWith("storage:project-photos/")) return;
       const path = p.image_url.slice("storage:project-photos/".length);
-      const { data: s } = await supabaseAdmin.storage.from("project-photos").createSignedUrl(path, 3600);
+      const { data: s } = await supabaseAdmin.storage.from("project-photos").createSignedUrl(path, 120);
       p.image_url = s?.signedUrl ?? null;
     }));
     const shown = projects.filter((p) => p.image_url?.includes("/object/sign/project-photos/"));

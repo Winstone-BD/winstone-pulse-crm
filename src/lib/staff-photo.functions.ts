@@ -47,7 +47,7 @@ export const staffPhotoUrls = createServerFn({ method: "POST" })
     const { data: rows } = await supabaseAdmin.from("profiles").select("id, photo_path").in("id", ids).not("photo_path", "is", null);
     const paths = (rows ?? []).map((r) => r.photo_path!);
     if (!paths.length) return {} as Record<string, string>;
-    const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 900);
+    const { data: signed } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 120);
     const byPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
     const out: Record<string, string> = {};
     for (const r of rows ?? []) {
