@@ -876,6 +876,13 @@
       "when": 1792035000305,
       "tag": "0124_sales_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1792041874853,
+      "tag": "0125_coach_objections_negotiation_drafts",
+      "breakpoints": true
     }
   ]
 }

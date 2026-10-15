@@ -2842,6 +2842,36 @@ export type Database = {
         }
         Relationships: []
       }
+      objection_answers: {
+        Row: {
+          answer: string
+          approved_at: string
+          approved_by: string | null
+          id: string
+          objection: string
+          objection_key: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          approved_at?: string
+          approved_by?: string | null
+          id?: string
+          objection: string
+          objection_key: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          approved_at?: string
+          approved_by?: string | null
+          id?: string
+          objection?: string
+          objection_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       os_event_receipts: {
         Row: {
           api_version: string | null

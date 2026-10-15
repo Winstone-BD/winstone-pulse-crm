@@ -95,7 +95,7 @@ export async function draftFollowupPair(leadId: string, agentId: string, authori
 
 export async function listDrafts(agentId: string | null) {
   const db = await admin();
-  let q = db.from("sales_drafts").select("id, agent_id, lead_id, ai_output, edited_output, edited_at, injection_flagged, created_at")
+  let q = db.from("sales_drafts").select("id, agent_id, lead_id, workflow, ai_output, edited_output, edited_at, injection_flagged, created_at")
     .order("created_at", { ascending: false }).limit(30);
   if (agentId) q = q.eq("agent_id", agentId);
   const { data, error } = await q;
@@ -152,6 +152,75 @@ export async function negotiationAdvice(leadId: string, projectId: string, agent
   const j = JSON.parse(m[0]) as { position?: unknown; tactics?: unknown; allowed?: unknown; never?: unknown; script?: unknown; escalate?: unknown };
   const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
   const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 4).map((x) => s(x, 200)).filter(Boolean) : []);
-  return { project: p.name, position: s(j.position), tactics: arr(j.tactics), allowed: arr(j.allowed), never: arr(j.never),
+  const out = { project: p.name, position: s(j.position), tactics: arr(j.tactics), allowed: arr(j.allowed), never: arr(j.never),
     script: s(j.script, 600), escalate: s(j.escalate), flagged: notes.flagged };
+  // Saved to draft history so HQ can review what the agent was advised to say.
+  const owner = authority ? lead.assigned_to : agentId;
+  if (owner) {
+    const txt = `দরকষাকষি পরামর্শ — ${out.project}\nঅবস্থান: ${out.position}\nকৌশল: ${out.tactics.join("; ")}\nদেওয়া যায়: ${out.allowed.join("; ")}\nকখনো বলবেন না: ${out.never.join("; ")}\nস্ক্রিপ্ট: ${out.script}\nHQ-তে পাঠান: ${out.escalate}`;
+    await db.from("sales_drafts").insert({ agent_id: owner, lead_id: leadId, workflow: "negotiation", ai_output: txt, injection_flagged: notes.flagged, model: DRAFT_MODEL });
+  }
+  return out;
+}
+
+const COACH_SYSTEM = `You are Winstone AI, a post-call coach for a Winstone Properties Ltd sales agent (Bangladesh real estate).
+Score the call ONLY against the buyer-check items: budget, area/project, property type, timeline, decision maker, installment need, NRB status.
+For each item say whether the saved call report shows it was clarified. Never invent facts. ${UNTRUSTED_RULE}
+Reply in Bangla ONLY as JSON: {"score":0-100,"covered":["..."],"missing":["..."],"praise":"...","improve":"...","next_follow_up":"one concrete action","when":"suggested timing"}`;
+
+export async function callCoach(leadId: string, agentId: string, authority: boolean) {
+  const db = await admin();
+  const { data: lead, error } = await db.from("leads").select("name, status, temperature, assigned_to").eq("id", leadId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!lead || (!authority && lead.assigned_to !== agentId)) throw new Error("This lead is not assigned to you");
+  const { data: rep } = await db.from("call_reports").select("summary, note, requirement, interest, customer_response, next_action, duration_seconds, connected, grade")
+    .eq("lead_id", leadId).eq("status", "submitted").order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+  if (!rep) throw new Error("No submitted call report yet — submit the report first");
+  const notes = sanitizeNotes([rep.summary, rep.note, rep.customer_response, rep.requirement, rep.interest].filter(Boolean).join("\n"), 2000);
+  const facts = { connected: rep.connected, seconds: rep.duration_seconds, grade: rep.grade, next_action: rep.next_action, status: lead.status, temperature: lead.temperature };
+  const m = (await callClaude(`${JSON.stringify(facts)}\n${notes.wrapped}`, COACH_SYSTEM)).match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("The AI returned an unreadable answer — please retry");
+  const j = JSON.parse(m[0]) as { score?: unknown; covered?: unknown; missing?: unknown; praise?: unknown; improve?: unknown; next_follow_up?: unknown; when?: unknown };
+  const s = (v: unknown, n = 400) => String(v ?? "").trim().slice(0, n);
+  const arr = (v: unknown) => (Array.isArray(v) ? v.slice(0, 7).map((x) => s(x, 120)).filter(Boolean) : []);
+  const score = Math.max(0, Math.min(100, Math.round(Number(j.score) || 0)));
+  const out = { score, covered: arr(j.covered), missing: arr(j.missing), praise: s(j.praise), improve: s(j.improve), next: s(j.next_follow_up), when: s(j.when, 120), flagged: notes.flagged };
+  const owner = authority ? lead.assigned_to : agentId;
+  if (owner) await db.from("sales_drafts").insert({ agent_id: owner, lead_id: leadId, workflow: "call_coach", model: DRAFT_MODEL, injection_flagged: notes.flagged,
+    ai_output: `কল কোচ — স্কোর ${score}/100\nজানা গেছে: ${out.covered.join("; ")}\nবাকি: ${out.missing.join("; ")}\nভালো: ${out.praise}\nউন্নতি: ${out.improve}\nপরের ফলো-আপ: ${out.next} (${out.when})` });
+  return out;
+}
+
+export const objectionKey = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().slice(0, 120);
+
+/** Objections from real call recordings, grouped; injection-flagged text is excluded. */
+export async function objectionLibrary() {
+  const db = await admin();
+  const [rec, ans] = await Promise.all([
+    db.from("call_recordings").select("customer_objections").order("created_at", { ascending: false }).limit(2000),
+    db.from("objection_answers").select("objection_key, objection, answer, approved_at"),
+  ]);
+  if (rec.error) throw new Error(rec.error.message);
+  const groups = new Map<string, { text: string; count: number }>();
+  let excluded = 0;
+  for (const r of rec.data ?? []) for (const o of r.customer_objections ?? []) {
+    const t = String(o).trim().slice(0, 200);
+    if (!t) continue;
+    if (sanitizeNotes(t).flagged) { excluded++; continue; }
+    const k = objectionKey(t);
+    const g = groups.get(k) ?? { text: t, count: 0 };
+    g.count++; groups.set(k, g);
+  }
+  const answers = new Map((ans.data ?? []).map((a) => [a.objection_key, a]));
+  const items = [...groups.entries()].map(([key, g]) => ({ key, objection: g.text, count: g.count, answer: answers.get(key)?.answer ?? null, approvedAt: answers.get(key)?.approved_at ?? null }))
+    .sort((a, b) => b.count - a.count).slice(0, 100);
+  return { items, excluded };
+}
+
+export async function approveObjectionAnswer(key: string, objection: string, answer: string, approver: string | null) {
+  if (sanitizeNotes(answer).flagged || sanitizeNotes(objection).flagged) throw new Error("Text contains instruction-like content and was blocked");
+  const db = await admin();
+  const { error } = await db.from("objection_answers").upsert({ objection_key: key, objection: objection.slice(0, 200), answer: answer.slice(0, 1200), approved_by: approver, approved_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: "objection_key" });
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
 }
