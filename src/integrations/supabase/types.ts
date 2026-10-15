@@ -2427,6 +2427,7 @@ export type Database = {
           notes: string | null
           outcome_category: string | null
           phone_number: string
+          pipeline_stage: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by: string | null
           retry_after: string | null
           serial_no: string | null
@@ -2460,6 +2461,7 @@ export type Database = {
           notes?: string | null
           outcome_category?: string | null
           phone_number: string
+          pipeline_stage?: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by?: string | null
           retry_after?: string | null
           serial_no?: string | null
@@ -2493,6 +2495,7 @@ export type Database = {
           notes?: string | null
           outcome_category?: string | null
           phone_number?: string
+          pipeline_stage?: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by?: string | null
           retry_after?: string | null
           serial_no?: string | null
@@ -5564,6 +5567,12 @@ export type Database = {
       app_role: "admin" | "team_leader" | "agent"
       call_direction: "outgoing" | "incoming_callback"
       call_sentiment: "positive" | "neutral" | "negative" | "critical"
+      lead_pipeline_stage:
+        | "enquiry"
+        | "proposal"
+        | "offer"
+        | "booking"
+        | "close"
       lead_status: "pending" | "contacted" | "follow_up" | "closed"
       maintenance_payment_status: "unpaid" | "pending" | "verified"
       maintenance_unlock_status:
@@ -5706,6 +5715,7 @@ export const Constants = {
       app_role: ["admin", "team_leader", "agent"],
       call_direction: ["outgoing", "incoming_callback"],
       call_sentiment: ["positive", "neutral", "negative", "critical"],
+      lead_pipeline_stage: ["enquiry", "proposal", "offer", "booking", "close"],
       lead_status: ["pending", "contacted", "follow_up", "closed"],
       maintenance_payment_status: ["unpaid", "pending", "verified"],
       maintenance_unlock_status: [
