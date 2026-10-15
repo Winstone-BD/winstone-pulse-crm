@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Gemini buyer-profile extraction: Gemini reads saved call notes and suggests buyer-check values (budget, type, timeline, decision maker, installment, NRB); agent applies into the draft. Prompt guard applied; nothing saved/sent. Unpublished; untested on a real lead.
 - [x] Diagnose recurring old billing presentation: monthly defaults/rules still 46.29, mixed 18.16 notice literals and 12th/15th text; no financial records changed. Added homepage role selector and network/account/server-access status; 10 tests passed, 1280/828/390/320px no overflow, IT PIN and agent sign-in destinations verified. Real signed-in role recommendation unverified; no deployment.
 - [x] Simplify homepage using approved reference hierarchy, unframed capabilities, truthful server status and phone-friendly workspace selection; preserve fonts/auth/billing. Browser checked at 1280/828/390/320px, optional reveal/device selection/real IT PIN dialog passed; no deployment or business-record changes.
 - [x] Require device selection before Get started; uploaded IT portraits after PIN; service billing restricted to existing verified architect identity plus user-bound IT token. 572 tests passed/5 skipped; phone/desktop UI checked with mocked PIN response, no live login or publish.

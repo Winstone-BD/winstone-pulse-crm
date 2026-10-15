@@ -1,20 +1,28 @@
 import { useServerFn } from "@tanstack/react-start";
-import { ClipboardList, Copy, Loader2 } from "lucide-react";
+import { ClipboardList, Copy, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { buildTemplate, type TemplateFacts, type TemplateId } from "@/lib/agent-templates";
+import { applyExtraction, buildTemplate, EXTRACT_FIELDS, EXTRACT_LABELS, type TemplateFacts, type TemplateId } from "@/lib/agent-templates";
 import { getBuyerCheckFacts } from "@/lib/buyer-facts.functions";
+import { extractBuyerCheck } from "@/lib/buyer-extract.functions";
 import { getAdminToken } from "@/lib/local-session";
+
+type Extracted = Awaited<ReturnType<typeof extractBuyerCheck>>["fields"];
 
 /** Pre-filled buyer-check / call-prep drafts from saved CRM facts. Nothing is sent or saved. */
 export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: TemplateFacts }) {
   const loadFacts = useServerFn(getBuyerCheckFacts);
+  const runExtract = useServerFn(extractBuyerCheck);
   const [text, setText] = useState("");
+  const [tpl, setTpl] = useState<TemplateId | null>(null);
   const [flagged, setFlagged] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [ai, setAi] = useState<Extracted | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiFlagged, setAiFlagged] = useState(false);
 
   const open = async (id: TemplateId) => {
     let f: TemplateFacts = facts;
@@ -31,7 +39,27 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
     const t = buildTemplate(id, f);
     setText(t.text);
     setFlagged(t.flagged);
+    setTpl(id);
+    setAi(null);
+    setAiFlagged(false);
   };
+
+  const analyse = async () => {
+    if (!leadId) return;
+    setAiBusy(true);
+    try {
+      const r = await runExtract({ data: { token: getAdminToken(), leadId } });
+      setAi(r.fields);
+      setAiFlagged(r.flagged);
+      if (!Object.keys(r.fields).length) toast.info("নোটে নতুন তথ্য পাওয়া যায়নি");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gemini বিশ্লেষণ ব্যর্থ — আবার চেষ্টা করুন");
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const found = ai ? EXTRACT_FIELDS.filter((k) => ai[k]) : [];
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -53,6 +81,41 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
             </p>
           )}
           <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={12} />
+          {tpl === "buyer_check" && (
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-1.5 text-xs font-semibold">
+                  <Sparkles className="size-3.5 text-primary" /> Gemini বিশ্লেষণ — কল নোট থেকে পাওয়া তথ্য
+                  {aiBusy && <Loader2 className="size-3.5 animate-spin" />}
+                </p>
+                <Button size="sm" variant="outline" disabled={aiBusy || busy || !leadId} onClick={() => void analyse()}>
+                  কল নোট বিশ্লেষণ করুন
+                </Button>
+              </div>
+              {aiFlagged && (
+                <p className="text-xs text-destructive">নোটে সন্দেহজনক নির্দেশ পাওয়া গেছে — সেটি ব্যবহার হয়নি।</p>
+              )}
+              {ai && (found.length > 0 ? (
+                <>
+                  <ul className="space-y-1 text-xs">
+                    {found.map((k) => (
+                      <li key={k}>
+                        <span className="font-medium">{EXTRACT_LABELS[k].replace(/: $/, ":")}</span>{" "}
+                        {ai[k]!.value}
+                        {ai[k]!.evidence ? <span className="text-muted-foreground"> — “{ai[k]!.evidence}”</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button size="sm" onClick={() => { setText(applyExtraction(text, ai)); toast.success("সাজেশন খসড়ায় বসানো হয়েছে — মিলিয়ে দেখে সম্পাদনা করুন"); }}>
+                    যাচাইয়ের ঘরে বসান
+                  </Button>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">নোটে নতুন তথ্য পাওয়া যায়নি — “যাচাই প্রয়োজন” ঘরগুলো খালি রইল।</p>
+              ))}
+              <p className="text-xs text-muted-foreground">Gemini শুধু সাজেশন দেয় — কোনো তথ্য সেভ হয় না, কিছু পাঠানো হয় না।</p>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">CRM-এ সেভ করা তথ্য থেকে পূরণ — শুধু খসড়া, কিছু পাঠানো বা সেভ হয় না।</p>
             <Button size="sm" onClick={() => { void navigator.clipboard.writeText(text); toast.success("কপি হয়েছে"); }}>

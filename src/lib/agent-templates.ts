@@ -21,6 +21,38 @@ export type TemplateFacts = {
 
 export const VERIFY = "তথ্য যাচাই প্রয়োজন";
 
+/** Buyer-check fields Gemini can suggest from saved call notes (shared with the server module). */
+export type ExtractFieldKey = "budget" | "property_type" | "timeline" | "decision_maker" | "installment" | "nrb";
+
+export const EXTRACT_FIELDS: ExtractFieldKey[] = ["budget", "property_type", "timeline", "decision_maker", "installment", "nrb"];
+
+export const EXTRACT_LABELS: Record<ExtractFieldKey, string> = {
+  budget: "বাজেট (সর্বোচ্চ ৳): ",
+  property_type: "ধরন (ফ্ল্যাট / জমি / কমার্শিয়াল / রিসোর্ট শেয়ার): ",
+  timeline: "কবে কিনতে চান: ",
+  decision_maker: "সিদ্ধান্ত কে নেবেন: ",
+  installment: "কিস্তি লাগবে? কত মাস: ",
+  nrb: "প্রবাসী (NRB) কি না: ",
+};
+
+/** Fill Gemini's suggested values into untouched verify lines of the buyer-check draft. */
+export function applyExtraction(
+  text: string,
+  fields: Partial<Record<ExtractFieldKey, { value: string; evidence?: string }>>,
+) {
+  let out = text;
+  for (const k of EXTRACT_FIELDS) {
+    const f = fields[k];
+    if (!f) continue;
+    const line = `${EXTRACT_LABELS[k]}${VERIFY}`;
+    if (!out.includes(line)) continue; // agent already edited this line — never overwrite
+    const safe = (f.value ?? "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+    if (!safe) continue;
+    out = out.replace(line, `${EXTRACT_LABELS[k]}${safe} (Gemini)`);
+  }
+  return out;
+}
+
 function clean(value: string | null | undefined, max = 120) {
   const raw = (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
   const { flagged } = sanitizeNotes(raw, max);
