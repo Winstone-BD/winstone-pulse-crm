@@ -41,6 +41,8 @@ const GROUPS: Group[] = [
   { id: "speech", label: "Speech & extras", items: [
     { id: "stt", label: "Bangla speech-to-text", purpose: "Call transcripts (Sarvam)", keys: ["SARVAM_API_KEY"], optional: true },
     { id: "github", label: "GitHub issues", purpose: "Runtime error tickets", keys: ["GITHUB_API_KEY"], optional: true, gateway: { connector: "github", key: "GITHUB_API_KEY" } },
+    { id: "firecrawl", label: "Firecrawl web reader", purpose: "Read allowlisted winstonebd.com pages (server-only)", keys: ["FIRECRAWL_API_KEY"], optional: true },
+    { id: "maps", label: "Google Maps / Places", purpose: "Place lookup with field masks (server key only)", keys: ["GOOGLE_MAPS_API_KEY"], optional: true },
   ]},
 ];
 
