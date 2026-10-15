@@ -14,12 +14,15 @@ export const getHandoverSignals = createServerFn({ method: "POST" })
     if (!lead || (c.scope === "agent" && lead.assigned_to !== c.profile!.id)) throw new Error("This lead is not assigned to you");
     const [rep, visits, books] = await Promise.all([
       db.from("call_reports").select("id").eq("lead_id", data.leadId).eq("status", "submitted").limit(1),
-      db.from("site_visits").select("status, outcome").eq("lead_id", data.leadId),
+      db.from("site_visits").select("status, outcome, outcome_at, visit_at").eq("lead_id", data.leadId),
       db.from("bookings").select("status, approval_status, project, amount_usd, booked_at").eq("lead_id", data.leadId).order("booked_at", { ascending: false }).limit(1),
     ]);
     const v = visits.data ?? [];
     const b = books.data?.[0] ?? null;
+    const { handoverDue } = await import("@/lib/handover-due");
+    const due = handoverDue({ visits: v, booking: b ? { booked_at: b.booked_at, approval_status: String(b.approval_status) } : null });
     return {
+      due,
       reported: (rep.data?.length ?? 0) > 0,
       visitScheduled: v.length > 0,
       visitCompleted: v.some((x) => x.status === "completed" || x.outcome != null),
@@ -36,22 +39,23 @@ export const getHandoverSummary = createServerFn({ method: "POST" })
     if (c.scope !== "authority") throw new Error("HQ/IT access required");
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const [visits, books] = await Promise.all([
-      db.from("site_visits").select("lead_id, status, outcome").limit(2000),
+      db.from("site_visits").select("lead_id, status, outcome, outcome_at, visit_at").limit(2000),
       db.from("bookings").select("lead_id, approval_status, project, booked_at").order("booked_at", { ascending: false }).limit(2000),
     ]);
     if (visits.error) throw new Error(visits.error.message);
     if (books.error) throw new Error(books.error.message);
-    const map = new Map<string, { scheduled: boolean; completed: boolean; booking: { approval: string; project: string | null } | null }>();
+    type V = { status: string; outcome: string | null; outcome_at: string | null; visit_at: string };
+    const map = new Map<string, { scheduled: boolean; completed: boolean; visits: V[]; booking: { approval: string; project: string | null; bookedAt: string | null } | null }>();
     for (const v of visits.data ?? []) {
       if (!v.lead_id) continue;
-      const m = map.get(v.lead_id) ?? { scheduled: false, completed: false, booking: null };
-      m.scheduled = true; if (v.status === "completed" || v.outcome != null) m.completed = true;
+      const m = map.get(v.lead_id) ?? { scheduled: false, completed: false, visits: [], booking: null };
+      m.scheduled = true; m.visits.push(v); if (v.status === "completed" || v.outcome != null) m.completed = true;
       map.set(v.lead_id, m);
     }
     for (const b of books.data ?? []) {
       if (!b.lead_id) continue;
-      const m = map.get(b.lead_id) ?? { scheduled: false, completed: false, booking: null };
-      if (!m.booking) m.booking = { approval: String(b.approval_status), project: b.project ?? null };
+      const m = map.get(b.lead_id) ?? { scheduled: false, completed: false, visits: [], booking: null };
+      if (!m.booking) m.booking = { approval: String(b.approval_status), project: b.project ?? null, bookedAt: b.booked_at ?? null };
       map.set(b.lead_id, m);
     }
     const ids = [...map.keys()];
@@ -59,5 +63,10 @@ export const getHandoverSummary = createServerFn({ method: "POST" })
     const owners = [...new Set(leads.map((l) => l.assigned_to).filter(Boolean))] as string[];
     const profs = owners.length ? (await db.from("profiles").select("id, name").in("id", owners)).data ?? [] : [];
     const pn = new Map(profs.map((p) => [p.id, p.name]));
-    return leads.map((l) => ({ id: l.id, name: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, ...map.get(l.id)! }));
+    const { handoverDue } = await import("@/lib/handover-due");
+    return leads.map((l) => {
+      const { visits: vs, ...m } = map.get(l.id)!;
+      const due = handoverDue({ visits: vs, booking: m.booking ? { booked_at: m.booking.bookedAt, approval_status: m.booking.approval } : null });
+      return { id: l.id, name: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, ...m, due };
+    });
   });
