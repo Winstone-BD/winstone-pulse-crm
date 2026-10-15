@@ -17,6 +17,7 @@ import {
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMyAccount } from "@/lib/session";
+import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
 
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
@@ -33,13 +34,16 @@ import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
 import { OutreachTemplates } from "@/components/crm/OutreachTemplates";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type {
-  CallRecording,
-  Lead,
-  LeadEvent,
-  Profile,
-  TimelineEntry,
-  WhatsappMessage,
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  PIPELINE_STAGES,
+  type CallRecording,
+  type Lead,
+  type LeadEvent,
+  type PipelineStage,
+  type Profile,
+  type TimelineEntry,
+  type WhatsappMessage,
 } from "@/lib/crm-data";
 import {
   whatsappStatusLabel,
@@ -48,6 +52,7 @@ import {
 } from "@/lib/whatsapp-status";
 import { LEAD_EVENT_LABELS } from "@/lib/crm-data";
 import { reanalyzeRecording } from "@/lib/crm.functions";
+import { setLeadPipelineStage } from "@/lib/lead-pipeline.functions";
 import { getAdminToken } from "@/lib/local-session";
 import {
   formatDuration,
@@ -79,6 +84,18 @@ export function LeadDossier({
 }) {
   const { scope } = useMyAccount();
   const agent = agents.find((a) => a.id === lead?.assigned_to);
+  const t = useT();
+  const queryClient = useQueryClient();
+  const setStage = useServerFn(setLeadPipelineStage);
+  const stageMutation = useMutation({
+    mutationFn: (stage: PipelineStage) =>
+      setStage({ data: { adminToken: getAdminToken(), leadId: lead?.id ?? "", stage } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
+      toast.success(t({ bn: "পাইপলাইন ধাপ আপডেট হয়েছে", en: "Pipeline stage updated" }));
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -116,6 +133,20 @@ export function LeadDossier({
                     {agent.name}
                   </span>
                 )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-muted-foreground">{t({ bn: "পাইপলাইন ধাপ", en: "Pipeline stage" })}</span>
+                <Select value={lead.pipeline_stage} onValueChange={(v) => stageMutation.mutate(v as PipelineStage)}>
+                  <SelectTrigger className="h-8 w-auto min-w-[9rem]" aria-label={t({ bn: "পাইপলাইন ধাপ", en: "Pipeline stage" })}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PIPELINE_STAGES.map((s) => (
+                      <SelectItem key={s.key} value={s.key}>{t(s)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {stageMutation.isPending && <Loader2 className="size-3 animate-spin text-muted-foreground" />}
               </div>
               <ContactSuppressionNotice leadId={lead.id} />
               <div className="mt-3 flex flex-wrap gap-2">
