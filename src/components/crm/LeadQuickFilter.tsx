@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { Lead } from "@/lib/crm-data";
+import { PIPELINE_STAGES, type Lead, type PipelineStage } from "@/lib/crm-data";
 
 export type LeadPeriod = "today" | "7d" | "month" | "all";
 export type LeadCategory = "all" | "hot" | "warm" | "cold" | "A" | "B" | "C" | "D" | "follow_up";
@@ -61,6 +61,14 @@ export function matchesCategory(lead: Lead, category: LeadCategory): boolean {
   return lead.grade === category;
 }
 
+export type LeadStage = "all" | PipelineStage;
+
+/** Sales pipeline stage filter — same canonical stage as the lead dossier picker. */
+export function matchesStage(lead: Lead, stage: LeadStage): boolean {
+  if (stage === "all") return true;
+  return lead.pipeline_stage === stage;
+}
+
 /**
  * Compact mobile-first filter bar for the agent lead list. Reuses the existing
  * temperature/grade fields — no new classification system.
@@ -69,19 +77,23 @@ export function LeadQuickFilter({
   leads,
   period,
   category,
+  stage,
   onPeriodChange,
   onCategoryChange,
+  onStageChange,
   onClear,
 }: {
   leads: Lead[];
   period: LeadPeriod;
   category: LeadCategory;
+  stage: LeadStage;
   onPeriodChange: (next: LeadPeriod) => void;
   onCategoryChange: (next: LeadCategory) => void;
+  onStageChange: (next: LeadStage) => void;
   onClear: () => void;
 }) {
   const inPeriod = leads.filter((lead) => matchesPeriod(lead, period));
-  const dirty = period !== "all" || category !== "all";
+  const dirty = period !== "all" || category !== "all" || stage !== "all";
 
   return (
     <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-2.5">
@@ -117,6 +129,34 @@ export function LeadQuickFilter({
               onClick={() => onCategoryChange(option.key)}
             >
               {option.label} ({count})
+            </Button>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+        <span className="shrink-0 text-[11px] font-semibold uppercase text-muted-foreground">
+          স্টেজ
+        </span>
+        <Button
+          size="sm"
+          variant={stage === "all" ? "default" : "outline"}
+          className="h-9 shrink-0 rounded-full px-3 text-xs"
+          onClick={() => onStageChange("all")}
+        >
+          সব ({inPeriod.length})
+        </Button>
+        {PIPELINE_STAGES.map((option) => {
+          const count = inPeriod.filter((lead) => lead.pipeline_stage === option.key).length;
+          return (
+            <Button
+              key={option.key}
+              size="sm"
+              variant={stage === option.key ? "default" : "outline"}
+              className="h-9 shrink-0 rounded-full px-3 text-xs"
+              onClick={() => onStageChange(option.key)}
+            >
+              {option.bn} ({count})
             </Button>
           );
         })}
