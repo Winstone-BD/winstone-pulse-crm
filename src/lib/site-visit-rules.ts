@@ -37,6 +37,13 @@ export function visitReminderStage(
   return null;
 }
 
+/** When the 2-hour reminder fires for a booked visit (null when the visit is not upcoming). */
+export function visitTwoHourReminderAt(v: { status: string; visit_at: string }): Date | null {
+  if (v.status !== "scheduled" && v.status !== "confirmed") return null;
+  const at = new Date(v.visit_at).getTime();
+  return Number.isNaN(at) ? null : new Date(at - 2 * H);
+}
+
 /** One push per stage per scheduled time per recipient; late/outcome repeat every 3h. */
 export function visitReminderKey(
   v: { id: string; visit_at: string },
