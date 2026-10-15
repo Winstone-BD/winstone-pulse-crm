@@ -3674,6 +3674,45 @@ export type Database = {
           },
         ]
       }
+      sales_drafts: {
+        Row: {
+          agent_id: string
+          ai_output: string
+          created_at: string
+          edited_at: string | null
+          edited_output: string | null
+          id: string
+          injection_flagged: boolean
+          lead_id: string | null
+          model: string
+          workflow: string
+        }
+        Insert: {
+          agent_id: string
+          ai_output: string
+          created_at?: string
+          edited_at?: string | null
+          edited_output?: string | null
+          id?: string
+          injection_flagged?: boolean
+          lead_id?: string | null
+          model: string
+          workflow: string
+        }
+        Update: {
+          agent_id?: string
+          ai_output?: string
+          created_at?: string
+          edited_at?: string | null
+          edited_output?: string | null
+          id?: string
+          injection_flagged?: boolean
+          lead_id?: string | null
+          model?: string
+          workflow?: string
+        }
+        Relationships: []
+      }
       security_findings: {
         Row: {
           created_at: string

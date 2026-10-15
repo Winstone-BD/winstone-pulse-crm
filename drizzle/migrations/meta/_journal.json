@@ -869,6 +869,13 @@
       "when": 1791962337808,
       "tag": "0123_site_visit_pipeline",
       "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1792035000305,
+      "tag": "0124_sales_drafts",
+      "breakpoints": true
     }
   ]
 }

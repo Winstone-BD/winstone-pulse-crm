@@ -9,6 +9,7 @@ import { getAdminToken } from "@/lib/local-session";
 import { clockTime } from "@/lib/crm-format";
 import { LeadProjectFacts } from "@/components/crm/KnowledgeHubCards";
 import { AgentTemplates } from "@/components/crm/AgentTemplates";
+import { SalesToolkit } from "@/components/crm/SalesToolkit";
 
 /** AI pre-call briefing: what to say on this lead's next call. */
 export function PreCallBriefCard({ leadId }: { leadId: string }) {
@@ -88,6 +89,7 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
       )}
     </section>
     <AgentTemplates facts={{ name: data?.leadName ?? null }} />
+    <SalesToolkit leadId={leadId} />
     <LeadProjectFacts leadId={leadId} />
     </>
   );
