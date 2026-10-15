@@ -16,7 +16,7 @@
 
 export type Reminder = {
   id: string;
-  kind: "report" | "follow_up" | "site_visit";
+  kind: "report" | "follow_up" | "site_visit" | "handover";
   leadId: string | null;
   title: string;
   detail: string;
@@ -161,6 +161,48 @@ export async function remindersFor(profileId: string, now = new Date(), opts: { 
     });
   }
 
+  // Handover due dates (fixed rules in handover-due.ts): only items due within 2 days or overdue.
+  {
+    const { handoverDue, dueText, DUE_LABEL } = await import("@/lib/handover-due");
+    let hv = supabaseAdmin.from("site_visits").select("lead_id, status, outcome, outcome_at, visit_at, leads!inner(name, phone_number, assigned_to)")
+      .gte("visit_at", new Date(nowMs - 60 * 86400_000).toISOString()).limit(300);
+    if (!opts.allVisits) hv = hv.eq("leads.assigned_to", profileId);
+    let hb = supabaseAdmin.from("bookings").select("lead_id, booked_at, approval_status, leads!inner(name, phone_number, assigned_to)")
+      .neq("approval_status", "approved").gte("booked_at", new Date(nowMs - 60 * 86400_000).toISOString()).limit(300);
+    if (!opts.allVisits) hb = hb.eq("leads.assigned_to", profileId);
+    const [{ data: hvs }, { data: hbs }] = await Promise.all([hv, hb]);
+    type L = { name?: string; phone_number?: string } | null;
+    const per = new Map<string, { lead: L; visits: { status: string; outcome: string | null; outcome_at: string | null; visit_at: string }[]; booking: { booked_at: string | null; approval_status: string | null } | null }>();
+    for (const v of hvs ?? []) {
+      const e = per.get(v.lead_id) ?? { lead: (v as { leads?: L }).leads ?? null, visits: [], booking: null };
+      e.visits.push(v); per.set(v.lead_id, e);
+    }
+    for (const b of hbs ?? []) {
+      if (!b.lead_id) continue;
+      const e = per.get(b.lead_id) ?? { lead: (b as { leads?: L }).leads ?? null, visits: [], booking: null };
+      if (!e.booking) e.booking = { booked_at: b.booked_at, approval_status: String(b.approval_status) };
+      per.set(b.lead_id, e);
+    }
+    for (const [leadId, e] of per) {
+      for (const d of handoverDue(e, now)) {
+        if (d.state === "upcoming") continue;
+        out.push({
+          id: `${d.kind}:${leadId}:${d.dueDate}:${d.state}`,
+          kind: "handover",
+          leadId,
+          title: `${DUE_LABEL[d.kind].bn} — ${d.state === "overdue" ? "সময় পেরিয়েছে" : "শেষ তারিখ কাছে"}`,
+          detail: `${e.lead?.name ?? "ক্রেতা"} — ${dueText(d)}`,
+          titleEn: `${DUE_LABEL[d.kind].en} ${d.state === "overdue" ? "overdue" : "due soon"}`,
+          detailEn: `${e.lead?.name ?? "Customer"} — due ${d.dueDate}`,
+          phone: e.lead?.phone_number ?? null,
+          dueAt: `${d.dueDate}T00:00:00+06:00`,
+          overdue: d.state === "overdue",
+          priority: d.state,
+        });
+      }
+    }
+  }
+
   const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
   return out.sort((a, b) => {
     // Unfinished reports remain mandatory and stay pinned before follow-ups.
@@ -228,7 +270,7 @@ export async function sweepReminders(now = new Date()) {
       // Upcoming follow-ups buzz once when the reminder window opens; a missed
       // (overdue) follow-up buzzes again every 3 hours until done or backlog.
       const overdueBucket = Math.floor(now.getTime() / (3 * 3_600_000));
-      const eventKey = item.kind === "site_visit"
+      const eventKey = item.kind === "handover" ? `handover:${item.id}:${agent.id}` : item.kind === "site_visit"
         ? visitReminderKey({ id: item.id, visit_at: item.dueAt }, item.priority as VisitReminderStage, agent.id, now.getTime()) :
         item.kind === "follow_up"
           ? item.overdue
@@ -243,7 +285,7 @@ export async function sweepReminders(now = new Date()) {
         payload: {
           title: item.kind === "follow_up" && item.overdue ? `⚠️ ${item.title}` : item.title,
           body: item.detail,
-          path: item.kind === "site_visit" ? "/site-visits" : "/desk",
+          path: item.kind === "site_visit" ? "/site-visits" : item.kind === "handover" && item.leadId ? `/leads/${item.leadId}` : "/desk",
           data: { reminder_kind: item.kind, reminder_id: item.id, lead_id: item.leadId ?? "" },
         },
       });
