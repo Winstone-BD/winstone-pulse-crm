@@ -57,7 +57,7 @@ export const getHandoverSummary = createServerFn({ method: "POST" })
     const ids = [...map.keys()];
     const leads = ids.length ? (await db.from("leads").select("id, name, phone_number, assigned_to").in("id", ids.slice(0, 1000))).data ?? [] : [];
     const owners = [...new Set(leads.map((l) => l.assigned_to).filter(Boolean))] as string[];
-    const profs = owners.length ? (await db.from("profiles").select("id, full_name").in("id", owners)).data ?? [] : [];
-    const pn = new Map(profs.map((p) => [p.id, p.full_name]));
+    const profs = owners.length ? (await db.from("profiles").select("id, name").in("id", owners)).data ?? [] : [];
+    const pn = new Map(profs.map((p) => [p.id, p.name]));
     return leads.map((l) => ({ id: l.id, name: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, ...map.get(l.id)! }));
   });
