@@ -142,8 +142,8 @@ function DraftHistory() {
                 {r.edited_at ? " · এডিট হয়েছে" : ""}{r.injection_flagged ? " · ⚠ সন্দেহজনক নোট" : ""}</p>
               {editing?.id === r.id ? (
                 <>
-                  <Textarea rows={8} value={editing.text} onChange={(e) => setEditing({ id: r.id, text: e.target.value })} />
-                  <Button size="sm" disabled={m.isPending} onClick={() => m.mutate(editing)}>সেভ</Button>
+                  <Textarea rows={8} value={editing?.text ?? ""} onChange={(e) => setEditing({ id: r.id, text: e.target.value })} />
+                  <Button size="sm" disabled={m.isPending} onClick={() => editing && m.mutate(editing)}>সেভ</Button>
                 </>
               ) : (
                 <>
