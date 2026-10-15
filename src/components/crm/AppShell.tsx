@@ -51,6 +51,7 @@ export const NAV = [
   { to: "/sales-intel", label: "Sales Intelligence", scopes: ["authority", "agent"] },
   { to: "/news", label: "Market News", scopes: ["authority", "agent"] },
   { to: "/site-visits", label: "Site Visits", scopes: ["authority", "agent"] },
+  { to: "/marketing", label: "Marketing", scopes: ["authority", "agent"] },
   { to: "/projects", label: "Projects", scopes: ["authority", "coordinator", "agent"] },
   { to: "/inventory", label: "Inventory", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },

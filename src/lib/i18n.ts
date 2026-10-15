@@ -43,6 +43,7 @@ export const NAV_LABELS: Record<string, { bn: string; en: string }> = {
   "/sales-intel": { bn: "সেলস ইন্টেলিজেন্স", en: "Sales Intelligence" },
   "/news": { bn: "মার্কেট নিউজ", en: "Market News" },
   "/site-visits": { bn: "সাইট ভিজিট", en: "Site Visits" },
+  "/marketing": { bn: "মার্কেটিং", en: "Marketing" },
   "/inventory": { bn: "ইনভেন্টরি", en: "Inventory" },
   "/reports": { bn: "রিপোর্ট", en: "Reports" },
   "/system": { bn: "আইটি কনসোল", en: "IT Console" },
