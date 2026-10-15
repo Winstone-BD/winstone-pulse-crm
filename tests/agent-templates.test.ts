@@ -15,3 +15,14 @@ describe("agent templates", () => {
     expect(t.text).toContain("গ্রাহক");
   });
 });
+
+describe("buyer check autofill", () => {
+  it("fills known CRM fields and marks the rest as needing verification", () => {
+    const t = buildTemplate("buyer_check", { name: "করিম", area: "Uttara", requirement: "3-bed flat", temperature: "hot", grade: "A", attempts: 2 });
+    expect(t.text).toContain("এলাকা: Uttara");
+    expect(t.text).toContain("প্রয়োজন: 3-bed flat");
+    expect(t.text).toContain("HOT/A");
+    expect(t.text).toMatch(/বাজেট \(সর্বোচ্চ ৳\): তথ্য যাচাই প্রয়োজন/);
+    expect(t.text).toContain("আগ্রহ: তথ্য যাচাই প্রয়োজন");
+  });
+});
