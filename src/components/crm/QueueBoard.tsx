@@ -7,8 +7,10 @@ import {
   LeadQuickFilter,
   matchesCategory,
   matchesPeriod,
+  matchesStage,
   type LeadCategory,
   type LeadPeriod,
+  type LeadStage,
 } from "@/components/crm/LeadQuickFilter";
 import { ManualIngestDialog } from "@/components/crm/ManualIngestDialog";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
@@ -42,6 +44,7 @@ export function QueueBoard({
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [period, setPeriod] = useState<LeadPeriod>("all");
   const [category, setCategory] = useState<LeadCategory>("all");
+  const [stage, setStage] = useState<LeadStage>("all");
 
   // Locked roster: only the existing approved agents can ever be picked here.
   const agents = useMemo(() => selectableAgents(profiles), [profiles]);
@@ -63,10 +66,11 @@ export function QueueBoard({
         matchesAgent &&
         matchesSearch &&
         matchesPeriod(lead, period) &&
-        matchesCategory(lead, category)
+        matchesCategory(lead, category) &&
+        matchesStage(lead, stage)
       );
     });
-  }, [leads, search, agentFilter, period, category]);
+  }, [leads, search, agentFilter, period, category, stage]);
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
@@ -90,11 +94,14 @@ export function QueueBoard({
         leads={leads}
         period={period}
         category={category}
+        stage={stage}
         onPeriodChange={setPeriod}
         onCategoryChange={setCategory}
+        onStageChange={setStage}
         onClear={() => {
           setPeriod("all");
           setCategory("all");
+          setStage("all");
         }}
       />
 
