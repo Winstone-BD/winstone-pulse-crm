@@ -883,6 +883,13 @@
       "when": 1792041874853,
       "tag": "0125_coach_objections_negotiation_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1792044262701,
+      "tag": "0126_sales_drafts_objection_answers",
+      "breakpoints": true
     }
   ]
 }

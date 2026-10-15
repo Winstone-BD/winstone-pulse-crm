@@ -1,0 +1,80 @@
+// Server-only: builds the daily one-row-per-lead report and mirrors it into
+// one company Google Spreadsheet (one tab per Dhaka date, rewritten on sync).
+import type { SheetRow } from "@/lib/pipeline-intel";
+
+const GW = "https://connector-gateway.lovable.dev/google_sheets/v4";
+const CONFIG_ID = "daily_sheet_google";
+
+export async function buildDailySheet(date: string): Promise<SheetRow[]> {
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const start = new Date(`${date}T00:00:00+06:00`).toISOString();
+  const end = new Date(Date.parse(start) + 86_400_000).toISOString();
+  const [calls, visits, books] = await Promise.all([
+    db.from("call_reports").select("lead_id, submitted_at").eq("status", "submitted").gte("submitted_at", start).lt("submitted_at", end).limit(5000),
+    db.from("site_visits").select("lead_id, status, visit_at").gte("visit_at", start).lt("visit_at", end).limit(5000),
+    db.from("bookings").select("lead_id, approval_status, booked_at").gte("booked_at", start).lt("booked_at", end).limit(5000),
+  ]);
+  for (const r of [calls, visits, books]) if (r.error) throw new Error(r.error.message);
+  const agg = new Map<string, { visits: number; done: number; bookings: number; pay: string[]; last: string | null }>();
+  const get = (id: string) => agg.get(id) ?? (agg.set(id, { visits: 0, done: 0, bookings: 0, pay: [], last: null }), agg.get(id)!);
+  const touch = (e: { last: string | null }, t: string | null) => { if (t && (!e.last || t > e.last)) e.last = t; };
+  for (const r of calls.data ?? []) if (r.lead_id) touch(get(r.lead_id), r.submitted_at);
+  for (const r of visits.data ?? []) { const e = get(r.lead_id); e.visits++; if (r.status === "completed") e.done++; touch(e, r.visit_at); }
+  for (const r of books.data ?? []) { const e = get(r.lead_id); e.bookings++; e.pay.push(r.approval_status === "approved" ? "HQ approved" : `awaiting HQ (${r.approval_status})`); touch(e, r.booked_at); }
+  const ids = [...agg.keys()].slice(0, 1000);
+  const leads = ids.length ? (await db.from("leads").select("id, name, phone_number, status, assigned_to").in("id", ids)).data ?? [] : [];
+  const owners = [...new Set(leads.map((l) => l.assigned_to).filter(Boolean))] as string[];
+  const pn = new Map(((owners.length ? (await db.from("profiles").select("id, name").in("id", owners)).data : []) ?? []).map((p) => [p.id, p.name as string]));
+  const fmt = (t: string | null) => (t ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Dhaka", hour: "2-digit", minute: "2-digit" }).format(new Date(t)) : null);
+  return leads.map((l) => {
+    const e = agg.get(l.id)!;
+    return { leadId: l.id, lead: l.name, phone: l.phone_number, agent: l.assigned_to ? pn.get(l.assigned_to) ?? null : null, status: String(l.status), visits: e.visits, visitsCompleted: e.done, bookings: e.bookings, paymentStatus: e.pay.join("; ") || "—", lastActivity: fmt(e.last) };
+  }).sort((a, b) => (b.lastActivity ?? "").localeCompare(a.lastActivity ?? ""));
+}
+
+async function gw(path: string, init: RequestInit = {}) {
+  const lk = process.env["LOVABLE_API_KEY"];
+  const sk = process.env["GOOGLE_SHEETS_API_KEY"];
+  if (!lk || !sk) throw new Error("Google Sheets is not connected");
+  const res = await fetch(`${GW}${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": sk, "Content-Type": "application/json", ...(init.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`Google Sheets request failed [${res.status}]: ${body}`);
+    throw new Error(`Google Sheets request failed [${res.status}]: ${body.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+async function spreadsheetId(): Promise<string> {
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { data } = await db.from("app_config").select("data").eq("id", CONFIG_ID).maybeSingle();
+  const saved = (data?.data as { spreadsheetId?: string } | null)?.spreadsheetId;
+  if (saved) return saved;
+  const created = await gw("/spreadsheets", { method: "POST", body: JSON.stringify({ properties: { title: "WINSTONE PULSE — Daily Lead Report" } }) });
+  const id = created.spreadsheetId as string;
+  const { error } = await db.from("app_config").upsert({ id: CONFIG_ID, data: { spreadsheetId: id }, updated_at: new Date().toISOString() } as never);
+  if (error) throw new Error(error.message);
+  return id;
+}
+
+export async function syncDailySheet(date: string) {
+  const rows = await buildDailySheet(date);
+  const id = await spreadsheetId();
+  const meta = await gw(`/spreadsheets/${id}?fields=sheets.properties.title`);
+  const titles: string[] = (meta.sheets ?? []).map((s: { properties: { title: string } }) => s.properties.title);
+  if (!titles.includes(date)) {
+    await gw(`/spreadsheets/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ addSheet: { properties: { title: date } } }] }) });
+  }
+  await gw(`/spreadsheets/${id}/values/'${date}'!A:J:clear`, { method: "POST", body: "{}" });
+  const values = [
+    ["Lead", "Phone", "Agent", "Status", "Visits", "Visits completed", "Bookings", "Payment status", "Last activity (Dhaka)", "Synced at"],
+    ...rows.map((r) => [r.lead, r.phone, r.agent ?? "", r.status, r.visits, r.visitsCompleted, r.bookings, r.paymentStatus, r.lastActivity ?? "", ""]),
+  ];
+  (values[0] as unknown[])[9] = `Synced ${new Date().toISOString()}`;
+  // RAW: values are stored as text, never evaluated as formulas.
+  await gw(`/spreadsheets/${id}/values/'${date}'!A1?valueInputOption=RAW`, { method: "PUT", body: JSON.stringify({ values }) });
+  return { rows: rows.length, url: `https://docs.google.com/spreadsheets/d/${id}/edit` };
+}
