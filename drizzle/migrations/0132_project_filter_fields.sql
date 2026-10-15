@@ -1,0 +1,3 @@
+ALTER TABLE public.project_catalog ADD COLUMN IF NOT EXISTS price_min numeric, ADD COLUMN IF NOT EXISTS price_max numeric, ADD COLUMN IF NOT EXISTS facing text[] NOT NULL DEFAULT '{}', ADD COLUMN IF NOT EXISTS amenities text[] NOT NULL DEFAULT '{}';
+COMMENT ON COLUMN public.project_catalog.price_min IS 'HQ-entered lowest unit price in BDT; null = unknown';
+COMMENT ON COLUMN public.project_catalog.price_max IS 'HQ-entered highest unit price in BDT; null = unknown';

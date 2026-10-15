@@ -3306,9 +3306,11 @@ export type Database = {
       }
       project_catalog: {
         Row: {
+          amenities: string[]
           created_at: string
           down_payment: string | null
           extra_charges: string | null
+          facing: string[]
           id: string
           image_url: string | null
           installment_plan: string | null
@@ -3316,6 +3318,8 @@ export type Database = {
           name: string
           notes: string | null
           parking_charge: string | null
+          price_max: number | null
+          price_min: number | null
           price_per_sqft: number | null
           status: string
           total_price: string | null
@@ -3324,9 +3328,11 @@ export type Database = {
           updated_by: string
         }
         Insert: {
+          amenities?: string[]
           created_at?: string
           down_payment?: string | null
           extra_charges?: string | null
+          facing?: string[]
           id?: string
           image_url?: string | null
           installment_plan?: string | null
@@ -3334,6 +3340,8 @@ export type Database = {
           name: string
           notes?: string | null
           parking_charge?: string | null
+          price_max?: number | null
+          price_min?: number | null
           price_per_sqft?: number | null
           status?: string
           total_price?: string | null
@@ -3342,9 +3350,11 @@ export type Database = {
           updated_by: string
         }
         Update: {
+          amenities?: string[]
           created_at?: string
           down_payment?: string | null
           extra_charges?: string | null
+          facing?: string[]
           id?: string
           image_url?: string | null
           installment_plan?: string | null
@@ -3352,6 +3362,8 @@ export type Database = {
           name?: string
           notes?: string | null
           parking_charge?: string | null
+          price_max?: number | null
+          price_min?: number | null
           price_per_sqft?: number | null
           status?: string
           total_price?: string | null
