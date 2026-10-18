@@ -4,6 +4,7 @@ import { ClipboardList, Loader2, PhoneIncoming, PhoneOutgoing, Search } from "lu
 import { useState } from "react";
 
 import { CallReportSummary } from "@/components/crm/CallReportSummary";
+import { DurationMismatchPanel } from "@/components/crm/DurationMismatchPanel";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { ReportDetails } from "@/components/crm/ReportDetails";
 import { Badge } from "@/components/ui/badge";
@@ -222,6 +223,10 @@ export function CallReportsPanel() {
       ) : null}
 
       {!isPending ? <CallReportSummary reports={reports} /> : null}
+
+      {data?.scope === "authority" ? (
+        <DurationMismatchPanel onOpenLead={(leadId) => setOpenLeadId(leadId)} />
+      ) : null}
 
       {isPending ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
