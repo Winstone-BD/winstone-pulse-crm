@@ -83,3 +83,53 @@ export const listAssignmentHistory = createServerFn({ method: "POST" })
       })),
     };
   });
+
+export interface DailyNewLeadRow {
+  agentId: string;
+  name: string;
+  employeeId: string | null;
+  newLeads: number;
+  expected: number;
+  ok: boolean;
+}
+
+/**
+ * HQ/IT only: for each active approved agent, how many NEW leads (handed out
+ * from the unassigned pool, i.e. no previous owner) they received on the given
+ * Dhaka day. Anyone not at exactly `expected` is flagged.
+ */
+export const dailyNewLeadCheck = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    z.object({
+      adminToken: z.string().max(4096).nullable().optional(),
+      day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      expected: z.number().int().min(1).max(500).default(50),
+    }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const c = await resolveCaller(data.adminToken ?? null);
+    if (c.scope !== "authority") throw new Error("Only HQ / IT admins can view this check");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: agents, error: ae } = await supabaseAdmin
+      .from("profiles").select("id,name,employee_id")
+      .eq("role", "agent").eq("is_active", true).eq("approval_status", "approved");
+    if (ae) throw new Error(ae.message);
+    const counts = new Map<string, number>();
+    for (let page = 0; page < 50; page++) {
+      const { data: rows, error } = await supabaseAdmin
+        .from("lead_assignments").select("to_agent_id")
+        .is("from_agent_id", null)
+        .gte("created_at", `${data.day}T00:00:00+06:00`)
+        .lte("created_at", `${data.day}T23:59:59.999+06:00`)
+        .range(page * 1000, page * 1000 + 999);
+      if (error) throw new Error(error.message);
+      for (const r of rows ?? []) if (r.to_agent_id) counts.set(r.to_agent_id, (counts.get(r.to_agent_id) ?? 0) + 1);
+      if ((rows ?? []).length < 1000) break;
+    }
+    const rows: DailyNewLeadRow[] = (agents ?? []).map((a) => {
+      const n = counts.get(a.id) ?? 0;
+      return { agentId: a.id, name: a.name, employeeId: a.employee_id, newLeads: n, expected: data.expected, ok: n === data.expected };
+    }).sort((x, y) => Number(x.ok) - Number(y.ok) || x.name.localeCompare(y.name));
+    return { day: data.day, rows, flagged: rows.filter((r) => !r.ok).length };
+  });
