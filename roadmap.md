@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Change all current Sales Agent accounts to Executive HQ using existing role infrastructure, preserve customer data; verify production availability and main CRM workflows without fabricated writes.
 - [x] Immutable overdue/missed recovery and API ownership checks/tests implemented. Monisha WIN2604 live read-only API checks pass across six activity tables; foreign history refused, LeadHub agent denied. No customer mutations; 1,503 follow-ups remain, zero recovery actions created by testing. Authorized LeadHub content/recovery submission blocked by PIN and mandatory staff contribution gate.
 - [x] Existing follow-up reconciliation: 1,503 records checked; no missing lead/agent/schedule/correlation IDs. 498 overdue are derived by new readers, not silently rescheduled. 689 historical completions lack recorded outcomes and 29 lack report links: preserved without fabrication. Legacy creation keys remain absent because originals are immutable; no bulk data mutation needed for current rule enforcement.
 - [ ] Deployment requested 2026-10-18 after 542 tests passed and harness build OK; https://crm.winstonebd.com completion/live smoke-test still unconfirmed. Project-photo authenticated-download warning remains; no access rules bypassed.
