@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Current Drive request: user asks to grant workspace-account permission on Scarlett’s Google Drive, link it, and verify supplied resource 1IExiEfhCbEGMrV-rCyRHGIEPGCqf7SW- (URL uses /drive/project/, so confirm MIME via connector rather than assume folder). Permission editing requires connection owner UI; do not bypass.
 - [ ] 2026-10-18 current request: refresh database Run baseline and largest safe cost-driver diagnosis; provision Mst. Mashat Johura (mashat.it.winstone@gmail.com) only through authorized IT Console with password entered securely in-app; reconnect current-workspace Drive using handover; add useful Claude/Gemini capability grounded in saved facts without duplicating existing tools.
 - [x] Lovable Auth enable request: provider settings confirmed Lovable sign-in was already enabled; no signup, roles or account changes.
 - [x] Database health confirmed up (12% memory, 17% disk, 19/160 connections). Recorded 7-day usage has Build only; Run/cash savings unverified. Agent event index measured 767→52 buffers and 0.718→0.293ms for the same bounded read; agent owner snapshot consolidated into one paginated OR query with regression test. Biggest assignment trigger rewrite withheld: 309 leads lack canonical phone keys, so replacing full-phone scans would risk eligibility changes; requires an audited identity-reconciliation design, not silent bypass.
