@@ -9,7 +9,7 @@ async function callerFor(adminToken: string | null | undefined, action: NoticeAc
   const { resolveCaller } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
   const decision = noticeDecision(caller, action);
-  if (decision.kind === "deny") throw new Error(decision.message);
+  if (decision.kind === "deny" && !(caller.scope === "authority" && caller.readOnly && ["publish", "recipients"].includes(action))) throw new Error(decision.message);
   return caller;
 }
 
@@ -57,7 +57,7 @@ export const listNoticeBoard = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const profileId = caller.profile?.id ?? null;
     return {
-      canPublish: caller.scope === "authority" && !caller.readOnly,
+      canPublish: caller.scope === "authority",
       profileId,
       notices: (notices ?? []).map((notice) => {
         const delivery = (receipts ?? []).filter((row) => row.notice_id === notice.id);
@@ -66,6 +66,7 @@ export const listNoticeBoard = createServerFn({ method: "POST" })
           read: profileId ? Boolean(delivery.find((row) => row.profile_id === profileId)?.read_at) : true,
           recipientCount: delivery.length,
           readCount: delivery.filter((row) => row.read_at).length,
+          receipts: caller.scope === "authority" ? delivery : delivery.filter(row => row.profile_id === profileId),
           replies: (replies ?? []).filter((row) => row.notice_id === notice.id),
         };
       }),
@@ -90,6 +91,8 @@ export const listNoticeRecipients = createServerFn({ method: "POST" })
 export const publishNotice = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     Base.extend({
+      requestId: z.string().uuid().optional(),
+      expiresAt: z.string().datetime().nullable().optional(),
       title: z.string().trim().min(2).max(160),
       body: z.string().trim().min(2).max(4000),
       severity: z.enum(["info", "important", "urgent"]),
@@ -115,35 +118,14 @@ export const publishNotice = createServerFn({ method: "POST" })
     if (recipientError) throw new Error(recipientError.message);
     if (!profiles?.length) throw new Error("কোনো সক্রিয় প্রাপক পাওয়া যায়নি");
 
-    const { data: notice, error } = await supabaseAdmin
-      .from("it_notices")
-      .insert({
-        title: data.title,
-        body: data.body,
-        severity: data.severity,
-        audience_type: data.audienceType,
-        audience_role: data.audienceType === "role" ? data.audienceRole ?? null : null,
-        author_profile_id: caller.profile?.id ?? null,
-        author_label: "IT Council",
-      })
-      .select("id")
-      .single();
-    if (error || !notice) throw new Error(error?.message ?? "নোটিশ পাঠানো যায়নি");
-    const { error: deliveryError } = await supabaseAdmin.from("it_notice_recipients").insert(
-      profiles.map((profile) => ({ notice_id: notice.id, profile_id: profile.id })),
-    );
-    if (deliveryError) throw new Error(deliveryError.message);
-
-    const { logAudit } = await import("@/lib/audit.server");
-    await logAudit({
-      action: "it_notice_published",
-      entityType: "it_notice",
-      entityId: notice.id,
-      actorProfileId: caller.profile?.id ?? null,
-      actorLabel: caller.profile?.name ?? "IT Council",
-      metadata: { audienceType: data.audienceType, audienceRole: data.audienceRole ?? null, recipients: profiles.length, severity: data.severity },
+    const label = caller.readOnly ? "Executive HQ" : (caller.profile?.name ?? "IT Council");
+    const result = await supabaseAdmin.rpc("publish_notice_atomic", {
+      _request: data.requestId ?? crypto.randomUUID(), _title: data.title, _body: data.body, _severity: data.severity,
+      _audience: data.audienceType, _role: data.audienceType === "role" ? data.audienceRole ?? null : null,
+      _recipients: profiles.map(p => p.id), _author: caller.profile?.id ?? null, _label: label, _expiry: data.expiresAt ?? null,
     });
-
+    if (result.error || !result.data) throw new Error("Message publication could not be confirmed");
+    const notice = { id: result.data };
     try {
       const { sendPush } = await import("@/lib/push.server");
       await sendPush({
@@ -171,7 +153,8 @@ export const markNoticeRead = createServerFn({ method: "POST" })
       .from("it_notice_recipients")
       .update({ read_at: new Date().toISOString() })
       .eq("notice_id", data.noticeId)
-      .eq("profile_id", caller.profile.id);
+      .eq("profile_id", caller.profile.id)
+      .is("read_at", null);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
