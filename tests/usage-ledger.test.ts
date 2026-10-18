@@ -1,0 +1,10 @@
+import {it,expect,vi} from 'vitest';
+import {UsageEvent,summarizeUsage,usageMonth} from '../src/lib/usage-ledger';
+const base={source:'provider',source_event_id:'one',usage_class:'run' as const,event_type:'ai',operation:'brief',amount_basis:'actual' as const,evidence:'provider usage',occurred_at:'2026-10-31T18:00:00Z'};
+it('Dhaka calendar month starts at UTC 18:00',()=>expect(usageMonth(base.occurred_at)).toBe('2026-11'));
+it('shared costs remain unallocated',()=>{const rows=summarizeUsage([{...base,credits:3},{...base,source_event_id:'two',credits:2,lead_id:'fbed8866-772f-442c-9dd5-8d64ac295e30'}]);expect(rows.find(r=>r.leadId===null)?.credits).toBe(3);expect(rows.find(r=>r.leadId!==null)?.credits).toBe(2);});
+it('Build and Run and currencies never merge',()=>{expect(summarizeUsage([{...base,credits:2,cost_currency:'USD',cost_amount:1},{...base,usage_class:'build',credits:4},{...base,cost_currency:'BDT',cost_amount:120}])).toHaveLength(3);});
+it('unknown does not accept invented prices',()=>expect(UsageEvent.safeParse({...base,amount_basis:'unknown',credits:1}).success).toBe(false));
+it('amount requires its own currency',()=>expect(UsageEvent.safeParse({...base,cost_amount:1}).success).toBe(false));
+const upsert=vi.fn(async()=>({error:null}));vi.mock('@/integrations/supabase/client.server',()=>({supabaseAdmin:{from:()=>({upsert})}}));
+it('ingestion ignores duplicate provider event IDs',async()=>{const {ingestUsageEvent}=await import('../src/lib/usage-ledger.server');await ingestUsageEvent(base);expect(upsert).toHaveBeenCalledWith(expect.objectContaining({source_event_id:'one'}),{onConflict:'source,source_event_id',ignoreDuplicates:true});});
