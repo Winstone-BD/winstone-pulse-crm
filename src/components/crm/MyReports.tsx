@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { myCallReports, summarizeMyReport } from "@/lib/call-reports.functions";
-import { clockTime, relativeTime } from "@/lib/crm-format";
+import { clockTime, fullDateTime, relativeTime } from "@/lib/crm-format";
+import { durationSourceLabel } from "@/lib/call-duration";
 import { useAdminToken } from "@/lib/local-session";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 import type { ReportBrief } from "@/lib/report-summary.server";
@@ -54,6 +55,9 @@ export function MyReports() {
 
   const reports = data?.reports ?? [];
   const upcoming = data?.upcoming ?? [];
+  const submitted = reports.filter((r) => r.status === "submitted");
+  const phoneSynced = submitted.filter((r) => r.duration_source === "phone_sync");
+  const talkMinutes = Math.round(submitted.reduce((sum, r) => sum + (r.duration_seconds ?? 0), 0) / 60);
 
   return (
     <div className="space-y-6">
@@ -103,6 +107,18 @@ export function MyReports() {
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">{reports.length}টি রিপোর্ট</p>
         </div>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "জমা দেওয়া রিপোর্ট", value: submitted.length },
+            { label: "ফোনের সময় মিলেছে", value: phoneSynced.length },
+            { label: "মোট কথা (মিনিট)", value: talkMinutes },
+          ].map((tile) => (
+            <div key={tile.label} className="rounded-lg border bg-card p-3">
+              <p className="tabular text-lg font-semibold">{tile.value}</p>
+              <p className="text-[11px] text-muted-foreground">{tile.label}</p>
+            </div>
+          ))}
+        </div>
         {reports.length === 0 ? (
           <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
             এখনো কোনো কল রিপোর্ট জমা হয়নি।
@@ -129,6 +145,14 @@ export function MyReports() {
                   {relativeTime(report.call_ended_at)}
                   {report.follow_up_at ? ` · ফলো-আপ ${clockTime(report.follow_up_at)}` : ""}
                 </p>
+                {report.status === "submitted" ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    সময়ের উৎস: {durationSourceLabel(report.duration_source)}
+                    {report.duration_source === "phone_sync" && report.duration_synced_at
+                      ? ` — সিংক হয়েছে ${fullDateTime(report.duration_synced_at)}`
+                      : ""}
+                  </p>
+                ) : null}
                 {report.note ? <p className="mt-1 text-sm">{report.note}</p> : null}
                 {report.reason ? (
                   <p className="mt-1 text-xs text-muted-foreground">কারণ: {report.reason}</p>
