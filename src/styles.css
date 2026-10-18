@@ -666,3 +666,8 @@ html[lang="bn"] h3 {
 :lang(bn) {
   font-family: "Hind Siliguri", var(--font-sans);
 }
+
+/* Home page (video reference): black workspace buttons, handwritten section titles. */
+.theme-exec .btn-enter { background-color: var(--charcoal); color: var(--background); }
+.theme-exec .btn-enter:hover, .theme-exec .group:hover .btn-enter { background-color: var(--foreground); color: var(--background); }
+.font-hand { font-family: "Caveat", var(--font-display); }
