@@ -122,12 +122,10 @@ function EntryHall() {
               Winstone <span className="text-gold">Pulse</span>
             </h1>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Close more deals, <span className="text-gold">less chaos.</span>
+              The Premium <span className="text-gold">Real Estate CRM.</span>
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
-              The visual CRM that your sales team will actually love using. Drag, drop, and close —
-              live sales monitoring, lead management, call activity, follow-up deadlines and team
-              performance, all in one place.
+              Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Button

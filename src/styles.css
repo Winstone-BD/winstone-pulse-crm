@@ -617,13 +617,13 @@
 /* Executive minimal home theme: warm paper canvas, near-black ink, white flat
    cards, champagne-gold accents only. No gradients, no heavy shadows. */
 :root {
-  --gold: #c9a45c;
+  --gold: #c6a66b;
   --gold-strong: #d4af37;
   --charcoal: #171717;
 }
 .theme-exec {
-  --background: #f5f2ea;
-  --foreground: #0b0b0b;
+  --background: #f5f0e7;
+  --foreground: #171717;
   --card: #ffffff;
   --card-foreground: #0b0b0b;
   --popover: #ffffff;
@@ -639,7 +639,7 @@
   --accent-foreground: #0b0b0b;
   --border: #dbd9d2;
   --input: #dbd9d2;
-  --ring: #c9a45c;
+  --ring: #c6a66b;
   --surface: #faf8f2;
   --surface-2: #efece4;
   --shadow-card: none;
