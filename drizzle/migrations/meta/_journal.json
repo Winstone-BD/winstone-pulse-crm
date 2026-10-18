@@ -771,6 +771,13 @@
       "when": 1792340037935,
       "tag": "0109_immutable_follow_up_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1792340310160,
+      "tag": "0110_enforce_current_assigned_lead_api_scope",
+      "breakpoints": true
     }
   ]
 }
