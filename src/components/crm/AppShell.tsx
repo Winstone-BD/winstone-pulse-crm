@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
+import { Lock, LockOpen, LogOut, Smartphone, Sparkles } from "lucide-react";
 import { MobileNavDrawer, NavSidebar, NAV_ICONS } from "@/components/crm/NavSidebar";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useEffect, useState, type ReactNode } from "react";
@@ -67,39 +67,6 @@ export const NAV = [
 ] as const satisfies ReadonlyArray<{ to: string; label: string; scopes: readonly Scope[] }>;
 
 
-/** Light/dark switch: presentation only, remembered on this device. */
-function ThemeToggle() {
-  const t = useT();
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const on = localStorage.getItem("winstone.theme") === "dark";
-    setDark(on);
-    document.documentElement.classList.toggle("dark", on);
-  }, []);
-  const flip = () => {
-    const on = !dark;
-    setDark(on);
-    document.documentElement.classList.toggle("dark", on);
-    try {
-      localStorage.setItem("winstone.theme", on ? "dark" : "light");
-    } catch {
-      // storage blocked: switch still applies for this visit
-    }
-  };
-  return (
-    <button
-      type="button"
-      onClick={flip}
-      aria-pressed={dark}
-      aria-label={dark ? t({ bn: "লাইট মোড", en: "Light mode" }) : t({ bn: "ডার্ক মোড", en: "Dark mode" })}
-      title={dark ? t({ bn: "লাইট মোড", en: "Light mode" }) : t({ bn: "ডার্ক মোড", en: "Dark mode" })}
-      className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
-    >
-      {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-    </button>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   useCrmRealtime();
   const adminToken = useAdminToken();
@@ -108,6 +75,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [pinOpen, setPinOpen] = useState(false);
   const lang = useLang();
   const t = useT();
+  useEffect(() => {
+    // The unified light palette supersedes legacy per-device dark styling.
+    // Keep the saved value untouched; it must not affect today's palette.
+    document.documentElement.classList.remove("dark");
+  }, []);
   const nav = NAV.filter((item) => (item.scopes as readonly Scope[]).includes(scope as Scope)).map((item) => ({
     ...item,
     label: NAV_LABELS[item.to]?.[lang] ?? item.label,
@@ -153,8 +125,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               ))}
             </div>
-
-            <ThemeToggle />
 
             {adminToken && <AgentSelector />}
 
