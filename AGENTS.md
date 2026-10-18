@@ -37,3 +37,4 @@
 - Workspace wrappers and portals inherit src/styles.css tokens; shared Buttons separate actions from accents — why: one palette everywhere.
 - Shared headers stack phone actions, dialogs reserve close-button space, tables contain horizontal scroll — why: improve all workspaces without changing workflows.
 - Desk WorkViews are scoped read-only; stages change via reports — why: no second write path.
+- Fonts are self-hosted: woff2 files live in public/fonts with @font-face in src/styles.css; never re-add the Google Fonts stylesheet link — why: external render-blocking CSS was the top page-speed cost.

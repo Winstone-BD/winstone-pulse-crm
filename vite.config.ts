@@ -113,5 +113,10 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Prerender the public gateway page to static HTML so first paint skips SSR
+    // entirely. Discovery stays off: authenticated workspaces must never be
+    // captured into a shared static file.
+    pages: [{ path: "/" }],
+    prerender: { enabled: true, autoStaticPathsDiscovery: false },
   },
 });
