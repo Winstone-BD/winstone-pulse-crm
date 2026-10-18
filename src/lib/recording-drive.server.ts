@@ -105,7 +105,7 @@ export async function backupRecordingToDrive(recordingId: string) {
     .select("id, status, drive_file_id, drive_file_url")
     .eq("call_recording_id", recordingId)
     .maybeSingle();
-  if (existing?.status === "done" && existing.drive_file_id) {
+  if (["done", "verified"].includes(existing?.status ?? "") && existing?.drive_file_id) {
     return {
       status: "already_done" as const,
       driveFileId: existing.drive_file_id,
@@ -121,7 +121,7 @@ export async function backupRecordingToDrive(recordingId: string) {
     .eq("id", recordingId)
     .maybeSingle();
   if (!recording) throw new Error("রেকর্ডিং পাওয়া যায়নি");
-  if (recording.recording_status !== "stored" || !recording.storage_path) {
+  if (!recording.storage_path) {
     throw new Error(`রেকর্ডিং এখনো জমা হয়নি — অবস্থা: ${recording.recording_status ?? "unknown"}`);
   }
 

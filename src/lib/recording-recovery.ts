@@ -8,12 +8,13 @@ export type RecoveryRecording = {
   stt_error_message: string | null;
   transcription_text: string | null;
   ai_summary: string | null;
+  updated_at?: string;
 };
 
 export function recordingRecovery(row: RecoveryRecording, driveStatus?: string | null) {
   const hasAudio = Boolean(row.storage_path || row.audio_url);
   const terminal = row.analysis_status === "not_available";
-  const active = row.analysis_status === "processing";
+  const active = row.analysis_status === "processing" && !analysisLeaseExpired(row.updated_at);
   const missingUpload = !hasAudio;
   const driveRetry = Boolean(row.storage_path) && !["done", "verified"].includes(driveStatus ?? "");
   const analysisRetry = hasAudio && !terminal && !active && row.analysis_status !== "completed";
@@ -30,12 +31,17 @@ export function assertRecordingRetry(row: RecoveryRecording, step: "drive" | "an
   if (!recovery.hasAudio || (step === "drive" && !row.storage_path)) {
     throw new Error("আগে ফোন থেকে আসল অডিও উদ্ধার করে একই কলের রেকর্ডিং আপলোড করুন; রিট্রাই দিয়ে অনুপস্থিত অডিও তৈরি হয় না।");
   }
-  if (step === "analysis" && row.analysis_status === "processing") {
+  if (step === "analysis" && row.analysis_status === "processing" && !analysisLeaseExpired(row.updated_at)) {
     throw new Error("বিশ্লেষণ চলছে; একই রেকর্ডিংয়ে আরেকটি বিশ্লেষণ শুরু করা হয়নি।");
   }
   if (step === "analysis" && row.analysis_status === "not_available") {
     throw new Error("এই অডিওর বিশ্লেষণ বন্ধ হয়েছে; ত্রুটি ও অডিও যাচাই করুন, একই ফাইলে অন্ধ রিট্রাই নয়।");
   }
+}
+
+/** A manual retry may reclaim only an unchanged processing row older than 15 minutes. */
+export function analysisLeaseExpired(updatedAt?: string, now = Date.now()) {
+  return Boolean(updatedAt && Number.isFinite(Date.parse(updatedAt)) && now - Date.parse(updatedAt) > 15 * 60_000);
 }
 
 export function analysisOutcomeOk(outcome: string) {

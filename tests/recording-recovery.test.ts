@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recordingRecovery, assertRecordingRetry, analysisOutcomeOk } from "../src/lib/recording-recovery";
+import { recordingRecovery, assertRecordingRetry, analysisOutcomeOk, analysisLeaseExpired } from "../src/lib/recording-recovery";
 
 const row = { storage_path: "audio/call.mp3", audio_url: null, upload_status: "uploaded", analysis_status: "failed", analysis_error: "AI_PROVIDER_FAILED", stt_error_message: null, transcription_text: "আসল কথোপকথন", ai_summary: null };
 describe("recording recovery", () => {
@@ -26,5 +26,11 @@ describe("recording recovery", () => {
     expect(analysisOutcomeOk("failed")).toBe(false);
     expect(analysisOutcomeOk("not_available")).toBe(false);
     expect(analysisOutcomeOk("completed")).toBe(true);
+  });
+  it("allows stale processing recovery only after 15 minutes", () => {
+    const at = "2026-10-18T10:00:00Z";
+    expect(analysisLeaseExpired(at, Date.parse("2026-10-18T10:15:00Z"))).toBe(false);
+    expect(analysisLeaseExpired(at, Date.parse("2026-10-18T10:15:01Z"))).toBe(true);
+    expect(analysisLeaseExpired(undefined)).toBe(false);
   });
 });
