@@ -22,7 +22,7 @@ describe('android API compatibility', () => {
     const paths = [...kotlin.matchAll(/"(\/api\/public\/[^"?]+)"/g)].map((m) => m[1]!);
     expect(paths.length).toBeGreaterThanOrEqual(10);
     for (const path of new Set(paths)) {
-      expect(() => serverRoute(path), `missing server route for ${path}`).not.toThrow();
+      expect(() => serverRoute(path.replace(/^\/api/, '')), `missing server route for ${path}`).not.toThrow();
     }
   });
 
