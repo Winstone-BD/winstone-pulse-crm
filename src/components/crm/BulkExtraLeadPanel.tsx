@@ -135,8 +135,8 @@ export function BulkExtraLeadPanel() {
       {last && (
         <ul className="space-y-0.5 text-xs">
           {last.map((r) => (
-            <li key={r.name} className={r.error ? "text-destructive" : undefined}>
-              {r.name}: {r.error ? `আটকে গেছে — ${r.error}` : `${r.moved}টি`}
+            <li key={r.name} className={r.error || r.moved !== quantity ? "text-destructive" : undefined}>
+              {r.name}: {r.error ? `আটকে গেছে — ${r.error}` : r.moved === quantity ? `${r.moved}টি ✓` : `${r.moved}টি — ${quantity}টি হয়নি, যাচাই করুন`}
             </li>
           ))}
         </ul>

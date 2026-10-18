@@ -368,6 +368,14 @@ export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
     if (current.size !== expected.size || [...current].some((id) => !expected.has(id))) {
       throw new Error("সক্রিয় এজেন্টের তালিকা Preview-এর পর বদলেছে — আবার Preview দেখুন");
     }
+    // Refuse up front when the pool cannot cover every agent's full share,
+    // so a batch never leaves some agents short.
+    const { usablePoolCount } = await import("@/lib/lead-pool.server");
+    const need = agents.length * data.quantity;
+    const available = await usablePoolCount();
+    if (available < need) {
+      throw new Error(`লিডের প্রাপ্যতা: দরকার ${need}টি, যোগ্য আছে ${available}টি — batch চালানো হয়নি`);
+    }
     const results: { agentId: string; name: string; moved: number; error: string | null }[] = [];
     let remaining = 0;
     for (const agent of agents) {

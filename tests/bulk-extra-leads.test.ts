@@ -37,3 +37,9 @@ describe("bulk extra history", () => {
     expect(h).toMatch(/await dispatcher\(data\.adminToken\)/);
   });
 });
+
+describe("bulk extra availability guard", () => {
+  it("refuses the batch when eligible leads cannot cover agents × quantity", () => {
+    expect(block).toMatch(/available < need/);
+  });
+});
