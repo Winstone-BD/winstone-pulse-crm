@@ -1942,6 +1942,62 @@ export type Database = {
           },
         ]
       }
+      it_officer_onboarding: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string
+          name: string
+          password_set_at: string | null
+          profile_id: string | null
+          role_assigned_at: string | null
+          role_assigned_by: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          name: string
+          password_set_at?: string | null
+          profile_id?: string | null
+          role_assigned_at?: string | null
+          role_assigned_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          name?: string
+          password_set_at?: string | null
+          profile_id?: string | null
+          role_assigned_at?: string | null
+          role_assigned_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_officer_onboarding_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_versions: {
         Row: {
           action: string
@@ -5750,6 +5806,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_it_officer_onboarding: {
+        Args: { _action: string; _actor: string; _id: string }
+        Returns: undefined
+      }
       clean_person_name: { Args: { _raw: string }; Returns: string }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {
