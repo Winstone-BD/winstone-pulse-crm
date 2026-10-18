@@ -20,8 +20,30 @@ export type LeadPoolAgent = {
   name: string;
   total: number;
   pending: number;
+  /** Everything on today's board, including leftovers rolled over from earlier days. */
   today: number;
+  /** Leads counted against today's daily quota (same rule the distributor uses). */
+  quotaToday: number;
+  /** That agent's daily quota target. */
+  quotaTarget: number;
+  /** Extra leads granted today (IT Console / auto-refill), above the quota. */
+  extraToday: number;
+  /** New hand-overs recorded in today's assignment history. */
+  newToday: number;
 };
+
+/** Reads every row of a query in 1,000-row pages (the Data API's per-read cap). */
+async function pageAll<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data } = await fetchPage(from, from + 999);
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
 
 /** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
@@ -205,11 +227,9 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         .or("assignment_source.is.null,assignment_source.neq.duplicate_skipped")
         .order("created_at", { ascending: true })
         .limit(100),
-      supabaseAdmin
-        .from("leads")
-        .select("assigned_to, status, work_date")
-        .not("assigned_to", "is", null)
-        .limit(20000),
+      // Paged below — the Data API caps a single read at 1,000 rows, which
+      // silently dropped most of today's leads and showed "0" per agent.
+      Promise.resolve({ data: null }),
       supabaseAdmin
         .from("audit_logs")
         .select("created_at, metadata")
@@ -217,26 +237,64 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false })
         .limit(1),
     ]);
+    void assigned;
+    const { assignedTodayByAgent } = await import("@/lib/lead-pool.server");
+    const { dhakaDayStartIso } = await import("@/lib/lead-pool-today");
+    const [rows, quotaHeld, extraRows, historyRows] = await Promise.all([
+      pageAll<{ assigned_to: string | null; status: string | null; work_date: string | null }>(
+        (from, to) =>
+          supabaseAdmin
+            .from("leads")
+            .select("assigned_to, status, work_date")
+            .not("assigned_to", "is", null)
+            .order("id")
+            .range(from, to),
+      ),
+      assignedTodayByAgent(today),
+      pageAll<{ agent_profile_id: string; quantity: number; source: string | null }>((from, to) =>
+        supabaseAdmin
+          .from("lead_extra_grants")
+          .select("agent_profile_id, quantity, source")
+          .eq("work_date", today)
+          .order("id")
+          .range(from, to),
+      ),
+      pageAll<{ to_agent_id: string | null }>((from, to) =>
+        supabaseAdmin
+          .from("lead_assignments")
+          .select("to_agent_id")
+          .gte("created_at", dhakaDayStartIso(today))
+          .order("id")
+          .range(from, to),
+      ),
+    ]);
     const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
     const previewIds = new Set(
       await eligibleLeadIds((previewCandidates ?? []).map((lead) => lead.id)),
     );
     const preview = (previewCandidates ?? []).filter((lead) => previewIds.has(lead.id)).slice(0, 12);
 
-    const rows = assigned ?? [];
     const rawImportMetadata = audits?.[0]?.metadata;
     const importMetadata =
       rawImportMetadata && typeof rawImportMetadata === "object" && !Array.isArray(rawImportMetadata)
         ? rawImportMetadata
         : null;
+    const { quotaFor } = await import("@/lib/lead-quota");
     const perAgent: LeadPoolAgent[] = agents.map((agent) => {
       const mine = rows.filter((row) => row.assigned_to === agent.id);
+      const extraToday = extraRows
+        .filter((g) => g.agent_profile_id === agent.id)
+        .reduce((s, g) => s + (g.quantity ?? 0), 0);
       return {
         id: agent.id,
         name: agent.name,
         total: mine.length,
         pending: mine.filter((row) => row.status === "pending").length,
         today: mine.filter((row) => row.work_date === today).length,
+        quotaToday: quotaHeld.get(agent.id) ?? 0,
+        quotaTarget: quotaFor(agent.employee_id, plan.perAgent),
+        extraToday,
+        newToday: historyRows.filter((h) => h.to_agent_id === agent.id).length,
       };
     });
 
