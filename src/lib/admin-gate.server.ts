@@ -46,11 +46,11 @@ export async function pinMatchesLive(input: string): Promise<boolean> {
   } catch {
     /* no env PIN configured — fall through to the vault */
   }
-  const { vaultPins } = await import("@/lib/pin-vault.server");
+  const { vaultPinFor } = await import("@/lib/pin-vault.server");
   const candidate = sha(input);
   let ok = false;
-  for (const stored of await vaultPins()) {
-    if (timingSafeEqual(candidate, sha(stored))) ok = true;
+  for (const stored of await Promise.all([vaultPinFor("master"), vaultPinFor("it_console")])) {
+    if (stored && timingSafeEqual(candidate, sha(stored))) ok = true;
   }
   return ok;
 }
