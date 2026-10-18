@@ -60,7 +60,7 @@ export default defineTool({
           "id, name, phone_number, company, status, outcome_category, call_attempts, source, assigned_to, notes, created_at, updated_at",
         )
         .order("updated_at", { ascending: false })
-        .limit(limit);
+        .limit(limit ?? 50);
       if (status) query = query.eq("status", status);
       if (source) query = query.eq("source", source);
       if (assignedTo) query = query.eq("assigned_to", assignedTo);

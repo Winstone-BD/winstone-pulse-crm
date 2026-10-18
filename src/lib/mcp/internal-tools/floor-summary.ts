@@ -12,10 +12,11 @@ export default defineTool({
     days: z.number().int().min(1).max(90).default(7).describe("How many days back to summarise."),
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ days }: { days: number }, ctx) => {
+  handler: async ({ days: daysOpt }: { days?: number }, ctx) => {
     try {
       await requireAllowedUser(ctx);
       const db = await crmDb();
+      const days = daysOpt ?? 7;
       const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
       const [{ data: agents }, { data: calls }, { data: messages }, { data: leads }] =

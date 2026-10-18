@@ -24,8 +24,8 @@ export default defineTool({
   },
   handler: async (
     { name, phone_number, company, notes, source, employee_id }: {
-      name: string;
-      phone_number: string;
+      name?: string;
+      phone_number?: string;
       company?: string;
       notes?: string;
       source?: string;
@@ -35,6 +35,7 @@ export default defineTool({
   ) => {
     try {
       const email = await requireAllowedUser(ctx);
+      if (!name || !phone_number) throw new ToolError("name and phone_number are required.");
       const db = await crmDb();
 
       let assignedTo: string | null = null;

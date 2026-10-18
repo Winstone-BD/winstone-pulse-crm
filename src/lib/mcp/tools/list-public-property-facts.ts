@@ -26,7 +26,7 @@ export default defineTool({
         .not("verified_at", "is", null)
         .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString().slice(0, 10)}`)
         .order("effective_date", { ascending: false })
-        .limit(limit);
+        .limit(limit ?? 50);
       if (geography) query = query.ilike("geography", `%${geography}%`);
       const { data, error } = await query;
       if (error) throw new ToolError(error.message);
