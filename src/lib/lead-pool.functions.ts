@@ -337,6 +337,53 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
     });
   });
 
+const BulkExtraInput = z.object({
+  adminToken: z.string().nullable().optional(),
+  quantity: z.number().int().min(1).max(100),
+  reason: z.string().trim().min(5).max(300),
+  /** Explicit confirmation that agents may exceed their daily base quota. */
+  acknowledgeOverQuota: z.literal(true),
+});
+
+/**
+ * The same extra-lead grant for every active agent at once (IT Console).
+ * Reuses grantExtraLeads per agent, so each desk gets its own ledger row,
+ * lead_assignments/lead_events rows and audit entry. A required reason and an
+ * explicit over-quota acknowledgement are enforced server-side.
+ */
+export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => BulkExtraInput.parse(input))
+  .handler(async ({ data }) => {
+    const caller = await dispatcher(data.adminToken);
+    const { grantExtraLeads, activeAgents } = await import("@/lib/lead-pool.server");
+    const { assertDistributionDay } = await import("@/lib/business-day");
+    assertDistributionDay();
+    const agents = await activeAgents();
+    const results: { agentId: string; name: string; moved: number; error: string | null }[] = [];
+    let remaining = 0;
+    for (const agent of agents) {
+      try {
+        const r = await grantExtraLeads({
+          agentProfileId: agent.id,
+          quantity: data.quantity,
+          reason: `[সবাইকে একসাথে] ${data.reason}`,
+          actorProfileId: null,
+          actorLabel: `${caller.label} · IT Console bulk`,
+        });
+        remaining = r.remaining;
+        results.push({ agentId: agent.id, name: agent.name, moved: r.moved, error: null });
+      } catch (e) {
+        results.push({
+          agentId: agent.id,
+          name: agent.name,
+          moved: 0,
+          error: e instanceof Error ? e.message : "ব্যর্থ",
+        });
+      }
+    }
+    return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
+  });
+
 /**
  * Auto-refill for the signed-in agent's own empty desk. The server decides
  * whether a batch is due (see lead-refill.rules.ts) — the agent cannot choose
@@ -371,15 +418,15 @@ export const quotaOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
     await deckReader(data.adminToken);
-    const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday } = await import(
-      "@/lib/lead-pool.server"
-    );
+    const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday, assignedTodayByAgent } =
+      await import("@/lib/lead-pool.server");
     const { quotaFor } = await import("@/lib/lead-quota");
     const [agents, plan, extra] = await Promise.all([
       activeAgents(),
       dailyPlan(),
       extraGrantsToday(),
     ]);
+    const held = await assignedTodayByAgent(dhakaToday());
     return {
       workDate: dhakaToday(),
       floorQuota: plan.perAgent,
@@ -389,6 +436,7 @@ export const quotaOverview = createServerFn({ method: "GET" })
         employeeId: agent.employee_id ?? null,
         baseQuota: quotaFor(agent.employee_id, plan.perAgent),
         extraToday: extra[agent.id] ?? 0,
+        assignedToday: held.get(agent.id) ?? 0,
       })),
     };
   });
