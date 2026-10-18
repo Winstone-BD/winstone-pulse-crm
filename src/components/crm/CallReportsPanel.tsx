@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { CallReportSummary } from "@/components/crm/CallReportSummary";
 import { DurationMismatchPanel } from "@/components/crm/DurationMismatchPanel";
+import { WhatsappCallLogPanel } from "@/components/crm/WhatsappCallLogPanel";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { ReportDetails } from "@/components/crm/ReportDetails";
 import { Badge } from "@/components/ui/badge";
@@ -225,7 +226,8 @@ export function CallReportsPanel() {
       {!isPending ? <CallReportSummary reports={reports} /> : null}
 
       {data?.scope === "authority" ? (
-        <DurationMismatchPanel onOpenLead={(leadId) => setOpenLeadId(leadId)} />
+        <><DurationMismatchPanel onOpenLead={(leadId) => setOpenLeadId(leadId)} />
+        <WhatsappCallLogPanel onOpenLead={(leadId) => setOpenLeadId(leadId)} /></>
       ) : null}
 
       {isPending ? (
