@@ -268,13 +268,13 @@ function EntryHall() {
         <section className="mt-10 border-y border-border py-6">
           <h2 className="text-lg font-bold tracking-tight">Are you a Winstone sales agent?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Your account and company device must be provisioned by IT HQ before you can start working.
+            Your account and company device must be provisioned by the IT Console before you can start working.
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Already have an account? Sign in using your assigned credentials on the authorized device.
           </p>
           <p className="mt-4 border-t border-border pt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-gold">
-            New agent accounts are created and managed by Winstone IT HQ.
+            New agent accounts are created and managed by the IT Console.
           </p>
         </section>
 
@@ -291,7 +291,7 @@ function EntryHall() {
           <p className="inline-flex items-center gap-1.5">
             <LifeBuoy className="size-3.5" /> Need help?{" "}
             <Link to="/support" className="font-semibold text-gold hover:underline">
-              Contact IT HQ
+              Contact IT Console
             </Link>
           </p>
           <p className="mt-3">© 2026 TrendFlux Digital. All Rights Reserved.</p>
