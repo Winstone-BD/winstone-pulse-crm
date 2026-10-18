@@ -140,6 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <button
               type="button"
+              aria-label={adminToken ? t({ bn: "অথরিটি খোলা", en: "Authority unlocked" }) : t({ bn: "মাস্টার পিন", en: "Master PIN" })}
               onClick={() => {
                 if (adminToken) {
                   setAdminToken(null);
