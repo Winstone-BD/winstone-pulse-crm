@@ -249,6 +249,11 @@ export const resolveMyFollowUp = createServerFn({ method: "POST" })
     if (caller.scope === "none" || !caller.profile || caller.readOnly) throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: replay } = await supabaseAdmin.from("follow_up_changes").select("follow_up_id").eq("lead_id", data.leadId).eq("correlation_id", data.key).maybeSingle();
+    if (replay) {
+      await (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, { eventId: replay.follow_up_id, action: data.action, reason: data.note, scheduledAt: data.scheduledAt, key: data.key });
+      return { leadId: data.leadId, action: data.action, scheduledAt: data.scheduledAt ?? null };
+    }
     const { data: event, error } = await supabaseAdmin.from("follow_up_events").select("id")
       .eq("lead_id", data.leadId).eq("agent_id", caller.profile.id).in("status", ["upcoming", "due", "missed"])
       .order("scheduled_at").limit(1).maybeSingle();

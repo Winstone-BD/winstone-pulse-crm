@@ -439,9 +439,8 @@ export async function submitCallReport(input: {
       supabaseAdmin.from("leads").select("unanswered_attempts").eq("id", report.lead_id).maybeSingle(),
       supabaseAdmin.from("app_config").select("data").eq("id", "office_holidays").maybeSingle(),
     ]);
-    const holidays = Array.isArray((holidayRow?.data as { dates?: unknown } | null)?.dates)
-      ? ((holidayRow!.data as { dates: unknown[] }).dates.filter((d) => typeof d === "string") as string[])
-      : [];
+    const dates = (holidayRow?.data as { dates?: unknown } | null)?.dates;
+    const holidays = Array.isArray(dates) ? dates.filter((d): d is string => typeof d === "string") : [];
     try {
       cadence = planNoAnswer((leadRow?.unanswered_attempts ?? 0) + 1, input.retryPlan ?? null, Date.now(), holidays);
     } catch (e) {
@@ -449,6 +448,8 @@ export async function submitCallReport(input: {
       throw e;
     }
   }
+
+  if (input.followUpAt && (!Number.isFinite(Date.parse(input.followUpAt)) || Date.parse(input.followUpAt) <= Date.now())) throw new Error("Choose a future follow-up date and time");
 
   const { data: claimed, error } = await supabaseAdmin
     .from("call_reports")
@@ -943,10 +944,7 @@ export async function editSubmittedReport(input: {
     })
     .eq("id", report.lead_id);
 
-  if (input.followUpAt) {
-    // Correct the report only; reschedule its follow-up explicitly with a reason.
-
-  }
+  // Correct the report only; reschedule its follow-up explicitly with a reason.
 
   const { logAudit } = await import("@/lib/audit.server");
   await logAudit({
