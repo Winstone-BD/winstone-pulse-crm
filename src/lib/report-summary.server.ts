@@ -34,6 +34,7 @@ export async function briefCallReport(reportId: string, agentId: string): Promis
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!report || report.agent_id !== agentId) throw new Error("এই রিপোর্টটি আপনার নেই");
+  await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(agentId, report.lead_id);
   if (report.status !== "submitted") throw new Error("রিপোর্টটি এখনো জমা হয়নি");
 
   if (report.ai_brief) {

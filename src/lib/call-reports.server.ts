@@ -814,6 +814,9 @@ export async function loadPendingReportDetail(agentId: string) {
     .eq("status", "pending")
     .maybeSingle();
   if (!report) return null;
+  const { data: assignedLead, error: assignmentError } = await supabaseAdmin.from('leads').select('assigned_to, assigned_agent_id').eq('id', report.lead_id).maybeSingle();
+  if (assignmentError) throw new Error(assignmentError.message);
+  if (!assignedLead || (assignedLead.assigned_to ?? assignedLead.assigned_agent_id) !== agentId) return null;
   const { count: queuedCount } = await supabaseAdmin
     .from("call_reports")
     .select("id", { count: "exact", head: true })
@@ -894,6 +897,7 @@ export async function editSubmittedReport(input: {
   if (!report) throw new Error("রিপোর্ট পাওয়া যায়নি");
   if (report.agent_id !== input.agentId) throw new Error("এই রিপোর্ট আপনার নয়");
   if (report.status !== "submitted") throw new Error("এই রিপোর্ট এখনো জমা হয়নি");
+  await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(input.agentId, report.lead_id);
   if (!reportEditable(report.call_ended_at)) {
     throw new Error("সংশোধনের সময় শেষ — সকাল ৯:০০ থেকে ১২:৪৫ পর্যন্ত একই দিনের রিপোর্ট বদলানো যায়");
   }
