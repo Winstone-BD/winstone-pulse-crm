@@ -151,14 +151,8 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
-    const matches = data.surface === "leadhub" ? await leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
-    if (!matches) return { ok: false as const };
-    return {
-      ok: true as const,
-      token: mintAdminToken(data.surface === "hq" ? "hq" : data.surface === "leadhub" ? "leadhub" : "full"),
-      readOnly: data.surface === "hq",
-    };
+    const { guardedPinUnlock } = await import("@/lib/pin-auth.server");
+    return guardedPinUnlock(data.surface, data.pin);
   });
 
 /** Lets the browser confirm a stored token is still valid (e.g. after a secret rotation). */
