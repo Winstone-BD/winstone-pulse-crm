@@ -9,6 +9,7 @@ import {
   recordingPipeline,
   retryPipelineItem,
   verifyDriveBackups,
+  recoverRecordingAudio,
   type PipelineRow,
   type StageState,
 } from "@/lib/pipeline.functions";
@@ -79,6 +80,17 @@ export function RecordingPipelinePanel() {
   const loadPipeline = useServerFn(recordingPipeline);
   const runRetry = useServerFn(retryPipelineItem);
   const runVerify = useServerFn(verifyDriveBackups);
+  const runRecover = useServerFn(recoverRecordingAudio);
+  const recover = useMutation({
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      if (!window.confirm(t({ bn: "এটি কি একই কলের আসল অডিও? মূল রেকর্ডিংয়ে আপলোড হবে; বিশ্লেষণ আলাদাভাবে চালাতে হবে।", en: "Is this the same call’s genuine audio? It will restore the original recording; analysis runs separately." }))) return null;
+      if (file.size > 24 * 1024 * 1024) throw new Error("24 MB maximum");
+      const base64 = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] ?? ""); reader.onerror = () => reject(new Error("File read failed")); reader.readAsDataURL(file); });
+      return runRecover({ data: { adminToken, recordingId: id, audioBase64: base64, extension: file.name.split(".").pop() ?? "" } });
+    },
+    onSuccess: (result) => { if (result) { toast.success(t({ bn: "মূল রেকর্ডিংয়ে অডিও উদ্ধার হয়েছে; বিশ্লেষণ এখনও চালানো হয়নি।", en: "Audio restored on the original recording; analysis has not run." })); void queryClient.invalidateQueries({ queryKey: ["recording-pipeline"] }); } },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const queryClient = useQueryClient();
 
   const pipeline = useQuery({
@@ -255,6 +267,7 @@ export function RecordingPipelinePanel() {
               {row.error && <p className="mt-2 text-xs text-destructive">{row.error}</p>}
 
               <div className="mt-2 flex flex-wrap items-center gap-2">
+                {row.recovery.missingUpload && <label className="min-w-0 text-xs">{t({ bn: "একই কলের আসল অডিও আপলোড (২৪ MB)", en: "Upload this call’s genuine audio (24 MB)" })}<Input type="file" accept="audio/*,.m4a,.amr,.3gp" disabled={recover.isPending} onChange={(event) => { const file = event.target.files?.[0]; if (file) recover.mutate({ id: row.recordingId, file }); event.target.value = ""; }} className="mt-1 max-w-full" /></label>}
                 <span className="text-[11px] text-muted-foreground">চেষ্টা: {row.attempts}</span>
                 {driveFailed && (
                   <Button

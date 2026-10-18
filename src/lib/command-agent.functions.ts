@@ -376,8 +376,9 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
       let failed = 0;
       for (const row of stuck) {
         try {
-          await analyzeOne(row.id);
-          done += 1;
+          const outcome = await analyzeOne(row.id);
+          if (analysisOutcomeOk(outcome)) done += 1;
+          else failed += 1;
         } catch {
           failed += 1;
         }

@@ -378,6 +378,32 @@ export const retryPipelineItem = createServerFn({ method: "POST" })
     }
   });
 
+/** Restore a missing file on the original recording, never create a new call/report. */
+export const recoverRecordingAudio = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Input.extend({ recordingId: z.string().uuid(), audioBase64: z.string().min(1).max(33_554_440), extension: z.string().max(8) }).parse(input))
+  .handler(async ({ data }) => {
+    const caller = await requireSupervisor(data.adminToken ?? null, true);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { assertAudioUpload, AUDIO_BUCKET } = await import("@/lib/call-intel.server");
+    const { logAudit } = await import("@/lib/audit.server");
+    const { data: row, error } = await supabaseAdmin.from("call_recordings").select("id, agent_id, lead_id, storage_path, audio_url, updated_at").eq("id", data.recordingId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("রেকর্ডিং পাওয়া যায়নি");
+    if (row.storage_path || row.audio_url) throw new Error("অডিও রেফারেন্স আগে থেকেই আছে; মূল ফাইল যাচাই করুন, প্রতিস্থাপন করা হয়নি।");
+    const bytes = assertAudioUpload(data.audioBase64, data.extension);
+    const extension = data.extension.toLowerCase().replace(/^\./, "");
+    const path = `recovered/${row.id}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabaseAdmin.storage.from(AUDIO_BUCKET).upload(path, bytes, { contentType: extension === "mp3" ? "audio/mpeg" : `audio/${extension}`, upsert: false });
+    if (uploadError) throw new Error(uploadError.message);
+    const { data: saved, error: saveError } = await supabaseAdmin.from("call_recordings").update({ storage_path: path, audio_url: path, storage_bucket: AUDIO_BUCKET, file_size_bytes: bytes.length, file_name: path.split("/").pop(), recording_status: "stored", upload_status: "uploaded", sync_status: "uploaded", analysis_status: "pending", analysis_error: null }).eq("id", row.id).eq("updated_at", row.updated_at).is("storage_path", null).is("audio_url", null).select("id").maybeSingle();
+    if (saveError || !saved) {
+      await supabaseAdmin.storage.from(AUDIO_BUCKET).remove([path]);
+      throw new Error(saveError?.message ?? "রেকর্ডিং পরিবর্তিত হয়েছে; আবার রিফ্রেশ করুন।");
+    }
+    await logAudit({ action: "recording_audio_recovered", entityType: "call_recording", entityId: row.id, actorProfileId: caller.profile?.id ?? null, actorLabel: caller.profile?.name ?? "Authority PIN", metadata: { bytes: bytes.length, analysisRun: false } });
+    return { ok: true, recordingId: row.id };
+  });
+
 /**
  * Checks the actual Drive file behind a stored drive_file_id. A database flag
  * alone is never treated as proof: a missing or trashed file flips the row to
