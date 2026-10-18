@@ -68,15 +68,9 @@ notice();waitThenReload();
 function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError|Cannot read properties of (?:null|undefined) (?:reading|setting) '(?:use|H|ReactCurrentDispatcher|_currentValue|useState|useContext|useSyncExternalStore|useEffect|useRef|useMemo|useCallback|useReducer)'/i.test(String(m||""))}
 function urlFrom(m){
 var s=String(m||"");
-var i=s.indexOf(".js");
-if(i<0){i=s.indexOf(".mjs")}
-if(i<0)return null;
-var j=i;
-while(j>0){var c=s.charAt(j-1);if(c===" "||c==="\\""||c==="'"||c==="("||c==="["||c==="{"||c===",")break;j--}
-var k=i+3;
-while(k<s.length){var d=s.charAt(k);if(d===" "||d==="\\""||d==="'"||d===")"||d==="]"||d==="}"||d===",")break;k++}
-var u=s.slice(j,k);
-return u.indexOf("http")===0||u.charAt(0)==="/"||u.indexOf("/@")===0?u:null;
+var match=s.match(/(?:https?:[/][/]|[/](?:src|assets|@vite|@id|@fs)[/])[^ <>"'(){}]+/);
+if(!match)return null;
+return match[0];
 }
 var F=window.fetch;if(F){window.fetch=function(){var a=arguments;return F.apply(this,a).then(function(res){try{var u=String(a[0]&&a[0].url||a[0]);if(res.status===500&&u.indexOf("/_serverFn/")>=0){res.clone().text().then(function(t){if(/Invalid server function ID/i.test(t))r("stale-server-fn",u.split("?")[0].slice(-80))}).catch(function(){})}}catch(x){}return res})}}
 window.addEventListener("vite:preloadError",function(e){e.preventDefault();var p=e.payload;var u=p&&(p.src||p.url)||urlFrom(p&&p.message);if(u&&sameOrigin(u)){failingUrl=u}r("preload-error",p&&p.message)});
