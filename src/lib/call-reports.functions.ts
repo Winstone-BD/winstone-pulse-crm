@@ -432,9 +432,9 @@ export const myFollowUps = createServerFn({ method: "POST" })
     if (caller.scope !== "authority") {
       const ownIds = new Set<string>();
       for (let from = 0; ; from += 1000) {
-        const { data: leads, error } = await supabaseAdmin.from("leads").select("id").eq("assigned_to", caller.profile?.id ?? "").order("id").range(from, from + 999);
+        const { data: leads, error } = await supabaseAdmin.from("leads").select("id, assigned_to, assigned_agent_id").or(`assigned_to.eq.${caller.profile?.id},assigned_agent_id.eq.${caller.profile?.id}`).order("id").range(from, from + 999);
         if (error) throw new Error(error.message);
-        for (const lead of leads ?? []) ownIds.add(lead.id);
+        for (const lead of leads ?? []) if ((lead.assigned_to ?? lead.assigned_agent_id) === caller.profile?.id) ownIds.add(lead.id);
         if (!leads || leads.length < 1000) break;
       }
       visible = events.filter(event => ownIds.has(event.lead_id));

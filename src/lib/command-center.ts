@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 /**
  * Sales Command Center — pure aggregation over canonical rows already loaded
  * for the caller's permitted scope. No numbers are invented: every figure is a
@@ -106,7 +107,7 @@ export function computeCommandCenter(input: {
 
   // ---- KPI pulse ----
   const callsToday = calls.filter((c) => dhakaDay(c.created_at) === today);
-  const openFu = followUps.filter((x) => x.status !== "done");
+  const openFu = followUps.filter((x) => isOpenFollowUp(x.status));
   const kpi = {
     totalLeads: leads.length,
     newLeadsInRange: leads.filter((l) => inRange(dhakaDay(l.created_at), f)).length,

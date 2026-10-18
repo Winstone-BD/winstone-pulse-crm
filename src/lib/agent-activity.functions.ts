@@ -21,7 +21,7 @@ export type AgentActivityRow = {
   androidVersion: string | null;
 };
 
-const DONE = new Set(["done", "completed", "cancelled", "canceled"]);
+const DONE = new Set(["done", "completed", "cancelled", "canceled", "rescheduled"]);
 
 /**
  * Staff-only (authority) roster for onboarding + activity: last web login,

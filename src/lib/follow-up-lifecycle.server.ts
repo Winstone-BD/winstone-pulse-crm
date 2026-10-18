@@ -17,17 +17,7 @@ export async function transitionFollowUp(caller: Caller, input: { eventId: strin
 /** Saved report intent creates a new task; never overwrites its predecessor. */
 export async function replaceReportFollowUp(agentId: string, reportId: string, patch: import('@/integrations/supabase/types').Database['public']['Tables']['follow_up_events']['Insert'], reason: string) {
   const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
-  const key = `report:${reportId}`;
-  const { data: existing } = await db.from('follow_up_events').select('id').eq('idempotency_key', key).maybeSingle();
-  if (existing) return existing.id;
-  const { data: open, error } = await db.from('follow_up_events').select('id').eq('lead_id', patch.lead_id).eq('agent_id', agentId).in('status', ['upcoming', 'due', 'missed']);
+  const { data, error } = await db.rpc('create_report_follow_up_atomic', { _agent: agentId, _report: reportId, _patch: patch, _reason: reason });
   if (error) throw new Error(error.message);
-  // Supersede prior intent with an explicit reason; each original stays intact.
-  for (const event of open ?? []) {
-    const { error: failure } = await db.rpc('transition_follow_up_atomic', { _event: event.id, _actor: agentId, _action: 'cancel', _reason: reason, _key: crypto.randomUUID() });
-    if (failure) throw new Error(failure.message);
-  }
-  const { data: created, error: failure } = await db.from('follow_up_events').insert({ ...patch, idempotency_key: key }).select('id').single();
-  if (failure) throw new Error(failure.message);
-  return created.id;
+  return data;
 }

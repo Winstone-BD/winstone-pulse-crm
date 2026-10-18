@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -114,7 +115,7 @@ async function runLead360Search(data: z.infer<typeof SearchInput>) {
     const rows = (leads ?? []).map((l) => {
       const r = (reps ?? []).filter((x) => x.lead_id === l.id);
       const f = (fus ?? []).filter((x) => x.lead_id === l.id);
-      const open = f.filter((x) => x.status !== "done" && x.status !== "completed").sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+      const open = f.filter((x) => isOpenFollowUp(x.status)).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
       const overdue = open.some((x) => new Date(x.scheduled_at).getTime() < now);
       const last = r[r.length - 1] ?? null;
       return {
@@ -212,7 +213,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         .select("id, agent_id, started_at, created_at, duration_seconds, call_status")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("follow_up_events")
-        .select("id, agent_id, scheduled_at, status, reason_code, note, created_at, completed_at, reschedule_count")
+        .select("id, agent_id, scheduled_at, status, reason_code, note, created_at, completed_at, reschedule_count, parent_follow_up_id, outcome, report_id")
         .eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
       all((a, b) => db.from("follow_up_changes")
         .select("id, follow_up_id, action, old_scheduled_at, new_scheduled_at, old_status, new_status, old_reason_code, reason_code, old_note, note, changed_by, changed_at")
@@ -307,6 +308,7 @@ export const getLead360 = createServerFn({ method: "POST" })
         createdAt: f.created_at,
         completedAt: f.completed_at,
         rescheduleCount: f.reschedule_count ?? 0,
+        parentFollowUpId: f.parent_follow_up_id, outcome: f.outcome, reportId: f.report_id,
       })),
       changes: (changes.data ?? []).map((c) => ({
         id: c.id,

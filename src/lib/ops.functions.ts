@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -96,16 +97,16 @@ export const callOpsSummary = createServerFn({ method: "POST" })
       followUps: {
         overdue: count(
           followUps.data,
-          (f) => f.status !== "done" && new Date(f.scheduled_at).getTime() < now,
+          (f) => isOpenFollowUp(f.status) && new Date(f.scheduled_at).getTime() < now,
         ),
         due: count(followUps.data, (f) => {
-          if (f.status === "done") return false;
+          if (!isOpenFollowUp(f.status)) return false;
           const at = new Date(f.scheduled_at).getTime();
           return at >= now && at - (f.reminder_minutes ?? 30) * 60_000 <= now;
         }),
         upcoming: count(
           followUps.data,
-          (f) => f.status !== "done" && new Date(f.scheduled_at).getTime() > now,
+          (f) => isOpenFollowUp(f.status) && new Date(f.scheduled_at).getTime() > now,
         ),
       },
       devices: (devices.data ?? []).map((d) => ({
