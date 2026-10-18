@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Role clarification: Executive HQ may view/update but must not issue operational instructions; IT Console owns account creation/update. Clarify which HQ updates are intended before changing server permissions; preserve existing Architect-only approvals and LeadHub assignment gates.
 - [ ] Current Drive request: user asks to grant workspace-account permission on Scarlett’s Google Drive, link it, and verify supplied resource 1IExiEfhCbEGMrV-rCyRHGIEPGCqf7SW- (URL uses /drive/project/, so confirm MIME via connector rather than assume folder). Permission editing requires connection owner UI; do not bypass.
 - [ ] 2026-10-18 current request: refresh database Run baseline and largest safe cost-driver diagnosis; provision Mst. Mashat Johura (mashat.it.winstone@gmail.com) only through authorized IT Console with password entered securely in-app; reconnect current-workspace Drive using handover; add useful Claude/Gemini capability grounded in saved facts without duplicating existing tools.
 - [x] Lovable Auth enable request: provider settings confirmed Lovable sign-in was already enabled; no signup, roles or account changes.
