@@ -37,8 +37,8 @@ export async function requestWebPushToken(): Promise<PushResult & { token?: stri
     appId: appId!,
     messagingSenderId: config.messagingSenderId,
   };
-  const { initializeApp } = await import("@firebase/app");
-  const { getMessaging, getToken, isSupported } = await import("@firebase/messaging");
+  const { initializeApp } = await import("firebase/app");
+  const { getMessaging, getToken, isSupported } = await import("firebase/messaging");
   if (!(await isSupported())) return { status: "unsupported" };
 
   const permission =

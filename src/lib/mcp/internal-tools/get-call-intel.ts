@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { toolShape, z } from "../schema";
+import { z } from "zod";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
@@ -8,7 +8,7 @@ export default defineTool({
   title: "Call intelligence",
   description:
     "Call recordings for one lead: duration, sync status, AI summary, sentiment, deal stage and transcript for each synced call.",
-  inputSchema: toolShape({
+  inputSchema: {
     lead_id: z.string().uuid().optional().describe("The lead's ID."),
     phone_number: z.string().trim().min(5).max(24).optional().describe("The lead's phone number."),
     limit: z
@@ -18,12 +18,9 @@ export default defineTool({
       .max(50)
       .optional()
       .describe("Max recordings to return (default 5)."),
-  }),
+  },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async (
-    { lead_id, phone_number, limit }: { lead_id?: string; phone_number?: string; limit?: number },
-    ctx,
-  ) => {
+  handler: async ({ lead_id, phone_number, limit }, ctx) => {
     try {
       await requireAllowedUser(ctx);
       if (!lead_id && !phone_number) throw new ToolError("Give either lead_id or phone_number.");

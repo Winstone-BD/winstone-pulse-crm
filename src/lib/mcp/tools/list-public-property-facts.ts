@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { toolShape, z } from "../schema";
+import { z } from "zod";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
@@ -7,12 +7,12 @@ export default defineTool({
   name: "list_public_property_facts",
   title: "List verified property facts",
   description: "Read verified, currently publishable Winstone project and property facts.",
-  inputSchema: toolShape({
+  inputSchema: {
     geography: z.string().trim().min(2).max(100).optional(),
     limit: z.number().int().min(1).max(100).default(50),
-  }),
+  },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ geography, limit }: { geography?: string; limit?: number }, ctx) => {
+  handler: async ({ geography, limit }, ctx) => {
     try {
       await requireAllowedUser(ctx);
       const db = await crmDb();
@@ -26,7 +26,7 @@ export default defineTool({
         .not("verified_at", "is", null)
         .or(`expiry_date.is.null,expiry_date.gte.${new Date().toISOString().slice(0, 10)}`)
         .order("effective_date", { ascending: false })
-        .limit(limit ?? 50);
+        .limit(limit);
       if (geography) query = query.ilike("geography", `%${geography}%`);
       const { data, error } = await query;
       if (error) throw new ToolError(error.message);

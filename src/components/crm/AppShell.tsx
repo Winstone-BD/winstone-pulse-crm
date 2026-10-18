@@ -21,7 +21,6 @@ import { AgentSelector } from "@/components/crm/AgentSelector";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { OfflineSyncBar } from "@/components/crm/OfflineSyncBar";
 import { RuntimeAlertWatcher } from "@/components/crm/RuntimeAlertWatcher";
-import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
 
 
 import { Button } from "@/components/ui/button";
@@ -245,8 +244,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      {/* The subscription notice lives here, in normal page flow below the content. */}
-      <MaintenanceFloorNotice className="px-3 pb-4 sm:px-6" />
 
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
         <p>© 2026 TrendFlux Digital. All Rights Reserved.</p>

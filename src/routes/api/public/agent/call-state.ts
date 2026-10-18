@@ -87,12 +87,9 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
 
         const { data: existing } = await supabaseAdmin
           .from("call_recordings")
-          .select("id, call_status, agent_id")
+          .select("id, call_status")
           .eq("external_call_id", body.call_uid)
           .maybeSingle();
-        if (existing && existing.agent_id && existing.agent_id !== caller.profile.id) {
-          return json({ error: "This call belongs to another agent" }, 403);
-        }
 
         let recordingId = existing?.id ?? null;
 

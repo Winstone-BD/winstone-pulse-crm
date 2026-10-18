@@ -15,8 +15,7 @@ import {
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
-import { downloadVoucher, printVoucher } from "@/lib/voucher";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
   const cls =
@@ -79,7 +78,7 @@ export function MaintenancePanel() {
   if (!adminToken) return <p className="text-sm text-muted-foreground">Unlock IT Console to manage maintenance.</p>;
   if (q.isLoading) return <Loader2 className="size-5 animate-spin" />;
   if (q.error || !q.data) return <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Unavailable"}</p>;
-  const { state, requests, audit, periods, vouchers } = q.data;
+  const { state, requests, audit, periods } = q.data;
 
   return (
     <section className="card-elevated space-y-5 p-4">
@@ -235,26 +234,6 @@ export function MaintenancePanel() {
               </details>
             );
           })}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1 text-sm font-semibold">Saved receipts</p>
-        <p className="mb-2 text-xs text-muted-foreground">Every verified payment keeps a permanent receipt here — reopen, download, or print it any time.</p>
-        <div className="space-y-2">
-          {vouchers.length === 0 && <p className="text-xs text-muted-foreground">No receipts yet — one is saved automatically when a payment is verified.</p>}
-          {vouchers.map((v) => (
-            <div key={v.no} className="flex flex-wrap items-center gap-2 rounded border border-success/40 bg-success/5 p-3 text-xs">
-              <div className="min-w-0">
-                <p className="font-semibold">Receipt {v.no}</p>
-                <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref} · {v.at}</p>
-              </div>
-              <div className="ml-auto flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
-                <Button size="sm" variant="outline" onClick={() => printVoucher(v)}>Print</Button>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

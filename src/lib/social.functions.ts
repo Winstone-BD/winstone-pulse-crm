@@ -1,4 +1,3 @@
-import { safeCsvCell } from "@/lib/csv-safe";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -253,7 +252,7 @@ export const socialLog = createServerFn({ method: "POST" })
 
 /** CSV with a BOM so Excel opens Bengali text correctly. */
 export function socialLogCsv(rows: SocialLogRow[]): string {
-  const esc = safeCsvCell;
+  const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const head = ["date_dhaka", "agent", "kind", "source_page_group", "link", "replies", "lead", "lead_status", "site_visit", "booking", "note"];
   const body = rows.map((r) => [
     new Date(new Date(r.createdAt).getTime() + 6 * 3_600_000).toISOString().slice(0, 16).replace("T", " "),

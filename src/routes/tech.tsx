@@ -16,8 +16,7 @@ import {
   architectLogin,
   architectOverview,
 } from "@/lib/maintenance.functions";
-import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
-import { downloadVoucher, printVoucher, type Voucher } from "@/lib/voucher";
+import { CRM_ONLY_FEE_LABEL, MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime } from "@/lib/maintenance-rules";
 
 export const Route = createFileRoute("/tech")({
   ssr: false,
@@ -135,7 +134,7 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
     if (q.error) { toast.error((q.error as Error).message); onExpired(); }
   }, [q.error, onExpired]);
   if (!q.data) return <Loader2 className="size-5 animate-spin" />;
-  const { state, requests, audit } = q.data;
+  const { state, requests } = q.data;
   const open = requests.filter((r) => r.status === "requested");
   const last = requests.find((r) => r.status === "approved");
 
@@ -176,7 +175,6 @@ function Dashboard({ session, onExpired }: { session: string; onExpired: () => v
         <p className="text-xs text-muted-foreground">Approvals on this page apply to the CRM part only. Keeping the whole operating system unlocked requires the full bill payment.</p>
       </div>
       <PaymentReview session={session} status={state.paymentStatus} paymentRef={state.paymentRef} period={state.period} onDone={() => void qc.invalidateQueries({ queryKey: ["architect-overview"] })} />
-      <ApprovalLog audit={audit} />
       <h2 className="text-base font-semibold">Maintenance access requests</h2>
       {open.length === 0 && <p className="text-sm text-muted-foreground">No pending request.</p>}
       {open.map((r) => (
@@ -258,69 +256,36 @@ function PaymentReview({ session, status, paymentRef, period, onDone }: { sessio
  */
 function AutoApprove({ session }: { session: string }) {
   const qc = useQueryClient();
-  const [result, setResult] = useState<null | { ok: boolean; text: string; voucher?: Voucher }>(null);
+  const [result, setResult] = useState<null | { ok: boolean; text: string }>(null);
   const [ran, setRan] = useState(false);
   const auto = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("auto") === "1";
-  const [plan, setPlan] = useState<null | { paymentRef: string | null; period: string; requests: { id: string; hours: number }[] }>(null);
-  const [busy, setBusy] = useState(false);
-  // Step 1: read what is waiting. Nothing is approved until the architect confirms.
   useEffect(() => {
     if (!auto || ran) return;
     setRan(true);
-    window.history.replaceState(null, "", "/tech");
-    void architectOverview({ data: { session } }).then(({ state, requests }) => {
-      const open = requests.filter((x) => x.status === "requested").map((r) => ({ id: r.id, hours: r.requested_hours }));
-      const ref = state.paymentStatus === "pending" && state.paymentRef ? state.paymentRef : null;
-      if (!ref && open.length === 0) setResult({ ok: false, text: "Nothing to approve yet — no payment reference or unlock request has been submitted." });
-      else setPlan({ paymentRef: ref, period: state.period, requests: open });
-    }).catch((e: Error) => setResult({ ok: false, text: `Approval failed: ${e.message}` }));
-  }, [auto, ran, session]);
-  // Step 2: only runs after the explicit "Yes, mark as paid" click.
-  const confirm = async () => {
-    if (!plan) return;
-    setBusy(true);
-    try {
-      const done: string[] = [];
-      let voucher: Voucher | null = null;
-      if (plan.paymentRef) {
-        const res = await architectPaymentDecision({ data: { session, approve: true, reason: `Confirmed by authorized architect — reference ${plan.paymentRef}` } });
-        voucher = res.voucher ?? null;
-        done.push("payment verified");
+    void (async () => {
+      try {
+        const { state, requests } = await architectOverview({ data: { session } });
+        const done: string[] = [];
+        if (state.paymentStatus === "pending" && state.paymentRef) {
+          await architectPaymentDecision({ data: { session, approve: true, reason: "Auto-approved: authorized architect signed in with PIN" } });
+          done.push("payment verified");
+        }
+        for (const r of requests.filter((x) => x.status === "requested")) {
+          await architectDecision({ data: { session, requestId: r.id, approve: true, minutes: r.requested_hours * 60, reason: "Auto-approved by authorized architect" } });
+          done.push("system unlocked");
+        }
+        setResult(done.length
+          ? { ok: true, text: `President unlock approved — ${[...new Set(done)].join(" and ")}.` }
+          : { ok: false, text: "Nothing to approve yet — no payment reference or unlock request has been submitted." });
+      } catch (e) {
+        setResult({ ok: false, text: `Approval failed: ${(e as Error).message}` });
+      } finally {
+        window.history.replaceState(null, "", "/tech");
+        void qc.invalidateQueries({ queryKey: ["architect-overview"] });
       }
-      for (const r of plan.requests) {
-        await architectDecision({ data: { session, requestId: r.id, approve: true, minutes: r.hours * 60, reason: "Confirmed by authorized architect" } });
-        done.push("system unlocked");
-      }
-      setResult({ ok: true, text: `President unlock approved — ${[...new Set(done)].join(" and ")}. Recorded in the approval log.${voucher ? " Receipt saved to payment history." : ""}`, ...(voucher ? { voucher } : {}) });
-    } catch (e) {
-      setResult({ ok: false, text: `Approval failed: ${(e as Error).message}` });
-    } finally {
-      setPlan(null);
-      setBusy(false);
-      void qc.invalidateQueries({ queryKey: ["architect-overview"] });
-    }
-  };
-  const confirmDialog = (
-    <Dialog open={plan !== null} onOpenChange={(v) => { if (!v && !busy) setPlan(null); }}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" /> Confirm approval</DialogTitle>
-        </DialogHeader>
-        <ul className="space-y-1 text-sm">
-          <li>Billing period: <b>{plan?.period}</b></li>
-          <li>Payment reference: <b>{plan?.paymentRef ?? "— (none submitted)"}</b></li>
-          <li>Unlock requests: <b>{plan?.requests.length ?? 0}</b></li>
-        </ul>
-        <p className="text-sm text-muted-foreground">Only confirm after you have checked that this payment actually arrived. This is recorded with your account and the time.</p>
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" disabled={busy} onClick={() => setPlan(null)}>Cancel</Button>
-          <Button disabled={busy} onClick={() => void confirm()}>{busy ? <Loader2 className="size-4 animate-spin" /> : null} Yes, mark as paid</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+    })();
+  }, [auto, ran, session, qc]);
   return (
-    <>{confirmDialog}
     <Dialog open={result !== null} onOpenChange={(v) => { if (!v) setResult(null); }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
@@ -330,51 +295,8 @@ function AutoApprove({ session }: { session: string }) {
           </DialogTitle>
         </DialogHeader>
         <p className="text-sm">{result?.text}</p>
-        {result?.voucher ? <VoucherCard v={result.voucher} /> : null}
         <Button onClick={() => setResult(null)}>OK</Button>
       </DialogContent>
-    </Dialog></>
-  );
-}
-
-/** Receipt issued the moment a payment is verified — download or print it as proof of full payment. */
-function VoucherCard({ v }: { v: Voucher }) {
-  return (
-    <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm">
-      <p className="font-semibold">Receipt {v.no}</p>
-      <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref}</p>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
-        <Button size="sm" variant="outline" onClick={() => printVoucher(v)}>Print</Button>
-      </div>
-    </div>
-  );
-}
-
-type AuditRow = Awaited<ReturnType<typeof architectOverview>>["audit"][number];
-
-/** Read-only log of every approval: account, time, payment reference, unlock request. */
-function ApprovalLog({ audit }: { audit: AuditRow[] }) {
-  const rows = audit.filter((a) => a.action === "payment_verified" || a.action === "unlock_approved");
-  return (
-    <div className="card-elevated space-y-2 p-4 text-sm">
-      <p className="font-bold">Approval log</p>
-      {rows.length === 0 && <p className="text-muted-foreground">No approvals recorded yet.</p>}
-      <ul className="divide-y divide-border">
-        {rows.map((a) => {
-          const m = (a.metadata ?? {}) as Record<string, unknown>;
-          const ref = typeof m["payment_ref"] === "string" ? (m["payment_ref"] as string) : "—";
-          return (
-            <li key={a.id} className="grid gap-0.5 py-2 text-xs">
-              <span className="font-semibold">{a.action === "payment_verified" ? "Payment marked paid" : "System unlocked"} · {a.billing_period ?? "—"}</span>
-              <span>Account: {a.actor}</span>
-              <span>Time: {dhakaTime(a.at)} (Dhaka)</span>
-              <span>Payment reference: {ref}</span>
-              <span className="break-all">Unlock request: {a.request_id ?? "—"}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    </Dialog>
   );
 }

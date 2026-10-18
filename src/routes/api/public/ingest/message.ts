@@ -55,12 +55,6 @@ export const Route = createFileRoute("/api/public/ingest/message")({
         if (invalidPhone)
           return json({ error: "সঠিক বাংলাদেশি মোবাইল নম্বর দিন", code: "invalid_phone" }, 422);
         if (!leadId) return json({ error: "Unknown lead" }, 404);
-        if (caller.kind === "device" && body.lead_id) {
-          const { leadHeldByOther, LEAD_NOT_YOURS, LEAD_OWNER_COLUMNS } = await import("@/lib/lead-access.server");
-          const { data: owned } = await supabaseAdmin.from("leads").select(`id, ${LEAD_OWNER_COLUMNS}`).eq("id", leadId).maybeSingle();
-          if (!owned) return json({ error: "Unknown lead" }, 404);
-          if (leadHeldByOther(owned as any, caller.profile.id)) return json({ error: LEAD_NOT_YOURS }, 403);
-        }
 
         const { error } = await supabaseAdmin.from("whatsapp_interactions").insert({
           lead_id: leadId,

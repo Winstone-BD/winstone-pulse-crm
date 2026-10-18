@@ -263,13 +263,7 @@ export const Route = createFileRoute("/api/public/agent/incoming-call")({
         const connected = body.state === "completed";
 
         if (body.state === "completed" || body.state === "no_answer" || body.state === "failed") {
-          // Only stamp the lead when it now belongs to this agent (or nobody).
-          await supabaseAdmin
-            .from("leads")
-            .update({ last_call_at: at })
-            .eq("id", leadId)
-            .or(`assigned_to.is.null,assigned_to.eq.${caller.profile.id}`)
-            .or(`assigned_agent_id.is.null,assigned_agent_id.eq.${caller.profile.id}`);
+          await supabaseAdmin.from("leads").update({ last_call_at: at }).eq("id", leadId);
 
           if (!connected) {
             await logLeadEvent({

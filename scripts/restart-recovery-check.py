@@ -27,82 +27,9 @@ PAGES = ["/projects", "/", "/desk", "/hq", "/live-leads", "/news", "/site-visits
 LOG = "/tmp/dev-server-logs/dev-server.log"
 BAD_LOG = ("Invalid server function ID", "optimized dependencies changed")
 
-SESSION_FILE = os.path.expanduser("~/.cache/lovable-auth/session.json")
 SESSION_KEY = os.environ.get("LOVABLE_BROWSER_SUPABASE_STORAGE_KEY")
 SESSION_JSON = os.environ.get("LOVABLE_BROWSER_SUPABASE_SESSION_JSON")
 COOKIES_JSON = os.environ.get("LOVABLE_BROWSER_SUPABASE_COOKIES_JSON")
-
-USAGE = """Account selection (pick which staff account the restart check runs as):
-  --list-accounts         list staff accounts (id + email) and exit
-  --account <email|uuid>  mint a session for that account (asks for approval)
-  --self                  mint a session for your own verified Lovable email
-  (none)                  use the injected preview session, else a session
-                          previously minted into ~/.cache/lovable-auth/
-Tokens are never printed."""
-
-
-def _accounts():
-    out = subprocess.run(
-        ["lovable", "supabase", "query",
-         "select id, email from auth.users order by created_at limit 50", "--json"],
-        capture_output=True, text=True,
-    )
-    if out.returncode != 0:
-        print("could not list accounts:", out.stderr.strip()[:200])
-        return []
-    try:
-        data = json.loads(out.stdout)
-    except json.JSONDecodeError:
-        return []
-    rows = data.get("rows", data) if isinstance(data, dict) else data
-    return [r for r in rows if isinstance(r, dict) and r.get("id")]
-
-
-def _load_session_file():
-    global SESSION_KEY, SESSION_JSON, COOKIES_JSON
-    with open(SESSION_FILE, encoding="utf-8") as f:
-        minted = json.load(f)
-    SESSION_KEY = minted["storage_key"]
-    SESSION_JSON = json.dumps(minted["session"])
-    COOKIES_JSON = json.dumps(minted.get("cookies") or [])
-    print("signed in as:", minted.get("email") or minted.get("user_id") or "selected account")
-
-
-def select_account(argv):
-    """Resolve CLI flags to a session. Returns an exit code, or None to continue."""
-    if "-h" in argv or "--help" in argv:
-        print(USAGE)
-        return 0
-    if "--list-accounts" in argv:
-        for r in _accounts():
-            print(f"{r['id']}  {r.get('email') or '(no email)'}")
-        return 0
-    cmd = None
-    if "--self" in argv:
-        cmd = ["lovable", "auth-session", "--json", "--self"]
-    elif "--account" in argv:
-        i = argv.index("--account")
-        if i + 1 >= len(argv):
-            print("--account needs an email or user id")
-            return 1
-        want = argv[i + 1].strip().lower()
-        uid = want
-        if "@" in want:
-            match = [r for r in _accounts() if (r.get("email") or "").lower() == want]
-            if len(match) != 1:
-                print(f"no single account matches {want}; try --list-accounts")
-                return 1
-            uid = match[0]["id"]
-        cmd = ["lovable", "auth-session", "--json", "--user", uid]
-    if cmd:
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        if res.returncode != 0:
-            print("could not sign in as the selected account:", res.stderr.strip()[:200])
-            return 1
-        _load_session_file()
-    elif not (SESSION_KEY and SESSION_JSON) and os.path.exists(SESSION_FILE):
-        _load_session_file()
-    return None
 
 
 def wait_up(timeout=60):
@@ -250,7 +177,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    picked = select_account(sys.argv[1:])
-    if picked is not None:
-        sys.exit(picked)
     sys.exit(asyncio.run(main()))

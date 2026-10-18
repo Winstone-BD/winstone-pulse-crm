@@ -18,7 +18,6 @@ import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import androidAsset from "@/assets/device-android.png.asset.json";
 import webAsset from "@/assets/device-web.png.asset.json";
 import desktopAsset from "@/assets/device-desktop.png.asset.json";
-import { MaintenanceFloorNotice } from "@/components/crm/MaintenanceNotice";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { Button } from "@/components/ui/button";
 import { useMyAccount } from "@/lib/session";
@@ -78,30 +77,30 @@ function EntryHall() {
                 className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
               />
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-gold sm:text-base">
+                <p className="text-sm font-black uppercase tracking-wide text-gold sm:text-base">
                   Winstone Properties Ltd.
                 </p>
-                <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
                   Find. Build. Invest.
                 </p>
               </div>
             </div>
-            <h1 className="mt-6 font-hand text-[2.6rem] font-semibold leading-[1.15] tracking-normal text-foreground sm:mt-8 sm:text-6xl sm:leading-[1.1] lg:text-7xl lg:leading-[1.05]">
+            <h1 className="mt-6 font-hand text-4xl font-bold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
 
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-2 font-hand text-[1.65rem] font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-3xl lg:text-4xl">
+            <p className="mt-2 font-hand text-2xl font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-4xl sm:tracking-tight">
               Close more deals, <span className="text-gold">less chaos.</span>
             </p>
-            <p className="mx-auto mt-4 max-w-md text-[15px] leading-[1.65] text-muted-foreground sm:mt-5 sm:text-base sm:leading-relaxed lg:text-[17px] lg:mx-0">
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base lg:mx-0">
               The visual CRM that your sales team will actually love using. Drag, drop, and close —
               live sales monitoring, lead management, call activity, follow-up deadlines and team
               performance, all in one place.
             </p>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-7 lg:justify-start">
               <Button
                 size="lg"
-                className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
+                className="min-w-36 rounded-md px-7 text-base font-bold hover:bg-charcoal"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -110,7 +109,7 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="w-full rounded-md px-5 text-base font-medium hover:-translate-y-px hover:border-foreground/40 hover:bg-muted active:translate-y-0 active:bg-muted/80 sm:w-auto sm:min-w-36 sm:px-7 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none">
+              <Button asChild size="lg" variant="outline" className="min-w-36 rounded-md px-7 text-base font-semibold">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
@@ -138,14 +137,14 @@ function EntryHall() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Pipeline Value
                 </p>
-                <p className="text-lg font-semibold tracking-tight">Live, every second</p>
-                <p className="text-xs font-medium text-gold">↑ Updated in real time</p>
+                <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
+                <p className="text-xs font-bold text-gold">↑ Updated in real time</p>
               </div>
               <div className="rounded-xl border border-border bg-card px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Follow-ups
                 </p>
-                <p className="text-lg font-semibold tracking-tight">Never missed</p>
+                <p className="text-lg font-extrabold tracking-tight">Never missed</p>
               </div>
             </div>
           </div>
@@ -181,24 +180,21 @@ function EntryHall() {
         </div>
 
         <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
-          The same Winstone Pulse on every device.
+          One CRM. One data layer. Every device.
         </p>
 
         <h2
           id="workspace-signin"
           className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
         >
-          One CRM. One data layer. Every device.
+          Sign in to your workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Choose your workspace
-        </p>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
-            description="Work leads, calls and follow-ups."
+            description="Your own lead queue, call log, WhatsApp threads and AI coaching."
             primary={
               <Button asChild className="btn-enter flex-1">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
@@ -218,7 +214,7 @@ function EntryHall() {
           <EntryCard
             icon={<Database className="size-6" />}
             title="LeadHub Nexus"
-            description="Import, organize and distribute leads."
+            description="Canonical lead database, imports, data quality and quantity assignment."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/leadhub")}>
                 <Lock className="size-4" /> Unlock PIN
@@ -229,7 +225,7 @@ function EntryHall() {
           <EntryCard
             icon={<BarChart3 className="size-6" />}
             title="Executive HQ"
-            description="View team performance and manage operations."
+            description="Live floor performance, leaderboards and ask-anything reports and charts."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
                 <Lock className="size-4" /> Unlock PIN
@@ -240,7 +236,7 @@ function EntryHall() {
           <EntryCard
             icon={<Server className="size-6" />}
             title="IT Console"
-            description="System health, access and integrations."
+            description="System configuration, integrations, data health and account approvals."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/system")}>
                 <Lock className="size-4" /> Unlock PIN
@@ -257,9 +253,6 @@ function EntryHall() {
             </Link>
           </p>
         )}
-
-        {/* The subscription notice lives here, in normal page flow below the content. */}
-        <MaintenanceFloorNotice className="pt-8" />
 
         <footer className="mt-auto pt-14 text-center text-xs text-muted-foreground">
           <p className="inline-flex items-center gap-1.5">
@@ -350,7 +343,7 @@ function ModeCard({
         {illustration}
       </span>
       <span>
-        <span className="block text-sm font-semibold tracking-tight sm:text-lg">{title}</span>
+        <span className="block text-sm font-bold tracking-tight sm:text-xl">{title}</span>
         <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</span>
       </span>
       <span className="btn-enter mt-auto inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold sm:h-11 sm:px-5 sm:text-sm">

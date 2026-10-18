@@ -265,7 +265,7 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
 export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
   const state = await maintenanceAccess();
   const client = await db();
-  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status, base_cents, vat_cents, total_cents, currency").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
+  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
   if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
   const at = new Date().toISOString();
   const update = input.approve
@@ -274,30 +274,15 @@ export async function architectReviewPayment(input: { actor: string; approve: bo
   const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
   if (error) throw new Error("Could not record decision");
   clearMaintenanceCache();
-  const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
-  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
+  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd } });
   if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
-  // Save a permanent receipt for this approval so it can be reopened from payment history.
-  let voucher: { no: string; period: string; ref: string; baseCents: number; vatCents: number; totalCents: number; currency: string; verifiedBy: string; at: string } | null = null;
-  if (input.approve) {
-    const no = `WP-CRM-${state.period.replace(/\D/g, "")}-${Date.now().toString(36).toUpperCase()}`;
-    const baseCents = row.base_cents ?? 1579;
-    const vatCents = row.vat_cents ?? 237;
-    const totalCents = row.total_cents ?? baseCents + vatCents;
-    const { error: vErr } = await client.from("payment_vouchers").upsert(
-      { voucher_no: no, plan_code: PLAN_CODE, billing_period: state.period, payment_ref: row.payment_ref, base_cents: baseCents, vat_cents: vatCents, total_cents: totalCents, currency: row.currency ?? "USD", verified_by: input.actor, verified_at: at },
-      { onConflict: "plan_code,billing_period" },
-    );
-    if (vErr) console.error("voucher save failed", vErr);
-    voucher = { no, period: state.period, ref: row.payment_ref, baseCents, vatCents, totalCents, currency: row.currency ?? "USD", verifiedBy: input.actor, at: dhakaTime(at) };
-  }
   await notifyOnce(
     `maintenance_payment_${input.approve ? "verified" : "rejected"}_${state.period}_${row.payment_ref}`,
     input.approve ? "info" : "critical",
     input.approve ? "Maintenance payment verified" : "Maintenance payment rejected",
     `${state.period} reference ${row.payment_ref}: ${input.approve ? "verified — no lock this month" : "rejected"}. Reason: ${input.reason}`,
   );
-  return { ok: true, voucher };
+  return { ok: true };
 }
 
 
@@ -342,18 +327,12 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 
 export async function maintenanceHistory() {
   const client = await db();
-  const [{ data: periods }, { data: requests }, { data: log }, { data: vouchers }] = await Promise.all([
+  const [{ data: periods }, { data: requests }, { data: log }] = await Promise.all([
     client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
-    client.from("payment_vouchers").select("voucher_no, billing_period, payment_ref, base_cents, vat_cents, total_cents, currency, verified_by, verified_at").eq("plan_code", PLAN_CODE).order("verified_at", { ascending: false }).limit(50),
   ]);
-  return {
-    periods: periods ?? [],
-    requests: requests ?? [],
-    audit: log ?? [],
-    vouchers: (vouchers ?? []).map((v) => ({ no: v.voucher_no, period: v.billing_period, ref: v.payment_ref, baseCents: v.base_cents, vatCents: v.vat_cents, totalCents: v.total_cents, currency: v.currency, verifiedBy: v.verified_by, at: dhakaTime(v.verified_at) })),
-  };
+  return { periods: periods ?? [], requests: requests ?? [], audit: log ?? [] };
 }
 
 /* ---------------- System Architect ---------------- */
@@ -509,8 +488,7 @@ export async function architectDecide(input: {
     })
     .eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period);
   clearMaintenanceCache();
-  const { data: payRow } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period).maybeSingle();
-  await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires, metadata: { approving_account: input.actor, approved_at: now.toISOString(), unlock_request_id: request.id, payment_ref: payRow?.payment_ref ?? null, payment_status: payRow?.payment_status ?? null } });
+  await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires });
   await notifyOnce(`maintenance_restored_${request.billing_period}_${request.id}`, "info", "Workspace access restored", `Access restored for ${request.billing_period} by System Architect until ${dhakaTime(expires)} (Dhaka).`);
   return { ok: true, status: "approved" as const, expiresAt: expires };
 }

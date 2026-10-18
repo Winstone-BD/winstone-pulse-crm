@@ -6,7 +6,6 @@
 - Project catalog (project_catalog), sales updates and discussion notes are server-only via projects.functions.ts; only HQ/IT edit catalog/owner notes, agents log on own leads, updates/notes append-only — why: HQ owns prices, sales history stays trustworthy.
 
 - Lead personal notes live only in lead_personal_notes (server-only, author-owned edit, soft delete) — why: notes never merge into call reports or append-only history.
-- MCP tool schemas (src/lib/mcp/tools, internal-tools) import `z` only from src/lib/mcp/schema.ts and pass inputSchema through `toolShape()`; handler args are annotated manually — why: @lovable.dev/mcp-js needs Zod 4 schemas at runtime while its declared types are Zod 3, and a Zod 3 import crashes every page at module eval.
 - Service-bill review may reveal details to an authenticated admin after a server-only PIN check, but never executes payment or grants financial approval — why: notification and financial execution must remain separate.
 - Runtime crashes go to server-only runtime_error_issues/occurrences via POST /api/public/telemetry/runtime-error (sanitised, query strings dropped, same-origin); a resolved issue reopens when it recurs — why: one cross-device record HQ/IT can trust.
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.

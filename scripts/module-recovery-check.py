@@ -59,7 +59,7 @@ async def main():
 
         await page.evaluate(
             """m => { sessionStorage.setItem('deployment-reload-attempted','1');
-                     sessionStorage.setItem('deployment-reload-attempted:n','4');
+                     sessionStorage.setItem('deployment-reload-attempted:n','3');
                      window.dispatchEvent(new ErrorEvent('error', { message: m })); }""",
             FAIL_MSG,
         )

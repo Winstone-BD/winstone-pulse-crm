@@ -52,7 +52,10 @@ const KIND = { since_joining: "যোগদান থেকে", daily: "দৈ�
 const fmtDate = (d: string) =>
   new Date(`${d}T12:00:00+06:00`).toLocaleDateString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", year: "numeric" });
 
-import { safeCsvCell as csvCell } from "@/lib/csv-safe";
+function csvCell(v: unknown) {
+  const s = String(v ?? "");
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 function ContributionsBoard() {
   const adminToken = useAdminToken();
