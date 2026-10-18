@@ -114,7 +114,7 @@ export function WebsiteAnswerBox({
             </p>
           ) : null}
           {!answer.covered ? (
-            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+            <p className="text-[11px] text-warning">
               ওয়েবসাইটে নিশ্চিত তথ্য নেই — অনুমান করে বলবেন না।
             </p>
           ) : null}

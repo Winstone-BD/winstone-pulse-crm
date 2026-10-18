@@ -130,7 +130,7 @@ export function VersionDataPanel() {
                     <td className="py-2 pr-3">{row.offlineCaptured}</td>
                     <td className="py-2 pr-3">
                       {row.pendingHandoff > 0 ? (
-                        <Badge variant="outline" className="border-amber-500/60 text-amber-600">
+                        <Badge variant="outline" className="border-warning/60 text-warning">
                           {row.pendingHandoff}
                         </Badge>
                       ) : (

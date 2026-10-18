@@ -1,18 +1,10 @@
 #!/usr/bin/env node
-// Fails when a dashboard UI file uses a hardcoded colour instead of a
+// Fails when a frontend UI file uses a hardcoded colour instead of a
 // semantic design token from src/styles.css.
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const TARGETS = [
-  "src/routes/desk.tsx",
-  "src/routes/hq.tsx",
-  "src/routes/live-leads.tsx",
-  "src/components/crm/hq",
-  "src/components/crm/AgentOverview.tsx",
-  "src/components/crm/SalesChartsDashboard.tsx",
-  "src/components/crm/LeadDayBoard.tsx",
-];
+const TARGETS = ["src/routes", "src/components"];
 
 const PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";
@@ -34,6 +26,10 @@ const problems = [];
 for (const file of TARGETS.flatMap(files)) {
   readFileSync(file, "utf8").split("\n").forEach((line, i) => {
     if (line.includes("color-check-ignore")) return;
+    // Browser chrome metadata and Recharts selectors match external defaults;
+    // neither assigns a component colour outside the token system.
+    if (file === "src/routes/__root.tsx" && line.includes('name: "theme-color"')) return;
+    if (file === "src/components/ui/chart.tsx" && line.includes("recharts-cartesian")) return;
     for (const { name, re } of RULES) {
       for (const m of line.matchAll(re)) problems.push(`${file}:${i + 1}  ${name}: ${m[0]}`);
     }
@@ -41,7 +37,7 @@ for (const file of TARGETS.flatMap(files)) {
 }
 
 if (problems.length) {
-  console.error(`✗ Hardcoded colours in dashboard UI (use semantic tokens):\n${problems.join("\n")}`);
+  console.error(`✗ Hardcoded colours in frontend UI (use semantic tokens):\n${problems.join("\n")}`);
   process.exit(1);
 }
-console.log("✓ Dashboard colour check OK — semantic tokens only");
+console.log("✓ Global frontend colour check OK — semantic tokens only");

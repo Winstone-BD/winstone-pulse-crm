@@ -73,7 +73,7 @@ const KIND_ICON: Record<ChecklistKind, React.ReactNode> = {
 const STATUS_CLASS: Record<ChecklistStatus, string> = {
   open: "border-border/60 bg-muted/30 text-muted-foreground",
   in_progress: "border-primary/50 bg-primary/10 text-primary",
-  resolved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  resolved: "border-success/40 bg-success/10 text-success",
   skipped: "border-border/60 bg-muted/20 text-muted-foreground line-through",
 };
 
