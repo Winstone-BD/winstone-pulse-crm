@@ -5998,6 +5998,17 @@ export type Database = {
         }
         Returns: string
       }
+      recover_follow_up_atomic: {
+        Args: {
+          _actor: string
+          _event: string
+          _key: string
+          _next_action: string
+          _reason: string
+          _scheduled_at: string
+        }
+        Returns: Json
+      }
       transition_follow_up_atomic: {
         Args: {
           _action?: string
