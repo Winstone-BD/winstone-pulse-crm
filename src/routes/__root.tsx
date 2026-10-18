@@ -118,12 +118,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600;700&display=swap",
-      },
+      // Self-hosted fonts (see @font-face in styles.css): preloading the two
+      // first-paint faces removes the external Google Fonts round-trip that
+      // used to block rendering.
+      { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/inter-400-latin.woff2", crossOrigin: "anonymous" },
+      { rel: "preload", as: "font", type: "font/woff2", href: "/fonts/hind-siliguri-400-bengali.woff2", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
         href: appCss,
