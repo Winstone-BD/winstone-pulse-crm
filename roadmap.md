@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Active
-- [ ] Canonical follow-up lifecycle: mandatory outcome/cancel/reschedule reasons; linked new follow-up on reschedule; completion never closes a lead; scoped reads/mutations, append-only history and clickable health filters. Verify with tests without altering real customer records.
+- [x] Canonical follow-up lifecycle: mandatory outcomes/reasons, linked replacement on reschedule, completion never closes leads, current-owner checks, immutable original tasks/history, idempotent atomic transitions, clickable health filters and scoped dossier history. 522 tests / 75 files pass; harness typecheck/build OK; original 1,503 follow-ups unchanged.
+- [ ] Follow-up populated-agent end-to-end verification — BLOCKED: injected account is stopped by the mandatory daily-contribution form; submitting it would create a real staff report. No customer follow-up mutated. Desktop health loading view observed; populated filters, reason submission and phone/tablet views remain unverified.
 
 - [x] Full-system presentation polish: shared controls, readable tables, wrapped headers, dialog spacing, mobile touch sizes, flat welcome panel; 506 tests pass, recovery check and harness build OK. Signed-in HQ/IT/Desk/audit/reports verified at 1280/768/360px; LeadHub private content and populated agent-only workflows remain permission-gated. No data mutations or publication.
 
