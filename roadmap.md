@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Recording recovery: truthful per-recording upload/Drive/STT/AI diagnosis, guarded stage-specific retries, real Drive verification, and safe agent report/follow-up checklist; live writes require real audio and authorized truthful agent input.
 - [x] PIN failure accounting corrected and published 2026-10-18: only confirmed wrong PINs count, leases do not; 43 targeted tests pass. Actual live isolated browser: four failures then correct resets, fifth wrong pauses 5:00, reload cannot bypass, correct succeeds after five minutes. Live copilot editable instruction/quantity 25 verified. PINs never disclosed; customer counts unchanged (4863/4152/1503/753/6).
 - [ ] Full live copilot agent-prefill and all-agent assignment/report/follow-up submissions need an unexpired authorized staff session and truthful input; latest live Nexus session shows no allocation agents, unlike earlier authorized preview check. No fabricated report, lead or assignment created; eight active approved agents remain unchanged.
 - [x] Corrected HQ/own-agent boundary release published to crm.winstonebd.com on 2026-10-18; fresh authorized live session confirms release-specific Nexus copilot, HQ, reports and Desk HTTP 200, no page errors/5xx. Call-log entry form, own-report panel and calendar open. Counts unchanged (4863/4152/1503/753/6). Full report submission/follow-up edit remains BLOCKED: injected user is admin with no own reports/leads, needs actual agent session + truthful authorized input. See docs/hq-release-live-check-2026-10-18.md.
