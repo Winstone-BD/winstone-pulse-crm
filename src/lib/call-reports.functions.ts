@@ -939,3 +939,43 @@ export const recoverMissedFollowUp = createServerFn({ method: 'POST' })
     await (await import('@/lib/agent-briefing.server')).assertBriefingForCaller(caller);
     return (await import('@/lib/follow-up-lifecycle.server')).recoverFollowUp(caller, data);
   });
+
+/**
+ * HQ/IT read-only log: every WhatsApp call an agent started from the CRM
+ * (each one opens a channel='whatsapp' report), pending or submitted.
+ * The time shown is what the agent typed — WhatsApp calls aren't phone-measured.
+ */
+export const listWhatsappCallAttempts = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope !== "authority") return { attempts: [] as const };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("call_reports")
+      .select("id, lead_id, agent_id, phone_number, status, duration_seconds, created_at, submitted_at")
+      .eq("channel", "whatsapp")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    const ids = [...new Set(list.flatMap((r) => [r.lead_id, r.agent_id]).filter(Boolean))] as string[];
+    const { data: people } = ids.length ? await supabaseAdmin.from("profiles").select("id, name").in("id", ids) : { data: [] };
+    const { data: leads } = ids.length ? await supabaseAdmin.from("leads").select("id, name, phone_number").in("id", ids) : { data: [] };
+    const personById = new Map((people ?? []).map((p) => [p.id, p.name]));
+    const leadById = new Map((leads ?? []).map((l) => [l.id, l]));
+    return {
+      attempts: list.map((r) => ({
+        id: r.id,
+        leadId: r.lead_id,
+        leadName: r.lead_id ? (leadById.get(r.lead_id)?.name ?? null) : null,
+        phoneNumber: r.lead_id ? (leadById.get(r.lead_id)?.phone_number ?? r.phone_number) : r.phone_number,
+        agentName: r.agent_id ? (personById.get(r.agent_id) ?? null) : null,
+        submitted: r.status === "submitted",
+        typedSeconds: r.status === "submitted" ? (r.duration_seconds ?? 0) : null,
+        startedAt: r.created_at,
+        submittedAt: r.submitted_at,
+      })),
+    };
+  });
