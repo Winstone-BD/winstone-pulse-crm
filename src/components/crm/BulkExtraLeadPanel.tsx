@@ -18,6 +18,7 @@ export function BulkExtraLeadPanel() {
   const [reason, setReason] = useState("");
   const [ack, setAck] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const [last, setLast] = useState<{ name: string; moved: number; error: string | null }[] | null>(null);
 
   const query = useQuery({
@@ -31,13 +32,14 @@ export function BulkExtraLeadPanel() {
 
   const run = useMutation({
     mutationFn: () =>
-      grant({ data: { adminToken: getAdminToken(), quantity, reason: reason.trim(), acknowledgeOverQuota: true } }),
+      grant({ data: { adminToken: getAdminToken(), quantity, reason: reason.trim(), acknowledgeOverQuota: true, requestId, expectedAgentIds: rows.map((r) => r.id) } }),
     onSuccess: (res) => {
       setLast(res.results);
       toast.success(`${res.results.length} জন এজেন্টকে মোট ${res.moved}টি অতিরিক্ত লিড · ডেটাবেজে বাকি ${res.remaining}`);
       setReason("");
       setAck(false);
       setConfirming(false);
+      setRequestId(crypto.randomUUID());
       for (const key of ["quota-overview", "lead-pool", "lead-pool-status", "crm-snapshot", "coord-allocation"])
         void qc.invalidateQueries({ queryKey: [key] });
     },
@@ -100,9 +102,19 @@ export function BulkExtraLeadPanel() {
 
       {confirming ? (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
-          <span>
-            {rows.length} জন × {quantity} = সর্বোচ্চ {rows.length * quantity}টি লিড যাবে।
-          </span>
+          <div className="w-full">
+            <p className="font-semibold">Preview — প্রতি জন {quantity}টি অতিরিক্ত (আগের লিড অপরিবর্তিত)</p>
+            <ul className="mt-1 grid gap-0.5 text-xs sm:grid-cols-2">
+              {rows.map((r) => (
+                <li key={r.id}>
+                  {r.employeeId ?? ""} {r.name}: {r.assignedToday + r.extraToday} → {r.assignedToday + r.extraToday + quantity}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {rows.length} জন × {quantity} = সর্বোচ্চ {rows.length * quantity}টি · যোগ্য লিড কম থাকলে কম যাবে
+            </p>
+          </div>
           <Button size="sm" onClick={() => run.mutate()} disabled={run.isPending}>
             {run.isPending ? <Loader2 className="size-4 animate-spin" /> : null} নিশ্চিত করুন
           </Button>
