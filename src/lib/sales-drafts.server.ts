@@ -4,6 +4,16 @@
  * guard. Every draft and edit is stored server-only in sales_drafts.
  */
 import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
+import { streamMessage } from "@lovable.dev/ai-gateway";
+import { aiFailure } from "@/lib/ai-failure";
+import { supportedEvidence } from "@/lib/ai-evidence";
+import { z } from "zod";
+
+// SDK streamMessage currently exposes unknown events; validate the native event contract.
+const claudeDelta = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("content_block_delta"), delta: z.object({ type: z.string(), text: z.string().optional() }) }),
+  z.object({ type: z.literal("message_delta"), delta: z.object({ stop_reason: z.string().nullable().optional() }) }),
+]);
 
 export const DRAFT_MODEL = "anthropic/claude-opus-5";
 
@@ -15,57 +25,32 @@ Rules:
 Write in polite natural Bangla:
 1) one WhatsApp message under 70 words, starting with "আসসালামু আলাইকুম" and signed "— Winstone Properties Ltd";
 2) one SMS under 30 words;
-3) a suggested follow-up time window (e.g. "আগামীকাল সকাল ১০–১২টা").
-Reply ONLY as JSON: {"whatsapp":"...","sms":"...","when":"..."}`;
+3) a suggested follow-up time window (e.g. "আগামীকাল সকাল ১০–১২টা"); this is advice, not a scheduled reminder.
+4) an exact quote from the supplied saved notes supporting the draft, in "evidence"; empty if none is available.
+5) one short buyer-check question about a missing fact in "next_question"; do not claim its answer is known.
+Reply ONLY as JSON: {"whatsapp":"...","sms":"...","when":"...","evidence":"...","next_question":"..."}`;
 
 export async function callClaude(user: string, system: string = SYSTEM): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI service is not configured");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/messages", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({ model: DRAFT_MODEL, max_tokens: 4000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok || !res.body) {
-    console.error("draft gateway", res.status, await res.text().catch(() => ""));
-    if (res.status === 402) throw new Error("AI credits are exhausted — please add credits");
-    if (res.status === 403) throw new Error("AI access is blocked for this workspace right now");
-    if (res.status === 429) throw new Error("AI is busy — try again in a moment");
-    throw new Error("The AI service is unavailable right now");
-  }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = "", text = "", refused = false;
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let i: number;
-    while ((i = buf.indexOf("\n\n")) >= 0) {
-      const frame = buf.slice(0, i);
-      buf = buf.slice(i + 2);
-      const data = frame.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
-      if (!data) continue;
-      try {
-        const e = JSON.parse(data) as { type?: string; delta?: { type?: string; text?: string; stop_reason?: string } };
-        if (e.type === "content_block_delta" && e.delta?.type === "text_delta") text += e.delta.text ?? "";
-        if (e.type === "message_delta" && e.delta?.stop_reason === "refusal") refused = true;
-        if (e.type === "error") throw new Error("The AI stopped unexpectedly — please retry");
-      } catch (err) {
-        if (err instanceof Error && err.message.startsWith("The AI")) throw err;
-      }
+  try {
+    const stream = await streamMessage({ model: DRAFT_MODEL, max_tokens: 4000, system, messages: [{ role: "user", content: user }] });
+    let text = "";
+    for await (const event of stream) {
+      const parsed = claudeDelta.safeParse(event);
+      if (!parsed.success) continue;
+      const delta = parsed.data;
+      if (delta.type === "content_block_delta" && delta.delta.type === "text_delta") text += delta.delta.text ?? "";
+      if (delta.type === "message_delta" && delta.delta.stop_reason === "refusal") throw new Error("The AI declined to draft this message");
     }
-  }
-  if (refused) throw new Error("The AI declined to draft this message");
-  return text;
+    return text;
+  } catch (error) { throw aiFailure(error); }
 }
 
 export function parsePair(text: string) {
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("The AI returned an unreadable answer — please retry");
-  const j = JSON.parse(m[0]) as { whatsapp?: unknown; sms?: unknown; when?: unknown };
+  const j = JSON.parse(m[0]) as { whatsapp?: unknown; sms?: unknown; when?: unknown; evidence?: unknown; next_question?: unknown };
   const s = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
-  const out = { whatsapp: s(j.whatsapp, 900), sms: s(j.sms, 320), when: s(j.when, 120) };
+  const out = { whatsapp: s(j.whatsapp, 900), sms: s(j.sms, 320), when: s(j.when, 120), evidence: s(j.evidence, 160), nextQuestion: s(j.next_question, 240) };
   if (!out.whatsapp || !out.sms) throw new Error("The AI returned an incomplete draft — please retry");
   return out;
 }
@@ -84,6 +69,7 @@ export async function draftFollowupPair(leadId: string, agentId: string, authori
   const notes = sanitizeNotes([lead.notes, rep?.summary, rep?.note].filter(Boolean).join("\n"), 1500);
   const facts = { name: lead.name, status: lead.status, requirement: rep?.requirement ?? null, last_next_action: rep?.next_action ?? null };
   const pair = parsePair(await callClaude(`${JSON.stringify(facts)}\n${notes.wrapped}`));
+  if (!supportedEvidence(pair.evidence, notes.wrapped)) pair.evidence = "";
   const output = `WhatsApp:\n${pair.whatsapp}\n\nSMS:\n${pair.sms}\n\nপরের ফলো-আপ: ${pair.when}`;
   const { data: row, error: insErr } = await db.from("sales_drafts").insert({
     agent_id: authority ? (lead.assigned_to ?? agentId) : agentId, lead_id: leadId, workflow: "followup_pair",

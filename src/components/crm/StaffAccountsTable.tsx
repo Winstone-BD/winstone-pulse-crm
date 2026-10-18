@@ -20,6 +20,7 @@ import {
 } from "@/lib/accounts.functions";
 import { getAdminToken, useAdminToken } from "@/lib/local-session";
 import { AgentOnboarding } from "@/components/crm/AgentOnboarding";
+import { ItOfficerProvisioning } from "@/components/crm/ItOfficerProvisioning";
 
 type Draft = {
   name: string;
@@ -303,6 +304,7 @@ export function StaffAccountsTable() {
         <p className="mt-3 text-sm text-muted-foreground">এখনো কোনো ডেস্ক অ্যাকাউন্ট নেই।</p>
       )}
       <AgentOnboarding />
+      <ItOfficerProvisioning />
     </section>
   );
 }

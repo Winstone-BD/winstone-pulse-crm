@@ -101,11 +101,13 @@ function FollowupPair({ leadId }: { leadId: string }) {
           {[["WhatsApp", d.whatsapp], ["SMS", d.sms]].map(([label, text]) => (
             <div key={label} className="rounded-lg border border-border p-3">
               <div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{label}</span>
-                <Button size="sm" variant="ghost" onClick={() => copy(text!)}><Copy className="size-4" /></Button></div>
+                <Button size="sm" variant="ghost" onClick={() => text && copy(text)}><Copy className="size-4" /></Button></div>
               <p className="whitespace-pre-wrap">{text}</p>
             </div>
           ))}
           <p className="text-xs">পরের ফলো-আপ: {d.when}</p>
+          {d.evidence && <p className="text-xs text-muted-foreground">সংরক্ষিত নোট: “{d.evidence}”</p>}
+          {d.nextQuestion && <p className="text-sm">পরের প্রশ্ন: {d.nextQuestion}</p>}
         </div>
       )}
       <p className="text-xs text-muted-foreground">শুধু খসড়া — কিছু পাঠানো হয় না। খসড়া ইতিহাসে সেভ থাকে।</p>
