@@ -1,33 +1,10 @@
 import { ReportsBoard } from "@/components/crm/reports/ReportsBoard";
 import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 import { RoleGate } from "@/components/crm/RoleGate";
-import { DayCallExportPanel } from "@/components/crm/DayCallExportPanel";
-import { SyncedCallsPanel } from "@/components/crm/SyncedCallsPanel";
-import { CallReportsPanel } from "@/components/crm/CallReportsPanel";
-import { useMyAccount } from "@/lib/session";
 import { AppShell } from "@/components/crm/AppShell";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
-import { ReportsHeader } from "@/components/crm/reports/ReportsHeader";
-import { ReportsFilterBar } from "@/components/crm/reports/ReportsFilterBar";
-import { ReportsKpiStrip } from "@/components/crm/reports/ReportsKpiStrip";
-import { DailyActivityChart } from "@/components/crm/reports/DailyActivityChart";
-import { IntelligenceCards, AiPerformanceBrief } from "@/components/crm/reports/IntelligenceCards";
-import { AgentPerformanceTable } from "@/components/crm/reports/AgentPerformanceTable";
-import { ProjectReportPanel } from "@/components/crm/reports/ProjectReportPanel";
-import { FollowUpHistoryPanel } from "@/components/crm/FollowUpHistoryPanel";
-// moved
-import { useSnapshot } from "@/lib/crm-data";
-import {
-  buildReport,
-  defaultFilters,
-  downloadCsv,
-  leadSources,
-  reportToCsv,
-  type ReportFilters,
-} from "@/lib/crm-reports";
 
 export const Route = createFileRoute("/reports")({
   head: () => ({
