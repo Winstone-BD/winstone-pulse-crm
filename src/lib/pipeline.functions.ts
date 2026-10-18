@@ -298,7 +298,7 @@ export const recordingPipeline = createServerFn({ method: "POST" })
         case "ai_failed":
           return stateOf(row, "ai") === "failed";
         case "supabase_failed":
-          return stateOf(row, "recording") === "failed" || stateOf(row, "supabase") === "failed";
+          return row.recovery.missingUpload;
       }
     });
 
