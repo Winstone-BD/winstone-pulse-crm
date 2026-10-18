@@ -389,7 +389,8 @@ export async function ingestRecording(input: {
       call_attempts: lead.call_attempts + 1,
       last_call_at: new Date().toISOString(),
       status: lead.status === "pending" ? "contacted" : lead.status,
-      is_verified: lead.is_verified || input.isTwoSided,
+      // is_two_sided is an uploader claim (stored on the recording only); it
+      // never marks the lead verified — verification comes from server-checked paths.
     })
     .eq("id", input.leadId);
 

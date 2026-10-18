@@ -146,6 +146,7 @@ export const logSiteVisitOutcome = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { siCaller } = await import("@/lib/sales-intel.server");
     const c = await siCaller(data.adminToken);
+    if (c.readOnly) throw new Error("HQ ভিউ সেশন শুধু পড়তে পারে — IT PIN দিয়ে পরিবর্তন করুন");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let read = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, status").eq("id", data.id);
     if (c.scope === "agent") read = read.eq("agent_id", c.agentId!);
