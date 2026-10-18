@@ -5917,6 +5917,27 @@ export type Database = {
           },
         ]
       }
+      workspace_role_grants: {
+        Row: {
+          grant_reason: string
+          granted_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          grant_reason: string
+          granted_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          grant_reason?: string
+          granted_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       active_follow_up_events: {
