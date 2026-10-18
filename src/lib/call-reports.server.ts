@@ -436,9 +436,8 @@ export async function submitCallReport(input: {
   // The stored duration wins whenever the phone actually measured the call; the
   // agent's number is only used when nothing was measured.
   const storedSeconds = report.duration_seconds ?? 0;
-  const durationSeconds =
-    report.device_reported_duration_seconds != null || storedSeconds > 0
-      ? storedSeconds : Math.max(0, Math.round(input.durationSeconds ?? 0));
+  const { reportDurationForSubmit } = await import("@/lib/call-timing");
+  const durationSeconds = reportDurationForSubmit(storedSeconds, report.device_reported_duration_seconds, input.durationSeconds);
   const noFollowUpNote = (input.followUpNote ?? "").trim();
   const note = input.followUpAt
     ? input.note?.trim() || null

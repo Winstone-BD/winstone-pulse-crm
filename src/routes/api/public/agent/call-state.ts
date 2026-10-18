@@ -118,7 +118,6 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
               device_id: caller.device.id,
               phone_number: lead.phone_number,
               call_direction: "outgoing",
-              duration_seconds: durationSeconds ?? 0,
               is_two_sided: false,
               sync_status: "uploaded",
               analysis_status: "pending",

@@ -4,7 +4,7 @@ const order: Record<string, number> = { initiated: 0, ringing: 1, answered: 2, c
 
 export function reconcileCallTiming(input: {
   state: string;
-  claimedSeconds?: number;
+  claimedSeconds?: number | undefined;
   existing?: { call_status: string | null; created_at: string; duration_seconds: number; device_reported_duration_seconds?: number | null } | null;
   nowMs: number;
 }) {
@@ -23,4 +23,8 @@ export function reconcileCallTiming(input: {
     : terminalCallStates.has(input.state) ? input.claimedSeconds ?? previous?.device_reported_duration_seconds ?? null
     : previous?.device_reported_duration_seconds ?? null;
   return { state, durationSeconds, reportedSeconds, applyEventTime: state === input.state && !alreadyFinished };
+}
+
+export function reportDurationForSubmit(stored: number, deviceClaim: number | null | undefined, entered: number | null | undefined) {
+  return deviceClaim != null || stored > 0 ? stored : Math.max(0, Math.round(entered ?? 0));
 }
