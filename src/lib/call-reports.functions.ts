@@ -511,7 +511,7 @@ export const myCallReports = createServerFn({ method: "POST" })
     const { data: reports } = await supabaseAdmin
       .from("call_reports")
       .select(
-        "id, lead_id, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, call_ended_at, submitted_at, recording_id, temperature, grade",
+        "id, lead_id, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, duration_source, duration_synced_at, call_ended_at, submitted_at, recording_id, temperature, grade",
       )
       .eq("agent_id", me.id)
       .order("call_ended_at", { ascending: false })
@@ -712,7 +712,7 @@ export const listCallReports = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("call_reports")
       .select(
-        "id, lead_id, agent_id, recording_id, phone_number, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, call_ended_at, submitted_at, temperature, grade, interest, requirement, customer_response, next_action, created_at",
+        "id, lead_id, agent_id, recording_id, phone_number, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, duration_source, duration_synced_at, call_ended_at, submitted_at, temperature, grade, interest, requirement, customer_response, next_action, created_at",
       )
       .order("call_ended_at", { ascending: false })
       .limit(data.limit ?? 200);
