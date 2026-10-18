@@ -27,16 +27,16 @@ import { useMyAccount } from "@/lib/session";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Winstone Pulse — The Premium Real Estate CRM" },
+      { title: "Winstone Pulse Gateway — The Premium Real Estate CRM" },
       {
         name: "description",
         content:
-          "Choose your workspace: Android, Web / iOS or Desktop. One Winstone Pulse — The Premium Real Estate CRM, the same data on every device.",
+          "Winstone Pulse Gateway: choose your workspace — Android, Web / iOS or Desktop — and enter the same Winstone Pulse CRM, the same data on every device.",
       },
-      { property: "og:title", content: "Winstone Pulse — The Premium Real Estate CRM" },
+      { property: "og:title", content: "Winstone Pulse Gateway — The Premium Real Estate CRM" },
       {
         property: "og:description",
-        content: "One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
+        content: "One gateway. One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -95,6 +95,9 @@ function EntryHall() {
                 The Premium Real Estate CRM
               </span>
             </span>
+            <span className="ml-1 hidden shrink-0 items-center rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-gold md:inline-flex">
+              Gateway
+            </span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span aria-hidden className="size-1.5 rounded-full bg-live" /> Server online
@@ -120,7 +123,7 @@ function EntryHall() {
               </div>
             </div>
             <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Winstone <span className="text-gold">Pulse</span>
+              Winstone <span className="text-gold">Pulse Gateway</span>
             </h1>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
               The Premium <span className="text-gold">Real Estate CRM.</span>
@@ -189,7 +192,7 @@ function EntryHall() {
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Select the mode you are using — the same Winstone Pulse opens on every device.
+          Select the mode you are using — the Winstone Pulse Gateway opens the same CRM on every device.
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-4 lg:grid-cols-4">
