@@ -13,8 +13,8 @@ import { z } from "zod";
 const Base = z.object({ adminToken: z.string().nullable().optional() });
 
 async function agentOf(adminToken: string | null) {
-  const { resolveCaller } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken);
+  const { resolveWorkCaller } = await import("@/lib/access.server");
+  const caller = await resolveWorkCaller(adminToken);
   if (caller.scope === "none" || !caller.profile) {
     throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
   }
@@ -453,7 +453,7 @@ const TransitionInput = Base.extend({ eventId: z.string().uuid(), reason: z.stri
 export const completeFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TransitionInput.parse(input))
   .handler(async ({ data }) => {
-    const caller = await (await import("@/lib/access.server")).resolveCaller(data.adminToken ?? null);
+    const caller = await (await import("@/lib/access.server")).resolveWorkCaller(data.adminToken ?? null);
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     return (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, { ...data, action: "complete" });
   });
@@ -461,7 +461,7 @@ export const completeFollowUp = createServerFn({ method: "POST" })
 export const changeFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TransitionInput.extend({ action: z.enum(["cancel", "miss"]) }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await (await import("@/lib/access.server")).resolveCaller(data.adminToken ?? null);
+    const caller = await (await import("@/lib/access.server")).resolveWorkCaller(data.adminToken ?? null);
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     return (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, data);
   });
@@ -811,7 +811,7 @@ export const myLeadExtras = createServerFn({ method: "POST" })
 export const rescheduleFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TransitionInput.extend({ scheduledAt: z.string().datetime() }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await (await import("@/lib/access.server")).resolveCaller(data.adminToken ?? null);
+    const caller = await (await import("@/lib/access.server")).resolveWorkCaller(data.adminToken ?? null);
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     return (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, { ...data, action: "reschedule" });
   });
@@ -819,7 +819,7 @@ export const rescheduleFollowUp = createServerFn({ method: "POST" })
 export const recoverMissedFollowUp = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => TransitionInput.extend({ scheduledAt: z.string().datetime(), nextAction: z.string().trim().min(1).max(2000) }).parse(input))
   .handler(async ({ data }) => {
-    const caller = await (await import('@/lib/access.server')).resolveCaller(data.adminToken ?? null);
+    const caller = await (await import('@/lib/access.server')).resolveWorkCaller(data.adminToken ?? null);
     await (await import('@/lib/agent-briefing.server')).assertBriefingForCaller(caller);
     return (await import('@/lib/follow-up-lifecycle.server')).recoverFollowUp(caller, data);
   });

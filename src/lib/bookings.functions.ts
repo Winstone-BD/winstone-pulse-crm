@@ -252,9 +252,9 @@ export const reviewBooking = createServerFn({ method: "POST" })
       .parse(i),
   )
   .handler(async ({ data }) => {
-    const { resolveCaller, requireAuthority } = await import("@/lib/access.server");
+    const { resolveCaller, requireBookingReviewer } = await import("@/lib/access.server");
     const caller = await resolveCaller(data.adminToken ?? null);
-    requireAuthority(caller);
+    await requireBookingReviewer(caller, data.adminToken);
     const actor = caller.readOnly ? "HQ" : "IT Console";
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin

@@ -25,8 +25,9 @@ const NewLeadInput = z.object({
 export const submitMyLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => NewLeadInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller, requireWrite } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
+    requireWrite(caller);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
 
     // Same intake path as the phone app — identical number cleanup, duplicate
@@ -56,8 +57,8 @@ const OpenLeadsInput = z.object({
 export const listOpenLeads = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OpenLeadsInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -82,8 +83,8 @@ export const SELF_CLAIM_RETIRED = true;
 export const claimLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ClaimInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
     if (caller.scope === "none" || !caller.profile) {
       throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     }
@@ -127,8 +128,9 @@ const MyMessageInput = z.object({
 export const logMyWhatsappMessage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => MyMessageInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller, requireWrite } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
+    requireWrite(caller);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
@@ -171,8 +173,9 @@ const TriageInput = z.object({
 export const triageMyLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => TriageInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller, requireWrite } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
+    requireWrite(caller);
     if (caller.scope === "none") throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
 
@@ -244,8 +247,8 @@ const FollowUpResolveInput = z.object({
 export const resolveMyFollowUp = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => FollowUpResolveInput.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
     if (caller.scope === "none" || !caller.profile || caller.readOnly) throw new Error("অনুমোদিত অ্যাকাউন্ট দিয়ে সাইন ইন করুন");
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

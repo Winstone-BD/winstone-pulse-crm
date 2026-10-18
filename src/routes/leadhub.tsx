@@ -68,7 +68,7 @@ function LeadHubGate() {
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">{t({ bn: "HQ / IT সুরক্ষিত ওয়ার্কস্পেস", en: "HQ / IT secured workspace" })}</p>
         <h1 className="text-xl font-bold">LeadHub Nexus</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t({ bn: "Executive HQ বা IT PIN দিয়ে মূল লিড ডেটাবেস খুলুন। এজেন্ট অ্যাকাউন্ট এখানে প্রবেশ করতে পারে না।", en: "Open the Canonical Lead Database with the Executive HQ or IT PIN. Agent accounts cannot enter." })}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t({ bn: "LeadHub-এর আলাদা PIN দিন। HQ দেখার অনুমতি বা সাধারণ IT PIN এখানে প্রযোজ্য নয়।", en: "Enter the dedicated LeadHub PIN. HQ viewing access and ordinary IT PINs do not unlock this workspace." })}</p>
       </div>
       <Button size="lg" className="w-full" onClick={() => setPinOpen(true)}><KeyRound className="size-4" /> {t({ bn: "PIN দিয়ে খুলুন", en: "Unlock with PIN" })}</Button>
       <AdminPinDialog open={pinOpen} onOpenChange={setPinOpen} surface="leadhub" />

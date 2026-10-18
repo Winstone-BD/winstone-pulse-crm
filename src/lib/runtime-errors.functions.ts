@@ -66,6 +66,8 @@ export const setRuntimeIssueStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const caller = await authority(data.adminToken);
+    const { requireWrite } = await import("@/lib/access.server");
+    requireWrite(caller);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const who = caller.label ?? (caller.userId ? `user:${caller.userId}` : "HQ/IT");
     const patch =
@@ -81,7 +83,9 @@ export const setRuntimeIssueStatus = createServerFn({ method: "POST" })
 export const runHealthCheckNow = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => Token.parse(i))
   .handler(async ({ data }) => {
-    await authority(data.adminToken);
+    const caller = await authority(data.adminToken);
+    const { requireWrite } = await import("@/lib/access.server");
+    requireWrite(caller);
     const { runDeploymentHealthCheck } = await import("@/lib/runtime-errors.server");
     return runDeploymentHealthCheck("https://crm.winstonebd.com");
   });

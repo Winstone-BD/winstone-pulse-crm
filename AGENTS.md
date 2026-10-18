@@ -16,7 +16,7 @@
 - Android V2 sends six raw yes/no answers, server scores; nearby-lead GPS never uploaded — why: one scoring rule, no staff tracking.
 - Project = inventory requirement labels; site visits/bookings only from saved report signals — why: no invented facts.
 - Staging E2E (tests/staging) is opt-in and refuses the live project ref — why: preview and live share one DB.
-- Server-module rules live in src/lib/AGENTS.md; workspace_role_grants are session-verified read-only HQ authority, never IT/LeadHub — why: preserve ownership without write escalation.
+- Read src/lib/AGENTS.md. HQ grants stay read-only; own-work endpoints use resolveWorkCaller for authenticated agents, never PIN impersonation — why: oversight must preserve assigned-lead work without IT/LeadHub escalation.
 - Dense CRM data views use compact cards below `md` and full tables at `md+`; lower-frequency wide tables scroll only inside `.table-scroll` — why: phone usability without weakening desktop comparison views.
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
 - Lead neglect: zero-work leads get 2 business-day notices (recall on the 3rd) then recall to the pool via `lead-neglect.server.ts`; recalls are append-only disputes, DB blocks re-assigning to the same agent and call-start refuses them — why: leads must not rot and the rule can't be bypassed from the UI.

@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Protected live workflows: restore HQ-granted agent own-work paths, existing write gates, and live/preview checks. Authorized LeadHub PIN and genuine staff daily report are required for full submission verification.
 - [x] Four-workspace audit recorded in docs/workspace-audit-2026-10-18.md: signed-in Agent/follow-ups/HQ populated, Nexus PIN gate intact, IT /system renders for read-only HQ with denied subpanels. No customer writes. Three write-gate risks and PIN throttling gap found; full privileged actions remain unverified.
 - [x] All 10 current agent profiles have audited supplemental read-only Executive HQ grants (inactive/rejected remain blocked); no IT/LeadHub powers or ownership changes. Signed-in preview HQ/Lead360 reads 4,863 leads; 546 tests pass. Customer counts unchanged: 4,863 leads / 4,152 reports / 1,503 follow-ups.
 - [x] Immutable overdue/missed recovery and API ownership checks/tests implemented. Monisha WIN2604 live read-only API checks pass across six activity tables; foreign history refused, LeadHub agent denied. No customer mutations; 1,503 follow-ups remain, zero recovery actions created by testing. Authorized LeadHub content/recovery submission blocked by PIN and mandatory staff contribution gate.
