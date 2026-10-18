@@ -1,0 +1,2 @@
+import {UsageEvent,type UsageRow} from './usage-ledger';
+export async function ingestUsageEvent(raw:UsageRow){const row=UsageEvent.parse(raw);const {supabaseAdmin:db}=await import('@/integrations/supabase/client.server');const result=await db.from('crm_usage_events').upsert(row,{onConflict:'source,source_event_id',ignoreDuplicates:true});if(result.error)throw new Error('Usage event could not be recorded');}
