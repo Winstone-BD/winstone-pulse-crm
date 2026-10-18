@@ -967,6 +967,13 @@
       "when": 1792315623759,
       "tag": "0137_bulk_extra_batch_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 138,
+      "version": "7",
+      "when": 1792329338814,
+      "tag": "0138_agent_event_history_index",
+      "breakpoints": true
     }
   ]
 }

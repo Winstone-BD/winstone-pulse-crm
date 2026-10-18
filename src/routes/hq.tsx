@@ -1,4 +1,5 @@
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
+import { AgentWorkloadPanel } from "@/components/crm/hq/AgentWorkloadPanel";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -212,6 +213,7 @@ function ControlBoard() {
             <MaintenanceProfileNotice />
             {tab === "overview" && (
               <div className="space-y-8">
+                <AgentWorkloadPanel />
                 <HqSmartSummary
                   profiles={profiles}
                   leads={leads}

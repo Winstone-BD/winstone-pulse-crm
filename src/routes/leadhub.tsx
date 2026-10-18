@@ -5,6 +5,7 @@ import { AlertTriangle, Database, FileUp, History, KeyRound, Send, ShieldCheck }
 import { useState } from "react";
 
 import { AppShell } from "@/components/crm/AppShell";
+import { LeadImportDialog } from "@/components/crm/LeadImportDialog";
 import { CsvImportDialog } from "@/components/crm/CsvImportDialog";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
@@ -101,7 +102,7 @@ function LeadHubWorkspace() {
       </nav>
 
       {section === "overview" && <><DeckKpis /><AllocationTable onAssign={(id) => { setAssignFor(id); setSection("assign"); }} /></>}
-      {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
+      {section === "import" && <div className="space-y-4"><div className="flex flex-wrap justify-end gap-2"><LeadImportDialog /><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
       {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title={t({ bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" })} />}
       {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><TopUpTo50Panel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
       {section === "neglected" && <NeglectedLeadsPanel />}
