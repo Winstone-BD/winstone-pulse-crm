@@ -52,9 +52,10 @@ export function FollowUpCalendar() {
     onError: (error: Error) => toast.error(error.message),
   });
   const all = events.data ?? [];
-  const rows = all.filter(row => filter === "all" || row.health === filter);
-  const start = (id: string, action: FollowUpAction | 'recover') => { setReason(""); setNextAction(''); setNewAt(""); setEditing({ id, action, key: crypto.randomUUID() }); };
   const replacedIds = new Set(all.map(row => row.parent_follow_up_id).filter(Boolean));
+  const healthRows = all.filter(row => !isOpenFollowUp(row.status) || !replacedIds.has(row.id));
+  const rows = filter === 'all' ? all : healthRows.filter(row => row.health === filter);
+  const start = (id: string, action: FollowUpAction | 'recover') => { setReason(""); setNextAction(''); setNewAt(""); setEditing({ id, action, key: crypto.randomUUID() }); };
   return <section className="min-w-0 space-y-4 border-y border-border py-4">
     <header className="flex flex-wrap items-center justify-between gap-2">
       <h2 className="flex items-center gap-2 font-semibold"><CalendarClock className="size-4 text-gold" />{t("ফলো-আপ স্বাস্থ্য", "Follow-up Health")}</h2>
@@ -62,7 +63,7 @@ export function FollowUpCalendar() {
     </header>
     <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
       {(["overdue", "due_today", "completed", "upcoming"] as const).map(key => <Button key={key} variant="outline" className="h-auto min-h-16 flex-col items-start gap-1 bg-card p-3" aria-pressed={filter === key} onClick={() => setFilter(key)}>
-        <span className={tones[key]}>{labels[key]}</span><span className="text-xl font-semibold tabular-nums">{all.filter(row => row.health === key).length}</span>
+        <span className={tones[key]}>{labels[key]}</span><span className="text-xl font-semibold tabular-nums">{healthRows.filter(row => row.health === key).length}</span>
       </Button>)}
     </div>
     {events.isPending ? <p role="status" className="text-sm text-muted-foreground">{t("লোড হচ্ছে…", "Loading…")}</p> : events.isError ? <div role="alert"><p className="text-sm text-destructive">{t("ফলো-আপ লোড করা যায়নি", "Could not load follow-ups")}</p><Button variant="outline" onClick={() => void events.refetch()}>{t("আবার চেষ্টা", "Retry")}</Button></div> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">{t("এই তালিকায় কোনো ফলো-আপ নেই", "No follow-ups in this list")}</p> : <ul className="max-h-[640px] space-y-2 overflow-y-auto">
