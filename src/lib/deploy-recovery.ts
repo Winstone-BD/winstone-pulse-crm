@@ -65,7 +65,7 @@ if(attempted()&&c>=MAX_RELOADS){log("fallback-shown",detail);fallback();return}
 mark();setStore(K+":n",String(c+1));
 notice();waitThenReload();
 }
-function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError|Cannot read properties of (?:null|undefined) (?:reading|setting) '(?:use|H|ReactCurrentDispatcher|_currentValue|useState|useContext|useSyncExternalStore|useEffect|useRef|useMemo|useCallback|useReducer)'/i.test(String(m||""))}
+function bad(m){return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|ChunkLoadError|Cannot read properties of (?:null|undefined) [(]?(?:reading|setting) '(?:use|H|ReactCurrentDispatcher|_currentValue|useState|useContext|useSyncExternalStore|useEffect|useRef|useMemo|useCallback|useReducer)'/i.test(String(m||""))}
 function urlFrom(m){
 var s=String(m||"");
 var match=s.match(/(?:https?:[/][/]|[/](?:src|assets|@vite|@id|@fs)[/])[^ <>"'(){}]+/);

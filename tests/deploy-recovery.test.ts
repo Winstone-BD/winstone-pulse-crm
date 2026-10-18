@@ -50,6 +50,13 @@ describe("deployment recovery bootstrap", () => {
     // old and new dependency bundles. It must trigger the same recovery reload.
     expect(deployRecoveryScript).toMatch(/Cannot read properties of \(\?:null\|undefined\)/);
   });
+  it.each(["use", "useContext", "useState", "useSyncExternalStore"])("recognizes the actual parenthesized React %s crash", hook => {
+    const start = deployRecoveryScript.indexOf("function bad(m)");
+    const end = deployRecoveryScript.indexOf("function urlFrom(m)", start);
+    const isRecoverable = new Function(`${deployRecoveryScript.slice(start, end)};return bad;`)() as (message: string) => boolean;
+    expect(isRecoverable(`Uncaught TypeError: Cannot read properties of null (reading '${hook}')`)).toBe(true);
+    expect(isRecoverable("Cannot read properties of null (reading 'customer')")).toBe(false);
+  });
 
   it("keeps every availability probe bounded", () => {
     expect(deployRecoveryScript).toMatch(/setTimeout\(function\(\)\{controller\.abort\(\)\},4000\)/);
