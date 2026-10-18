@@ -20,8 +20,30 @@ export type LeadPoolAgent = {
   name: string;
   total: number;
   pending: number;
+  /** Everything on today's board, including leftovers rolled over from earlier days. */
   today: number;
+  /** Leads counted against today's daily quota (same rule the distributor uses). */
+  quotaToday: number;
+  /** That agent's daily quota target. */
+  quotaTarget: number;
+  /** Extra leads granted today (IT Console / auto-refill), above the quota. */
+  extraToday: number;
+  /** New hand-overs recorded in today's assignment history. */
+  newToday: number;
 };
+
+/** Reads every row of a query in 1,000-row pages (the Data API's per-read cap). */
+async function pageAll<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data } = await fetchPage(from, from + 999);
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
 
 /** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
