@@ -31,13 +31,13 @@ import { HomeErrorBoundary } from "@/components/HomeErrorBoundary";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Winstone Pulse — The Premium Real Estate CRM" },
+      { title: "Choose Your Workspace — Winstone Pulse" },
       {
         name: "description",
         content:
           "Choose your workspace: Android, Web / iOS or Desktop. One Winstone Pulse — The Premium Real Estate CRM, the same data on every device.",
       },
-      { property: "og:title", content: "Winstone Pulse — The Premium Real Estate CRM" },
+      { property: "og:title", content: "Choose Your Workspace — Winstone Pulse" },
       {
         property: "og:description",
         content: "One CRM. One data layer. Every device. Choose Android, Web / iOS or Desktop.",
