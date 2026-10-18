@@ -1,12 +1,142 @@
-import {useState} from 'react';
-import {useQuery} from '@tanstack/react-query';
-import {useServerFn} from '@tanstack/react-start';
-import {Link} from '@tanstack/react-router';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {useAdminToken} from '@/lib/local-session';
-import {operationalStatus} from '@/lib/operational-status.functions';
-export function OperationalEvidencePanel(){const adminToken=useAdminToken();const [month,setMonth]=useState(new Date(Date.now()+21600000).toISOString().slice(0,7));const [agent,setAgent]=useState('');const load=useServerFn(operationalStatus);const q=useQuery({queryKey:['operational-evidence',adminToken,month],queryFn:()=>load({data:{adminToken,month}}),retry:false});
- function exportRows(){if(!q.data)return;const blob=new Blob([JSON.stringify(q.data.events,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`usage-${month}.json`;a.click();URL.revokeObjectURL(url);}
- return <section className="space-y-4 border-t border-border py-4"><header className="flex flex-wrap gap-3 items-center"><h2 className="font-semibold">Build / Run · মাসিক খরচ ও প্রমাণ</h2><Input aria-label="খরচের মাস" type="month" className="w-44" value={month} onChange={e=>setMonth(e.target.value)}/><Button variant="outline" disabled={!q.data} onClick={exportRows}>Export</Button></header>{q.error?<p role="alert" className="text-destructive">হিসাব পড়া যায়নি: {q.error.message}</p>:q.isPending?<p>লোড হচ্ছে…</p>:q.data?<><p className="text-sm text-muted-foreground">{q.data.sources.build} {q.data.sources.run} {q.data.sources.cash}</p>{!q.data.events.length?<p>এই মাসে খরচের রেকর্ড নেই; এটি শূন্য খরচের প্রমাণ নয়।</p>:null}<div className="table-scroll"><table className="w-full text-sm"><thead><tr><th>Build / Run</th><th>প্রমাণ</th><th>লিড / Unallocated</th><th>Credits</th><th>Cost</th><th>Events</th></tr></thead><tbody>{q.data.summary.map((r,i)=><tr className="border-t border-border" key={i}><td>{r.class}</td><td>{r.basis}</td><td>{r.leadId??'Unallocated'}</td><td>{r.basis==='unknown'?'—':r.credits.toFixed(6)}</td><td>{r.currency==='—'?'অজানা':`${r.amount} ${r.currency}`}</td><td>{r.events}</td></tr>)}</tbody></table></div><h3 className="font-semibold">Pending ≥48 ঘণ্টা · {q.data.aging.agedCount}/{q.data.aging.denominator}</h3><p className="text-xs text-muted-foreground">বর্তমান এজেন্টের সর্বশেষ বরাদ্দের সময় থেকে গণনা; অজানা বয়স {q.data.aging.unknownAge}।</p><Input aria-label="এজেন্টের নাম ফিল্টার" value={agent} onChange={e=>setAgent(e.target.value)} placeholder="এজেন্টের নাম"/><div className="max-h-80 overflow-auto"><ul>{q.data.aging.rows.filter(r=>(r.agent_name??'').toLowerCase().includes(agent.toLowerCase())).map(r=><li key={r.id} className="border-t border-border py-2 text-sm">{r.name} · {r.agent_name??'—'} · {new Date(r.assigned_at).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka'})} · কল {r.call_count??'—'}</li>)}</ul></div><Link to="/hq"><Button variant="outline">HQ পর্যালোচনা</Button></Link><h3 className="font-semibold">Billing sources</h3>{q.data.billing.map(r=><p key={r.period}>{r.period} · CRM maintenance: {r.status} · {r.service_active_until??'সময়সীমা অজানা'}</p>)}{q.data.subscriptions.map((r,i)=><p key={i}>Paddle {r.environment}: {r.status} · {r.current_period_end??'—'}</p>)}<p className="text-xs text-muted-foreground">Paddle subscription এবং CRM maintenance আলাদা উৎস।</p><h3 className="font-semibold">সর্বশেষ Sheets ফলাফল</h3><ul className="text-sm">{q.data.sheets.slice(0,6).map((r,i)=><li key={i}>{r.surface} · {r.outcome} · HTTP {r.http_status??'অজানা'} · {new Date(r.created_at).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka'})}</li>)}</ul></>:null}</section>;
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAdminToken } from "@/lib/local-session";
+import { operationalStatus } from "@/lib/operational-status.functions";
+export function OperationalEvidencePanel() {
+  const adminToken = useAdminToken();
+  const [month, setMonth] = useState(new Date(Date.now() + 21600000).toISOString().slice(0, 7));
+  const [agent, setAgent] = useState("");
+  const load = useServerFn(operationalStatus);
+  const q = useQuery({
+    queryKey: ["operational-evidence", adminToken, month],
+    queryFn: () => load({ data: { adminToken, month } }),
+    retry: false,
+  });
+  function exportRows() {
+    if (!q.data) return;
+    const blob = new Blob([JSON.stringify(q.data.events, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `usage-${month}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  return (
+    <section className="space-y-4 border-t border-border py-4">
+      <header className="flex flex-wrap gap-3 items-center">
+        <h2 className="font-semibold">Build / Run · মাসিক খরচ ও প্রমাণ</h2>
+        <Input
+          aria-label="খরচের মাস"
+          type="month"
+          className="w-44"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+        />
+        <Button variant="outline" disabled={!q.data} onClick={exportRows}>
+          Export
+        </Button>
+      </header>
+      {q.error ? (
+        <p role="alert" className="text-destructive">
+          হিসাব পড়া যায়নি: {q.error.message}
+        </p>
+      ) : q.isPending ? (
+        <p>লোড হচ্ছে…</p>
+      ) : q.data ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            {q.data.sources.build} {q.data.sources.run} {q.data.sources.cash}
+          </p>
+          {!q.data.events.length ? (
+            <p>এই মাসে খরচের রেকর্ড নেই; এটি শূন্য খরচের প্রমাণ নয়।</p>
+          ) : null}
+          <div className="table-scroll">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Build / Run</th>
+                  <th>প্রমাণ</th>
+                  <th>লিড / Unallocated</th>
+                  <th>Credits</th>
+                  <th>Cost</th>
+                  <th>Events</th>
+                </tr>
+              </thead>
+              <tbody>
+                {q.data.summary.map((r, i) => (
+                  <tr className="border-t border-border" key={i}>
+                    <td>{r.class}</td>
+                    <td>{r.basis}</td>
+                    <td>{r.leadId ?? "Unallocated"}</td>
+                    <td>
+                      {r.basis === "unknown" ? "—" : r.credits == null ? "—" : r.credits.toFixed(6)}
+                    </td>
+                    <td>{r.currency === "—" ? "অজানা" : `${r.amount} ${r.currency}`}</td>
+                    <td>{r.events}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3 className="font-semibold">
+            Pending ≥48 ঘণ্টা · {q.data.aging.agedCount}/{q.data.aging.denominator}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            বর্তমান এজেন্টের সর্বশেষ বরাদ্দের সময় থেকে গণনা; অজানা বয়স {q.data.aging.unknownAge}।
+          </p>
+          <Input
+            aria-label="এজেন্টের নাম ফিল্টার"
+            value={agent}
+            onChange={(e) => setAgent(e.target.value)}
+            placeholder="এজেন্টের নাম"
+          />
+          <div className="max-h-80 overflow-auto">
+            <ul>
+              {q.data.aging.rows
+                .filter((r) => (r.agent_name ?? "").toLowerCase().includes(agent.toLowerCase()))
+                .map((r) => (
+                  <li key={r.id} className="border-t border-border py-2 text-sm">
+                    {r.name} · {r.agent_name ?? "—"} ·{" "}
+                    {new Date(r.assigned_at).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })} ·
+                    কল {r.call_count ?? "—"}
+                  </li>
+                ))}
+            </ul>
+          </div>
+          <Link to="/hq">
+            <Button variant="outline">HQ পর্যালোচনা</Button>
+          </Link>
+          <h3 className="font-semibold">Billing sources</h3>
+          {q.data.billing.map((r) => (
+            <p key={r.period}>
+              {r.period} · CRM maintenance: {r.status} ·{" "}
+              {r.service_active_until ?? "সময়সীমা অজানা"}
+            </p>
+          ))}
+          {q.data.subscriptions.map((r, i) => (
+            <p key={i}>
+              Paddle {r.environment}: {r.status} · {r.current_period_end ?? "—"}
+            </p>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            Paddle subscription এবং CRM maintenance আলাদা উৎস।
+          </p>
+          <h3 className="font-semibold">সর্বশেষ Sheets ফলাফল</h3>
+          <ul className="text-sm">
+            {q.data.sheets.slice(0, 6).map((r, i) => (
+              <li key={i}>
+                {r.surface} · {r.outcome} · HTTP {r.http_status ?? "অজানা"} ·{" "}
+                {new Date(r.created_at).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </section>
+  );
 }
