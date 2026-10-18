@@ -224,6 +224,10 @@ export function CallReportsPanel() {
 
       {!isPending ? <CallReportSummary reports={reports} /> : null}
 
+      {data?.scope === "authority" ? (
+        <DurationMismatchPanel onOpenLead={(leadId) => setOpenLeadId(leadId)} />
+      ) : null}
+
       {isPending ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> রিপোর্ট আনা হচ্ছে…
