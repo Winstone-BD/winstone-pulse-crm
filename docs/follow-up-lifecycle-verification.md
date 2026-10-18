@@ -16,6 +16,7 @@
 - Browser at `/desk?s=calendar`: desktop health loading view observed without overflow. Subsequent injected-session navigation stopped at the mandatory contribution form. No real report was submitted and no follow-up was changed.
 
 ## Not verified / risks
+- Pre-release reconciliation: 498 existing open tasks are overdue and now categorized by the reader without altering their original dates. All 1,503 have canonical lead/agent/schedule/correlation values; legacy idempotency keys remain empty, 689 historical completions have no recorded outcome and 29 have no report link. These are historical gaps, not permission to fabricate facts or relink records. New creation keys and required outcomes apply going forward.
 - Populated agent workflow, filters after loading, completion/cancel/reschedule read-back and phone/tablet rendering require clearing the real staff contribution gate legitimately. No mock rows or bypass were used.
 - Missed is an explicit recorded action after the scheduled time; overdue is derived automatically. No background automatic missed-event writer was added.
 - The overall existing call-report submission still commits its report and lead writes separately from follow-up creation. Follow-up creation/transitions themselves are atomic; complete call-report transaction recovery is outside this change and remains a production risk.
