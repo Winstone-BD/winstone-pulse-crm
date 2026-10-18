@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Active
+- [ ] Apply canonical rules to existing follow-up data safely: inspect legacy gaps, preserve historical dates/outcomes, apply only evidence-backed corrections.
+- [ ] Publish full system after latest security review; report deployment request separately from confirmed live smoke-test.
 - [x] Canonical follow-up lifecycle: mandatory outcomes/reasons, linked replacement on reschedule, completion never closes leads, current-owner checks, immutable original tasks/history, idempotent atomic transitions, clickable health filters and scoped dossier history. 522 tests / 75 files pass; harness typecheck/build OK; original 1,503 follow-ups unchanged.
 - [ ] Follow-up populated-agent end-to-end verification — BLOCKED: injected account is stopped by the mandatory daily-contribution form; submitting it would create a real staff report. No customer follow-up mutated. Desktop health loading view observed; populated filters, reason submission and phone/tablet views remain unverified.
 
