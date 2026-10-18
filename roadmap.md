@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Active
+- [x] Existing follow-up reconciliation: 1,503 records checked; no missing lead/agent/schedule/correlation IDs. 498 overdue are derived by new readers, not silently rescheduled. 689 historical completions lack recorded outcomes and 29 lack report links: preserved without fabrication. Legacy creation keys remain absent because originals are immutable; no bulk data mutation needed for current rule enforcement.
+- [ ] Publish full system after latest security review; report deployment request separately from confirmed live smoke-test.
 - [x] Canonical follow-up lifecycle: mandatory outcomes/reasons, linked replacement on reschedule, completion never closes leads, current-owner checks, immutable original tasks/history, idempotent atomic transitions, clickable health filters and scoped dossier history. 522 tests / 75 files pass; harness typecheck/build OK; original 1,503 follow-ups unchanged.
 - [ ] Follow-up populated-agent end-to-end verification — BLOCKED: injected account is stopped by the mandatory daily-contribution form; submitting it would create a real staff report. No customer follow-up mutated. Desktop health loading view observed; populated filters, reason submission and phone/tablet views remain unverified.
 
