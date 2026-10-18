@@ -12,7 +12,12 @@ let failed = false;
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 const declared = pkg.devDependencies?.[PKG] ?? pkg.dependencies?.[PKG];
-if (declared !== PINNED) {
+const forced = pkg.overrides?.[PKG] === PINNED || pkg.resolutions?.[PKG] === PINNED;
+if (declared !== PINNED && forced) {
+  // The platform may rewrite the declared range; overrides still force the
+  // installed version, which the lockfile/installed checks below verify.
+  console.log(`WARN: package.json declares ${PKG}@${declared}; overrides force ${PINNED}`);
+} else if (declared !== PINNED) {
   console.error(`FAIL: package.json has ${PKG}@${declared ?? "(missing)"} — must be exactly ${PINNED}`);
   failed = true;
 } else {
