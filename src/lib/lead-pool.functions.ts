@@ -343,6 +343,10 @@ const BulkExtraInput = z.object({
   reason: z.string().trim().min(5).max(300),
   /** Explicit confirmation that agents may exceed their daily base quota. */
   acknowledgeOverQuota: z.literal(true),
+  /** One id per confirmed batch — retries/double clicks never grant twice. */
+  requestId: z.string().uuid(),
+  /** The exact agents shown in the preview; the batch refuses if the active set changed. */
+  expectedAgentIds: z.array(z.string().uuid()).min(1).max(50),
 });
 
 /**
@@ -359,6 +363,11 @@ export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
     const { assertDistributionDay } = await import("@/lib/business-day");
     assertDistributionDay();
     const agents = await activeAgents();
+    const current = new Set(agents.map((a) => a.id));
+    const expected = new Set(data.expectedAgentIds);
+    if (current.size !== expected.size || [...current].some((id) => !expected.has(id))) {
+      throw new Error("সক্রিয় এজেন্টের তালিকা Preview-এর পর বদলেছে — আবার Preview দেখুন");
+    }
     const results: { agentId: string; name: string; moved: number; error: string | null }[] = [];
     let remaining = 0;
     for (const agent of agents) {
@@ -369,6 +378,7 @@ export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
           reason: `[সবাইকে একসাথে] ${data.reason}`,
           actorProfileId: null,
           actorLabel: `${caller.label} · IT Console bulk`,
+          requestId: data.requestId,
         });
         remaining = r.remaining;
         results.push({ agentId: agent.id, name: agent.name, moved: r.moved, error: null });

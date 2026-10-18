@@ -17,3 +17,16 @@ describe("bulk extra leads (IT Console)", () => {
     expect(block).toMatch(/assertDistributionDay\(\)/);
   });
 });
+
+describe("bulk extra leads idempotency + target lock", () => {
+  it("requires a requestId and the previewed agent list", () => {
+    expect(block).toMatch(/requestId: z\.string\(\)\.uuid\(\)/);
+    expect(block).toMatch(/expectedAgentIds/);
+    expect(block).toMatch(/Preview-এর পর বদলেছে/);
+  });
+  it("grantExtraLeads replays an existing request instead of granting again", () => {
+    const server = readFileSync("src/lib/lead-pool.server.ts", "utf8");
+    expect(server).toMatch(/\.eq\("request_id", input\.requestId\)/);
+    expect(server).toMatch(/replayed: true/);
+  });
+});

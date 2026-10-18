@@ -501,12 +501,26 @@ export async function grantExtraLeads(input: {
   actorLabel?: string | null;
   /** Ledger source — "manual_extra" (LeadHub/IT) or "auto_refill" (empty desk). */
   source?: "manual_extra" | "auto_refill";
-}): Promise<{ moved: number; remaining: number; workDate: string }> {
+  /** Idempotency key: a repeated request for the same agent hands out nothing new. */
+  requestId?: string | null;
+}): Promise<{ moved: number; remaining: number; workDate: string; replayed?: boolean }> {
   const source = input.source ?? "manual_extra";
   const { assertDistributionDay } = await import("@/lib/business-day");
   assertDistributionDay();
   const supabaseAdmin = await admin();
   const today = dhakaToday();
+
+  if (input.requestId) {
+    const { data: prior } = await supabaseAdmin
+      .from("lead_extra_grants")
+      .select("quantity")
+      .eq("request_id", input.requestId)
+      .eq("agent_profile_id", input.agentProfileId)
+      .maybeSingle();
+    if (prior) {
+      return { moved: prior.quantity, remaining: await usablePoolCount(), workDate: today, replayed: true };
+    }
+  }
 
   const { data: agent } = await supabaseAdmin
     .from("profiles")
@@ -586,6 +600,7 @@ export async function grantExtraLeads(input: {
     quantity: moved,
     reason: input.reason ?? null,
     source,
+    request_id: input.requestId ?? null,
     granted_by: input.actorProfileId ?? null,
     granted_by_label: input.actorLabel ?? "IT Console",
   });

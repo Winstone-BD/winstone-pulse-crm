@@ -2175,6 +2175,7 @@ export type Database = {
           id: string
           quantity: number
           reason: string | null
+          request_id: string | null
           source: string
           work_date: string
         }
@@ -2186,6 +2187,7 @@ export type Database = {
           id?: string
           quantity: number
           reason?: string | null
+          request_id?: string | null
           source?: string
           work_date: string
         }
@@ -2197,6 +2199,7 @@ export type Database = {
           id?: string
           quantity?: number
           reason?: string | null
+          request_id?: string | null
           source?: string
           work_date?: string
         }
