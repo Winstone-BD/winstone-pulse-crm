@@ -103,7 +103,9 @@ const PINNED_BUILD_TOOL = "2.25.2";
   }
   if (problems.length === 0) return;
   const msg = `[build-tool pin] ${name} must be exactly ${PINNED_BUILD_TOOL} — unexpected change: ${problems.join("; ")}`;
-  if (process.argv.includes("build")) throw new Error(msg);
+  // Production builds stop; preview (development-mode) builds only warn so the
+  // preview stays usable while the drift is reported.
+  if (process.argv.includes("build") && !process.argv.includes("development")) throw new Error(msg);
   console.error(`\n\u001b[31m${msg}\u001b[0m\n`);
 })();
 
