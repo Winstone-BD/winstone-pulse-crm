@@ -82,5 +82,7 @@ export async function extractBuyerProfile(leadId: string, agentId: string, autho
   const facts = { name: lead.name, area: lead.area ?? lead.address ?? null, requirement: rep?.requirement ?? null, temperature: lead.temperature ?? null };
   const source = `${JSON.stringify(facts)}\n${notes.wrapped}`;
   const fields = groundExtraction(parseExtraction(await callGemini(`${JSON.stringify(facts)}\n${notes.wrapped}`)), source);
+  const {logAiUsage}=await import("./ai-usage.server");
+  await logAiUsage({category:"other",model:EXTRACT_MODEL,leadId,actorProfileId:agentId,detail:"buyer_extraction"});
   return { fields, flagged: notes.flagged };
 }

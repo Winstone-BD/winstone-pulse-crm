@@ -1,0 +1,92 @@
+import { it, expect, vi, beforeEach } from "vitest";
+const state = vi.hoisted(() => ({
+  scope: "agent",
+  readOnly: false,
+  filters: [] as unknown[],
+  rpc: vi.fn(async () => ({ data: "00000000-0000-4000-8000-000000000003", error: null })),
+}));
+vi.mock("@tanstack/react-start", () => ({
+  createServerFn: () => {
+    let validate = (x: unknown) => x;
+    const api = {
+      inputValidator(fn: typeof validate) {
+        validate = fn;
+        return api;
+      },
+      handler(fn: (x: { data: unknown }) => unknown) {
+        return (x: { data: unknown }) => fn({ data: validate(x.data) });
+      },
+    };
+    return api;
+  },
+}));
+vi.mock("@/lib/access.server", () => ({
+  resolveCaller: async () => ({
+    scope: state.scope,
+    readOnly: state.readOnly,
+    profile: { id: "00000000-0000-4000-8000-000000000001", name: "HQ" },
+  }),
+}));
+vi.mock("@/lib/push.server", () => ({ sendPush: vi.fn() }));
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: {
+    rpc: state.rpc,
+    from: () => {
+      const q: Record<string, unknown> = {};
+      for (const m of ["select", "order", "limit", "update"]) q[m] = () => q;
+      q.eq = (...a: unknown[]) => {
+        state.filters.push(a);
+        return q;
+      };
+      q.is = (...a: unknown[]) => {
+        state.filters.push(a);
+        return q;
+      };
+      q.then = (f: (x: unknown) => unknown) =>
+        f({
+          data: [
+            {
+              id: "00000000-0000-4000-8000-000000000001",
+              notice_id: "00000000-0000-4000-8000-000000000003",
+            },
+          ],
+          error: null,
+        });
+      return q;
+    },
+  },
+}));
+beforeEach(() => {
+  state.scope = "agent";
+  state.readOnly = false;
+  state.filters = [];
+  state.rpc.mockClear();
+});
+it("agent receipt needs session not PIN and preserves first read", async () => {
+  const { markNoticeRead } = await import("../src/lib/notice-board.functions");
+  await markNoticeRead({ data: { noticeId: "00000000-0000-4000-8000-000000000003" } });
+  expect(state.filters).toContainEqual(["profile_id", "00000000-0000-4000-8000-000000000001"]);
+  expect(state.filters).toContainEqual(["read_at", null]);
+});
+it("agent cannot publish before any RPC", async () => {
+  const { publishNotice } = await import("../src/lib/notice-board.functions");
+  await expect(
+    publishNotice({
+      data: { title: "Note", body: "Review", severity: "info", audienceType: "all" },
+    }),
+  ).rejects.toThrow("HQ");
+  expect(state.rpc).not.toHaveBeenCalled();
+});
+it("HQ publication retains request identity for atomic retry", async () => {
+  state.scope = "authority";
+  state.readOnly = true;
+  const { publishNotice } = await import("../src/lib/notice-board.functions");
+  const id = "00000000-0000-4000-8000-000000000002";
+  await publishNotice({
+    data: { requestId: id, title: "Note", body: "Review", severity: "info", audienceType: "all" },
+  });
+  expect(state.rpc).toHaveBeenCalledWith(
+    "publish_notice_atomic",
+    expect.objectContaining({ _request: id, _label: "Executive HQ" }),
+  );
+});

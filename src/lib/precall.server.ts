@@ -301,7 +301,9 @@ export async function buildQuickBrief(leadId: string, useAi: boolean): Promise<Q
   const key = process.env["LOVABLE_API_KEY"];
   if (!useAi || !key) return rules;
   try {
-    return (await aiBrief(facts, key)) ?? rules;
+    const result=await aiBrief(facts,key);
+    if(result){const {logAiUsage}=await import("./ai-usage.server");await logAiUsage({category:"other",model:"openai/gpt-6-astra",leadId,detail:"quick_brief"});}
+    return result ?? rules;
   } catch (error) {
     console.error("quick brief failed", error);
     return rules;

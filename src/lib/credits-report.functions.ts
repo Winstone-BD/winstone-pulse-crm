@@ -75,11 +75,12 @@ export const getCreditsReport = createServerFn({ method: "POST" })
 
     // Rolling 7-day window, independent of the selected month.
     const since = new Date(Date.now() - 7 * 24 * 3_600_000).toISOString();
-    const { data: recentRows } = await supabaseAdmin
+    const { data: recentRows, error: recentError } = await supabaseAdmin
       .from("ai_usage_events")
       .select("est_credits")
       .gte("created_at", since)
       .limit(20000);
+    if (recentError) throw new Error('Recent usage telemetry unavailable');
     const recentCredits =
       Math.round((recentRows ?? []).reduce((s, r) => s + (Number(r.est_credits) || 0), 0) * 100) /
       100;

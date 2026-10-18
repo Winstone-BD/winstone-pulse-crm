@@ -248,6 +248,8 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     const transcript = stt.transcript;
     await logAiUsage({
       category: "transcription",
+      leadId: recording.lead_id,
+      sourceEventId: `transcription:${recordingId}:${stt.requestId ?? crypto.randomUUID()}`,
       model: stt.model ?? stt.provider,
       actorProfileId: recording.agent_id,
       detail: recordingId,
@@ -255,6 +257,7 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     const analysis = await analyzeTranscript(transcript, recording.duration_seconds);
     await logAiUsage({
       category: "analysis",
+      leadId: recording.lead_id,
       model: "openai/gpt-6-astra",
       actorProfileId: recording.agent_id,
       detail: recordingId,

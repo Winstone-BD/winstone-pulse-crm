@@ -1002,6 +1002,13 @@
       "when": 1792331762704,
       "tag": "0142_assignment_review_and_it_identity_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1792332540371,
+      "tag": "0143_usage_ledger_notice_integrity",
+      "breakpoints": true
     }
   ]
 }

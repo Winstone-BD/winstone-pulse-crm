@@ -76,6 +76,8 @@ export async function draftFollowupPair(leadId: string, agentId: string, authori
     ai_output: output, injection_flagged: notes.flagged, model: DRAFT_MODEL,
   }).select("id").single();
   if (insErr) throw new Error(insErr.message);
+  const {logAiUsage}=await import("./ai-usage.server");
+  await logAiUsage({category:"other",model:DRAFT_MODEL,leadId,actorProfileId:agentId,detail:"followup_pair"});
   return { id: row.id, ...pair, flagged: notes.flagged };
 }
 

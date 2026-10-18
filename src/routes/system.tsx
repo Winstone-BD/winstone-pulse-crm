@@ -1,5 +1,6 @@
 import { HubSyncStatusPanel } from "@/components/crm/HubAlerts";
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
+import { OperationalEvidencePanel } from "@/components/crm/OperationalEvidencePanel";
 import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
@@ -183,6 +184,7 @@ function SystemBoard() {
           <SystemManualCard />
           <SystemUpdateReport />
           <BackendHealthPanel />
+          <OperationalEvidencePanel />
           <SheetSyncHealthPanel />
           <VersionDataPanel />
           <CommandAgentPanel surface="system" />

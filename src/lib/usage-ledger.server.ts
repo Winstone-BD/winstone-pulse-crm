@@ -1,0 +1,21 @@
+import { UsageEvent, type UsageRow } from "./usage-ledger";
+export async function ingestUsageEvent(raw: UsageRow) {
+  const row = UsageEvent.parse(raw);
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const result = await db
+    .from("crm_usage_events")
+    .upsert(
+      {
+        ...row,
+        model: row.model ?? null,
+        lead_id: row.lead_id ?? null,
+        quantity: row.quantity ?? null,
+        quantity_unit: row.quantity_unit ?? null,
+        credits: row.credits ?? null,
+        cost_amount: row.cost_amount ?? null,
+        cost_currency: row.cost_currency ?? null,
+      },
+      { onConflict: "source,source_event_id", ignoreDuplicates: true },
+    );
+  if (result.error) throw new Error("Usage event could not be recorded");
+}

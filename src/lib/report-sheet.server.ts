@@ -1,3 +1,4 @@
+import { integrationFailure } from "./integration-status";
 /**
  * IT Console report sheet: turns submitted call reports into spreadsheet rows,
  * and pushes new rows into the workspace Google Sheet through the Lovable
@@ -171,7 +172,7 @@ async function gatewayFetch(path: string, init?: RequestInit, attempt = 0): Prom
       durationMs,
       errorText: body,
     });
-    throw new Error(`Google Sheets ত্রুটি [${response.status}]: ${body.slice(0, 300)}`);
+    throw new Error(`Google Sheets [${response.status}]: ${integrationFailure(response.status,body).message}`);
   }
   await recordSheetSyncEvent({
     surface: "report_sheet",
