@@ -402,6 +402,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
     Base.extend({
       fromIso: z.string().nullable().optional(),
       toIso: z.string().nullable().optional(),
+      activeOnly: z.boolean().optional(),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -414,7 +415,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
     const events: import("@/integrations/supabase/types").Database["public"]["Tables"]["follow_up_events"]["Row"][] = [];
     for (let from = 0; ; from += 1000) {
       let query = supabaseAdmin
-        .from("follow_up_events")
+        .from(data.activeOnly ? "active_follow_up_events" : "follow_up_events")
         .select("*")
         .order("scheduled_at", { ascending: true })
         .order("id")
@@ -497,7 +498,7 @@ export const myCallReports = createServerFn({ method: "POST" })
 
     const nowIso = new Date().toISOString();
     const { data: upcoming } = await supabaseAdmin
-      .from("follow_up_events")
+      .from("active_follow_up_events")
       .select(
         "id, lead_id, customer_name, phone_number, category, priority, note, scheduled_at, status",
       )
@@ -781,7 +782,7 @@ export const myLeadExtras = createServerFn({ method: "POST" })
       .limit(2000);
     if (agentId) reports = reports.eq("agent_id", agentId);
     let follows = supabaseAdmin
-      .from("follow_up_events")
+      .from("active_follow_up_events")
       .select("lead_id, scheduled_at")
       .in("status", ["upcoming", "due", "missed"])
       .order("scheduled_at", { ascending: true })

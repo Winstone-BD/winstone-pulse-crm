@@ -17,3 +17,4 @@
 
 - Follow-up transitions/recovery use follow-up-lifecycle.server.ts and atomic DB functions; recovery appends one child/action without modifying the source, rescheduling links a new task, completion never edits the lead — why: one scoped, append-only lifecycle.
 - Agent activity readers use assigned-lead-scope.server.ts current canonical ownership in addition to historic actor filters; single-record operations recheck assignment — why: transfers must not expose former customers through APIs.
+- Active follow-up feeds use active_follow_up_events/current_follow_up_work_items views, while history reads the original table — why: recovery preserves its source without duplicating reminders or active counts.

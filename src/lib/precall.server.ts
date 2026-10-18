@@ -182,7 +182,7 @@ async function loadFacts(leadId: string): Promise<{ facts: BriefFacts; inventory
       .order("submitted_at", { ascending: false })
       .limit(1),
     supabaseAdmin
-      .from("follow_up_events")
+      .from("active_follow_up_events")
       .select("scheduled_at")
       .eq("lead_id", leadId)
       .in("status", ["upcoming", "due", "missed"])

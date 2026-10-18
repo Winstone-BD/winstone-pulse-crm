@@ -44,7 +44,7 @@ export const listAgentActivity = createServerFn({ method: "POST" })
         .order("employee_id", { ascending: true }),
       supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
       supabaseAdmin.from("call_reports").select("agent_id").eq("status", "pending"),
-      supabaseAdmin.from("follow_up_events").select("agent_id, status").lt("scheduled_at", nowIso),
+      supabaseAdmin.from("active_follow_up_events").select("agent_id, status").lt("scheduled_at", nowIso),
       supabaseAdmin
         .from("agent_devices")
         .select("profile_id, last_seen_at, app_version, revoked_at")

@@ -44,7 +44,7 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
   }));
 
   const { data: fus } = await db
-    .from("follow_up_events")
+    .from("current_follow_up_work_items")
     .select("id, lead_id, customer_name, scheduled_at, status, completed_at")
     .eq("agent_id", agentId)
     .lte("scheduled_at", end)

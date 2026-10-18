@@ -36,7 +36,7 @@ export const callOpsSummary = createServerFn({ method: "POST" })
           .select("id, analysis_status, analysis_error, recorder_source, is_two_sided, created_at")
           .gte("created_at", since),
         supabaseAdmin
-          .from("follow_up_events")
+          .from("current_follow_up_work_items")
           .select("id, agent_id, status, scheduled_at, reminder_minutes"),
         supabaseAdmin
           .from("agent_devices")

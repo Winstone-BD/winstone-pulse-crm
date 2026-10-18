@@ -82,7 +82,7 @@ export function useFollowUpReminders(enabled: boolean) {
     queryFn: () => {
       const from = new Date(Date.now() - 60 * 60_000).toISOString();
       const to = new Date(Date.now() + 6 * 60 * 60_000).toISOString();
-      return fetchEvents({ data: { adminToken, fromIso: from, toIso: to } });
+      return fetchEvents({ data: { adminToken, fromIso: from, toIso: to, activeOnly: true } });
     },
   });
 

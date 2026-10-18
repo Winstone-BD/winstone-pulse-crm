@@ -90,14 +90,14 @@ export async function buildSalesBrief(c: SiCaller, leadId: string) {
     all<{ id: string; created_at: string; connected: boolean | null; category: string | null; customer_response: string | null; next_action: string | null; summary: string | null; requirement: string | null; evaluation_score: number | null; follow_up_priority: string | null; status: string }>((a, b) =>
       db.from("call_reports").select("id, created_at, connected, category, customer_response, next_action, summary, requirement, evaluation_score, follow_up_priority, status").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
     all<{ id: string; scheduled_at: string; status: string; reason_code: string | null; note: string | null }>((a, b) =>
-      db.from("follow_up_events").select("id, scheduled_at, status, reason_code, note").eq("lead_id", lead.id).order("scheduled_at").order("id").range(a, b)),
+      db.from("current_follow_up_work_items").select("id, scheduled_at, status, reason_code, note").eq("lead_id", lead.id).order("scheduled_at").order("id").range(a, b)),
     all<{ id: string; created_at: string; objection_code: string; action: string }>((a, b) =>
       db.from("pitch_events").select("id, created_at, objection_code, action").eq("lead_id", lead.id).order("created_at").order("id").range(a, b)),
   ]);
   const submitted = reports.filter((r) => r.status === "submitted");
   const last = submitted[submitted.length - 1];
   const req = [...submitted].reverse().find((r) => r.requirement?.trim());
-  const openFu = followUps.find((f) => !["done", "completed", "cancelled", "canceled"].includes(f.status));
+  const openFu = followUps.find((f) => ['upcoming', 'due', 'missed'].includes(f.status));
   const nr = "রেকর্ড করা নেই";
   const raw: Omit<BriefLine, "group">[] = [
     { label: "Requirement", value: req?.requirement ?? nr, sources: req ? [{ kind: "call_report", id: req.id }] : [] },

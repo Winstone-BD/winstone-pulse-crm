@@ -39,11 +39,16 @@ export const getCommandCenterFeed = createServerFn({ method: "POST" })
       }),
       pageAll((a, b) => {
         let q = supabaseAdmin
-          .from("follow_up_events")
+          .from("current_follow_up_work_items")
           .select("id, lead_id, agent_id, status, scheduled_at, completed_at");
         if (me) q = q.eq("agent_id", me);
         return q.order("created_at", { ascending: true }).order("id").range(a, b);
       }),
     ]);
+    if (me) {
+      const { assignedLeadIds, filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+      const ids = await assignedLeadIds(me);
+      return { reports: filterAssignedActivity(reports, ids), followUps: filterAssignedActivity(followUps, ids) };
+    }
     return { reports, followUps };
   });

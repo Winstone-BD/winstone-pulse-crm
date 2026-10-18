@@ -440,7 +440,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
         : Promise.resolve({ data: [] as { id: string; name: string; employee_id: string | null }[] }),
       ids.length
         ? supabaseAdmin
-            .from("follow_up_events")
+            .from("active_follow_up_events")
             .select("lead_id, scheduled_at, status")
             .in("lead_id", ids)
             .order("scheduled_at", { ascending: true })
