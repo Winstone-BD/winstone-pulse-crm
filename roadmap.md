@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Add HQ agent→lead progress view and review/comment updates without agent PIN; HQ authorization remains required, no instructions/assignments/account edits. Reuse existing scoped HQ data and append-only comments where possible.
 - [x] HQ clarification resolved: reviews/comments only, no operational instructions or account management. Existing requireWrite/CommandAgent guards retained; remediation events now HQ noted-only server-side and status selector restricted; accountability/Architect approval gates preserved. Seven new rule tests pass; real HQ session verification blocked.
 - [ ] Current Drive: Scarlett’s connection readable by requester but unlinked and unlinkable because project owner lacks access. Metadata HTTP 200 confirms supplied resource is Winstone OS, MIME application/vnd.google-apps.project, cannot add/list children—not a recordings folder. Connection owner must grant project owner access through Permissions; correct approved recordings folder URL still required. No relink/rotation/upload.
 - [x] Refreshed database-optimization baseline Oct 5–18: 19.4 requested Build credits only, no Run quantities; current rates not measured costs. Slowest assignment UPDATE mean 1336ms (157 cumulative calls); global phone extraction candidate withheld because 309 missing identity keys. Prior event index measurement and snapshot consolidation retained; largest tables only 3–8MB, no deletion/resize/schedule changes. Recorded Run savings unverified.
