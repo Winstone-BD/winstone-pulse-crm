@@ -580,115 +580,32 @@ export async function submitCallReport(input: {
   }
 
   let followUpId: string | null = null;
-  if (input.followUpAt) {
-    // Idempotent: a resubmitted report never creates a second follow-up task.
-    const { data: existing } = await supabaseAdmin
-      .from("follow_up_events")
-      .select("id")
-      .eq("report_id", report.id)
-      .maybeSingle();
-    if (existing) followUpId = existing.id;
-  }
-  if (input.followUpAt && !followUpId) {
-    // One open follow-up per lead + agent: a newer report moves the open task
-    // instead of stacking a duplicate reminder for the same customer.
-    const { data: open } = await supabaseAdmin
-      .from("follow_up_events")
-      .select("id")
-      .eq("lead_id", report.lead_id)
-      .eq("agent_id", input.agentId)
-      .neq("status", "done")
-      .order("scheduled_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (open) {
-      await supabaseAdmin
-        .from("follow_up_events")
-        .update({
-          report_id: report.id,
-          category,
-          priority: followUpPriority,
-          note: input.note?.trim() || null,
-          reason_code: input.followUpReason ?? null,
-          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
-          customer_response: input.customerResponse ?? null,
-          next_action: input.nextAction ?? null,
-          previous_call_id: report.recording_id ?? null,
-          scheduled_at: input.followUpAt,
-          reminder_minutes: input.reminderMinutes ?? 30,
-          notified_at: null,
-          status: "upcoming",
-        })
-        .eq("id", open.id);
-      followUpId = open.id;
+  const plannedAt = input.followUpAt ?? cadence?.retryAt ?? null;
+  if (plannedAt) {
+    const { replaceReportFollowUp } = await import("@/lib/follow-up-lifecycle.server");
+    const stageNote = cadence ? (cadence.stage === "unresponsive" ? "Unresponsive Pool — 3 unanswered calls; reactivation after 7 days" : cadence.stage === "snooze_soft" ? "Second unanswered call — soft message and retry" : "First unanswered call — retry") : null;
+    followUpId = await replaceReportFollowUp(input.agentId, report.id, {
+      lead_id: report.lead_id, agent_id: input.agentId, report_id: report.id,
+      recording_id: report.recording_id, customer_name: lead?.name ?? null,
+      phone_number: lead?.phone_number ?? report.phone_number, category, priority: followUpPriority,
+      note: stageNote ?? (input.followUpReason === "other" ? input.followUpReasonNote : input.note)?.trim() ?? null,
+      reason_code: cadence ? "call_later" : input.followUpReason ?? null,
+      customer_response: input.customerResponse ?? null, next_action: input.nextAction ?? stageNote,
+      previous_call_id: report.recording_id ?? null, scheduled_at: plannedAt,
+      reminder_minutes: input.reminderMinutes ?? 30, status: "upcoming",
+    }, input.customerResponse?.trim() || input.nextAction?.trim() || stageNote || "Customer requested a new follow-up in the saved call report");
+  } else if (received) {
+    // Only a saved answered report supplies a real completion outcome.
+    const outcome = [input.customerResponse, input.reason, input.note, input.noFollowUpReason, noFollowUpNote].filter(Boolean).join(" — ");
+    const { data: open, error } = await supabaseAdmin.from("follow_up_events").select("id")
+      .eq("lead_id", report.lead_id).eq("agent_id", input.agentId).in("status", ["upcoming", "due", "missed"]);
+    if (error) throw new Error(error.message);
+    for (const event of open ?? []) {
+      const { error: failure } = await supabaseAdmin.rpc("transition_follow_up_atomic", {
+        _event: event.id, _actor: input.agentId, _action: "complete", _reason: outcome, _key: crypto.randomUUID(),
+      });
+      if (failure) throw new Error(failure.message);
     }
-  }
-  if (input.followUpAt && !followUpId) {
-    const { data: event } = await supabaseAdmin
-      .from("follow_up_events")
-      .insert({
-        lead_id: report.lead_id,
-        agent_id: input.agentId,
-        report_id: report.id,
-        recording_id: report.recording_id,
-        customer_name: lead?.name ?? null,
-        phone_number: lead?.phone_number ?? report.phone_number,
-        category,
-        priority: followUpPriority,
-        note: input.note?.trim() || null,
-        reason_code: input.followUpReason ?? null,
-          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
-        customer_response: input.customerResponse ?? null,
-        next_action: input.nextAction ?? null,
-        previous_call_id: report.recording_id ?? null,
-        scheduled_at: input.followUpAt,
-        reminder_minutes: input.reminderMinutes ?? 30,
-        status: "upcoming",
-      })
-      .select("id")
-      .single();
-    followUpId = event?.id ?? null;
-  }
-
-  // No new follow-up date → the contact was closed on this report. Settle every
-  // open follow-up for this lead as done (never deleted): the update trigger
-  // writes a permanent 'completed' row to follow_up_changes, so HQ keeps when,
-  // why and by which report the follow-up stopped, and it stops showing overdue.
-  if (!input.followUpAt) {
-    const closeNote = input.noFollowUpReason
-      ? `কল রিপোর্ট সম্পন্ন (${input.noFollowUpReason})${noFollowUpNote ? ` — ${noFollowUpNote}` : ""}`
-      : "কল সম্পন্ন — ফলো-আপ সমাপ্ত";
-    await supabaseAdmin
-      .from("follow_up_events")
-      .update({ status: "done", completed_at: nowIso, report_id: report.id, note: closeNote })
-      .eq("lead_id", report.lead_id)
-      .neq("status", "done");
-  }
-
-  // Did-not-receive: one follow-up on the same queue, owned by the same agent.
-  if (cadence) {
-    const stageNote =
-      cadence.stage === "unresponsive"
-        ? `Unresponsive Pool — ৩ বার ধরেননি; ${7} দিন পর Reactivation Queue`
-        : cadence.stage === "snooze_soft"
-          ? "২য় বার ধরেননি — সফট মেসেজ পাঠিয়ে আবার কল"
-          : "১ম বার ধরেননি — আবার কল";
-    await supabaseAdmin.from("follow_up_events").insert({
-      lead_id: report.lead_id,
-      agent_id: input.agentId,
-      report_id: report.id,
-      recording_id: report.recording_id,
-      customer_name: lead?.name ?? null,
-      phone_number: lead?.phone_number ?? report.phone_number,
-      category,
-      priority: followUpPriority,
-      note: stageNote,
-      reason_code: "call_later",
-      previous_call_id: report.recording_id ?? null,
-      scheduled_at: cadence.retryAt,
-      reminder_minutes: input.reminderMinutes ?? 30,
-      status: "upcoming",
-    });
   }
 
   const { logLeadEvent } = await import("@/lib/lead-events.server");
@@ -1027,16 +944,8 @@ export async function editSubmittedReport(input: {
     .eq("id", report.lead_id);
 
   if (input.followUpAt) {
-    await supabaseAdmin
-      .from("follow_up_events")
-      .update({
-        category,
-        note: input.note?.trim() || null,
-        scheduled_at: input.followUpAt,
-        priority: followUpPriorityFor(temperature),
-      })
-      .eq("report_id", report.id)
-      .neq("status", "done");
+    // Correct the report only; reschedule its follow-up explicitly with a reason.
+
   }
 
   const { logAudit } = await import("@/lib/audit.server");
