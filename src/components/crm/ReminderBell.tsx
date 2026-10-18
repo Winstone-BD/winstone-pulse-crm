@@ -1,6 +1,6 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { BellRing, Clock, FileWarning, MapPin } from "lucide-react";
+import { BellRing, Clock, FileWarning } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -105,8 +105,6 @@ export function ReminderBell() {
               >
                 {item.kind === "report" ? (
                   <FileWarning className="mt-0.5 size-4 shrink-0 text-destructive" />
-                ) : item.kind === "site_visit" ? (
-                  <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
                 ) : (
                   <Clock className="mt-0.5 size-4 shrink-0 text-primary" />
                 )}

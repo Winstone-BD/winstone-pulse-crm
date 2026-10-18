@@ -87,7 +87,7 @@ export const yearArchiveExport = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("call_reports")
         .select(
-          "id, lead_id, agent_id, status, category, connected, duration_seconds, device_reported_duration_seconds, temperature, grade, summary, note, reason, follow_up_at, submitted_at, created_at",
+          "id, lead_id, agent_id, status, category, connected, duration_seconds, temperature, grade, summary, note, reason, follow_up_at, submitted_at, created_at",
         )
         .gte("created_at", from)
         .lt("created_at", to)
@@ -191,7 +191,7 @@ export const myDayPerformance = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("call_reports")
-      .select("id, status, connected, duration_seconds, category, call_ended_at, channel")
+      .select("id, status, connected, duration_seconds, category, call_ended_at")
       .eq("agent_id", me.id)
       .gte("call_ended_at", from)
       .lt("call_ended_at", to);
@@ -202,7 +202,6 @@ export const myDayPerformance = createServerFn({ method: "POST" })
     let connected = 0;
     let veryShort = 0;
     let pending = 0;
-    let whatsapp = 0;
 
     for (const report of reports) {
       const seconds = report.duration_seconds ?? 0;
@@ -210,7 +209,6 @@ export const myDayPerformance = createServerFn({ method: "POST" })
       if (report.connected) connected += 1;
       if (seconds > 0 && seconds < 3) veryShort += 1;
       if (report.status === "pending") pending += 1;
-      if (report.channel === "whatsapp") whatsapp += 1;
       if (report.category) categories[report.category] = (categories[report.category] ?? 0) + 1;
     }
 
@@ -220,8 +218,6 @@ export const myDayPerformance = createServerFn({ method: "POST" })
       connected,
       veryShort,
       pending,
-      /** Reports opened by a WhatsApp contact (the mandatory WhatsApp report). */
-      whatsapp,
       talkSeconds,
       categories,
     };

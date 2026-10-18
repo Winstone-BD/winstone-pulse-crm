@@ -109,13 +109,12 @@ export function LeadDayBoard() {
         </span>
       </header>
 
-      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           { label: "মোট কল", value: stats ? String(stats.calls) : "—" },
           { label: "কথা হয়েছে", value: stats ? String(stats.connected) : "—" },
           { label: "কথার সময়", value: stats ? `${minutes} মিনিট` : "—" },
           { label: "৩ সেকেন্ডের কম", value: stats ? String(stats.veryShort) : "—" },
-          { label: "হোয়াটসঅ্যাপ রিপোর্ট", value: stats ? String(stats.whatsapp) : "—" },
         ].map((item) => (
           <div key={item.label} className="rounded-lg border border-border bg-muted/40 p-2">
             <dt className="text-[11px] text-muted-foreground">{item.label}</dt>

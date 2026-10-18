@@ -171,7 +171,9 @@ function CreditsBoard() {
               <Row label="ডকুমেন্ট সারসংক্ষেপ" value={`≈ ${AI_USAGE_RATES.doc_summary} ক্রেডিট`} />
             </dl>
             <p className="mt-3 text-xs text-muted-foreground">
-              পুরোনো নির্ধারিত হারভিত্তিক অনুমান; provider billing নয়। Build / Run-এর যাচাইকৃত হিসাব IT Console-এর মাসিক খরচ ও প্রমাণে দেখুন।
+              ৮ জন এজেন্ট নিয়ে মাসজুড়ে চালালে অনুমান: এআই কাজে ≈ {report.projection.aiOnly}{" "}
+              ক্রেডিট, সিস্টেম উন্নয়নসহ ≈ {report.projection.withDevelopment} ক্রেডিট/মাস। টাকার
+              দাম ও টপ-আপ Settings → Plans &amp; credits থেকে দেখুন।
             </p>
           </section>
 

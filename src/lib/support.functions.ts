@@ -1,4 +1,3 @@
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -132,7 +131,6 @@ async function runAiTurn(conversationId: string, customerName: string | null) {
 }
 
 export const startSupportConversation = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({

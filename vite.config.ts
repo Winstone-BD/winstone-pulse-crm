@@ -9,17 +9,6 @@ import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
-import { execSync } from "node:child_process";
-
-const BUILD_COMMIT = (() => {
-  const fromEnv = process.env["COMMIT_SHA"] || process.env["GIT_COMMIT"] || process.env["VERCEL_GIT_COMMIT_SHA"];
-  if (fromEnv) return fromEnv;
-  try {
-    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
-  } catch {
-    return "unknown";
-  }
-})();
 
 // Load non-VITE_ env vars into process.env for server-side code only (email API keys,
 // service role key). These are never injected into the client bundle.
@@ -81,55 +70,9 @@ function browserAsyncHooksStub() {
   };
 }
 
-// Build-tool pin guard: runs on every preview start AND every build.
-// Any place in package.json (or the installed copy) that drifts from the
-// locked version is reported loudly; builds refuse to continue.
-const PINNED_BUILD_TOOL = "2.25.2";
-(() => {
-  const name = "@lovable.dev/vite-tanstack-config";
-  const problems: string[] = [];
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve("package.json"), "utf8"));
-    for (const field of ["dependencies", "devDependencies", "overrides", "resolutions"]) {
-      const v = pkg[field]?.[name];
-      if (v !== undefined && v !== PINNED_BUILD_TOOL) problems.push(`package.json ${field}: ${v}`);
-    }
-    const installed = JSON.parse(
-      fs.readFileSync(path.resolve("node_modules", name, "package.json"), "utf8"),
-    ).version;
-    if (installed !== PINNED_BUILD_TOOL) problems.push(`installed: ${installed}`);
-  } catch (e) {
-    problems.push(`could not verify (${(e as Error).message})`);
-  }
-  if (problems.length === 0) return;
-  const msg = `[build-tool pin] ${name} must be exactly ${PINNED_BUILD_TOOL} — unexpected change: ${problems.join("; ")}`;
-  // Production builds stop; preview (development-mode) builds only warn so the
-  // preview stays usable while the drift is reported.
-  if (process.argv.includes("build") && !process.argv.includes("development")) throw new Error(msg);
-  console.error(`\n\u001b[31m${msg}\u001b[0m\n`);
-})();
-
 export default defineConfig({
   plugins: [mcpPlugin(), browserAsyncHooksStub()],
   vite: {
-    // Build stamp for /version and the footer. Falls back to "unknown" when the
-    // build environment has no git metadata — never invented.
-    define: {
-      __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
-      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-      // Deployment ID from whatever the hosting platform provides at build time.
-      // Checked in priority order; empty when the platform exposes none.
-      __BUILD_DEPLOYMENT_ID__: JSON.stringify(
-        process.env["LOVABLE_DEPLOYMENT_ID"] ||
-          process.env["DEPLOYMENT_ID"] ||
-          process.env["VERCEL_DEPLOYMENT_ID"] ||
-          process.env["CF_PAGES_COMMIT_SHA"] ||
-          process.env["RENDER_GIT_COMMIT"] ||
-          process.env["NETLIFY_DEPLOY_ID"] ||
-          process.env["DEPLOY_ID"] ||
-          "",
-      ),
-    },
     // Root cause of "Failed to fetch dynamically imported module" / "Invalid server
     // function ID" after a restart: Vite discovered these deps late on every cold
     // start, re-optimized and force-reloaded, invalidating chunk hashes that open
@@ -145,7 +88,6 @@ export default defineConfig({
         "react-dom/client",
         "react/jsx-runtime",
         "@tanstack/react-router",
-        "@tanstack/react-query",
         "@tanstack/history",
         "@tanstack/router-core",
         "@tanstack/router-core/isServer",
@@ -176,8 +118,5 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
-    // Split each route into its own chunk so heavy code (charts, HQ dashboards)
-    // loads only when that page is visited, not on the homepage.
-    autoCodeSplitting: true,
   },
 });

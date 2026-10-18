@@ -29,8 +29,7 @@ export const liveLeads = createServerFn({ method: "POST" })
     if (!allowed) {
       const { resolveCaller } = await import("@/lib/access.server");
       const caller = await resolveCaller(token);
-      allowed = caller.scope === "authority" ||
-        (caller.scope !== "none" && caller.approval === "approved" && (caller.profile as { role?: string } | null)?.role === "team_leader");
+      allowed = caller.scope === "authority" || (caller.profile as { role?: string } | null)?.role === "team_leader";
     }
     if (!allowed) throw new Error("এই ড্যাশবোর্ড শুধু HQ, LeadHub ও টিম লিডারদের জন্য");
 

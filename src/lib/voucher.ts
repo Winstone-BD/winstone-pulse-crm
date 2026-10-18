@@ -1,4 +1,4 @@
-import { CRM_PLAN_NAME, moneyLabel } from "@/lib/maintenance-rules";
+import { CRM_PLAN_NAME, usd } from "@/lib/maintenance-rules";
 
 /** A saved payment receipt — created server-side when a payment is verified, reopenable any time. */
 export type Voucher = {
@@ -20,10 +20,9 @@ export function voucherHtml(v: Voucher) {
     ["Plan", CRM_PLAN_NAME],
     ["Billing period", v.period],
     ["Payment reference", v.ref],
-    ...(v.vatCents
-      ? ([["Base", moneyLabel(v.baseCents, v.currency)], ["VAT (15%)", moneyLabel(v.vatCents, v.currency)]] as [string, string][])
-      : []),
-    ["Total paid", moneyLabel(v.totalCents, v.currency)],
+    ["Base", usd(v.baseCents)],
+    ["VAT (15%)", usd(v.vatCents)],
+    ["Total paid", `${usd(v.totalCents)} ${v.currency}`],
     ["Status", "PAID — verified"],
     ["Verified by", v.verifiedBy],
     ["Verified at", `${v.at} (Asia/Dhaka)`],

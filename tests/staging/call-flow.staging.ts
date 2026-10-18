@@ -2,24 +2,33 @@
  * STAGING-ONLY end-to-end test: call initiation -> post-call report.
  *
  * Runs the real server rules against a REAL database, so it must never touch
- * the live CRM. The shared guard (./guard) refuses to start unless the
- * operator opted in and named a confirmed, allow-listed staging target.
+ * the live CRM. It refuses to start unless:
+ *   - STAGING_E2E=1 is set, and
+ *   - SUPABASE_URL is NOT the live project, and
+ *   - STAGING_CONFIRM equals the staging project ref inside SUPABASE_URL.
  *
- * Run (against an isolated staging backend only):
- *   STAGING_E2E=1 SUPABASE_URL=https://<ref>.supabase.co STAGING_CONFIRM=<ref> \
- *   STAGING_APP_URL=https://<staging-app> STAGING_APP_ALLOWLIST=<staging-app-host> \
- *   bunx vitest run --config vitest.staging.config.ts tests/staging/call-flow.staging.ts
+ * Run (against an isolated staging/draft backend only):
+ *   STAGING_E2E=1 STAGING_CONFIRM=<staging-ref> bunx vitest run --config vitest.staging.config.ts
  *
- * It creates clearly-labelled fixtures (a "[STAGING-E2E]" agent + lead).
- * Leads and their history are append-only by design, so fixtures stay in the
- * staging database.
+ * It creates its own clearly-labelled fixtures (a "[STAGING-E2E]" agent + lead).
+ * Leads are never deleted by design, so fixtures stay in the staging database.
  */
 import { randomUUID } from "node:crypto";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { assertStaging } from "./guard";
+const LIVE_REF = "siepfegeubbqwhodyxcg";
+const url = process.env["SUPABASE_URL"] ?? "";
+const confirm = process.env["STAGING_CONFIRM"] ?? "";
 
-assertStaging(); // throws before any import of privileged clients or writes
+export function stagingGuard(): string | null {
+  if (process.env["STAGING_E2E"] !== "1") return "STAGING_E2E=1 not set";
+  if (!url) return "SUPABASE_URL missing";
+  if (url.includes(LIVE_REF)) return "Refusing: SUPABASE_URL points at the LIVE CRM";
+  if (!confirm || !url.includes(confirm)) return "STAGING_CONFIRM must match the staging project ref in SUPABASE_URL";
+  return null;
+}
+const blocked = stagingGuard();
+if (blocked) throw new Error(`[staging-e2e] ${blocked}`);
 
 const tag = `[STAGING-E2E] ${new Date().toISOString()}`;
 let agentId = "";

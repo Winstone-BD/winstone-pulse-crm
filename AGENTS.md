@@ -9,13 +9,14 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Lead assignment only via LeadHub Nexus (server PIN scope); imports land unassigned; claimLead retired — why: one canonical path, no quota bypass.
-- Accountability reviews are server-only; final approval needs HQ PIN, never IT.
+- agent_accountability_reviews is server-only; approval needs HQ PIN, never IT — why: Executive HQ final approval.
 - 9:05 Dhaka briefing ack enforced server-side on every agent mutation (web + Android) — why: UI notices are bypassable.
 - History is append-only: follow_up_events never deleted, contact-close via DB trigger + immutable lead_events — why: UI checks can be bypassed.
 - Staff names cleaned by profiles trigger; legal_name never shown — why: one rule everywhere.
 - Android V2 sends six raw yes/no answers, server scores; nearby-lead GPS never uploaded — why: one scoring rule, no staff tracking.
 - Project = inventory requirement labels; site visits/bookings only from saved report signals — why: no invented facts.
-- Server-module rules, AI evidence and IT provisioning live in src/lib/AGENTS.md — why: server boundaries share one rulebook.
+- Staging E2E (tests/staging) is opt-in and refuses the live project ref — why: preview and live share one DB.
+- Server-module rules (maintenance, Sales Intel, Market News, notes, service bills, telemetry, AI cache, contributions, desk range) live in src/lib/AGENTS.md.
 - Dense CRM data views use compact cards below `md` and full tables at `md+`; lower-frequency wide tables scroll only inside `.table-scroll` — why: phone usability without weakening desktop comparison views.
 - Winstone OS inbound events only via POST /api/public/os/events (HMAC + idempotency in server-only os_event_receipts); mapping never invents entities — why: one verified, replay-safe bridge.
 - Lead neglect: zero-work leads get 2 business-day notices (recall on the 3rd) then recall to the pool via `lead-neglect.server.ts`; recalls are append-only disputes, DB blocks re-assigning to the same agent and call-start refuses them — why: leads must not rot and the rule can't be bypassed from the UI.
@@ -23,15 +24,14 @@
 - Pin @lovable.dev/vite-tanstack-config to 2.25.2 — why: 2.26.0 emits createRequire(import.meta.url) that crashes every page on the live Worker.
 - Bookings start `approval_status='pending'`; only HQ/IT approval (server-checked authority, decision final via trigger) queues the signed OS relay event — why: HQ gatekeeps what reaches Winstone OS.
 - Knowledge Hub (winstonebd.com) data enters the CRM only as public pages (website_pages), verbatim official RSS news (market_news origin='official') and signed `site_visit.requested` events on /api/public/os/events into server-only website_visit_requests; a request becomes a site_visit only when the agent/HQ confirms it — why: no invented facts, one verified bridge.
-- Stale-tab recovery: pre-bundle React/TanStack deps; deploy-recovery coalesces failures, bounds probes, preserves full JS/MJS/TSX module URLs and queries, waits for module availability before reload, and recovers mixed-bundle React null reads — why: restarts must not strand stale tabs.
+- Vite pre-bundles React, react-router and the TanStack router-core/seroval/h3-v2 deps in vite.config optimizeDeps.include — why: late discovery re-optimized on every cold start and broke open tabs (stale chunks / invalid server-fn IDs).
+- Restart recovery: `bun run test:restart` (sandbox-only; --account/--self/--list-accounts); post-publish: `bun run test:smoke` (live, signed out, read-only) — why: blank screens need real restarts/loads, not unit tests.
+- Module recovery lives in src/lib/deploy-recovery.ts (injected by __root): it coalesces concurrent failures, bounds each availability probe with a timeout, and reloads only once the module that failed serves again, not merely the page — why: a restarting server answers its document long before its modules, and reloading into that state stranded a blank tab.
+- Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
+- Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
+- Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
+- Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
+- Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
-- Billing uses PLAN_CODE=crm only; CRM/OS entitlements are independent.
-- IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
-- Architect/Super Admin roles come only from the profiles-insert trigger + server-only privileged_account_allowlist (confirmed email, first user binds); payment approval stays architect identity (Google+PIN) — why: no UI/API grants them.
-- Subdirectories have their own AGENTS.md; read it before changing files there.
-- HQ workload uses canonical handovers, not backlog gaps; IT evidence uses immutable cost events and assignment age — why: unknown usage is not zero.
-- Reviewed files use LeadHub-gated importReviewedPoolLeads → intakeLead, owner null, content-based parsing — why: no invented facts or assignment bypass.
-- Homepage role selection only filters existing entry cards; recommendations use getMyAccount and operational access uses useMaintenance with explicit unavailable states — why: navigation must not grant roles or fabricate health/access.
-- Client IP for limits/logs comes only from cf-connecting-ip via requestSourceKey; 429s use rateLimitedResponse (Retry-After, no internals); no IP allowlists/office binding — why: X-Forwarded-For is spoofable and staff work from any network.
-- Handover due dates come only from pure rules in src/lib/handover-due.ts (no stored due dates); pipeline answers use whitelisted question IDs with server counts, never model-generated numbers — why: one rule, no invented figures.
-- Android call-state timing reconciles through call-timing.ts: device_reported_duration_seconds is an unverified claim for display/export only; duration_seconds keeps the server cap, frozen on terminal retries; late states cannot downgrade completed calls — why: offline chronology must survive without enabling inflated rankings.
+- Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
+- Billing rows (invoices, unlock requests) are keyed by plan_code; this app only touches plan_code='crm' via PLAN_CODE in maintenance.server.ts — why: CRM and OS entitlements are independent.

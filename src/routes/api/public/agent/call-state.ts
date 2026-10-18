@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { reconcileCallTiming, terminalCallStates } from "@/lib/call-timing";
 
 /**
  * Call lifecycle contract for the Android companion.
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
         const at = body.at ?? new Date().toISOString();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+        const { leadHeldByOther, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
 
         const { data: lead } = await supabaseAdmin
           .from("leads")
@@ -59,8 +58,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           .eq("id", body.lead_id)
           .maybeSingle();
         if (!lead) return json({ error: "Unknown lead" }, 404);
-        // Calls sync only onto leads assigned to this agent — unassigned pool leads are LeadHub-only.
-        if (leadNotAssignedTo(lead, caller.profile.id)) {
+        if (leadHeldByOther(lead, caller.profile.id)) {
           return json({ error: LEAD_NOT_YOURS }, 403);
         }
 
@@ -73,42 +71,33 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
               ? "pending"
               : "unknown";
 
-        const { data: existing, error: lookupError } = await supabaseAdmin
-          .from("call_recordings")
-          .select("id, lead_id, call_status, agent_id, created_at, duration_seconds, device_reported_duration_seconds, recording_status, started_at")
-          .eq("external_call_id", body.call_uid)
-          .maybeSingle();
-        if (lookupError) return json({ error: "Call lookup unavailable" }, 503);
-        if (existing && (existing.agent_id !== caller.profile.id || existing.lead_id !== lead.id)) {
-          return json({ error: "This call belongs to another agent or lead" }, 403);
-        }
-        const timing = reconcileCallTiming({ state: body.state, claimedSeconds: body.duration_seconds, existing, nowMs: Date.now() });
-        const durationSeconds = timing.durationSeconds;
-        const effectiveRecordingStatus = existing && terminalCallStates.has(existing.call_status ?? "")
-          ? existing.recording_status : recordingStatus;
-
         const patch = {
-          call_status: timing.state,
+          call_status: body.state,
           agent_phone: body.agent_phone ?? caller.profile.phone ?? null,
-          recording_status: effectiveRecordingStatus,
-          ...(timing.applyEventTime && body.state === "initiated" ? { started_at: at } : {}),
-          ...(timing.applyEventTime && body.state === "answered" ? { answered_at: at } : {}),
-          ...(timing.applyEventTime && terminalCallStates.has(body.state)
+          recording_status: recordingStatus,
+          ...(body.state === "initiated" ? { started_at: at } : {}),
+          ...(body.state === "answered" ? { answered_at: at } : {}),
+          ...(body.state === "completed" || body.state === "failed" || body.state === "no_answer"
             ? { finished_at: at }
             : {}),
-          duration_seconds: durationSeconds,
-          device_reported_duration_seconds: timing.reportedSeconds,
+          ...(body.duration_seconds !== undefined
+            ? { duration_seconds: body.duration_seconds }
+            : {}),
         };
+
+        const { data: existing } = await supabaseAdmin
+          .from("call_recordings")
+          .select("id, call_status, agent_id")
+          .eq("external_call_id", body.call_uid)
+          .maybeSingle();
+        if (existing && existing.agent_id && existing.agent_id !== caller.profile.id) {
+          return json({ error: "This call belongs to another agent" }, 403);
+        }
 
         let recordingId = existing?.id ?? null;
 
         if (existing) {
-          // Compare-and-set: a simultaneous completion must not be overwritten by a late start.
-          let update = supabaseAdmin.from("call_recordings").update(patch).eq("id", existing.id)
-            .eq("duration_seconds", existing.duration_seconds);
-          update = existing.call_status == null ? update.is("call_status", null) : update.eq("call_status", existing.call_status);
-          const saved = await update.select("id").maybeSingle();
-          if (saved.error || !saved.data) return json({ error: "Call changed; retry sync" }, 409);
+          await supabaseAdmin.from("call_recordings").update(patch).eq("id", existing.id);
         } else {
           const { data: inserted, error } = await supabaseAdmin
             .from("call_recordings")
@@ -118,6 +107,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
               device_id: caller.device.id,
               phone_number: lead.phone_number,
               call_direction: "outgoing",
+              duration_seconds: body.duration_seconds ?? 0,
               is_two_sided: false,
               sync_status: "uploaded",
               analysis_status: "pending",
@@ -128,9 +118,15 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
             })
             .select("id")
             .single();
+          // A concurrent duplicate is a replay, not a failure: read it back.
           if (error) {
-            // Retry through the ownership check and reconciliation with the winning row.
-            return json({ error: "Call sync unavailable; retry" }, error.code === "23505" ? 409 : 503);
+            const { data: raced } = await supabaseAdmin
+              .from("call_recordings")
+              .select("id")
+              .eq("external_call_id", body.call_uid)
+              .maybeSingle();
+            if (!raced) return json({ error: error.message }, 500);
+            recordingId = raced.id;
           } else {
             recordingId = inserted?.id ?? null;
           }
@@ -151,7 +147,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           },
         });
 
-        if (body.state === "initiated" && !existing) {
+        if (body.state === "initiated") {
           const { logLeadEvent } = await import("@/lib/lead-events.server");
           await logLeadEvent({
             leadId: lead.id,
@@ -166,7 +162,7 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
         // gets to send its own "open report" request.
         let reportId: string | null = null;
         if (body.state === "completed" || body.state === "no_answer" || body.state === "failed") {
-          if (timing.applyEventTime) await supabaseAdmin.from("leads").update({ last_call_at: at }).eq("id", lead.id);
+          await supabaseAdmin.from("leads").update({ last_call_at: at }).eq("id", lead.id);
           const { openCallReport } = await import("@/lib/call-reports.server");
           const report = await openCallReport({
             leadId: lead.id,
@@ -174,15 +170,10 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
             recordingId,
             deviceId: caller.device.id,
             phoneNumber: lead.phone_number,
-            durationSeconds: durationSeconds ?? 0,
-            deviceReportedDurationSeconds: timing.reportedSeconds,
-            connected: timing.state === "completed",
+            durationSeconds: body.duration_seconds ?? 0,
+            connected: body.state === "completed",
           });
           reportId = report.id;
-          // Only this call's unfinished report; never revise submitted/finalized history.
-          if (recordingId) await supabaseAdmin.from("call_reports")
-            .update({ duration_seconds: durationSeconds, device_reported_duration_seconds: timing.reportedSeconds })
-            .eq("recording_id", recordingId).eq("agent_id", caller.profile.id).in("status", ["pending", "queued"]);
         }
 
         return json({
@@ -190,8 +181,8 @@ export const Route = createFileRoute("/api/public/agent/call-state")({
           call_uid: body.call_uid,
           recording_id: recordingId,
           report_id: reportId,
-          call_status: timing.state,
-          recording_status: effectiveRecordingStatus,
+          call_status: body.state,
+          recording_status: recordingStatus,
         });
       },
     },

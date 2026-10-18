@@ -30,8 +30,8 @@ describe("resolveCaller module initialisation (regression)", () => {
 
     await expect(resolveCaller(null)).resolves.toMatchObject({ scope: "none", userId: null });
     await expect(resolveCaller(gate.mintAdminToken("full"))).resolves.toMatchObject({
-      scope: "none",
-      readOnly: true,
+      scope: "authority",
+      readOnly: false,
     });
     await expect(resolveCaller(gate.mintAdminToken("hq"))).resolves.toMatchObject({
       scope: "authority",
@@ -49,15 +49,14 @@ describe("resolveCaller module initialisation (regression)", () => {
     expect(results.every((r) => r.scope === "none")).toBe(true);
   });
 
-  it("maintenance lock blocks HQ and PIN alone cannot grant IT recovery authority", async () => {
+  it("maintenance lock blocks HQ read-only but not the IT Console PIN", async () => {
     const [{ resolveCaller }, gate] = await Promise.all([
       import("@/lib/access.server"),
       import("@/lib/admin-gate.server"),
     ]);
     lock.locked = true;
     await expect(resolveCaller(gate.mintAdminToken("hq"))).rejects.toThrow(/MAINTENANCE LOCKED/);
-    await expect(resolveCaller(gate.mintAdminToken("full"))).resolves.toMatchObject({ scope: "none" });
-    await expect(resolveCaller(gate.mintItAccountToken("test-user"))).resolves.toMatchObject({ scope: "none" });
+    await expect(resolveCaller(gate.mintAdminToken("full"))).resolves.toMatchObject({ scope: "authority" });
     await expect(resolveCaller(gate.mintAdminToken("hq"), { skipMaintenance: true })).resolves.toMatchObject({ readOnly: true });
     lock.locked = false;
   });

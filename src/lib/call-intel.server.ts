@@ -248,8 +248,6 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     const transcript = stt.transcript;
     await logAiUsage({
       category: "transcription",
-      leadId: recording.lead_id,
-      sourceEventId: `transcription:${recordingId}:${stt.requestId ?? crypto.randomUUID()}`,
       model: stt.model ?? stt.provider,
       actorProfileId: recording.agent_id,
       detail: recordingId,
@@ -257,7 +255,6 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     const analysis = await analyzeTranscript(transcript, recording.duration_seconds);
     await logAiUsage({
       category: "analysis",
-      leadId: recording.lead_id,
       model: "openai/gpt-6-astra",
       actorProfileId: recording.agent_id,
       detail: recordingId,
@@ -392,8 +389,7 @@ export async function ingestRecording(input: {
       call_attempts: lead.call_attempts + 1,
       last_call_at: new Date().toISOString(),
       status: lead.status === "pending" ? "contacted" : lead.status,
-      // is_two_sided is an uploader claim (stored on the recording only); it
-      // never marks the lead verified — verification comes from server-checked paths.
+      is_verified: lead.is_verified || input.isTwoSided,
     })
     .eq("id", input.leadId);
 

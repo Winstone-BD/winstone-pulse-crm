@@ -9,11 +9,11 @@ export function HqHeader() {
           <BarChart3 className="size-6" />
         </span>
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold sm:text-3xl">
-            Executive HQ
+          <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
+            সেলস কমান্ড সেন্টার
           </h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            টিমের কাজ ও অপারেশন দেখুন
+            দেখুন → বুঝুন → ক্লিক করুন → কাজ করুন। সব সংখ্যা আসল রেকর্ড থেকে।
           </p>
         </div>
       </div>

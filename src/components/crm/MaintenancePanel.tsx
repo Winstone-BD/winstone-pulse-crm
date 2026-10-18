@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MaintenanceCountdown, NoticePreview } from "@/components/crm/MaintenanceNotice";
-import { UnlockRequestCard } from "@/components/crm/UnlockRequestCard";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,13 +10,12 @@ import { Label } from "@/components/ui/label";
 import { useAdminToken } from "@/lib/local-session";
 import {
   itMaintenance,
-  nextMaintenanceInvoicePreview,
   requestSystemUnlock,
   setMaintenanceLockAt,
   submitMaintenancePayment,
   withdrawMaintenancePayment,
 } from "@/lib/maintenance.functions";
-import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, billingStatusLine, moneyLabel, paidInvoiceAudit } from "@/lib/maintenance-rules";
+import { MAINTENANCE_FEE_LABEL, UNLOCK_PRESET_HOURS, dhakaTime, usd } from "@/lib/maintenance-rules";
 import { downloadVoucher, printVoucher } from "@/lib/voucher";
 
 function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: React.ReactNode }) {
@@ -97,12 +95,10 @@ export function MaintenancePanel() {
 
       <MaintenanceCountdown />
 
-      <UnlockRequestCard state={state} adminToken={adminToken} />
-
       <dl className="grid gap-2 text-sm sm:grid-cols-3">
         {[
           ["Billing period", state.period],
-          ["Maintenance fee", state.amountLabel],
+          ["Maintenance fee", MAINTENANCE_FEE_LABEL],
           ["Due date", dhakaTime(state.dueDate)],
           ["Lock time", dhakaTime(state.lockAt)],
           ["Verified by", state.paymentVerifiedBy ?? "—"],
@@ -118,13 +114,11 @@ export function MaintenancePanel() {
         ))}
       </dl>
 
-      <NextInvoicePreview />
-
       <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed">
         <p className="mb-1 text-sm font-semibold">কীভাবে কাজ করে (ঢাকা সময়)</p>
         <ol className="list-decimal space-y-0.5 pl-4 text-muted-foreground">
           <li>৯ তারিখ ০০:০০ — সবার স্ক্রিনে পেমেন্ট নোটিশ শুরু।</li>
-          <li>১৪ তারিখ ০০:০০ — Renewal Due ({MAINTENANCE_FEE_LABEL} পরিশোধের দিন)।</li>
+          <li>১২ তারিখ ০০:০০ — Renewal Due ($46.29 USD পরিশোধের দিন)।</li>
           <li>১৪ তারিখ ২৩:৫৯ পর্যন্ত — CRM পুরোপুরি চালু (গ্রেস সময়)।</li>
           <li>১৫ তারিখ ০০:০০ — পেমেন্ট যাচাই না হলে এজেন্ট/HQ লক; IT Console খোলা থাকে।</li>
           <li>পেমেন্ট হলে নিচে আসল ট্রানজ্যাকশন/রসিদ নম্বর লিখে “Submit for verification” চাপুন — মাসটি PENDING হবে।</li>
@@ -199,27 +193,6 @@ export function MaintenancePanel() {
       </div>
 
       <div>
-        <p className="mb-1 text-sm font-semibold">Paid invoice audit</p>
-        <p className="mb-2 text-xs text-muted-foreground">Who marked each invoice paid, when (Asia/Dhaka), and whether the usual Architect approval was skipped. Read-only.</p>
-        <div className="table-scroll rounded border border-border">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/40 text-left"><tr><th className="p-2">Invoice</th><th className="p-2">Marked paid by</th><th className="p-2">When</th><th className="p-2">Approval</th></tr></thead>
-            <tbody>
-              {paidInvoiceAudit(periods, audit).map((r) => (
-                <tr key={r.period} className="border-t border-border">
-                  <td className="p-2 font-semibold">{r.period}</td>
-                  <td className="p-2">{r.markedBy}</td>
-                  <td className="p-2">{r.at ? dhakaTime(r.at) : "—"}</td>
-                  <td className="p-2"><Tone tone={r.approvalSkipped ? "amber" : "green"}>{r.approvalSkipped ? "APPROVAL SKIPPED" : "APPROVED"}</Tone> <span className="text-muted-foreground">{r.how}</span></td>
-                </tr>
-              ))}
-              {paidInvoiceAudit(periods, audit).length === 0 && <tr><td colSpan={4} className="p-2 text-muted-foreground">No paid invoices yet.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div>
         <p className="mb-1 text-sm font-semibold">Subscription payment history</p>
         <p className="mb-2 text-xs text-muted-foreground">Each invoice with its deadline, every payment submission and the verification result. Read-only.</p>
         <div className="space-y-2">
@@ -234,7 +207,7 @@ export function MaintenancePanel() {
               <details key={p.billing_period} className="rounded border border-border bg-card" open={p.billing_period === state.period}>
                 <summary className="flex cursor-pointer flex-wrap items-center gap-2 p-3 text-xs">
                   <span className="font-semibold">Invoice {p.billing_period}</span>
-                  <span>{p.total_cents != null ? moneyLabel(p.total_cents, p.currency) : `$${Number(p.fee_usd).toFixed(2)} USD`}</span>
+                  <span>${Number(p.fee_usd).toFixed(2)} USD incl. VAT</span>
                   <Tone tone={p.payment_status === "verified" ? "green" : p.payment_status === "pending" ? "amber" : "red"}>
                     {p.payment_status === "verified" ? "VERIFIED" : p.payment_status === "pending" ? "VERIFICATION PENDING" : "UNPAID"}
                   </Tone>
@@ -274,7 +247,7 @@ export function MaintenancePanel() {
             <div key={v.no} className="flex flex-wrap items-center gap-2 rounded border border-success/40 bg-success/5 p-3 text-xs">
               <div className="min-w-0">
                 <p className="font-semibold">Receipt {v.no}</p>
-                <p className="text-muted-foreground">{v.period} · {moneyLabel(v.totalCents, v.currency)} paid · ref {v.ref} · {v.at}</p>
+                <p className="text-muted-foreground">{v.period} · {usd(v.totalCents)} {v.currency} paid · ref {v.ref} · {v.at}</p>
               </div>
               <div className="ml-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => downloadVoucher(v)}>Download</Button>
@@ -336,34 +309,4 @@ function filterAudit<T extends AuditRow>(rows: T[], kind: AuditKind, search: str
     if (!q) return true;
     return [act, a.actor, a.actor_role, a.reason ?? "", a.billing_period ?? "", dhakaTime(a.at)].join(" ").toLowerCase().includes(q);
   });
-}
-
-/** Read-only: next not-yet-generated invoice from the canonical rule + configured VAT. Creates nothing, changes nothing. */
-function NextInvoicePreview() {
-  const adminToken = useAdminToken();
-  const q = useQuery({
-    queryKey: ["next-invoice-preview", adminToken],
-    queryFn: () => nextMaintenanceInvoicePreview({ data: { adminToken } }),
-    enabled: Boolean(adminToken),
-  });
-  if (q.isLoading) return <p className="text-xs text-muted-foreground">Loading next invoice preview…</p>;
-  if (q.error || !q.data) return <p className="text-xs text-destructive">Next invoice preview unavailable.</p>;
-  const { preview: p, status } = q.data;
-  const row = (k: string, v: string) => (<div className="flex justify-between gap-3"><dt className="text-muted-foreground">{k}</dt><dd className="font-medium tabular-nums">{v}</dd></div>);
-  return (
-    <section aria-label="Next invoice preview" className="rounded-lg border border-dashed border-border p-3 text-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preview only · not an issued invoice</p>
-      <p className="mt-1 text-xs"><span className="text-muted-foreground">Current status: </span><span className="font-semibold">{billingStatusLine(status)}</span></p>
-      <p className="mt-2 font-semibold">Next invoice · {p.period}</p>
-      <dl className="mt-1 space-y-0.5 text-xs">
-        {row("Subtotal", p.subtotalLabel)}
-        {row("VAT rate", p.vatRateLabel)}
-        {row("VAT amount", p.vatLabel ?? "—")}
-        {row("Total", p.totalLabel ?? "— (VAT rate not configured)")}
-        {row("Due (Asia/Dhaka)", dhakaTime(p.dueAt))}
-        {row("Lock (Asia/Dhaka)", dhakaTime(p.lockAt))}
-      </dl>
-      {p.vatRateBps != null && <p className="mt-1 text-[11px] text-muted-foreground">VAT = {p.subtotalLabel} × {p.vatRateLabel} = {p.vatLabel}</p>}
-    </section>
-  );
 }

@@ -1,6 +1,5 @@
 import { HubSyncStatusPanel } from "@/components/crm/HubAlerts";
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
-import { OperationalEvidencePanel } from "@/components/crm/OperationalEvidencePanel";
 import { PAGE_SECTIONS, sectionSearch, useSection } from "@/lib/page-sections";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, Database, KeyRound, Lock, Radio, Receipt } from "lucide-react";
@@ -15,18 +14,11 @@ import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReview
 import { DocSummaryPanel } from "@/components/crm/DocSummaryPanel";
 import { DriveBackupPanel } from "@/components/crm/DriveBackupPanel";
 import { ExtraLeadPanel } from "@/components/crm/ExtraLeadPanel";
-import { BulkExtraLeadPanel } from "@/components/crm/BulkExtraLeadPanel";
-import { BulkExtraHistoryPanel } from "@/components/crm/BulkExtraHistoryPanel";
-import { DailyNewLeadCheckPanel } from "@/components/crm/DailyNewLeadCheckPanel";
 import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { TeamSupportInbox } from "@/components/crm/TeamSupportInbox";
 import { MaintenancePanel } from "@/components/crm/MaintenancePanel";
 import { OsSyncPanel } from "@/components/crm/OsSyncPanel";
-import {
-  LoginFailuresPanel,
-  MonthlySummaryPanel,
-  ProjectPhotoExposurePanel,
-} from "@/components/crm/SecurityMonitorPanel";
+import { LoginFailuresPanel, MonthlySummaryPanel } from "@/components/crm/SecurityMonitorPanel";
 import { YearArchivePanel } from "@/components/crm/YearArchivePanel";
 import { ReportSheetPanel } from "@/components/crm/ReportSheetPanel";
 import { SheetSyncHealthPanel } from "@/components/crm/SheetSyncHealthPanel";
@@ -40,7 +32,6 @@ import { RoleGate } from "@/components/crm/RoleGate";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
-import { PipelinePanel } from "@/components/crm/PipelinePanel";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { SystemCustomizer } from "@/components/crm/SystemCustomizer";
 import { SystemNoticeBar } from "@/components/crm/SystemNoticeBar";
@@ -53,40 +44,6 @@ import { RecordingPipelinePanel } from "@/components/crm/RecordingPipelinePanel"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildBillingSummary, DEFAULT_RATE_PER_MINUTE, useSnapshot } from "@/lib/crm-data";
-
-import {
-  BillingApprovalsHub,
-  BillingReminder,
-  useBillingApprovals,
-} from "@/components/crm/BillingApprovalsHub";
-import { pendingCount } from "@/lib/billing-advisor";
-
-/** Persistent, always-visible entry with the real pending count from the server. */
-function ApprovalsShortcut({ active, onOpen }: { active: boolean; onOpen: () => void }) {
-  const q = useBillingApprovals();
-  const n = q.data ? pendingCount(q.data) : 0;
-  if (active) return null;
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="card-elevated flex w-full items-center justify-between gap-3 p-3 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <span className="flex items-center gap-2 font-semibold">
-        <Lock className="size-4 text-primary" /> Billing &amp; Approvals
-      </span>
-      <span className="text-xs text-muted-foreground">
-        {n > 0 ? (
-          <span className="rounded-full bg-primary px-2 py-0.5 font-bold text-primary-foreground">
-            {n} pending
-          </span>
-        ) : (
-          "Open"
-        )}
-      </span>
-    </button>
-  );
-}
 
 export const Route = createFileRoute("/system")({
   validateSearch: sectionSearch,
@@ -122,14 +79,10 @@ function SystemPage() {
         allow={["authority"]}
         icon={<Database className="size-7" />}
         title="আইটি কনসোল"
-        description="সিস্টেম সেটিং, অ্যাকাউন্ট অনুমোদন, ডেটার অবস্থা আর বিল। প্রথমে IT PIN, তারপর নিজের অনুমোদিত ইমেইল ও পাসওয়ার্ড।"
+        description="সিস্টেম সেটিং, অ্যাকাউন্ট অনুমোদন, ডেটার অবস্থা আর বিল। মাস্টার পিন লাগবে।"
       >
-        <div className="mb-4">
-          <HubSyncStatusPanel />
-        </div>
-        <div className="hq-luxe">
-          <SystemBoard />
-        </div>
+        <div className="mb-4"><HubSyncStatusPanel /></div>
+        <div className="hq-luxe rounded-3xl p-3 sm:p-5"><SystemBoard /></div>
       </RoleGate>
     </AppShell>
   );
@@ -173,93 +126,43 @@ function SystemBoard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-            {t({ bn: "আইটি কনসোল", en: "System & Billing" })}
-          </h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{t({ bn: "সিস্টেম ও বিল", en: "System & Billing" })}</h1>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {t({
-              bn: "সিস্টেম ও ইন্টিগ্রেশন দেখুন",
-              en: "System health, staff access and integrations.",
-            })}
+            {t({ bn: "মূল ইঞ্জিনের অবস্থা, ডেটা আসার ঠিকানা আর মাসিক টেলিফোন খরচ।", en: "Core engine health, data intake endpoints and monthly phone cost." })}
           </p>
         </div>
         <CopilotDrawer />
       </div>
 
       <SystemNoticeBar surface="it" />
-      <BillingReminder onReview={() => setSec("approvals")} />
-      <ApprovalsShortcut active={sec === "approvals"} onOpen={() => setSec("approvals")} />
 
-      <nav aria-label="IT Console sections" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {(
-          [
-            { key: "health", bn: "সিস্টেম হেলথ", en: "System Health" },
-            { key: "access", bn: "স্টাফ ও প্রবেশ", en: "Staff & Access" },
-            { key: "knowledge", bn: "ইন্টিগ্রেশন", en: "Integrations" },
-            { key: "calls", bn: "কল রেকর্ডিং", en: "Call Recordings" },
-            { key: "billing", bn: "খরচ ও বিল", en: "Usage & Billing" },
-          ] as const
-        ).map((x) => (
-          <Button
+      <nav aria-label="IT Console sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
+        {PAGE_SECTIONS["/system"].map((x) => (
+          <button
             key={x.key}
-            variant={sec === x.key ? "default" : "outline"}
-            className="min-h-12 h-auto whitespace-normal"
+            type="button"
             onClick={() => setSec(x.key)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${sec === x.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}
           >
-            {t({ bn: x.bn, en: x.en })}
-          </Button>
+            {t({ bn: x.label, en: x.en })}
+          </button>
         ))}
       </nav>
-      <details className="border-b border-border pb-3">
-        <summary className="min-h-11 cursor-pointer text-sm font-medium">
-          {t({ bn: "আরও / বিস্তারিত", en: "More / Advanced" })}
-        </summary>
-        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {PAGE_SECTIONS["/system"].map((x) => (
-            <Button
-              key={x.key}
-              variant="ghost"
-              className="min-h-11 h-auto whitespace-normal"
-              onClick={() => setSec(x.key)}
-            >
-              {t({ bn: x.label, en: x.en })}
-            </Button>
-          ))}
-        </nav>
-      </details>
-
-      {sec === "approvals" && (
-        <div className="space-y-6">
-          <BillingApprovalsHub />
-          <MaintenancePanel />
-        </div>
-      )}
 
       {sec === "health" && (
         <div className="space-y-6">
+          <SystemManualCard />
+          <SystemUpdateReport />
           <BackendHealthPanel />
-          <details className="border-t border-border pt-4">
-            <summary className="min-h-12 cursor-pointer font-semibold">
-              {t({ bn: "বিস্তারিত পরীক্ষা ও টুলস", en: "Diagnostics & tools" })}
-            </summary>
-            <div className="space-y-5 pt-4">
-              <SheetSyncHealthPanel />
-              <VersionDataPanel />
-              <SystemManualCard />
-              <SystemUpdateReport />
-              <CommandAgentPanel surface="system" />
-              <PipelinePanel />
-            </div>
-          </details>
+          <SheetSyncHealthPanel />
+          <VersionDataPanel />
+          <CommandAgentPanel surface="system" />
         </div>
       )}
 
       {sec === "leads" && (
         <div className="space-y-6">
           <LeadDatabasePanel />
-          <DailyNewLeadCheckPanel />
-          <BulkExtraLeadPanel />
-          <BulkExtraHistoryPanel />
           <ExtraLeadPanel />
           <YearArchivePanel />
         </div>
@@ -280,15 +183,6 @@ function SystemBoard() {
 
       {sec === "knowledge" && (
         <div className="space-y-6">
-          <Button asChild variant="outline" className="min-h-12">
-            <Link to="/integrations">
-              {t({ bn: "সংযোগের অবস্থা দেখুন", en: "View integration status" })}
-            </Link>
-          </Button>
-          <SheetSyncHealthPanel />
-          <ReportSheetPanel />
-          <DriveBackupPanel />
-          <OsSyncPanel />
           <WebsiteKnowledgePanel />
           <DriveKnowledgePanel />
         </div>
@@ -319,124 +213,122 @@ function SystemBoard() {
 
       {sec === "billing" && (
         <div className="space-y-6">
-          <OperationalEvidencePanel />
-          <MaintenancePanel />
-          <OsSyncPanel />
-          <ProjectPhotoExposurePanel />
-          <LoginFailuresPanel />
-          <MonthlySummaryPanel />
+      <MaintenancePanel />
+      <OsSyncPanel />
+      <LoginFailuresPanel />
+      <MonthlySummaryPanel />
 
-          <AuditTrail />
+      <AuditTrail />
 
-          <section className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-lg font-semibold">
-                <Receipt className="size-4 text-primary" /> {billing.monthLabel} মাসের বিল
-              </h2>
-              <div className="flex items-center gap-2">
-                <Link to="/credits">
-                  <Button variant="outline" size="sm">
-                    <Coins className="size-4" /> ক্রেডিট বিল রিপোর্ট
-                  </Button>
-                </Link>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  রেট ৳/মিনিট
-                  <Input
-                    value={rate}
-                    onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
-                    className="w-20"
-                    inputMode="decimal"
-                  />
-                </label>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <Tile
-                label="করা কল"
-                value={String(billing.dials)}
-                hint={`${billing.newLeads}টি নতুন লিড`}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Receipt className="size-4 text-primary" /> {billing.monthLabel} মাসের বিল
+          </h2>
+          <div className="flex items-center gap-2">
+            <Link to="/credits">
+              <Button variant="outline" size="sm">
+                <Coins className="size-4" /> ক্রেডিট বিল রিপোর্ট
+              </Button>
+            </Link>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              রেট ৳/মিনিট
+              <Input
+                value={rate}
+                onChange={(e) => setRate(e.target.value.replace(/[^\d.]/g, ""))}
+                className="w-20"
+                inputMode="decimal"
               />
-              <Tile
-                label="কথা হয়েছে"
-                value={`${billing.connectedPct.toFixed(0)}%`}
-                hint={`${billing.dials}টির মধ্যে ${billing.connected}টি কলে`}
-              />
-              <Tile
-                label="বিলযোগ্য মিনিট"
-                value={String(billing.billableMinutes)}
-                hint="প্রতি কলে উপরের দিকে গোনা"
-              />
-              <Tile
-                label="আনুমানিক অপারেটর খরচ"
-                value={`৳${billing.carrierCost.toFixed(2)}`}
-                hint={`${billing.aiAnalysed}টি কল এআই দেখেছে`}
-              />
-            </div>
-          </section>
+            </label>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Tile
+            label="করা কল"
+            value={String(billing.dials)}
+            hint={`${billing.newLeads}টি নতুন লিড`}
+          />
+          <Tile
+            label="কথা হয়েছে"
+            value={`${billing.connectedPct.toFixed(0)}%`}
+            hint={`${billing.dials}টির মধ্যে ${billing.connected}টি কলে`}
+          />
+          <Tile
+            label="বিলযোগ্য মিনিট"
+            value={String(billing.billableMinutes)}
+            hint="প্রতি কলে উপরের দিকে গোনা"
+          />
+          <Tile
+            label="আনুমানিক অপারেটর খরচ"
+            value={`৳${billing.carrierCost.toFixed(2)}`}
+            hint={`${billing.aiAnalysed}টি কল এআই দেখেছে`}
+          />
+        </div>
+      </section>
 
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="card-elevated p-4">
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
-                <Database className="size-4 text-primary" /> ডেটার অবস্থা
-              </h2>
-              <dl className="mt-3 space-y-1.5 text-sm">
-                <Row
-                  label="এজেন্ট প্রোফাইল"
-                  value={`${profiles.filter((p) => p.is_active).length} জন চালু / ${profiles.length}`}
-                />
-                <Row label="লিড" value={String(leads.length)} />
-                <Row label="কল রেকর্ডিং" value={String(calls.length)} />
-                <Row
-                  label="যাচাই হওয়া অডিও"
-                  value={String(calls.filter((c) => c.sync_status === "verified").length)}
-                />
-                <Row label="হোয়াটসঅ্যাপ মেসেজ" value={String(messages.length)} />
-                <Row
-                  label="ডিল জেতা (সব সময়ের)"
-                  value={String(leads.filter((l) => l.outcome_category === "deal_won").length)}
-                />
-              </dl>
-              <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                লিড কোথা থেকে এসেছে
-              </h3>
-              <dl className="mt-2 space-y-1.5 text-sm">
-                {sources.length === 0 && (
-                  <p className="text-sm text-muted-foreground">এখনো কোনো লিড নেই।</p>
-                )}
-                {sources.map(([source, total]) => (
-                  <Row key={source} label={SOURCE_LABELS[source] ?? source} value={String(total)} />
-                ))}
-              </dl>
-            </div>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="card-elevated p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <Database className="size-4 text-primary" /> ডেটার অবস্থা
+          </h2>
+          <dl className="mt-3 space-y-1.5 text-sm">
+            <Row
+              label="এজেন্ট প্রোফাইল"
+              value={`${profiles.filter((p) => p.is_active).length} জন চালু / ${profiles.length}`}
+            />
+            <Row label="লিড" value={String(leads.length)} />
+            <Row label="কল রেকর্ডিং" value={String(calls.length)} />
+            <Row
+              label="যাচাই হওয়া অডিও"
+              value={String(calls.filter((c) => c.sync_status === "verified").length)}
+            />
+            <Row label="হোয়াটসঅ্যাপ মেসেজ" value={String(messages.length)} />
+            <Row
+              label="ডিল জেতা (সব সময়ের)"
+              value={String(leads.filter((l) => l.outcome_category === "deal_won").length)}
+            />
+          </dl>
+          <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            লিড কোথা থেকে এসেছে
+          </h3>
+          <dl className="mt-2 space-y-1.5 text-sm">
+            {sources.length === 0 && (
+              <p className="text-sm text-muted-foreground">এখনো কোনো লিড নেই।</p>
+            )}
+            {sources.map(([source, total]) => (
+              <Row key={source} label={SOURCE_LABELS[source] ?? source} value={String(total)} />
+            ))}
+          </dl>
+        </div>
 
-            <div className="card-elevated p-4">
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
-                <Radio className="size-4 text-primary" /> ডেটা আসার ঠিকানা
-              </h2>
-              <p className="mt-2 text-xs text-muted-foreground">
-                অ্যান্ড্রয়েড অ্যাপ <code>x-ingest-secret</code> হেডার দিয়ে তথ্য পাঠায়।
-              </p>
-              <ul className="mt-3 space-y-2 text-sm">
-                {ENDPOINTS.map((e) => (
-                  <li key={e.path} className="rounded-lg bg-surface-2 px-3 py-2">
-                    <p className="font-mono text-xs break-all">
-                      POST {origin}
-                      {e.path}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{e.what}</p>
-                  </li>
-                ))}
-              </ul>
-              <h3 className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <KeyRound className="size-3.5" /> যেসব চাবি ব্যবহার হচ্ছে
-              </h3>
-              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <li>ইনজেস্ট সিক্রেট — সার্ভারে রাখা, কখনো দেখানো হয় না</li>
-                <li>মাস্টার পিন — সার্ভারে রাখা, প্রতিবার খোলার সময় মিলিয়ে দেখা হয়</li>
-                <li>এআই ট্রান্সক্রিপ্ট ও সারসংক্ষেপের চাবি — প্ল্যাটফর্ম নিজেই দেখে</li>
-              </ul>
-            </div>
-          </section>
+        <div className="card-elevated p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <Radio className="size-4 text-primary" /> ডেটা আসার ঠিকানা
+          </h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            অ্যান্ড্রয়েড অ্যাপ <code>x-ingest-secret</code> হেডার দিয়ে তথ্য পাঠায়।
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {ENDPOINTS.map((e) => (
+              <li key={e.path} className="rounded-lg bg-surface-2 px-3 py-2">
+                <p className="font-mono text-xs break-all">
+                  POST {origin}
+                  {e.path}
+                </p>
+                <p className="text-xs text-muted-foreground">{e.what}</p>
+              </li>
+            ))}
+          </ul>
+          <h3 className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <KeyRound className="size-3.5" /> যেসব চাবি ব্যবহার হচ্ছে
+          </h3>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <li>ইনজেস্ট সিক্রেট — সার্ভারে রাখা, কখনো দেখানো হয় না</li>
+            <li>মাস্টার পিন — সার্ভারে রাখা, প্রতিবার খোলার সময় মিলিয়ে দেখা হয়</li>
+            <li>এআই ট্রান্সক্রিপ্ট ও সারসংক্ষেপের চাবি — প্ল্যাটফর্ম নিজেই দেখে</li>
+          </ul>
+        </div>
+      </section>
         </div>
       )}
     </div>

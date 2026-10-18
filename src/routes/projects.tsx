@@ -39,8 +39,6 @@ function ProjectsPage() {
   const [month, setMonth] = useState(dhakaMonth);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("active");
-  const [area, setArea] = useState("");
-  const [availableOnly, setAvailableOnly] = useState(false);
 
   const report = useQuery({
     queryKey: ["projects-directory", month, adminToken ? "pin" : "session"],
@@ -58,17 +56,12 @@ function ProjectsPage() {
 
   const rows = useMemo(() => {
     const all = report.data?.rows ?? [];
-    const needle = q.trim().toLowerCase();
-    return all.filter((r) => {
-      const d = details.get(r.projectId);
-      const loc = (d?.location ?? "").toLowerCase();
-      return (status === "all" || (status === "active" ? r.active : !r.active)) &&
-        (!needle || r.project.toLowerCase().includes(needle) || loc.includes(needle)) &&
-        (!area || loc === area.toLowerCase()) &&
-        (!availableOnly || (d?.available_units ?? 0) > 0);
-    });
-  }, [report.data, q, status, area, availableOnly, details]);
-  const areas = useMemo(() => [...new Set((inventory.data?.items ?? []).map((i) => (i.location ?? "").trim()).filter(Boolean))].sort(), [inventory.data]);
+    return all.filter(
+      (r) =>
+        (status === "all" || (status === "active" ? r.active : !r.active)) &&
+        r.project.toLowerCase().includes(q.trim().toLowerCase()),
+    );
+  }, [report.data, q, status]);
 
   const totals = rows.reduce(
     (t, r) => ({ leads: t.leads + r.leads, calls: t.calls + r.calls, visits: t.visits + r.siteVisits, bookings: t.bookings + r.bookings }),
@@ -112,11 +105,10 @@ function ProjectsPage() {
           ))}
         </div>
 
-        <div className="sticky top-0 z-10 space-y-2 rounded-xl border border-border bg-card/95 p-3 backdrop-blur">
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="প্রজেক্ট বা এলাকা খুঁজুন…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder="প্রজেক্ট খুঁজুন…" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} aria-label="স্ট্যাটাস">
             <option value="active">চালু প্রজেক্ট</option>
@@ -124,15 +116,6 @@ function ProjectsPage() {
             <option value="all">সব</option>
           </select>
           <Input type="month" className="sm:w-44" value={month} onChange={(e) => setMonth(e.target.value)} aria-label="মাস" />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 text-xs">
-          <button type="button" onClick={() => setArea("")} className={`shrink-0 rounded-full border px-3 py-1.5 ${!area ? "border-primary bg-primary/15 text-primary" : "border-border"}`}>সব এলাকা</button>
-          {areas.map((a) => (
-            <button key={a} type="button" onClick={() => setArea(a === area ? "" : a)} className={`shrink-0 rounded-full border px-3 py-1.5 ${a === area ? "border-primary bg-primary/15 text-primary" : "border-border"}`}>{a}</button>
-          ))}
-          <button type="button" onClick={() => setAvailableOnly((v) => !v)} className={`shrink-0 rounded-full border px-3 py-1.5 ${availableOnly ? "border-primary bg-primary/15 text-primary" : "border-border"}`}>শুধু খালি ইউনিট</button>
-          <span className="ml-auto shrink-0 self-center text-muted-foreground">{rows.length}টি ফলাফল</span>
-        </div>
         </div>
 
         {report.isPending ? (

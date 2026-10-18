@@ -1,4 +1,3 @@
-import { integrationFailure } from "./integration-status";
 /**
  * Shift summaries → Google Sheets. Every generated shift summary is written to
  * a dedicated tab in the workspace spreadsheet, so HQ can read the summary
@@ -80,7 +79,7 @@ async function gatewayFetch(path: string, init?: RequestInit, attempt = 0): Prom
       durationMs,
       errorText: body,
     });
-    throw new Error(`Google Sheets [${response.status}]: ${integrationFailure(response.status,body).message}`);
+    throw new Error(`Google Sheets ত্রুটি [${response.status}]: ${body.slice(0, 300)}`);
   }
   await recordSheetSyncEvent({
     surface: "shift_summary",
@@ -204,7 +203,7 @@ export async function appendShiftSummaryToSheetQuietly(
     });
     await gatewayFetch(
       `/spreadsheets/${SHEET_ID}/values/${TAB}!A2:K${1 + block.length}?valueInputOption=USER_ENTERED`,
-      { method: "PUT", body: JSON.stringify({ values: block.map((r) => r.map(neutraliseFormula)) }) },
+      { method: "PUT", body: JSON.stringify({ values: block }) },
     );
 
     await logShiftSheetSync(shiftKey, block.length);
@@ -243,9 +242,4 @@ async function logShiftSheetSync(shiftKey: string, rowsWritten: number) {
 
 export function shiftSheetUrl() {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0`;
-}
-
-/** USER_ENTERED evaluates formulas, so text cells starting with = + - @ are prefixed with '. */
-function neutraliseFormula(v: string): string {
-  return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
 }

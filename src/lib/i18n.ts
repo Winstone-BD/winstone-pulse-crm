@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from "react";
 
-/** UI language. Bengali is the default; English stays available. A saved choice always wins. */
+/** UI language. English is the default; Bengali is a full alternative. A saved choice always wins. */
 export type Lang = "bn" | "en";
 const KEY = "winstone.lang";
 const listeners = new Set<() => void>();
 
 function read(): Lang {
-  if (typeof window === "undefined") return "bn";
-  return window.localStorage.getItem(KEY) === "en" ? "en" : "bn";
+  if (typeof window === "undefined") return "en";
+  return window.localStorage.getItem(KEY) === "bn" ? "bn" : "en";
 }
 
 export function setLang(lang: Lang) {
@@ -24,7 +24,7 @@ export function useLang(): Lang {
       return () => listeners.delete(cb);
     },
     read,
-    () => "bn",
+    () => "en",
   );
 }
 
@@ -43,7 +43,6 @@ export const NAV_LABELS: Record<string, { bn: string; en: string }> = {
   "/sales-intel": { bn: "সেলস ইন্টেলিজেন্স", en: "Sales Intelligence" },
   "/news": { bn: "মার্কেট নিউজ", en: "Market News" },
   "/site-visits": { bn: "সাইট ভিজিট", en: "Site Visits" },
-  "/marketing": { bn: "মার্কেটিং", en: "Marketing" },
   "/inventory": { bn: "ইনভেন্টরি", en: "Inventory" },
   "/reports": { bn: "রিপোর্ট", en: "Reports" },
   "/system": { bn: "আইটি কনসোল", en: "IT Console" },

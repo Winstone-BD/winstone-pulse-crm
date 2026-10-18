@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
 
 /** 120 requests per minute per source address. */
 const osLimiter = createRateLimiter(120, 60_000);
@@ -32,7 +32,6 @@ export const Route = createFileRoute("/api/public/os/events")({
             "payment.updated",
             "lead_ingested",
             "site_visit.requested",
-            "enquiry.submitted",
           ],
         }),
       POST: async ({ request }) => {
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/api/public/os/events")({
           return json(503, { ok: false, error: "receiver_not_configured", retryable: true });
 
         if (!osLimiter(requestSourceKey(request)))
-          return rateLimitedResponse(osLimiter.retryAfter(requestSourceKey(request)), { error: "rate_limited" });
+          return json(429, { ok: false, error: "rate_limited", retryable: true });
 
         const rawBody = await request.text();
         if (rawBody.length > 64_000) return json(413, { ok: false, error: "payload_too_large" });
@@ -112,11 +111,6 @@ export const Route = createFileRoute("/api/public/os/events")({
               if (claim.status !== "failed" || !(await bridge.releaseFailedClaim(key))) {
                 return json(409, { ok: true, status: "duplicate_ignored", outcome: claim.outcome });
               }
-            }
-            if (v2.kind === "enquiry.submitted") {
-              const { applyEnquirySubmitted } = await import("@/lib/knowledge-hub.server");
-              const er = await applyEnquirySubmitted(key, v2.enquiry, v2.phone);
-              return json(201, { ok: true, status: er.outcome, lead_id: er.leadId });
             }
             if (v2.kind === "site_visit.requested") {
               const { applyVisitRequested, notifyVisitRequestAgent } = await import("@/lib/knowledge-hub.server");

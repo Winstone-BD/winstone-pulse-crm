@@ -1,7 +1,4 @@
-import { DailyWorkPanel } from "@/components/crm/DailyWorkPanel";
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
-import { AgentWorkloadPanel } from "@/components/crm/hq/AgentWorkloadPanel";
-import { AgentLeadProgress } from "@/components/crm/hq/AgentLeadProgress";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -13,7 +10,6 @@ import { AgentDossier } from "@/components/crm/AgentDossier";
 import { HqDrillSheet, type DrillSpec } from "@/components/crm/HqDrillSheet";
 import { AgentRadar } from "@/components/crm/AgentRadar";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
-import { PipelinePanel } from "@/components/crm/PipelinePanel";
 import { AskHqPanel } from "@/components/crm/AskHqPanel";
 import { ExecutiveBrief } from "@/components/crm/ExecutiveBrief";
 import { ShiftSummaryPanel } from "@/components/crm/ShiftSummaryPanel";
@@ -65,8 +61,6 @@ export const Route = createFileRoute("/hq")({
         content:
           "Track live calls, talk time, verified recordings and AI call summaries in one command center.",
       },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   pendingComponent: () => (
@@ -178,20 +172,17 @@ function ControlBoard() {
 
   return (
     <>
-      <div className="hq-luxe space-y-6">
+      <div className="hq-luxe space-y-6 rounded-3xl p-3 sm:p-5">
         <HqHeader />
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* Mobile: collapsible tab menu */}
-          <details className="group rounded-lg border border-border bg-card lg:w-48 lg:shrink-0">
+          <details className="group rounded-xl border border-border bg-card lg:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
               <span>{activeLabel}</span>
               <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
-            <nav
-              aria-label="HQ sections"
-              className="flex flex-col gap-1 border-t border-border p-2"
-            >
+            <nav aria-label="HQ sections" className="flex flex-col gap-1 border-t border-border p-2">
               {HQ_TABS.map((t) => (
                 <button
                   key={t.key}
@@ -214,72 +205,50 @@ function ControlBoard() {
           </details>
 
           {/* White content surface */}
-          <div className="min-w-0 flex-1 space-y-4">
+          <div className="min-w-0 flex-1 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:p-6">
             <MaintenanceProfileNotice />
             {tab === "overview" && (
               <div className="space-y-8">
-                <DailyWorkPanel hq onFollowUps={() => setTab("followups")} />
-                <Lead360Workspace />
-                <details className="border-t border-border pt-4">
-                  <summary className="min-h-12 cursor-pointer font-semibold">
-                    আরও / বিস্তারিত পর্যবেক্ষণ
-                  </summary>
-                  <div className="space-y-6 pt-4">
-                    <AgentWorkloadPanel />
-                    <HqSmartSummary
-                      profiles={profiles}
-                      leads={leads}
-                      calls={calls}
-                      messages={messages}
-                      onSelectAgent={setOpenAgentId}
-                    />
-                    <SalesChartsDashboard scope="hq" />
-                    <SalesCommandCenter
-                      profiles={profiles}
-                      leads={leads}
-                      calls={calls}
-                      loading={isPending}
-                      onDrill={setDrill}
-                      onSelectAgent={setOpenAgentId}
-                    />
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <section className="rounded-2xl border border-border bg-background p-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <h2 className="font-semibold">আজকের মার্কেট ব্রিফ</h2>
-                          <Link
-                            to="/news"
-                            className="text-xs font-medium text-primary hover:underline"
-                          >
-                            সব খবর →
-                          </Link>
-                        </div>
-                        <MarketNewsFeed compact />
-                      </section>
-                      <section className="rounded-2xl border border-border bg-background p-4">
-                        <h2 className="font-semibold">প্রপার্টি ও প্রজেক্ট আপডেট</h2>
-                        <p className="mb-2 text-xs text-muted-foreground">
-                          শুধু যাচাই-কৃত ও প্রকাশিত তথ্য — না থাকলে খালি।
-                        </p>
-                        <FactsBoard category="project_property" admin={false} />
-                      </section>
+                <HqSmartSummary
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  messages={messages}
+                  onSelectAgent={setOpenAgentId}
+                />
+                <SalesChartsDashboard scope="hq" />
+                <SalesCommandCenter
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  loading={isPending}
+                  onDrill={setDrill}
+                  onSelectAgent={setOpenAgentId}
+                />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <section className="rounded-2xl border border-border bg-background p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="font-semibold">আজকের মার্কেট ব্রিফ</h2>
+                      <Link to="/news" className="text-xs font-medium text-primary hover:underline">সব খবর →</Link>
                     </div>
-                    <SystemManualCard />
-                    <ExecutiveKpiBoard
-                      profiles={profiles}
-                      leads={leads}
-                      calls={calls}
-                      messages={messages}
-                    />
-                    <SmartInsightStrip scope="floor" />
-                    <ExecutiveBrief />
-                    <HqStatTiles
-                      calls={calls}
-                      leads={leads}
-                      messages={messages}
-                      onDrill={setDrill}
-                    />
-                  </div>
-                </details>
+                    <MarketNewsFeed compact />
+                  </section>
+                  <section className="rounded-2xl border border-border bg-background p-4">
+                    <h2 className="font-semibold">প্রপার্টি ও প্রজেক্ট আপডেট</h2>
+                    <p className="mb-2 text-xs text-muted-foreground">শুধু যাচাই-কৃত ও প্রকাশিত তথ্য — না থাকলে খালি।</p>
+                    <FactsBoard category="project_property" admin={false} />
+                  </section>
+                </div>
+                <SystemManualCard />
+                <ExecutiveKpiBoard
+                  profiles={profiles}
+                  leads={leads}
+                  calls={calls}
+                  messages={messages}
+                />
+                <SmartInsightStrip scope="floor" />
+                <ExecutiveBrief />
+                <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />
               </div>
             )}
 
@@ -302,13 +271,6 @@ function ControlBoard() {
 
             {tab === "leads" && (
               <div className="space-y-8">
-                <AgentLeadProgress
-                  agents={agents}
-                  leads={leads}
-                  calls={calls}
-                  loading={isPending}
-                  onOpen={setOpenLeadId}
-                />
                 <HqClassificationTiles leads={leads} onDrill={setDrill} />
                 <HqMixCards
                   funnelRows={funnelRows}
@@ -339,7 +301,6 @@ function ControlBoard() {
                 <FloorLockAdminPanel />
                 <ShiftSummaryPanel scope="hq" />
                 <CommandAgentPanel surface="hq" />
-                <PipelinePanel />
                 <AskHqPanel />
               </div>
             )}

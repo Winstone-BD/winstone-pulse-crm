@@ -210,7 +210,7 @@ export function ServiceBillPanel({ mode = "hq" }: { mode?: "hq" | "it" }) {
         </div>
       ) : null}
 
-      {mode === "it" && query.data?.canApproveBilling && current ? (
+      {mode === "it" && current ? (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-2 rounded-lg border border-border/60 p-3">
             <p className="text-sm font-semibold">পেমেন্ট যাচাই</p>

@@ -1,5 +1,4 @@
 import { MessageCircle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ export function WhatsAppAction({
   className,
   ariaLabel,
 }: Props) {
-  const queryClient = useQueryClient();
   const handleClick = () => {
     const result = openWhatsApp(phone, text);
     if (!result.ok) {
@@ -48,16 +46,9 @@ export function WhatsAppAction({
     if (!leadId) return;
     void logWhatsappHandoff({
       data: { adminToken: getAdminToken(), leadId, phone: result.msisdn },
-    })
-      .then((res) => {
-        if (res && "reportOpened" in res && res.reportOpened) {
-          toast.info("হোয়াটসঅ্যাপ যোগাযোগের রিপোর্ট জমা দেওয়া বাধ্যতামূলক / WhatsApp report is required");
-          void queryClient.invalidateQueries({ queryKey: ["pending-call-report"] });
-        }
-      })
-      .catch((error: Error) => {
-        console.error("[whatsapp] handoff log failed", error);
-      });
+    }).catch((error: Error) => {
+      console.error("[whatsapp] handoff log failed", error);
+    });
   };
 
   return (

@@ -94,7 +94,7 @@ export async function sha256Hex(text: string): Promise<string> {
 
 /* ---------------- Unified bridge envelope (RFC v2) ---------------- */
 
-export const OS_V2_EVENT_TYPES = ["lead_ingested", "site_visit.requested", "enquiry.submitted"] as const;
+export const OS_V2_EVENT_TYPES = ["lead_ingested", "site_visit.requested"] as const;
 
 /** Polymorphic envelope. Detected by the presence of `payload` (legacy uses `data`). */
 export const osEnvelopeSchema = z
@@ -166,45 +166,15 @@ export const visitRequestedSchema = z
   .strict();
 export type VisitRequested = z.infer<typeof visitRequestedSchema>;
 
-/** Knowledge Hub buyer-portal enquiry — lands as an unassigned LeadHub lead. */
-export const enquirySubmittedSchema = z
-  .object({
-    request_id: z.string().trim().min(1).max(200),
-    name: z.string().trim().min(1).max(120),
-    phone: z.string().trim().min(6).max(24),
-    project: z.string().trim().max(200).nullable().optional(),
-    property_type: z.enum(["flat", "land", "commercial", "duplex", "other"]).nullable().optional(),
-    budget_min_bdt: z.number().int().min(0).max(100_000_000_000).nullable().optional(),
-    budget_max_bdt: z.number().int().min(0).max(100_000_000_000).nullable().optional(),
-    facing: z.enum(["north", "south", "east", "west", "north_east", "north_west", "south_east", "south_west"]).nullable().optional(),
-    amenities: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
-    message: z.string().trim().max(1000).nullable().optional(),
-    page_url: z.string().trim().url().max(500).nullable().optional(),
-    utm_source: z.string().trim().max(100).nullable().optional(),
-    utm_medium: z.string().trim().max(100).nullable().optional(),
-    utm_campaign: z.string().trim().max(200).nullable().optional(),
-  })
-  .strict()
-  .refine((p) => p.budget_min_bdt == null || p.budget_max_bdt == null || p.budget_min_bdt <= p.budget_max_bdt, { path: ["budget_max_bdt"] });
-export type EnquirySubmitted = z.infer<typeof enquirySubmittedSchema>;
-
 export type V2Parse =
   | { ok: true; kind: "lead_ingested"; envelope: OsEnvelope; lead: LeadIngested; phone: string }
   | { ok: true; kind: "site_visit.requested"; envelope: OsEnvelope; visit: VisitRequested; phone: string }
-  | { ok: true; kind: "enquiry.submitted"; envelope: OsEnvelope; enquiry: EnquirySubmitted; phone: string }
   | { ok: false; status: 422; error: string; issues?: string[] };
 
 /** Envelope + discriminator + payload validation. All failures are 422 (non-retryable). */
 export function parseV2Envelope(raw: unknown): V2Parse {
   const env = osEnvelopeSchema.safeParse(raw);
   if (!env.success) return { ok: false, status: 422, error: "invalid_envelope", issues: env.error.issues.map((i) => i.path.join(".")) };
-  if (env.data.event_type === "enquiry.submitted") {
-    const e = enquirySubmittedSchema.safeParse(env.data.payload);
-    if (!e.success) return { ok: false, status: 422, error: "invalid_payload", issues: e.error.issues.map((i) => i.path.join(".")) };
-    const ep = canonicalBdPhone(e.data.phone);
-    if (!ep) return { ok: false, status: 422, error: "invalid_phone", issues: ["phone"] };
-    return { ok: true, kind: "enquiry.submitted", envelope: env.data, enquiry: e.data, phone: ep };
-  }
   if (env.data.event_type === "site_visit.requested") {
     const v = visitRequestedSchema.safeParse(env.data.payload);
     if (!v.success) return { ok: false, status: 422, error: "invalid_payload", issues: v.error.issues.map((i) => i.path.join(".")) };

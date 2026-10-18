@@ -16,7 +16,7 @@ export const checkIngestPayload = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
 
     let parsed: unknown;
     try {
@@ -41,7 +41,7 @@ export const runIngestDiagnostics = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ adminToken: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { BD_PHONE } = await import("@/lib/ingest-schemas");
 

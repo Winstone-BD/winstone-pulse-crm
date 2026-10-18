@@ -1,4 +1,3 @@
-import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
 import { assignmentReasons, clampBrief, followUpScript, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
@@ -118,9 +117,9 @@ export async function buildPreCallBrief(leadId: string): Promise<PreCallBrief> {
         messages: [
           {
             role: "system",
-            content: `${SYSTEM}\n${UNTRUSTED_RULE}\nToday is ${new Date().toISOString().slice(0, 10)}.`,
+            content: `${SYSTEM}\nToday is ${new Date().toISOString().slice(0, 10)}.`,
           },
-          { role: "user", content: sanitizeNotes(JSON.stringify(evidence), 12000).wrapped },
+          { role: "user", content: JSON.stringify(evidence) },
         ],
         response_format: { type: "json_object" },
       }),
@@ -237,8 +236,8 @@ async function aiBrief(facts: BriefFacts, key: string): Promise<QuickBrief | nul
       store: false,
       reasoning: { effort: "low" },
       input: [
-        { role: "system", content: [{ type: "input_text", text: `${QUICK_SYSTEM}\n${UNTRUSTED_RULE}` }] },
-        { role: "user", content: [{ type: "input_text", text: sanitizeNotes(JSON.stringify(facts), 6000).wrapped }] },
+        { role: "system", content: [{ type: "input_text", text: QUICK_SYSTEM }] },
+        { role: "user", content: [{ type: "input_text", text: JSON.stringify(facts) }] },
       ],
       text: {
         format: {
@@ -301,9 +300,7 @@ export async function buildQuickBrief(leadId: string, useAi: boolean): Promise<Q
   const key = process.env["LOVABLE_API_KEY"];
   if (!useAi || !key) return rules;
   try {
-    const result=await aiBrief(facts,key);
-    if(result){const {logAiUsage}=await import("./ai-usage.server");await logAiUsage({category:"other",model:"openai/gpt-6-astra",leadId,detail:"quick_brief"});}
-    return result ?? rules;
+    return (await aiBrief(facts, key)) ?? rules;
   } catch (error) {
     console.error("quick brief failed", error);
     return rules;

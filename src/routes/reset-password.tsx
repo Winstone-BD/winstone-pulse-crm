@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { clearMustChangePassword } from "@/lib/accounts.functions";
-import { setInvitedItPassword } from "@/lib/it-provisioning.functions";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -27,7 +26,6 @@ export const Route = createFileRoute("/reset-password")({
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const clear = useServerFn(clearMustChangePassword);
-  const setItPassword = useServerFn(setInvitedItPassword);
   const [ready, setReady] = useState<boolean | null>(null);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -45,14 +43,6 @@ function ResetPasswordPage() {
     if (pw.length < 8) { toast.error("কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন"); return; }
     if (pw !== pw2) { toast.error("দুটি পাসওয়ার্ড মেলেনি"); return; }
     setBusy(true);
-    try {
-    const itSetup = await setItPassword({ data: { password: pw } });
-    if (itSetup.handled) {
-      setPw(""); setPw2("");
-      toast.success("পাসওয়ার্ড সেট হয়েছে; Architect অনুমোদন ও IT ভূমিকা দেওয়ার অপেক্ষায়");
-      void navigate({ to: "/" });
-      return;
-    }
     const { error } = await supabase.auth.updateUser({ password: pw });
     if (error) {
       setBusy(false);
@@ -62,8 +52,6 @@ function ResetPasswordPage() {
     await supabase.auth.refreshSession();
     toast.success("নতুন পাসওয়ার্ড সেট হয়েছে");
     void navigate({ to: "/" });
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Password setup failed"); }
-    finally { setBusy(false); }
   };
 
   return (

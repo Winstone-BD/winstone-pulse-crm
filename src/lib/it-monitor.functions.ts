@@ -56,17 +56,3 @@ export const saveMonthlySummary = createServerFn({ method: "POST" })
     const { saveMonthlySummaryToDrive, previousDhakaMonth } = await import("@/lib/monthly-summary.server");
     return saveMonthlySummaryToDrive(data.month ?? previousDhakaMonth(), caller.label ?? caller.profile?.name ?? "IT Console");
   });
-
-/** Live check: project photos must never be downloadable without the CRM (public bucket or storage rule). */
-export const getProjectPhotoExposure = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => tokenSchema.parse(i ?? {}))
-  .handler(async ({ data }) => {
-    await itCaller(data.adminToken, false);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin.rpc("project_photos_exposure");
-    if (error) throw new Error("Could not check project photo access");
-    const r = rows?.[0];
-    const bucketPublic = Boolean(r?.bucket_public);
-    const policies = r?.policy_names ?? [];
-    return { exposed: bucketPublic || policies.length > 0, bucketPublic, policies, checkedAt: new Date().toISOString() };
-  });

@@ -374,13 +374,11 @@ object WinstoneApi {
         agentPhone: String? = null,
         recordingSupported: Boolean? = null,
         recordingNote: String? = null,
-        atIso: String? = null,
     ): JSONObject = withContext(Dispatchers.IO) {
         val payload = JSONObject().apply {
             put("call_uid", callUid)
             put("lead_id", leadId)
             put("state", state)
-            atIso?.let { put("at", it) }
             durationSeconds?.let { put("duration_seconds", it) }
             agentPhone?.let { if (it.isNotBlank()) put("agent_phone", it) }
             recordingSupported?.let { put("recording_supported", it) }

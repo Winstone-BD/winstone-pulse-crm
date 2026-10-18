@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAdminToken } from "@/lib/local-session";
 import { useLang } from "@/lib/i18n";
 import {
-  addProjectNote, addSalesUpdate, AMENITIES, FACINGS, INTERESTS, leadProjectActivity, listProjectNotes, listProjects, PARTIES, saveProject,
+  addProjectNote, addSalesUpdate, INTERESTS, leadProjectActivity, listProjectNotes, listProjects, PARTIES, saveProject,
   type CatalogProject,
 } from "@/lib/projects.functions";
 
@@ -43,31 +43,6 @@ const FIELDS: Array<[keyof CatalogProject, { bn: string; en: string }]> = [
   ["extra_charges", { bn: "অতিরিক্ত চার্জ", en: "Extra charges" }],
   ["notes", { bn: "অন্যান্য", en: "Other" }],
 ];
-export const FACING_L: Record<string, { bn: string; en: string }> = {
-  north: { bn: "উত্তর", en: "North" }, south: { bn: "দক্ষিণ", en: "South" }, east: { bn: "পূর্ব", en: "East" }, west: { bn: "পশ্চিম", en: "West" },
-  north_east: { bn: "উত্তর-পূর্ব", en: "North-east" }, north_west: { bn: "উত্তর-পশ্চিম", en: "North-west" }, south_east: { bn: "দক্ষিণ-পূর্ব", en: "South-east" }, south_west: { bn: "দক্ষিণ-পশ্চিম", en: "South-west" },
-};
-export const AMENITY_L: Record<string, { bn: string; en: string }> = {
-  lift: { bn: "লিফট", en: "Lift" }, generator: { bn: "জেনারেটর", en: "Generator" }, parking: { bn: "পার্কিং", en: "Parking" }, gas: { bn: "গ্যাস লাইন", en: "Gas line" },
-  security: { bn: "নিরাপত্তা", en: "Security" }, rooftop: { bn: "ছাদ বাগান", en: "Rooftop" }, gym: { bn: "জিম", en: "Gym" }, pool: { bn: "সুইমিং পুল", en: "Pool" },
-  community_hall: { bn: "কমিউনিটি হল", en: "Community hall" }, near_school: { bn: "স্কুলের কাছে", en: "Near school" }, near_hospital: { bn: "হাসপাতালের কাছে", en: "Near hospital" }, main_road: { bn: "মেইন রোডের পাশে", en: "Main road" },
-};
-function Chips({ all, labels, value, onChange }: { all: readonly string[]; labels: Record<string, { bn: string; en: string }>; value: string[]; onChange: (v: string[]) => void }) {
-  const t = useT();
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {all.map((k) => {
-        const on = value.includes(k);
-        return (
-          <button key={k} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== k) : [...value, k])}
-            className={`min-h-9 rounded-full border px-3 text-xs ${on ? "border-primary bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground"}`}>
-            {t(labels[k]!)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 const INTEREST_L: Record<string, { bn: string; en: string } | undefined> = {
   interested: { bn: "আগ্রহী", en: "Interested" }, negotiating: { bn: "দরকষাকষি", en: "Negotiating" }, not_now: { bn: "এখন না", en: "Not now" },
 };
@@ -85,7 +60,7 @@ function useT() {
 export function useProjects() {
   const adminToken = useAdminToken();
   const fn = useServerFn(listProjects);
-  return useQuery({ queryKey: ["project-catalog", adminToken ? "pin" : "s"], queryFn: () => fn({ data: { adminToken } }), staleTime: 60_000, refetchInterval: 100_000 });
+  return useQuery({ queryKey: ["project-catalog", adminToken ? "pin" : "s"], queryFn: () => fn({ data: { adminToken } }), staleTime: 60_000 });
 }
 
 function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | null; onDone: () => void }) {
@@ -97,22 +72,14 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
     Object.fromEntries(["name", "image_url", ...FIELDS.map(([k]) => k)].map((k) => [k, initial?.[k as keyof CatalogProject] == null ? "" : String(initial[k as keyof CatalogProject])])),
   );
   const [status, setStatus] = useState(initial?.status ?? "active");
-  const [pmin, setPmin] = useState(initial?.price_min == null ? "" : String(initial.price_min));
-  const [pmax, setPmax] = useState(initial?.price_max == null ? "" : String(initial.price_max));
-  const [facing, setFacing] = useState<string[]>(initial?.facing ?? []);
-  const [amen, setAmen] = useState<string[]>(initial?.amenities ?? []);
   const m = useMutation({
     mutationFn: () => {
-      const num = (v: string) => { const x = v.replace(/,/g, "").trim(); if (!x) return null; const n = Number(x); if (!Number.isFinite(n) || n < 0) throw new Error("মূল্য সঠিক সংখ্যা দিন"); return n; };
-      const price_min = num(pmin), price_max = num(pmax);
-      if (price_min != null && price_max != null && price_min > price_max) throw new Error("সর্বনিম্ন মূল্য সর্বোচ্চের চেয়ে বেশি");
       const s = (k: string) => f[k]?.trim() || null;
       const ppsf = f["price_per_sqft"]?.trim() ? Number(f["price_per_sqft"]) : null;
       if (ppsf != null && !Number.isFinite(ppsf)) throw new Error("বর্গফুট মূল্য সংখ্যা হতে হবে");
       return save({ data: { adminToken, id: initial?.id ?? null, name: f["name"] ?? "", status: status as "active" | "archived", price_per_sqft: ppsf,
         location: s("location"), unit_sizes: s("unit_sizes"), total_price: s("total_price"), down_payment: s("down_payment"),
-        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes"), image_url: s("image_url"),
-        price_min, price_max, facing: facing as (typeof FACINGS)[number][], amenities: amen as (typeof AMENITIES)[number][] } });
+        installment_plan: s("installment_plan"), parking_charge: s("parking_charge"), extra_charges: s("extra_charges"), notes: s("notes"), image_url: s("image_url") } });
     },
     onSuccess: () => { toast.success("সংরক্ষিত"); qc.invalidateQueries({ queryKey: ["project-catalog"] }); onDone(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "ব্যর্থ"),
@@ -125,10 +92,6 @@ function ProjectForm({ initial, onDone }: { initial: Partial<CatalogProject> | n
           <Input inputMode={k === "price_per_sqft" ? "decimal" : undefined} value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
         </label>
       ))}
-      <label className="text-xs">সর্বনিম্ন মূল্য (৳) / Min price<Input inputMode="numeric" value={pmin} onChange={(e) => setPmin(e.target.value)} /></label>
-      <label className="text-xs">সর্বোচ্চ মূল্য (৳) / Max price<Input inputMode="numeric" value={pmax} onChange={(e) => setPmax(e.target.value)} /></label>
-      <div className="text-xs sm:col-span-2"><p className="mb-1">মুখ / Facing</p><Chips all={FACINGS} labels={FACING_L} value={facing} onChange={setFacing} /></div>
-      <div className="text-xs sm:col-span-2"><p className="mb-1">সুবিধা / Amenities</p><Chips all={AMENITIES} labels={AMENITY_L} value={amen} onChange={setAmen} /></div>
       <label className="text-xs sm:col-span-2">ছবির লিংক / Image URL<Input value={f["image_url"] ?? ""} onChange={(e) => setF({ ...f, image_url: e.target.value })} placeholder="https://…" /></label>
       <label className="text-xs">Status
         <select className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -188,20 +151,6 @@ export function ProjectCatalogPanel() {
   const q = useProjects();
   const [editing, setEditing] = useState<Partial<CatalogProject> | null | "new">(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [budget, setBudget] = useState("");
-  const [fFacing, setFFacing] = useState<string[]>([]);
-  const [fAmen, setFAmen] = useState<string[]>([]);
-  const [missing, setMissing] = useState<null | "price" | "facing" | "amen">(null);
-  const budgetN = Number(budget.replace(/,/g, "")) || 0;
-  const isMissing = (p: CatalogProject, k: string) =>
-    k === "price" ? p.price_min == null && p.price_max == null : k === "facing" ? !(p.facing ?? []).length : !(p.amenities ?? []).length;
-  // Only HQ-entered facts filter: a project with no price/facing saved is hidden when that filter is on.
-  const shownProjects = (q.data?.projects ?? []).filter((p) =>
-    (!missing || isMissing(p, missing)) &&
-    (!budgetN || (p.price_min != null && p.price_min <= budgetN)) &&
-    (!fFacing.length || fFacing.some((f) => (p.facing ?? []).includes(f))) &&
-    fAmen.every((a) => (p.amenities ?? []).includes(a)));
-  const filtering = budgetN > 0 || fFacing.length > 0 || fAmen.length > 0 || missing != null;
   const canEdit = q.data?.canEdit ?? false;
   return (
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4" aria-labelledby="catalog-h">
@@ -213,51 +162,8 @@ export function ProjectCatalogPanel() {
       {q.isLoading ? <p role="status" className="text-sm text-muted-foreground">{t(L.loading)}</p> : null}
       {q.isError ? <p role="alert" className="text-sm text-destructive">{(q.error as Error).message}</p> : null}
       {q.data && !q.data.projects.length ? <p className="text-sm text-muted-foreground">{t(L.empty)}</p> : null}
-      {q.data?.projects.length ? (() => {
-        const all = q.data.projects;
-        const rows = [
-          { k: "price" as const, label: { bn: "মূল্য সীমা", en: "Price range" } },
-          { k: "facing" as const, label: { bn: "মুখ", en: "Facing" } },
-          { k: "amen" as const, label: { bn: "সুবিধা", en: "Amenities" } },
-        ].map((r) => ({ ...r, gap: all.filter((p) => isMissing(p, r.k)).length }));
-        return (
-          <div className="space-y-1">
-            <div className="grid grid-cols-3 gap-2" aria-label={t({ bn: "তথ্য পূরণের অবস্থা", en: "Data coverage" })}>
-              {rows.map((r) => {
-                const n = all.length - r.gap;
-                const on = missing === r.k;
-                return (
-                  <button type="button" key={r.k} aria-pressed={on} onClick={() => setMissing(on ? null : r.k)}
-                    className={`rounded-xl border p-2 text-left ${on ? "border-primary bg-primary/10" : "border-border bg-muted/30"}`}>
-                    <p className="text-[11px] text-muted-foreground">{t(r.label)}</p>
-                    <p className="tabular text-sm font-semibold">{n}/{all.length}</p>
-                    <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${Math.round((n / all.length) * 100)}%` }} /></div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{r.gap} {t({ bn: "বাকি", en: "missing" })}{r.gap ? ` · ${on ? t({ bn: "সব দেখান", en: "show all" }) : t({ bn: "দেখান", en: "show" })}` : ""}</p>
-                  </button>
-                );
-              })}
-            </div>
-            {missing ? <p role="status" className="text-xs text-muted-foreground">{t({ bn: "শুধু যেগুলোতে এই তথ্য নেই", en: "Showing only projects missing this detail" })} · {shownProjects.length}</p> : null}
-          </div>
-        );
-      })() : null}
-      {q.data?.projects.length ? (
-        <details className="rounded-xl border border-border bg-muted/30 p-3" open={filtering || undefined}>
-          <summary className="cursor-pointer text-sm font-semibold">{t({ bn: "ফিল্টার", en: "Filters" })} · {shownProjects.length}/{q.data.projects.length}</summary>
-          <div className="mt-3 grid gap-3">
-            <label className="text-xs">{t({ bn: "ক্লায়েন্টের বাজেট (৳, সর্বোচ্চ)", en: "Client budget (৳, max)" })}
-              <Input inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="5000000" />
-            </label>
-            <div className="text-xs"><p className="mb-1">{t({ bn: "মুখ", en: "Facing" })}</p><Chips all={FACINGS} labels={FACING_L} value={fFacing} onChange={setFFacing} /></div>
-            <div className="text-xs"><p className="mb-1">{t({ bn: "সুবিধা (সবগুলো থাকতে হবে)", en: "Amenities (must have all)" })}</p><Chips all={AMENITIES} labels={AMENITY_L} value={fAmen} onChange={setFAmen} /></div>
-            {filtering ? <Button size="sm" variant="ghost" className="justify-self-start" onClick={() => { setBudget(""); setFFacing([]); setFAmen([]); }}>{t({ bn: "ফিল্টার মুছুন", en: "Clear filters" })}</Button> : null}
-            <p className="text-[11px] text-muted-foreground">{t({ bn: "যে প্রজেক্টে HQ এই তথ্য দেয়নি, ফিল্টার চালু থাকলে সেটি দেখাবে না।", en: "Projects without these details saved by HQ are hidden while a filter is on." })}</p>
-          </div>
-        </details>
-      ) : null}
-      {filtering && !shownProjects.length ? <p className="text-sm text-muted-foreground">{t({ bn: "এই ফিল্টারে কোনো প্রজেক্ট নেই", en: "No projects match these filters" })}</p> : null}
       <div className="grid gap-3 md:grid-cols-2">
-        {shownProjects.map((p) => (
+        {(q.data?.projects ?? []).map((p) => (
           <article key={p.id} className="overflow-hidden rounded-xl border border-border text-sm">
             {p.image_url ? <img src={p.image_url} alt={p.name} loading="lazy" className="aspect-[16/9] w-full object-cover" /> : null}
             <div className="p-3">
@@ -273,13 +179,6 @@ export function ProjectCatalogPanel() {
                 <div key={k} className="min-w-0"><dt className="text-muted-foreground">{t(lbl)}</dt><dd className="break-words font-medium">{k === "price_per_sqft" ? money(Number(p[k])) : String(p[k])}</dd></div>
               ))}
             </dl>
-            {p.price_min != null || p.price_max != null ? <p className="mt-1 text-xs"><span className="text-muted-foreground">{t({ bn: "মূল্য সীমা", en: "Price range" })}: </span><span className="font-medium">{p.price_min != null ? money(Number(p.price_min)) : "?"} – {p.price_max != null ? money(Number(p.price_max)) : "?"}</span></p> : null}
-            {(p.facing ?? []).length || (p.amenities ?? []).length ? (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {(p.facing ?? []).map((f) => <span key={f} className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">{t(FACING_L[f] ?? { bn: f, en: f })}</span>)}
-                {(p.amenities ?? []).map((a) => <span key={a} className="rounded-full bg-muted px-2 py-0.5 text-[11px]">{t(AMENITY_L[a] ?? { bn: a, en: a })}</span>)}
-              </div>
-            ) : null}
             <Button size="sm" variant="link" className="px-0" onClick={() => setOpen(open === p.id ? null : p.id)}>{t(L.notes)}</Button>
             {open === p.id ? <NotesBlock project={p} canEdit={canEdit} /> : null}
             </div>

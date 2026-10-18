@@ -75,44 +75,17 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
 
 const GROUPS: { title: { bn: string; en: string }; routes: string[] }[] = [
   { title: { bn: "প্রধান", en: "Main" }, routes: ["/", "/desk", "/coach"] },
-  {
-    title: { bn: "লিড ও বিক্রয়", en: "Leads & sales" },
-    routes: [
-      "/leadhub",
-      "/live-leads",
-      "/booking-review",
-      "/sales-intel",
-      "/news",
-      "/site-visits",
-      "/projects",
-      "/inventory",
-      "/reports",
-    ],
-  },
-  {
-    title: { bn: "ম্যানেজমেন্ট", en: "Management" },
-    routes: ["/hq", "/contributions", "/audit-log", "/staff-portal"],
-  },
-  {
-    title: { bn: "সাপোর্ট", en: "Support" },
-    routes: ["/inbox", "/tickets", "/customers", "/support-admin"],
-  },
+  { title: { bn: "লিড ও বিক্রয়", en: "Leads & sales" }, routes: ["/leadhub", "/live-leads", "/booking-review", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/reports"] },
+  { title: { bn: "ম্যানেজমেন্ট", en: "Management" }, routes: ["/hq", "/contributions", "/audit-log", "/staff-portal"] },
+  { title: { bn: "সাপোর্ট", en: "Support" }, routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {
     title: { bn: "আইটি ও নিরাপত্তা", en: "IT & security" },
-    routes: [
-      "/system",
-      "/runtime-errors",
-      "/security",
-      "/ingest",
-      "/migration",
-      "/migration-export",
-    ],
+    routes: ["/system", "/runtime-errors", "/security", "/ingest", "/migration", "/migration-export"],
   },
   { title: { bn: "সহায়তা", en: "Help" }, routes: ["/docs", "/docs-admin", "/help"] },
 ];
 
-const FOCUS =
-  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 /** Arrow keys / Home / End move focus between menu links. */
 function onNavKeys(e: KeyboardEvent<HTMLElement>) {
@@ -122,13 +95,9 @@ function onNavKeys(e: KeyboardEvent<HTMLElement>) {
   e.preventDefault();
   const i = links.indexOf(document.activeElement as HTMLElement);
   const next =
-    e.key === "Home"
-      ? 0
-      : e.key === "End"
-        ? links.length - 1
-        : e.key === "ArrowDown"
-          ? (i + 1) % links.length
-          : (i - 1 + links.length) % links.length;
+    e.key === "Home" ? 0 : e.key === "End" ? links.length - 1
+    : e.key === "ArrowDown" ? (i + 1) % links.length
+    : (i - 1 + links.length) % links.length;
   links[next]?.focus();
 }
 
@@ -144,43 +113,21 @@ function NavContent({
   const t = useT();
   const byRoute = new Map(items.map((i) => [i.to, i]));
   const path = useRouterState({ select: (st) => st.location.pathname });
-  const activeS = useRouterState({
-    select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? ""),
-  });
+  const activeS = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["s"] ?? "") });
   const visibleGroups = GROUPS.map((group) => ({
     group,
     list: group.routes.map((r) => byRoute.get(r)).filter(Boolean) as Item[],
   })).filter((g) => g.list.length > 0);
   const showGroupLabels = visibleGroups.length > 1;
-  const primaryRoutes = [
-    "/",
-    "/desk",
-    "/hq",
-    "/leadhub",
-    "/system",
-    "/projects",
-    "/reports",
-    "/help",
-  ];
   return (
     <>
-      {visibleGroups.map(({ group, list: groupItems }) => {
-        const list = groupItems.filter((i) => primaryRoutes.includes(i.to));
-        if (!list.length) return null;
-        const advanced = !list.some((i) => primaryRoutes.includes(i.to));
+      {visibleGroups.map(({ group, list }) => {
         return (
-          <details
-            key={group.title.en}
-            open={!advanced || collapsed || list.some((i) => i.to === path)}
-            className={showGroupLabels ? "mb-3" : "mb-0.5"}
-          >
+          <div key={group.title.en} className={showGroupLabels ? "mb-5" : "mb-0.5"}>
             {showGroupLabels && (
-              <summary
-                hidden={collapsed}
-                className="min-h-10 cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground"
-              >
-                {t(group.title)}
-              </summary>
+            <p hidden={collapsed} className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/80">
+              {t(group.title)}
+            </p>
             )}
             <nav className="flex flex-col gap-0.5">
               {list.map((item) => {
@@ -188,80 +135,44 @@ function NavContent({
                 const subs = PAGE_SECTIONS[item.to as SectionRoute];
                 return (
                   <div key={item.to}>
-                    <Link
-                      to={item.to}
-                      activeOptions={{ exact: item.to === "/" }}
-                      onClick={onNavigate}
-                      data-nav-link
-                      title={collapsed ? item.label : undefined}
-                      aria-label={collapsed ? item.label : undefined}
-                      className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-11 rounded-md px-3 py-2 text-[13px] font-medium text-foreground/75 transition-all duration-200 hover:bg-card hover:text-foreground data-[status=active]:bg-primary data-[status=active]:font-semibold data-[status=active]:text-primary-foreground data-[status=active]:shadow-md`}
-                    >
-                      <Icon className="size-4 shrink-0" />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                    </Link>
-                    {!collapsed &&
-                      subs &&
-                      path === item.to &&
-                      !["/desk", "/hq", "/system"].includes(path) && (
-                        <div className="ml-5 mt-1.5 flex flex-col gap-0.5 border-l-2 border-primary/25 pl-2.5">
-                          {subs.map((sub, i) => {
-                            const on =
-                              activeS === sub.key ||
-                              (!subs.some((x) => x.key === activeS) && i === 0);
-                            return (
-                              <Link
-                                key={sub.key}
-                                to={item.to}
-                                search={{ s: sub.key } as never}
-                                onClick={onNavigate}
-                                data-nav-link
-                                className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/70 hover:text-foreground"}`}
-                              >
-                                {t({ bn: sub.label, en: (sub as { en?: string }).en ?? sub.label })}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
+                  <Link
+                    to={item.to}
+                    activeOptions={{ exact: item.to === "/" }}
+                    onClick={onNavigate}
+                    data-nav-link
+                    title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? item.label : undefined}
+                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-xl px-3 py-2 text-[13px] font-medium text-foreground/75 transition-all duration-200 hover:bg-card hover:text-foreground data-[status=active]:bg-primary data-[status=active]:font-semibold data-[status=active]:text-primary-foreground data-[status=active]:shadow-md`}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                  {!collapsed && subs && path === item.to && (
+                    <div className="ml-5 mt-1.5 flex flex-col gap-0.5 border-l-2 border-primary/25 pl-2.5">
+                      {subs.map((sub, i) => {
+                        const on = activeS === sub.key || (!subs.some((x) => x.key === activeS) && i === 0);
+                        return (
+                          <Link
+                            key={sub.key}
+                            to={item.to}
+                            search={{ s: sub.key } as never}
+                            onClick={onNavigate}
+                            data-nav-link
+                            className={`${FOCUS} rounded-md px-2 py-1.5 text-[12px] transition-colors ${on ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:bg-card/70 hover:text-foreground"}`}
+                          >
+                            {t({ bn: sub.label, en: (sub as { en?: string }).en ?? sub.label })}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                   </div>
                 );
               })}
             </nav>
-          </details>
+          </div>
         );
       })}
-      <details
-        open={collapsed || !primaryRoutes.includes(path)}
-        className="border-t border-border pt-2"
-      >
-        <summary
-          hidden={collapsed}
-          className="min-h-11 cursor-pointer px-3 py-2 text-sm font-medium text-muted-foreground"
-        >
-          {t({ bn: "আরও / সব টুলস", en: "More / All tools" })}
-        </summary>
-        <nav className="space-y-1">
-          {items
-            .filter((i) => !primaryRoutes.includes(i.to))
-            .map((item) => {
-              const Icon = NAV_ICONS[item.to] ?? LifeBuoy;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={onNavigate}
-                  data-nav-link
-                  title={collapsed ? item.label : undefined}
-                  className={`${FOCUS} flex min-h-11 items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent data-[status=active]:bg-accent data-[status=active]:text-foreground`}
-                >
-                  <Icon className="size-4 shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              );
-            })}
-        </nav>
-      </details>
     </>
   );
 }
@@ -288,10 +199,7 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
       // Alt+M jumps keyboard focus into the menu.
       if (e.altKey && e.key.toLowerCase() === "m") {
         e.preventDefault();
-        (
-          (ref.current?.querySelector('[data-status="active"]') as HTMLElement | null) ??
-          ref.current?.querySelector<HTMLElement>("[data-nav-link]")
-        )?.focus();
+        (ref.current?.querySelector('[data-status="active"]') as HTMLElement | null ?? ref.current?.querySelector<HTMLElement>("[data-nav-link]"))?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -308,16 +216,8 @@ export function NavSidebar({ items }: { items: readonly Item[] }) {
         type="button"
         onClick={toggle}
         aria-expanded={!collapsed}
-        aria-label={
-          collapsed
-            ? t({ bn: "সাইডবার প্রসারিত করুন (Ctrl+B)", en: "Expand sidebar (Ctrl+B)" })
-            : t({ bn: "সাইডবার ভাঁজ করুন (Ctrl+B)", en: "Collapse sidebar (Ctrl+B)" })
-        }
-        title={
-          collapsed
-            ? t({ bn: "প্রসারিত করুন (Ctrl+B)", en: "Expand (Ctrl+B)" })
-            : t({ bn: "ভাঁজ করুন (Ctrl+B)", en: "Collapse (Ctrl+B)" })
-        }
+        aria-label={collapsed ? t({ bn: "সাইডবার প্রসারিত করুন (Ctrl+B)", en: "Expand sidebar (Ctrl+B)" }) : t({ bn: "সাইডবার ভাঁজ করুন (Ctrl+B)", en: "Collapse sidebar (Ctrl+B)" })}
+        title={collapsed ? t({ bn: "প্রসারিত করুন (Ctrl+B)", en: "Expand (Ctrl+B)" }) : t({ bn: "ভাঁজ করুন (Ctrl+B)", en: "Collapse (Ctrl+B)" })}
         className={`${FOCUS} mb-4 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-muted-foreground hover:bg-accent/60 hover:text-foreground ${collapsed ? "justify-center" : ""}`}
       >
         {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -339,21 +239,14 @@ function SidebarAccount({ collapsed }: { collapsed: boolean }) {
   if (scope === "none" || !account?.profile) return null;
   const name = account.profile.name ?? "";
   return (
-    <div
-      className={`mt-3 flex items-center gap-2 border-t border-border pt-3 ${collapsed ? "flex-col" : ""}`}
-    >
-      <span
-        className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary"
-        aria-hidden
-      >
+    <div className={`mt-3 flex items-center gap-2 border-t border-border pt-3 ${collapsed ? "flex-col" : ""}`}>
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary" aria-hidden>
         {name.slice(0, 2)}
       </span>
       {!collapsed && (
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[13px] font-semibold">{name}</span>
-          <span className="block truncate text-[10px] text-muted-foreground">
-            {account.profile.employee_id ?? ""}
-          </span>
+          <span className="block truncate text-[10px] text-muted-foreground">{account.profile.employee_id ?? ""}</span>
         </span>
       )}
       <button
@@ -411,7 +304,7 @@ export function MobileNavDrawer({ items }: { items: readonly Item[] }) {
                   Winstone Pulse
                 </span>
                 <span className="block truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  Premium Real Estate CRM
+Premium Real Estate CRM
                 </span>
               </span>
             </span>

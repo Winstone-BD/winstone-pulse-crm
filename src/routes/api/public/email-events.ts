@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
 
 const limiter = createRateLimiter(120, 60_000);
 const json = (status: number, body: Record<string, unknown>) =>
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/public/email-events")({
         }),
       POST: async ({ request }) => {
         if (!limiter(requestSourceKey(request)))
-          return rateLimitedResponse(limiter.retryAfter(requestSourceKey(request)), { error: "rate_limited" });
+          return json(429, { ok: false, error: "rate_limited" });
         const { checkEmailEvent } = await import("@/lib/email-events");
         const check = await checkEmailEvent({
           secret: process.env["HOSTINGER_EMAIL_WEBHOOK_SECRET"],

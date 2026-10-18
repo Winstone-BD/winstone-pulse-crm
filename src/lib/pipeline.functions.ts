@@ -1,4 +1,3 @@
-import {recordingRetryEligibility} from "./integration-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -145,15 +144,13 @@ export const recordingPipeline = createServerFn({ method: "POST" })
 
       // 2/3. Recording capture and storage in the backend bucket.
       const recordingState: StageState =
-        ["stored", "available"].includes(r.recording_status ?? "")
+        r.recording_status === "stored"
           ? "success"
           : r.recording_status === "not_available"
             ? "failed"
             : "pending";
       const supabaseState: StageState = r.storage_path
         ? "success"
-        : r.sync_status === "failed"
-          ? "failed"
         : r.recording_status === "not_available"
           ? "skipped"
           : "pending";
@@ -341,11 +338,6 @@ export const retryPipelineItem = createServerFn({ method: "POST" })
       });
     };
 
-    const {supabaseAdmin: db} = await import("@/integrations/supabase/client.server");
-    const audio = await db.from("call_recordings").select("storage_path,recording_status").eq("id",data.recordingId).maybeSingle();
-    if (audio.error || !audio.data) throw new Error("Recording unavailable");
-    const eligible = recordingRetryEligibility(audio.data.storage_path,audio.data.recording_status);
-    if (!eligible.allowed) return {ok:false as const,outcome:"device_resync_required",detail:eligible.reason};
     try {
       if (data.step === "drive") {
         const { backupRecordingToDrive } = await import("@/lib/recording-drive.server");

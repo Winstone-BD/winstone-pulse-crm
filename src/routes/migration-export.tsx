@@ -90,9 +90,8 @@ function ExportCenter() {
         let total = 0;
         const chunks: Array<Record<string, unknown>> = [];
         do {
-          const raw: { rowsJson: string; nextAfterCursor: string | null } =
-            await exportTableChunk({ data: { adminToken, table, afterCursor } });
-          const res: { rows: Array<Record<string, unknown>>; nextAfterCursor: string | null } = {
+          const raw = await exportTableChunk({ data: { adminToken, table, afterCursor } });
+          const res = {
             rows: JSON.parse(raw.rowsJson) as Array<Record<string, unknown>>,
             nextAfterCursor: raw.nextAfterCursor,
           };

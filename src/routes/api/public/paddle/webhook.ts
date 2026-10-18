@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
 
 const paddleLimiter = createRateLimiter(180, 60_000);
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
     handlers: {
       POST: async ({ request }) => {
         if (!paddleLimiter(requestSourceKey(request)))
-          return rateLimitedResponse(paddleLimiter.retryAfter(requestSourceKey(request)), { error: "rate_limited" });
+          return new Response("Rate limited", { status: 429 });
         const rawBody = await request.clone().text();
         const signature = request.headers.get("paddle-signature");
         if (!signature || !rawBody) return new Response("Missing signature", { status: 401 });

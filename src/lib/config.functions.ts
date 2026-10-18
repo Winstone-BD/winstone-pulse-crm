@@ -3,15 +3,8 @@ import { z } from "zod";
 
 import { AppConfigSchema, DEFAULT_CONFIG, parseConfig } from "@/lib/crm-config";
 
-/** Live CRM rules for the IT customizer. Signed-in HQ / IT authority only. */
-export const getAppConfig = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ adminToken: z.string().nullable().optional() }).parse(input ?? {}),
-  )
-  .handler(async ({ data: input }) => {
-  const { resolveCaller } = await import("@/lib/access.server");
-  const caller = await resolveCaller(input.adminToken ?? null);
-  if (caller.scope !== "authority") throw new Error("HQ / IT access required");
+/** Live rules for every device. Contains no personal data, so it needs no PIN. */
+export const getAppConfig = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("app_config")
@@ -32,7 +25,7 @@ export const saveAppConfig = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_config")
@@ -46,7 +39,7 @@ export const resetAppConfig = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ adminToken: z.string().min(1) }).parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("app_config")

@@ -1,5 +1,3 @@
-import { SHORT_COMMIT } from "@/lib/build-info";
-import { BrandLockup } from "@/components/BrandLockup";
 import { Link } from "@tanstack/react-router";
 import { Lock, LockOpen, LogOut, Moon, Smartphone, Sparkles, Sun } from "lucide-react";
 import { MobileNavDrawer, NavSidebar, NAV_ICONS } from "@/components/crm/NavSidebar";
@@ -7,6 +5,7 @@ import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import { AboutLegalModal } from "@/components/crm/AboutLegalModal";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { AnyNumberCallDialog } from "@/components/crm/AnyNumberCallDialog";
@@ -51,7 +50,6 @@ export const NAV = [
   { to: "/sales-intel", label: "Sales Intelligence", scopes: ["authority", "agent"] },
   { to: "/news", label: "Market News", scopes: ["authority", "agent"] },
   { to: "/site-visits", label: "Site Visits", scopes: ["authority", "agent"] },
-  { to: "/marketing", label: "Marketing", scopes: ["authority", "agent"] },
   { to: "/projects", label: "Projects", scopes: ["authority", "coordinator", "agent"] },
   { to: "/inventory", label: "Inventory", scopes: ["authority", "coordinator"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
@@ -61,8 +59,6 @@ export const NAV = [
   { to: "/migration", label: "Migration Checklist", scopes: ["authority"] },
   { to: "/migration-export", label: "Migration Export", scopes: ["authority"] },
   { to: "/security", label: "PIN & Access", scopes: ["authority", "coordinator", "agent"] },
-  { to: "/security-findings", label: "Security Findings", scopes: ["authority"] },
-  { to: "/enquiries", label: "Website Enquiries", scopes: ["authority"] },
   { to: "/docs", label: "Docs", scopes: ["authority", "coordinator", "agent", "none"] },
   { to: "/docs-admin", label: "Docs Admin", scopes: ["authority", "coordinator"] },
   { to: "/inbox", label: "Support Inbox", scopes: ["authority", "coordinator", "agent"] },
@@ -126,8 +122,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="lg:hidden">
             <MobileNavDrawer items={nav} />
           </div>
-          <Link to="/" className="flex min-w-0 shrink items-center">
-            <BrandLockup />
+          <Link to="/" className="flex min-w-0 shrink items-center gap-2.5">
+            <img
+              src={logoAsset.url}
+              alt="Winstone logo"
+              className="size-8 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-border"
+            />
+            <span className="hidden min-w-0 leading-tight min-[480px]:block">
+              <span className="block truncate text-[13px] font-bold tracking-tight">
+                Winstone Pulse
+              </span>
+              <span className="hidden truncate text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:block">
+                Premium Real Estate CRM
+              </span>
+            </span>
           </Link>
 
 
@@ -243,7 +251,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
         <p>© 2026 TrendFlux Digital. All Rights Reserved.</p>
         <p className="mt-1">Developed &amp; Powered by Zahid Hasan Emon.</p>
-        <p className="mt-1 font-mono text-[10px] opacity-70">Build {SHORT_COMMIT}</p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <Link
             to="/privacy"

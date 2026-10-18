@@ -12,7 +12,6 @@ const HandoffInput = z.object({
   leadId: z.string().uuid().nullable().optional(),
   phone: z.string().trim().min(4).max(24),
   note: z.string().trim().max(400).nullable().optional(),
-  channel: z.enum(["whatsapp", "sms"]).optional(),
 });
 
 /**
@@ -43,36 +42,16 @@ export const logWhatsappHandoff = createServerFn({ method: "POST" })
     await logLeadEvent({
       leadId: data.leadId,
       agentId: caller.profile?.id ?? null,
-      kind: data.channel === "sms" ? "sms_handoff" : "whatsapp_message",
-      detail: `${data.channel === "sms" ? "SMS অ্যাপ খোলা হয়েছে" : "হোয়াটসঅ্যাপ খোলা হয়েছে"} (${data.phone})${data.note ? ` · ${data.note}` : ""}`,
+      kind: "whatsapp_message",
+      detail: `হোয়াটসঅ্যাপ খোলা হয়েছে (${data.phone})${data.note ? ` · ${data.note}` : ""}`,
     });
-    // Every WhatsApp contact by an agent opens the same mandatory report as a
-    // call (connected or not, the agent must report). Reuses the one report path.
-    let reportOpened = false;
-    if (caller.scope === "agent" && caller.profile && data.channel !== "sms") {
-      try {
-        const { openCallReport } = await import("@/lib/call-reports.server");
-        await openCallReport({
-          leadId: data.leadId,
-          agentId: caller.profile.id,
-          phoneNumber: data.phone,
-          durationSeconds: 0,
-          connected: true,
-          channel: "whatsapp",
-        });
-        reportOpened = true;
-      } catch (error) {
-        console.error("[whatsapp] report open failed", error);
-      }
-    }
-    return { ok: true as const, logged: true, reportOpened };
+    return { ok: true as const, logged: true };
   });
 
 const SendInput = z.object({
   adminToken: z.string().nullable().optional(),
   leadId: z.string().uuid(),
-  /** Only HQ-approved templates may be sent; the server builds the text. */
-  templateKey: z.string().min(1).max(40),
+  body: z.string().trim().min(1).max(4000),
 });
 
 /**
@@ -102,7 +81,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, name, assigned_to, assigned_agent_id, phone_number")
+      .select("id, assigned_to, assigned_agent_id, phone_number")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
@@ -132,13 +111,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const to = normalizeWhatsAppNumber(lead.phone_number);
     if (!to) throw new Error("নম্বরটি সঠিক নয়");
 
-    const { OUTREACH_TEMPLATES } = await import("@/lib/outreach-templates");
-    const tpl = OUTREACH_TEMPLATES.find((t) => t.key === data.templateKey);
-    if (!tpl) throw new Error("শুধু অনুমোদিত টেমপ্লেট পাঠানো যায়");
-    const { data: visit } = await supabaseAdmin.from("site_visits").select("project").eq("lead_id", lead.id)
-      .not("project", "is", null).order("visit_at", { ascending: false }).limit(1).maybeSingle();
-    const body = tpl.build({ name: lead.name, project: visit?.project ?? null, agentName: caller.profile.name ?? null });
-    const result = await provider.sendMessage({ to, body, leadId: lead.id });
+    const result = await provider.sendMessage({ to, body: data.body, leadId: lead.id });
     if (!result.ok) return { ok: false as const, status: "failed" as const, error: result.error };
 
     await supabaseAdmin.from("whatsapp_interactions").insert({
@@ -146,7 +119,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
       agent_id: caller.profile?.id ?? null,
       sender_type: "agent",
       message_type: "text",
-      message_content: body,
+      message_content: data.body,
       provider: "meta-cloud-api",
       provider_message_id: result.providerMessageId || null,
       // Meta's webhook moves this to delivered / read / failed.

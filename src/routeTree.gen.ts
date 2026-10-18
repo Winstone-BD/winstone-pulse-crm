@@ -19,32 +19,26 @@ import { Route as CoachRouteImport } from './routes/coach'
 import { Route as ContributionsRouteImport } from './routes/contributions'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as CustomersRouteImport } from './routes/customers'
-import { Route as DailySheetRouteImport } from './routes/daily-sheet'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DispatchRouteImport } from './routes/dispatch'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsAdminRouteImport } from './routes/docs-admin'
-import { Route as EnquiriesRouteImport } from './routes/enquiries'
 import { Route as HandoverRouteImport } from './routes/handover'
-import { Route as HandoverSummaryRouteImport } from './routes/handover-summary'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HqRouteImport } from './routes/hq'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
 import { Route as InsightsRouteImport } from './routes/insights'
-import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LeadhubRouteImport } from './routes/leadhub'
 import { Route as LiveLeadsRouteImport } from './routes/live-leads'
 import { Route as ManualRouteImport } from './routes/manual'
-import { Route as MarketingRouteImport } from './routes/marketing'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as NewsRouteImport } from './routes/news'
-import { Route as ObjectionsRouteImport } from './routes/objections'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -52,28 +46,23 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RuntimeErrorsRouteImport } from './routes/runtime-errors'
 import { Route as SalesIntelRouteImport } from './routes/sales-intel'
 import { Route as SecurityRouteImport } from './routes/security'
-import { Route as SecurityFindingsRouteImport } from './routes/security-findings'
 import { Route as ServiceBillAlertRouteImport } from './routes/service-bill-alert'
 import { Route as ServiceBillUnlockRouteImport } from './routes/service-bill-unlock'
 import { Route as SiteVisitsRouteImport } from './routes/site-visits'
 import { Route as SocialPagesRouteImport } from './routes/social-pages'
 import { Route as StaffPortalRouteImport } from './routes/staff-portal'
-import { Route as StagingChecklistRouteImport } from './routes/staging-checklist'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupportAdminRouteImport } from './routes/support-admin'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as TechRouteImport } from './routes/tech'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TicketsRouteImport } from './routes/tickets'
-import { Route as UnlockApproveRouteImport } from './routes/unlock-approve'
-import { Route as VersionRouteImport } from './routes/version'
 import { Route as VoiceTranscriptionRouteImport } from './routes/voice-transcription'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
 import { Route as HelpSlugRouteImport } from './routes/help_.$slug'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicEmailEventsRouteImport } from './routes/api/public/email-events'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicSmokeRouteImport } from './routes/api/public/smoke'
 import { Route as ApiPublicTmpBulkImportRouteImport } from './routes/api/public/tmp-bulk-import'
 import { Route as DocsAdminEditorSlugRouteImport } from './routes/docs-admin_.editor.$slug'
@@ -98,7 +87,6 @@ import { Route as ApiPublicBackupsRunRouteImport } from './routes/api/public/bac
 import { Route as ApiPublicConfigMaintenanceRouteImport } from './routes/api/public/config/maintenance'
 import { Route as ApiPublicConfigRulesRouteImport } from './routes/api/public/config/rules'
 import { Route as ApiPublicDownloadApkRouteImport } from './routes/api/public/download/apk'
-import { Route as ApiPublicHooksDailySheetRouteImport } from './routes/api/public/hooks/daily-sheet'
 import { Route as ApiPublicHooksDeployHealthRouteImport } from './routes/api/public/hooks/deploy-health'
 import { Route as ApiPublicHooksDriveBackupRouteImport } from './routes/api/public/hooks/drive-backup'
 import { Route as ApiPublicHooksLeadDistributionRouteImport } from './routes/api/public/hooks/lead-distribution'
@@ -176,11 +164,6 @@ const CustomersRoute = CustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DailySheetRoute = DailySheetRouteImport.update({
-  id: '/daily-sheet',
-  path: '/daily-sheet',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
@@ -206,19 +189,9 @@ const DocsAdminRoute = DocsAdminRouteImport.update({
   path: '/docs-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EnquiriesRoute = EnquiriesRouteImport.update({
-  id: '/enquiries',
-  path: '/enquiries',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const HandoverRoute = HandoverRouteImport.update({
   id: '/handover',
   path: '/handover',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HandoverSummaryRoute = HandoverSummaryRouteImport.update({
-  id: '/handover-summary',
-  path: '/handover-summary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -251,11 +224,6 @@ const InsightsRoute = InsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IntegrationsRoute = IntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -276,11 +244,6 @@ const ManualRoute = ManualRouteImport.update({
   path: '/manual',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketingRoute = MarketingRouteImport.update({
-  id: '/marketing',
-  path: '/marketing',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -299,11 +262,6 @@ const MigrationExportRoute = MigrationExportRouteImport.update({
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ObjectionsRoute = ObjectionsRouteImport.update({
-  id: '/objections',
-  path: '/objections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -341,11 +299,6 @@ const SecurityRoute = SecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SecurityFindingsRoute = SecurityFindingsRouteImport.update({
-  id: '/security-findings',
-  path: '/security-findings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ServiceBillAlertRoute = ServiceBillAlertRouteImport.update({
   id: '/service-bill-alert',
   path: '/service-bill-alert',
@@ -369,11 +322,6 @@ const SocialPagesRoute = SocialPagesRouteImport.update({
 const StaffPortalRoute = StaffPortalRouteImport.update({
   id: '/staff-portal',
   path: '/staff-portal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StagingChecklistRoute = StagingChecklistRouteImport.update({
-  id: '/staging-checklist',
-  path: '/staging-checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -406,16 +354,6 @@ const TicketsRoute = TicketsRouteImport.update({
   path: '/tickets',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnlockApproveRoute = UnlockApproveRouteImport.update({
-  id: '/unlock-approve',
-  path: '/unlock-approve',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VersionRoute = VersionRouteImport.update({
-  id: '/version',
-  path: '/version',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const VoiceTranscriptionRoute = VoiceTranscriptionRouteImport.update({
   id: '/voice-transcription',
   path: '/voice-transcription',
@@ -445,11 +383,6 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 const ApiPublicEmailEventsRoute = ApiPublicEmailEventsRouteImport.update({
   id: '/api/public/email-events',
   path: '/api/public/email-events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSmokeRoute = ApiPublicSmokeRouteImport.update({
@@ -577,12 +510,6 @@ const ApiPublicDownloadApkRoute = ApiPublicDownloadApkRouteImport.update({
   path: '/api/public/download/apk',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksDailySheetRoute =
-  ApiPublicHooksDailySheetRouteImport.update({
-    id: '/api/public/hooks/daily-sheet',
-    path: '/api/public/hooks/daily-sheet',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksDeployHealthRoute =
   ApiPublicHooksDeployHealthRouteImport.update({
     id: '/api/public/hooks/deploy-health',
@@ -741,32 +668,26 @@ export interface FileRoutesByFullPath {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
-  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
-  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
-  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/insights': typeof InsightsRoute
-  '/integrations': typeof IntegrationsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
-  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
-  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -774,28 +695,23 @@ export interface FileRoutesByFullPath {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
-  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
-  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
-  '/unlock-approve': typeof UnlockApproveRoute
-  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -820,7 +736,6 @@ export interface FileRoutesByFullPath {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
-  '/api/public/hooks/daily-sheet': typeof ApiPublicHooksDailySheetRoute
   '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
@@ -859,32 +774,26 @@ export interface FileRoutesByTo {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
-  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
-  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
-  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/insights': typeof InsightsRoute
-  '/integrations': typeof IntegrationsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
-  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
-  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -892,28 +801,23 @@ export interface FileRoutesByTo {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
-  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
-  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
-  '/unlock-approve': typeof UnlockApproveRoute
-  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/help/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -938,7 +842,6 @@ export interface FileRoutesByTo {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
-  '/api/public/hooks/daily-sheet': typeof ApiPublicHooksDailySheetRoute
   '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
@@ -978,32 +881,26 @@ export interface FileRoutesById {
   '/contributions': typeof ContributionsRoute
   '/credits': typeof CreditsRoute
   '/customers': typeof CustomersRoute
-  '/daily-sheet': typeof DailySheetRoute
   '/desk': typeof DeskRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/dispatch': typeof DispatchRoute
   '/docs': typeof DocsRoute
   '/docs-admin': typeof DocsAdminRoute
-  '/enquiries': typeof EnquiriesRoute
   '/handover': typeof HandoverRoute
-  '/handover-summary': typeof HandoverSummaryRoute
   '/help': typeof HelpRoute
   '/hq': typeof HqRoute
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
   '/insights': typeof InsightsRoute
-  '/integrations': typeof IntegrationsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
   '/manual': typeof ManualRoute
-  '/marketing': typeof MarketingRoute
   '/mcp': typeof McpRoute
   '/migration': typeof MigrationRoute
   '/migration-export': typeof MigrationExportRoute
   '/news': typeof NewsRoute
-  '/objections': typeof ObjectionsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
   '/reports': typeof ReportsRoute
@@ -1011,28 +908,23 @@ export interface FileRoutesById {
   '/runtime-errors': typeof RuntimeErrorsRoute
   '/sales-intel': typeof SalesIntelRoute
   '/security': typeof SecurityRoute
-  '/security-findings': typeof SecurityFindingsRoute
   '/service-bill-alert': typeof ServiceBillAlertRoute
   '/service-bill-unlock': typeof ServiceBillUnlockRoute
   '/site-visits': typeof SiteVisitsRoute
   '/social-pages': typeof SocialPagesRoute
   '/staff-portal': typeof StaffPortalRoute
-  '/staging-checklist': typeof StagingChecklistRoute
   '/support': typeof SupportRoute
   '/support-admin': typeof SupportAdminRoute
   '/system': typeof SystemRoute
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
-  '/unlock-approve': typeof UnlockApproveRoute
-  '/version': typeof VersionRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs_/$slug': typeof DocsSlugRoute
   '/help_/$slug': typeof HelpSlugRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/email-events': typeof ApiPublicEmailEventsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/smoke': typeof ApiPublicSmokeRoute
   '/api/public/tmp-bulk-import': typeof ApiPublicTmpBulkImportRoute
   '/docs-admin_/editor/$slug': typeof DocsAdminEditorSlugRoute
@@ -1057,7 +949,6 @@ export interface FileRoutesById {
   '/api/public/config/maintenance': typeof ApiPublicConfigMaintenanceRoute
   '/api/public/config/rules': typeof ApiPublicConfigRulesRoute
   '/api/public/download/apk': typeof ApiPublicDownloadApkRoute
-  '/api/public/hooks/daily-sheet': typeof ApiPublicHooksDailySheetRoute
   '/api/public/hooks/deploy-health': typeof ApiPublicHooksDeployHealthRoute
   '/api/public/hooks/drive-backup': typeof ApiPublicHooksDriveBackupRoute
   '/api/public/hooks/lead-distribution': typeof ApiPublicHooksLeadDistributionRoute
@@ -1098,32 +989,26 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
-    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
-    | '/enquiries'
     | '/handover'
-    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
     | '/inbox'
     | '/ingest'
     | '/insights'
-    | '/integrations'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
     | '/manual'
-    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
     | '/news'
-    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1131,28 +1016,23 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
-    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
-    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
     | '/tech'
     | '/terms'
     | '/tickets'
-    | '/unlock-approve'
-    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
-    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -1177,7 +1057,6 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
-    | '/api/public/hooks/daily-sheet'
     | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
@@ -1216,32 +1095,26 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
-    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
-    | '/enquiries'
     | '/handover'
-    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
     | '/inbox'
     | '/ingest'
     | '/insights'
-    | '/integrations'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
     | '/manual'
-    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
     | '/news'
-    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1249,28 +1122,23 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
-    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
-    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
     | '/tech'
     | '/terms'
     | '/tickets'
-    | '/unlock-approve'
-    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
     | '/help/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
-    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin/editor/$slug'
@@ -1295,7 +1163,6 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
-    | '/api/public/hooks/daily-sheet'
     | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
@@ -1334,32 +1201,26 @@ export interface FileRouteTypes {
     | '/contributions'
     | '/credits'
     | '/customers'
-    | '/daily-sheet'
     | '/desk'
     | '/diagnostics'
     | '/dispatch'
     | '/docs'
     | '/docs-admin'
-    | '/enquiries'
     | '/handover'
-    | '/handover-summary'
     | '/help'
     | '/hq'
     | '/import'
     | '/inbox'
     | '/ingest'
     | '/insights'
-    | '/integrations'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
     | '/manual'
-    | '/marketing'
     | '/mcp'
     | '/migration'
     | '/migration-export'
     | '/news'
-    | '/objections'
     | '/privacy'
     | '/projects'
     | '/reports'
@@ -1367,28 +1228,23 @@ export interface FileRouteTypes {
     | '/runtime-errors'
     | '/sales-intel'
     | '/security'
-    | '/security-findings'
     | '/service-bill-alert'
     | '/service-bill-unlock'
     | '/site-visits'
     | '/social-pages'
     | '/staff-portal'
-    | '/staging-checklist'
     | '/support'
     | '/support-admin'
     | '/system'
     | '/tech'
     | '/terms'
     | '/tickets'
-    | '/unlock-approve'
-    | '/version'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs_/$slug'
     | '/help_/$slug'
     | '/.lovable/oauth/consent'
     | '/api/public/email-events'
-    | '/api/public/health'
     | '/api/public/smoke'
     | '/api/public/tmp-bulk-import'
     | '/docs-admin_/editor/$slug'
@@ -1413,7 +1269,6 @@ export interface FileRouteTypes {
     | '/api/public/config/maintenance'
     | '/api/public/config/rules'
     | '/api/public/download/apk'
-    | '/api/public/hooks/daily-sheet'
     | '/api/public/hooks/deploy-health'
     | '/api/public/hooks/drive-backup'
     | '/api/public/hooks/lead-distribution'
@@ -1453,32 +1308,26 @@ export interface RootRouteChildren {
   ContributionsRoute: typeof ContributionsRoute
   CreditsRoute: typeof CreditsRoute
   CustomersRoute: typeof CustomersRoute
-  DailySheetRoute: typeof DailySheetRoute
   DeskRoute: typeof DeskRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   DispatchRoute: typeof DispatchRoute
   DocsRoute: typeof DocsRoute
   DocsAdminRoute: typeof DocsAdminRoute
-  EnquiriesRoute: typeof EnquiriesRoute
   HandoverRoute: typeof HandoverRoute
-  HandoverSummaryRoute: typeof HandoverSummaryRoute
   HelpRoute: typeof HelpRoute
   HqRoute: typeof HqRoute
   ImportRoute: typeof ImportRoute
   InboxRoute: typeof InboxRoute
   IngestRoute: typeof IngestRoute
   InsightsRoute: typeof InsightsRoute
-  IntegrationsRoute: typeof IntegrationsRoute
   InventoryRoute: typeof InventoryRoute
   LeadhubRoute: typeof LeadhubRoute
   LiveLeadsRoute: typeof LiveLeadsRoute
   ManualRoute: typeof ManualRoute
-  MarketingRoute: typeof MarketingRoute
   McpRoute: typeof McpRoute
   MigrationRoute: typeof MigrationRoute
   MigrationExportRoute: typeof MigrationExportRoute
   NewsRoute: typeof NewsRoute
-  ObjectionsRoute: typeof ObjectionsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProjectsRoute: typeof ProjectsRoute
   ReportsRoute: typeof ReportsRoute
@@ -1486,28 +1335,23 @@ export interface RootRouteChildren {
   RuntimeErrorsRoute: typeof RuntimeErrorsRoute
   SalesIntelRoute: typeof SalesIntelRoute
   SecurityRoute: typeof SecurityRoute
-  SecurityFindingsRoute: typeof SecurityFindingsRoute
   ServiceBillAlertRoute: typeof ServiceBillAlertRoute
   ServiceBillUnlockRoute: typeof ServiceBillUnlockRoute
   SiteVisitsRoute: typeof SiteVisitsRoute
   SocialPagesRoute: typeof SocialPagesRoute
   StaffPortalRoute: typeof StaffPortalRoute
-  StagingChecklistRoute: typeof StagingChecklistRoute
   SupportRoute: typeof SupportRoute
   SupportAdminRoute: typeof SupportAdminRoute
   SystemRoute: typeof SystemRoute
   TechRoute: typeof TechRoute
   TermsRoute: typeof TermsRoute
   TicketsRoute: typeof TicketsRoute
-  UnlockApproveRoute: typeof UnlockApproveRoute
-  VersionRoute: typeof VersionRoute
   VoiceTranscriptionRoute: typeof VoiceTranscriptionRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DocsSlugRoute: typeof DocsSlugRoute
   HelpSlugRoute: typeof HelpSlugRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicEmailEventsRoute: typeof ApiPublicEmailEventsRoute
-  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicSmokeRoute: typeof ApiPublicSmokeRoute
   ApiPublicTmpBulkImportRoute: typeof ApiPublicTmpBulkImportRoute
   DocsAdminEditorSlugRoute: typeof DocsAdminEditorSlugRoute
@@ -1532,7 +1376,6 @@ export interface RootRouteChildren {
   ApiPublicConfigMaintenanceRoute: typeof ApiPublicConfigMaintenanceRoute
   ApiPublicConfigRulesRoute: typeof ApiPublicConfigRulesRoute
   ApiPublicDownloadApkRoute: typeof ApiPublicDownloadApkRoute
-  ApiPublicHooksDailySheetRoute: typeof ApiPublicHooksDailySheetRoute
   ApiPublicHooksDeployHealthRoute: typeof ApiPublicHooksDeployHealthRoute
   ApiPublicHooksDriveBackupRoute: typeof ApiPublicHooksDriveBackupRoute
   ApiPublicHooksLeadDistributionRoute: typeof ApiPublicHooksLeadDistributionRoute
@@ -1633,13 +1476,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/daily-sheet': {
-      id: '/daily-sheet'
-      path: '/daily-sheet'
-      fullPath: '/daily-sheet'
-      preLoaderRoute: typeof DailySheetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/desk': {
       id: '/desk'
       path: '/desk'
@@ -1675,25 +1511,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/enquiries': {
-      id: '/enquiries'
-      path: '/enquiries'
-      fullPath: '/enquiries'
-      preLoaderRoute: typeof EnquiriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/handover': {
       id: '/handover'
       path: '/handover'
       fullPath: '/handover'
       preLoaderRoute: typeof HandoverRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/handover-summary': {
-      id: '/handover-summary'
-      path: '/handover-summary'
-      fullPath: '/handover-summary'
-      preLoaderRoute: typeof HandoverSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -1738,13 +1560,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/integrations': {
-      id: '/integrations'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof IntegrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/inventory': {
       id: '/inventory'
       path: '/inventory'
@@ -1773,13 +1588,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManualRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/marketing': {
-      id: '/marketing'
-      path: '/marketing'
-      fullPath: '/marketing'
-      preLoaderRoute: typeof MarketingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -1806,13 +1614,6 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/objections': {
-      id: '/objections'
-      path: '/objections'
-      fullPath: '/objections'
-      preLoaderRoute: typeof ObjectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1864,13 +1665,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SecurityRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/security-findings': {
-      id: '/security-findings'
-      path: '/security-findings'
-      fullPath: '/security-findings'
-      preLoaderRoute: typeof SecurityFindingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/service-bill-alert': {
       id: '/service-bill-alert'
       path: '/service-bill-alert'
@@ -1904,13 +1698,6 @@ declare module '@tanstack/react-router' {
       path: '/staff-portal'
       fullPath: '/staff-portal'
       preLoaderRoute: typeof StaffPortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/staging-checklist': {
-      id: '/staging-checklist'
-      path: '/staging-checklist'
-      fullPath: '/staging-checklist'
-      preLoaderRoute: typeof StagingChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -1955,20 +1742,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TicketsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/unlock-approve': {
-      id: '/unlock-approve'
-      path: '/unlock-approve'
-      fullPath: '/unlock-approve'
-      preLoaderRoute: typeof UnlockApproveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/version': {
-      id: '/version'
-      path: '/version'
-      fullPath: '/version'
-      preLoaderRoute: typeof VersionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/voice-transcription': {
       id: '/voice-transcription'
       path: '/voice-transcription'
@@ -2009,13 +1782,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/email-events'
       fullPath: '/api/public/email-events'
       preLoaderRoute: typeof ApiPublicEmailEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/smoke': {
@@ -2184,13 +1950,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/download/apk'
       fullPath: '/api/public/download/apk'
       preLoaderRoute: typeof ApiPublicDownloadApkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/daily-sheet': {
-      id: '/api/public/hooks/daily-sheet'
-      path: '/api/public/hooks/daily-sheet'
-      fullPath: '/api/public/hooks/daily-sheet'
-      preLoaderRoute: typeof ApiPublicHooksDailySheetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/deploy-health': {
@@ -2389,32 +2148,26 @@ const rootRouteChildren: RootRouteChildren = {
   ContributionsRoute: ContributionsRoute,
   CreditsRoute: CreditsRoute,
   CustomersRoute: CustomersRoute,
-  DailySheetRoute: DailySheetRoute,
   DeskRoute: DeskRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   DispatchRoute: DispatchRoute,
   DocsRoute: DocsRoute,
   DocsAdminRoute: DocsAdminRoute,
-  EnquiriesRoute: EnquiriesRoute,
   HandoverRoute: HandoverRoute,
-  HandoverSummaryRoute: HandoverSummaryRoute,
   HelpRoute: HelpRoute,
   HqRoute: HqRoute,
   ImportRoute: ImportRoute,
   InboxRoute: InboxRoute,
   IngestRoute: IngestRoute,
   InsightsRoute: InsightsRoute,
-  IntegrationsRoute: IntegrationsRoute,
   InventoryRoute: InventoryRoute,
   LeadhubRoute: LeadhubRoute,
   LiveLeadsRoute: LiveLeadsRoute,
   ManualRoute: ManualRoute,
-  MarketingRoute: MarketingRoute,
   McpRoute: McpRoute,
   MigrationRoute: MigrationRoute,
   MigrationExportRoute: MigrationExportRoute,
   NewsRoute: NewsRoute,
-  ObjectionsRoute: ObjectionsRoute,
   PrivacyRoute: PrivacyRoute,
   ProjectsRoute: ProjectsRoute,
   ReportsRoute: ReportsRoute,
@@ -2422,21 +2175,17 @@ const rootRouteChildren: RootRouteChildren = {
   RuntimeErrorsRoute: RuntimeErrorsRoute,
   SalesIntelRoute: SalesIntelRoute,
   SecurityRoute: SecurityRoute,
-  SecurityFindingsRoute: SecurityFindingsRoute,
   ServiceBillAlertRoute: ServiceBillAlertRoute,
   ServiceBillUnlockRoute: ServiceBillUnlockRoute,
   SiteVisitsRoute: SiteVisitsRoute,
   SocialPagesRoute: SocialPagesRoute,
   StaffPortalRoute: StaffPortalRoute,
-  StagingChecklistRoute: StagingChecklistRoute,
   SupportRoute: SupportRoute,
   SupportAdminRoute: SupportAdminRoute,
   SystemRoute: SystemRoute,
   TechRoute: TechRoute,
   TermsRoute: TermsRoute,
   TicketsRoute: TicketsRoute,
-  UnlockApproveRoute: UnlockApproveRoute,
-  VersionRoute: VersionRoute,
   VoiceTranscriptionRoute: VoiceTranscriptionRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
@@ -2444,7 +2193,6 @@ const rootRouteChildren: RootRouteChildren = {
   HelpSlugRoute: HelpSlugRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicEmailEventsRoute: ApiPublicEmailEventsRoute,
-  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicSmokeRoute: ApiPublicSmokeRoute,
   ApiPublicTmpBulkImportRoute: ApiPublicTmpBulkImportRoute,
   DocsAdminEditorSlugRoute: DocsAdminEditorSlugRoute,
@@ -2469,7 +2217,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicConfigMaintenanceRoute: ApiPublicConfigMaintenanceRoute,
   ApiPublicConfigRulesRoute: ApiPublicConfigRulesRoute,
   ApiPublicDownloadApkRoute: ApiPublicDownloadApkRoute,
-  ApiPublicHooksDailySheetRoute: ApiPublicHooksDailySheetRoute,
   ApiPublicHooksDeployHealthRoute: ApiPublicHooksDeployHealthRoute,
   ApiPublicHooksDriveBackupRoute: ApiPublicHooksDriveBackupRoute,
   ApiPublicHooksLeadDistributionRoute: ApiPublicHooksLeadDistributionRoute,

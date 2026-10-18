@@ -38,8 +38,6 @@ export const Route = createFileRoute("/api/public/agent/call-start")({
 
         const briefingBlock = await requireAgentBriefing(caller.profile.id);
         if (briefingBlock) return json(briefingBlock, 409);
-        const reviewBlock = await (await import("@/lib/accountability-access.server")).requireAgentReviewClear(caller.profile.id);
-        if (reviewBlock) return json(reviewBlock, 409);
 
         {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -1,4 +1,0 @@
-ALTER TABLE public.call_recordings ADD COLUMN IF NOT EXISTS device_reported_duration_seconds integer CHECK (device_reported_duration_seconds BETWEEN 0 AND 86400);
-ALTER TABLE public.call_reports ADD COLUMN IF NOT EXISTS device_reported_duration_seconds integer CHECK (device_reported_duration_seconds BETWEEN 0 AND 86400);
-COMMENT ON COLUMN public.call_recordings.device_reported_duration_seconds IS 'Unverified Android device claim; never use in performance totals. Existing duration_seconds retains the server cap.';
-COMMENT ON COLUMN public.call_reports.device_reported_duration_seconds IS 'Unverified device claim copied from associated call; excluded from trusted duration_seconds and performance.';

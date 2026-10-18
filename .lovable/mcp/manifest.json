@@ -1,20 +1,19 @@
 {
   "version": 1,
-  "sdk_version": "4.0.0-rc.0",
+  "sdk_version": "2.3.0",
   "path": "/mcp",
   "auth": {
     "type": "oauth",
     "issuer": "https://siepfegeubbqwhodyxcg.supabase.co/auth/v1",
-    "require_oauth_client_claim": true,
     "accepted_audiences": [
       "authenticated"
     ]
   },
   "mcp": {
     "server": {
-      "name": "winstone-pulse-crm",
+      "name": "winstone-public-property-catalog",
       "version": "0.1.0",
-      "title": "Winstone Pulse: CRM"
+      "title": "Winstone Public Property Catalog"
     },
     "tools": [
       {
@@ -27,7 +26,6 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "geography": {
@@ -36,13 +34,14 @@
               "maxLength": 100
             },
             "limit": {
-              "default": 50,
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "default": 50
             }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       }

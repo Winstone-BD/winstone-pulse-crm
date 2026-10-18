@@ -277,9 +277,8 @@ export function DeskCommandCenter({
 
   const priority = useMemo(() => {
     const now = Date.now();
-    const done = new Set(doneIds);
     return leads
-      .filter((l) => l.status !== "closed" && l.work_state !== "completed" && !isParked(l) && !done.has(l.id))
+      .filter((l) => l.status !== "closed")
       .map((l) => {
         const overdue = l.retry_after ? Date.parse(l.retry_after) < now : false;
         const score =
@@ -291,7 +290,7 @@ export function DeskCommandCenter({
       .filter((r) => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
-  }, [leads, doneIds]);
+  }, [leads]);
 
   const activity = useMemo(() => {
     const rowsAll = [
@@ -375,25 +374,23 @@ export function DeskCommandCenter({
     setSelectedId(leadId);
     if (compactDesk) setMobile360Open(true);
   };
-  // After any report is saved (call mode or not), move off the just-reported
-  // lead so a ringing/busy number is never dialled again by mistake.
+  // Call mode: after a report is saved, open the next open lead in the queue.
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
-  const doneIdsRef = useRef(doneIds);
-  doneIdsRef.current = doneIds;
   useEffect(() => {
+    if (!callMode) return;
     const onSubmitted = (e: Event) => {
       const leadId = (e as CustomEvent<{ leadId: string | null }>).detail?.leadId;
       setDoneIds((prev) => (leadId ? [...prev, leadId] : prev));
-      const next = pickNextEligible(rowsRef.current, [...doneIdsRef.current, leadId].filter(Boolean) as string[]);
+      const next = pickNextEligible(rowsRef.current, [...doneIds, leadId].filter(Boolean) as string[]);
       if (next) {
         setSelectedId(next.id);
-        toast.success(t({ bn: `রিপোর্ট সংরক্ষিত · পরের লিড: ${next.name}`, en: `Report saved · Next lead: ${next.name}` }));
+        toast.success(t({ bn: `পরের লিড: ${next.name}`, en: `Next lead: ${next.name}` }));
       } else toast.success(t({ bn: "এই তালিকার সব লিড শেষ!", en: "All leads in this list are done!" }));
     };
     window.addEventListener("winstone:report-submitted", onSubmitted);
     return () => window.removeEventListener("winstone:report-submitted", onSubmitted);
-  }, [t]);
+  }, [callMode, doneIds, t]);
   // Alt+Shift+N: same selection rule as auto-advance. Blocked while any dialog
   // (incl. the mandatory call report) is open, so it can never skip a pending report.
   const selectedIdRef = useRef<string | null>(null);

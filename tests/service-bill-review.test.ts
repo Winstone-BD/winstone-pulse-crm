@@ -20,7 +20,7 @@ describe("review-only service bill", () => {
     expect(bill).toEqual({
       bill_id: "11111111-1111-4111-8111-111111111111",
       service_name: "Winstone Pulse IT Service & Maintenance",
-      amount: 35.29,
+      amount: 46.29,
       currency: "USD",
       status: "Pending Review",
       issuer: "Winstone IT Team",

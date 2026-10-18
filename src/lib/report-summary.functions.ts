@@ -1,8 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
-
 /**
  * Smart summary from the agent's own report text — no transcript, no recording
  * needed. Reuses the project's existing Lovable AI gateway path (same model as
@@ -43,12 +41,11 @@ export const draftReportSummary = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "You summarise a Bangladeshi tele-sales agent's own call notes. Reply in Bengali, 2-3 short bullet lines starting with '• ', covering what the customer said and the next step. Use ONLY facts present in the notes; never invent prices, names or promises. If the notes are too thin, reply exactly: NOT_ENOUGH. " +
-              UNTRUSTED_RULE,
+              "You summarise a Bangladeshi tele-sales agent's own call notes. Reply in Bengali, 2-3 short bullet lines starting with '• ', covering what the customer said and the next step. Use ONLY facts present in the notes; never invent prices, names or promises. If the notes are too thin, reply exactly: NOT_ENOUGH",
           },
           {
             role: "user",
-            content: `${data.category ? `ক্যাটাগরি: ${data.category}\n` : ""}নোট:\n${sanitizeNotes(data.text).wrapped}`,
+            content: `${data.category ? `ক্যাটাগরি: ${data.category}\n` : ""}নোট:\n${data.text}`,
           },
         ],
       }),

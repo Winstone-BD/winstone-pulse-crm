@@ -86,42 +86,30 @@ export async function sendPush(input: {
   entityId?: string | null;
   profileIds: string[];
   payload: PushPayload;
-  /** validate_only: FCM checks the message, nothing is delivered. */
-  dryRun?: boolean;
 }): Promise<{ sent: number; failed: number; skipped?: string }> {
   const supabaseAdmin = await admin();
-  // Dry run: internal primitive only (no caller exposes it yet). It writes no
-  // ledger row, never revokes a token, and targets exactly one profile.
-  const dry = input.dryRun === true;
-  if (dry && input.profileIds.length !== 1) return { sent: 0, failed: 0, skipped: "dry_run_single_profile_only" };
 
-  if (!dry) {
-    // Idempotency: the ledger row is the claim. A duplicate event does nothing.
-    const { error: claimError } = await supabaseAdmin.from("push_deliveries").insert({
-      event_key: input.eventKey,
-      kind: input.kind,
-      entity_id: input.entityId ?? null,
-      provider: "firebase_messaging",
-    });
-    if (claimError) return { sent: 0, failed: 0, skipped: "already_sent" };
-  }
+  // Idempotency: the ledger row is the claim. A duplicate event does nothing.
+  const { error: claimError } = await supabaseAdmin.from("push_deliveries").insert({
+    event_key: input.eventKey,
+    kind: input.kind,
+    entity_id: input.entityId ?? null,
+    provider: "firebase_messaging",
+  });
+  if (claimError) return { sent: 0, failed: 0, skipped: "already_sent" };
 
   const creds = credentials();
   const tokens = await tokensFor(input.profileIds);
-  if (!dry) {
-    await supabaseAdmin
-      .from("push_deliveries")
-      .update({ recipients: tokens.length })
-      .eq("event_key", input.eventKey);
-  }
+  await supabaseAdmin
+    .from("push_deliveries")
+    .update({ recipients: tokens.length })
+    .eq("event_key", input.eventKey);
 
   if (!creds) {
-    if (!dry) {
-      await supabaseAdmin
-        .from("push_deliveries")
-        .update({ error_message: "firebase_not_connected" })
-        .eq("event_key", input.eventKey);
-    }
+    await supabaseAdmin
+      .from("push_deliveries")
+      .update({ error_message: "firebase_not_connected" })
+      .eq("event_key", input.eventKey);
     return { sent: 0, failed: 0, skipped: "firebase_not_connected" };
   }
   if (tokens.length === 0) return { sent: 0, failed: 0, skipped: "no_devices" };
@@ -130,22 +118,20 @@ export async function sendPush(input: {
   let failed = 0;
   let lastError: string | null = null;
 
-  const { fetchWithTimeout, redact, stringifyData, isDeadTokenResponse } = await import("@/lib/outbound-guard");
   for (const row of tokens) {
     const message = {
-      ...(dry ? { validate_only: true } : {}),
       message: {
         token: row.token,
-        notification: { title: input.payload.title.slice(0, 200), body: input.payload.body.slice(0, 1000) },
-        data: stringifyData({
+        notification: { title: input.payload.title, body: input.payload.body },
+        data: {
           ...(input.payload.data ?? {}),
           kind: input.kind,
           path: input.payload.path ?? "/desk",
-        }),
+        },
       },
     };
     try {
-      const response = await fetchWithTimeout(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
+      const response = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${creds.lovableKey}`,
@@ -153,28 +139,26 @@ export async function sendPush(input: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(message),
-      }, 8_000);
+      });
       if (response.ok) {
         sent += 1;
         continue;
       }
       const text = await response.text();
       failed += 1;
-      lastError = `[${response.status}] ${redact(text)}`;
-      // Only a dead token is dropped; a bad payload never revokes the device.
-      if (!dry && isDeadTokenResponse(response.status, text)) await revokePushToken(row.token);
+      lastError = `[${response.status}] ${text}`;
+      // A dead token is dropped instead of retried forever.
+      if (response.status === 404 || response.status === 400) await revokePushToken(row.token);
     } catch (error) {
       failed += 1;
-      lastError = error instanceof Error && error.name === "AbortError" ? "timeout" : "push failed";
+      lastError = error instanceof Error ? error.message : "push failed";
     }
   }
 
-  if (!dry) {
-    await supabaseAdmin
-      .from("push_deliveries")
-      .update({ delivered: sent, failed, error_message: lastError })
-      .eq("event_key", input.eventKey);
-  }
+  await supabaseAdmin
+    .from("push_deliveries")
+    .update({ delivered: sent, failed, error_message: lastError })
+    .eq("event_key", input.eventKey);
 
   return { sent, failed };
 }

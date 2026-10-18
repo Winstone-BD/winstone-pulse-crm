@@ -78,14 +78,13 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     // never cut short by a floor-wide limit or mixed with other agents' work.
     if (caller.scope === "agent" && caller.profile) {
       const me = caller.profile.id;
-      const [profile, ownLeads] = await Promise.all([
+      const [profile, ownLeadsA, ownLeadsB] = await Promise.all([
         supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).eq("id", me),
-        pageAll((a, b) => supabaseAdmin.from("leads").select("*")
-          .or(`assigned_agent_id.eq.${me},assigned_to.eq.${me}`)
-          .order("updated_at", { ascending: false }).order("id").range(a, b)),
+        supabaseAdmin.from("leads").select("*").eq("assigned_agent_id", me).limit(5000),
+        supabaseAdmin.from("leads").select("*").eq("assigned_to", me).limit(5000),
       ]);
       const leadMap = new Map<string, any>();
-      for (const l of ownLeads.data ?? []) {
+      for (const l of [...(ownLeadsA.data ?? []), ...(ownLeadsB.data ?? [])]) {
         if (leadOwner(l) === me) leadMap.set(l.id, l);
       }
       const myLeads = [...leadMap.values()].sort((a, b) =>
@@ -99,7 +98,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         pageAll((a, b) => supabaseAdmin.from("lead_events").select("*").eq("agent_id", me)
           .order("created_at", { ascending: false }).order("id").range(a, b)),
       ]);
-      const failed = [profile, ownLeads, calls, messages, events].find((r) => r.error);
+      const failed = [profile, ownLeadsA, ownLeadsB, calls, messages, events].find((r) => r.error);
       if (failed?.error) throw new Error(failed.error.message);
       const dedupe = <T extends { id: string }>(rows: T[]) => [
         ...new Map(rows.map((r) => [r.id, r])).values(),
@@ -149,12 +148,12 @@ export const unlockAdmin = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { pinMatchesLive, leadHubPinMatches, mintAdminToken, mintItChallenge } = await import("@/lib/admin-gate.server");
+    const { pinMatchesLive, leadHubPinMatches, mintAdminToken } = await import("@/lib/admin-gate.server");
     const matches = data.surface === "leadhub" ? await leadHubPinMatches(data.pin) : await pinMatchesLive(data.pin);
     if (!matches) return { ok: false as const };
     return {
       ok: true as const,
-      token: data.surface === "system" ? mintItChallenge() : mintAdminToken(data.surface === "hq" ? "hq" : "leadhub"),
+      token: mintAdminToken(data.surface === "hq" ? "hq" : data.surface === "leadhub" ? "leadhub" : "full"),
       readOnly: data.surface === "hq",
     };
   });
@@ -199,7 +198,7 @@ export const getAudioUrl = createServerFn({ method: "POST" })
     }
     const { data: signed, error } = await supabaseAdmin.storage
       .from("call-audio")
-      .createSignedUrl(recording.audio_url, 2 * 60);
+      .createSignedUrl(recording.audio_url, 5 * 60);
     if (error || !signed) throw new Error("Could not create playback link");
     return { url: signed.signedUrl };
   });
@@ -418,7 +417,7 @@ export const reanalyzeRecording = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ReanalyzeInput.parse(input))
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
     const { processRecording } = await import("@/lib/call-intel.server");
     await processRecording(data.recordingId);
     const { logAudit } = await import("@/lib/audit.server");

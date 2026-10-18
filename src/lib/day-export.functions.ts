@@ -26,7 +26,6 @@ export type DayCallRow = {
   direction: string;
   callStatus: string;
   durationSeconds: number;
-  deviceReportedDurationSeconds: number | null;
   durationLabel: string;
   connected: boolean;
   recordingStatus: string;
@@ -38,8 +37,6 @@ export type DayCallRow = {
 };
 
 const SIGNED_URL_SECONDS = 6 * 60 * 60;
-/** Live recent-calls list: links expire quickly and are re-minted on each refresh. */
-const RECENT_LINK_SECONDS = 2 * 60;
 const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
 
 function dhakaLabel(iso: string) {
@@ -76,7 +73,7 @@ export const dayCallExport = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabaseAdmin
       .from("call_recordings")
       .select(
-        "id, lead_id, agent_id, phone_number, call_direction, call_source, call_status, duration_seconds, device_reported_duration_seconds, recording_status, audio_url, transcription_text, ai_summary, ai_lead_category, started_at, created_at",
+        "id, lead_id, agent_id, phone_number, call_direction, call_source, call_status, duration_seconds, recording_status, audio_url, transcription_text, ai_summary, ai_lead_category, started_at, created_at",
       )
       .gte("created_at", new Date(dayStart.getTime() - 86_400_000).toISOString())
       .lt("created_at", new Date(dayEnd.getTime() + 86_400_000).toISOString())
@@ -133,7 +130,6 @@ export const dayCallExport = createServerFn({ method: "POST" })
         direction: row.call_direction,
         callStatus: row.call_status ?? "—",
         durationSeconds: row.duration_seconds ?? 0,
-        deviceReportedDurationSeconds: row.device_reported_duration_seconds,
         durationLabel: hms(row.duration_seconds ?? 0),
         connected: (row.duration_seconds ?? 0) > CONNECTED_SECONDS,
         recordingStatus: row.recording_status ?? "—",
@@ -189,7 +185,7 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabaseAdmin
       .from("call_recordings")
       .select(
-        "id, lead_id, agent_id, phone_number, call_direction, call_source, call_status, duration_seconds, device_reported_duration_seconds, recording_status, upload_status, audio_url, transcription_text, ai_summary, ai_lead_category, started_at, created_at",
+        "id, lead_id, agent_id, phone_number, call_direction, call_source, call_status, duration_seconds, recording_status, upload_status, audio_url, transcription_text, ai_summary, ai_lead_category, started_at, created_at",
       )
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 30);
@@ -217,7 +213,7 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
     if (paths.length > 0) {
       const { data: signed } = await supabaseAdmin.storage
         .from("call-audio")
-        .createSignedUrls([...new Set(paths)], RECENT_LINK_SECONDS);
+        .createSignedUrls([...new Set(paths)], SIGNED_URL_SECONDS);
       for (const item of signed ?? []) {
         if (item.path && item.signedUrl) signedByPath.set(item.path, item.signedUrl);
       }
@@ -238,7 +234,6 @@ export const recentSyncedCalls = createServerFn({ method: "POST" })
         direction: row.call_direction,
         callStatus: row.call_status ?? "—",
         durationSeconds: row.duration_seconds ?? 0,
-        deviceReportedDurationSeconds: row.device_reported_duration_seconds,
         durationLabel: hms(row.duration_seconds ?? 0),
         recordingStatus: row.recording_status ?? "—",
         uploadStatus: row.upload_status ?? "—",

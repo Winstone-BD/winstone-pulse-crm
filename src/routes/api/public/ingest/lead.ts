@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { createRateLimiter, rateLimitedResponse, requestSourceKey } from "@/lib/rate-limit";
+import { createRateLimiter, requestSourceKey } from "@/lib/rate-limit";
 
 const leadIngestLimiter = createRateLimiter(120, 60_000);
 
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/public/ingest/lead")({
     handlers: {
       POST: async ({ request }) => {
         if (!leadIngestLimiter(requestSourceKey(request))) {
-          return rateLimitedResponse(leadIngestLimiter.retryAfter(requestSourceKey(request)), { error: "Rate limited" });
+          return json({ error: "Rate limited", retryable: true }, 429);
         }
         const { resolveApiCaller } = await import("@/lib/device-auth.server");
         const caller = await resolveApiCaller(request);

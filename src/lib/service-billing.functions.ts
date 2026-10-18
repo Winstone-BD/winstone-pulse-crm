@@ -4,7 +4,7 @@ import { z } from "zod";
 /**
  * Monthly ৳4,000 service bill endpoints. Reading is open to HQ (read-only) and
  * IT; verifying a payment or recording the architect payout needs a writing
- * identified IT Head session, and both are idempotent in service-billing.server.ts.
+ * IT/coordinator session, and both are idempotent in service-billing.server.ts.
  */
 
 const TokenInput = z.object({ adminToken: z.string().nullable().optional() });
@@ -20,27 +20,17 @@ async function writer(adminToken: string | null | undefined) {
   const caller = await reader(adminToken);
   const { requireWrite } = await import("@/lib/access.server");
   requireWrite(caller);
-  if (!(await billingReviewer(caller.userId, adminToken))) throw new Error("Only the verified Head of IT account can approve billing");
   return caller;
-}
-
-async function billingReviewer(userId: string | null, adminToken: string | null | undefined) {
-  if (!userId || !adminToken) return false;
-  const { itAccountTokenUser } = await import("@/lib/admin-gate.server");
-  if (itAccountTokenUser(adminToken) !== userId) return false;
-  const { architectFromRequest } = await import("@/lib/maintenance.server");
-  const identity = await architectFromRequest();
-  return identity?.userId === userId;
 }
 
 /** Invoice history, current period and whether the service is covered today. */
 export const serviceBillingOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
-    const caller = await reader(data.adminToken);
+    await reader(data.adminToken);
     const { billingState, architectAccount } = await import("@/lib/service-billing.server");
     const [state, architect] = await Promise.all([billingState(), architectAccount()]);
-    return { ...state, architect, canApproveBilling: !caller.readOnly && await billingReviewer(caller.userId, data.adminToken) };
+    return { ...state, architect };
   });
 
 const VerifyInput = TokenInput.extend({

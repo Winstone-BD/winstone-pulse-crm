@@ -80,7 +80,7 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
   // Loaded on demand so a hot reload of the PIN module never leaves a stale binding.
   const gate = await import("@/lib/admin-gate.server");
   const pinScope = gate.adminTokenScope(adminToken ?? null);
-  if (pinScope === "hq") {
+  if (pinScope === "full" || pinScope === "hq") {
     return {
       scope: "authority",
       profile: null,
@@ -93,7 +93,6 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
 
   const userId = await userIdFromRequest();
   if (!userId) return ANON;
-  if (pinScope === "full" && gate.itAccountTokenUser(adminToken) !== userId) return ANON;
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: profile } = await supabaseAdmin
@@ -110,14 +109,9 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
     return { scope: "none", profile, userId, approval, readOnly: true };
   }
 
-  const { data: roleRows, error: roleError } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
-  if (roleError) throw new Error("Unable to verify account permissions");
-  const isAdmin = roleRows?.some((row) => row.role === "admin") ?? false;
-  if (pinScope === "full" && !isAdmin) return ANON;
-
   return {
     scope:
-      isAdmin ? "authority" : "agent",
+      profile.role === "admin" ? "authority" : "agent",
     profile,
     userId,
     approval,

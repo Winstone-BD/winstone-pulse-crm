@@ -41,8 +41,6 @@ export const startMyCall = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
     const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
-    const reviewBlock = await (await import("@/lib/accountability-access.server")).requireAgentReviewClear(me.id);
-    if (reviewBlock) return reviewBlock;
     const briefingBlock = await requireAgentBriefing(me.id);
     if (briefingBlock) return briefingBlock;
     {
@@ -660,7 +658,7 @@ export const listCallReports = createServerFn({ method: "POST" })
     let query = supabaseAdmin
       .from("call_reports")
       .select(
-        "id, lead_id, agent_id, recording_id, phone_number, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, device_reported_duration_seconds, call_ended_at, submitted_at, temperature, grade, interest, requirement, customer_response, next_action, created_at",
+        "id, lead_id, agent_id, recording_id, phone_number, status, category, summary, note, reason, follow_up_at, connected, duration_seconds, call_ended_at, submitted_at, temperature, grade, interest, requirement, customer_response, next_action, created_at",
       )
       .order("call_ended_at", { ascending: false })
       .limit(data.limit ?? 200);

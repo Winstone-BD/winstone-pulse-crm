@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireReviewAction } from "@/lib/hq-review.rules";
 
 import { AUDIT_COMMIT, AUDIT_DATE, AUDIT_ITEMS, DOC_VERSION } from "@/lib/handover-docs";
 
@@ -20,14 +19,14 @@ async function authority(adminToken: string | null | undefined) {
   const c = await resolveCaller(adminToken ?? null, { skipMaintenance: true });
   if (c.scope !== "authority") return null;
   const actor = c.profile?.name ?? (c.readOnly ? "Executive HQ" : "IT Console");
-  return { actor, readOnly: c.readOnly, scope: c.profile ? "admin" : c.readOnly ? "hq" : "it" };
+  return { actor, scope: c.profile ? "admin" : c.readOnly ? "hq" : "it" };
 }
 
 export const getAuditRecords = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => z.object({ adminToken: Token }).parse(i ?? {}))
   .handler(async ({ data }) => {
     const a = await authority(data.adminToken);
-    if (!a) return { allowed: false as const, commentOnly: true, persisted: [], events: [] };
+    if (!a) return { allowed: false as const, persisted: [], events: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [f, e] = await Promise.all([
       supabaseAdmin.from("audit_findings").select("finding_key, item_no, captured_by, captured_at").eq("audit_commit", AUDIT_COMMIT),
@@ -35,7 +34,7 @@ export const getAuditRecords = createServerFn({ method: "POST" })
         .like("finding_key", `${AUDIT_COMMIT}#%`).order("created_at", { ascending: true }).limit(2000),
     ]);
     if (f.error || e.error) throw new Error("অডিট রেকর্ড পড়া যায়নি");
-    return { allowed: true as const, commentOnly: a.readOnly, persisted: f.data ?? [], events: e.data ?? [] };
+    return { allowed: true as const, persisted: f.data ?? [], events: e.data ?? [] };
   });
 
 /** Snapshots the current documented findings permanently (idempotent). */
@@ -70,7 +69,6 @@ export const addRemediationEvent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const a = await authority(data.adminToken);
     if (!a) throw new Error("শুধু HQ/IT সমাধানের ধাপ লিখতে পারে");
-    requireReviewAction(a.readOnly, data.action);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const key = findingKey(data.itemNo);
     const { data: f } = await supabaseAdmin.from("audit_findings").select("finding_key").eq("finding_key", key).maybeSingle();

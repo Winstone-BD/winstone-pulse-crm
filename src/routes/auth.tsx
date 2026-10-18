@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -11,12 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithIdentifier } from "@/lib/accounts.functions";
-import { ensureRegistered } from "@/lib/session";
+import { ensureRegistered, saveSignupDraft } from "@/lib/session";
 
 const SearchSchema = z.object({
   role: z.literal("agent").catch("agent"),
-  // Public self-registration is retired: IT HQ provisions every account.
-  mode: z.literal("signin").catch("signin"),
+  mode: z.enum(["signin", "signup"]).catch("signin"),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -27,7 +26,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sales agents sign in to their Winstone Pulse desk with the credentials IT HQ assigned.",
+          "Sales agents sign in to their Winstone Pulse desk, or create an account for approval.",
       },
       { property: "og:title", content: "Sign in — Winstone Pulse" },
       {
@@ -48,6 +47,8 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
 
   const signIn = useMutation({
     mutationFn: async () => {
@@ -56,7 +57,7 @@ function AuthPage() {
       });
       const { error } = await supabase.auth.setSession(tokens);
       if (error) throw new Error(error.message);
-      await ensureRegistered();
+      await ensureRegistered(name);
     },
     onSuccess: () => {
       toast.success("Signed in");
@@ -65,9 +66,36 @@ function AuthPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  void mode;
-  const busy = signIn.isPending;
-  const canSubmit = email.trim().length >= 4 && password.length >= 6;
+  const signUp = useMutation({
+    mutationFn: async () => {
+      saveSignupDraft({ name, phone, requestedRole: role });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) throw new Error(error.message);
+      if (data.session) await ensureRegistered(name);
+      return Boolean(data.session);
+    },
+    onSuccess: (hasSession) => {
+      if (hasSession) {
+        toast.success("Account created — waiting for approval");
+        void navigate({ to: "/desk" });
+      } else {
+        toast.success("Account created — confirm your email, then sign in");
+        void navigate({ to: "/auth", search: { role, mode: "signin" } });
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const isSignup = mode === "signup";
+  const busy = signIn.isPending || signUp.isPending;
+  const canSubmit =
+    (isSignup ? email.includes("@") : email.trim().length >= 4) &&
+    password.length >= 6 &&
+    (!isSignup || name.trim().length >= 2);
 
   return (
     <div className="theme-light grid min-h-dvh lg:grid-cols-2">
@@ -102,22 +130,47 @@ function AuthPage() {
         </Link>
 
         <h1 className="mt-6 text-xl font-bold tracking-tight">
-          {"Sign in to your desk"}
+          {isSignup ? "Create your account" : "Sign in to your desk"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {"Use your phone number, Employee ID or email."}
+          {isSignup
+            ? "A supervisor approves new accounts before the floor data opens up."
+            : "Use your phone number, Employee ID or email."}
         </p>
 
         <div className="mt-5 space-y-3">
+          {isSignup && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Full name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Mst. Soniya Yeasmin"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="01805049668"
+                  inputMode="tel"
+                />
+              </div>
+            </>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="email">{"Phone / Employee ID / Email"}</Label>
+            <Label htmlFor="email">{isSignup ? "Email" : "Phone / Employee ID / Email"}</Label>
             <Input
               id="email"
-              type={"text"}
+              type={isSignup ? "email" : "text"}
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={"01805049668 or WIN2601"}
+              placeholder={isSignup ? "you@winstonebd.com" : "01805049668 or WIN2601"}
             />
           </div>
 
@@ -126,13 +179,14 @@ function AuthPage() {
             <Input
               id="password"
               type="password"
-              autoComplete={"current-password"}
+              autoComplete={isSignup ? "new-password" : "current-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && canSubmit && !busy) {
-                  signIn.mutate();
+                  if (isSignup) signUp.mutate();
+                  else signIn.mutate();
                 }
               }}
             />
@@ -141,18 +195,27 @@ function AuthPage() {
           <Button
             className="w-full"
             disabled={!canSubmit || busy}
-            onClick={() => signIn.mutate()}
+            onClick={() => (isSignup ? signUp.mutate() : signIn.mutate())}
           >
             {busy ? (
               <Loader2 className="size-4 animate-spin" />
+            ) : isSignup ? (
+              <UserPlus className="size-4" />
             ) : (
               <LogIn className="size-4" />
             )}
-            {"Sign in"}
+            {isSignup ? "Create account" : "Sign in"}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            New agent accounts are created and managed by Winstone IT HQ.
+            {isSignup ? "Already have an account? " : "New here? "}
+            <Link
+              to="/auth"
+              search={{ role, mode: isSignup ? "signin" : "signup" }}
+              className="font-semibold text-primary hover:underline"
+            >
+              {isSignup ? "Sign in" : "Create account"}
+            </Link>
           </p>
           <p className="text-center text-xs text-muted-foreground">
             <Link to="/" className="hover:underline">

@@ -16,33 +16,31 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
   const db = await admin();
   const { start, end } = dhakaDayBounds(day);
 
-  const { data: leads, error: leadError } = await db
+  const { data: leads } = await db
     .from("leads")
     .select("id, name, status, work_state, updated_at, assignment_source")
     .eq("assigned_to", agentId)
     .eq("work_date", day)
     .limit(1000);
-  if (leadError) throw new Error("Unable to measure assigned work");
   const usable = (leads ?? []).filter((l) => l.assignment_source !== "duplicate_skipped");
   const ids = usable.map((l) => l.id);
 
   const reported = new Set<string>();
   if (ids.length) {
-    const { data: reps, error: reportError } = await db
+    const { data: reps } = await db
       .from("call_reports")
       .select("lead_id")
       .eq("agent_id", agentId)
       .in("lead_id", ids)
-      .eq("status", "submitted")
-      .gte("submitted_at", start)
-      .lte("submitted_at", end);
-    if (reportError) throw new Error("Unable to measure submitted reports");
+      .gte("created_at", start)
+      .lte("created_at", end);
     for (const r of reps ?? []) if (r.lead_id) reported.add(r.lead_id);
   }
   const leadRows = usable.map((l) => ({
     id: l.id,
     completed:
-      reported.has(l.id),
+      reported.has(l.id) || (l.work_state === "completed" && l.updated_at <= end) ||
+      (l.status !== "pending" && l.updated_at <= end),
   }));
 
   const { data: fus } = await db

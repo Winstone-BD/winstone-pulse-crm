@@ -95,11 +95,7 @@ export function buildProjectReport(
 }
 
 export function projectReportCsv(rows: ProjectReportRow[]) {
-  const cell = (value: string | number) => {
-    let s = String(value);
-    if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-    return `"${s.replaceAll('"', '""')}"`;
-  };
+  const cell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
   return [
     ["Project / Requirement", "Status", "Leads", "Calls", "Site visit signals", "Bookings"],
     ...rows.map((row) => [

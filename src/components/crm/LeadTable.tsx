@@ -10,10 +10,8 @@ import {
   LeadQuickFilter,
   matchesCategory,
   matchesPeriod,
-  matchesStage,
   type LeadCategory,
   type LeadPeriod,
-  type LeadStage,
 } from "@/components/crm/LeadQuickFilter";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { ErrorState, LeadStatusBadge } from "@/components/crm/DataState";
@@ -118,7 +116,6 @@ export function LeadTable() {
   const [openLeadId, setOpenLeadId] = useState<string | null>(null);
   const [period, setPeriod] = useState<LeadPeriod>("all");
   const [category, setCategory] = useState<LeadCategory>("all");
-  const [stage, setStage] = useState<LeadStage>("all");
   const [bucket, setBucket] = useState<DeskBucket>("all");
   const [groupBy, setGroupBy] = useState<GroupKey>("none");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -142,14 +139,8 @@ export function LeadTable() {
 
   // The quick filter narrows the pool first; the status tabs then count within it.
   const scoped = useMemo(
-    () =>
-      leads.filter(
-        (lead) =>
-          matchesPeriod(lead, period) &&
-          matchesCategory(lead, category) &&
-          matchesStage(lead, stage),
-      ),
-    [leads, period, category, stage],
+    () => leads.filter((lead) => matchesPeriod(lead, period) && matchesCategory(lead, category)),
+    [leads, period, category],
   );
 
   const counts = useMemo(
@@ -199,8 +190,7 @@ export function LeadTable() {
       else next.add(key);
       return next;
     });
-  const filtersActive =
-    bucket !== "all" || search.trim() !== "" || period !== "all" || category !== "all" || stage !== "all";
+  const filtersActive = bucket !== "all" || search.trim() !== "" || period !== "all" || category !== "all";
 
   const openLead = leads.find((l) => l.id === openLeadId) ?? null;
 
@@ -235,22 +225,15 @@ export function LeadTable() {
         leads={leads}
         period={period}
         category={category}
-        stage={stage}
         onPeriodChange={setPeriod}
         onCategoryChange={(next) => {
           setCategory(next);
           // Show every matching lead, not just the ones still awaiting a call.
           if (next !== "all") setFilter("all");
         }}
-        onStageChange={(next) => {
-          setStage(next);
-          // A stage view must show all its leads, not just the pending-call tab.
-          if (next !== "all") setFilter("all");
-        }}
         onClear={() => {
           setPeriod("all");
           setCategory("all");
-          setStage("all");
         }}
       />
 
@@ -310,7 +293,6 @@ export function LeadTable() {
               setSearch("");
               setPeriod("all");
               setCategory("all");
-              setStage("all");
               setFilter("all");
             }}
           >

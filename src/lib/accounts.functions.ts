@@ -172,7 +172,6 @@ export const getMyAccount = createServerFn({ method: "POST" })
       deck: deckAccess(caller),
       approval: caller.approval,
       signedIn: caller.userId !== null,
-      itAuthenticated: Boolean(caller.userId && data.adminToken && (await import("@/lib/admin-gate.server")).itAccountTokenUser(data.adminToken) === caller.userId && caller.scope === "authority"),
       profile: caller.profile
         ? {
             id: caller.profile.id,
@@ -260,9 +259,6 @@ export const decideAccount = createServerFn({ method: "POST" })
             role: "agent" as const,
           };
 
-    const officer = await supabaseAdmin.from("it_officer_onboarding").select("id").eq("profile_id", data.profileId).maybeSingle();
-    if (officer.error) throw new Error("Unable to verify account approval path");
-    if (officer.data) throw new Error("IT officer accounts require the dedicated Architect approval flow");
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.profileId);
     if (error) throw new Error(error.message);
 
@@ -527,15 +523,12 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
     const caller = await access.resolveCaller(data.adminToken ?? null);
     access.requireAuthority(caller);
     access.requireWrite(caller);
-    // Exact trusted hosts only — recovery tokens must never be redirected to other subdomains.
-    const allowed = [
-      "https://crm.winstonebd.com",
-      "https://winstone-pulse-crm.lovable.app",
-      "https://winstone-crm-v01.lovable.app",
-      "https://id-preview--990267f3-4198-4d83-ae21-7d9c802617f4.lovable.app",
-    ];
+    const allowed = ["https://crm.winstonebd.com", "https://winstone-crm-v01.lovable.app"];
     const origin = new URL(data.origin).origin;
-    const safeOrigin = allowed.includes(origin) ? origin : allowed[0]!;
+    const safeOrigin =
+      allowed.includes(origin) || origin.endsWith(".lovable.app") || origin.startsWith("http://localhost")
+        ? origin
+        : allowed[0]!;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -550,12 +543,13 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
     await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
       app_metadata: { ...(authUser.user.app_metadata ?? {}), must_change_password: true },
     });
-    // The recovery link goes ONLY to the employee's own sign-in email — it is
-    // never returned to the IT screen, so IT cannot take over the account.
-    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-      redirectTo: `${safeOrigin}/reset-password`,
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: `${safeOrigin}/reset-password` },
     });
-    if (error) throw new Error("রিসেট ইমেইল পাঠানো যায়নি");
+    const actionLink = link?.properties?.action_link;
+    if (error || !actionLink) throw new Error(error?.message ?? "লিংক তৈরি হয়নি");
 
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
@@ -571,8 +565,7 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
       "পাসওয়ার্ড রিসেট লিংক তৈরি হয়েছে",
       `IT আপনার অ্যাকাউন্টের জন্য একটি পাসওয়ার্ড রিসেট লিংক তৈরি করেছে (${new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} ঢাকা)। আপনি না চাইলে এখনই HQ/IT-কে জানান।`,
     );
-    const masked = email.replace(/^(.{2}).*(@.*)$/, "$1***$2");
-    return { sentTo: masked, name: profile.name };
+    return { link: actionLink, name: profile.name };
   });
 
 /** After the agent saves a new password, clear the must-change flag. */

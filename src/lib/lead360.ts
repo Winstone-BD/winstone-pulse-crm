@@ -91,7 +91,7 @@ const fmt = (iso: string | null) =>
 
 export function summarize(calls: L360Call[], followUps: L360FollowUp[], now = new Date()) {
   const connected = calls.filter((c) => c.connected).length;
-  const open = followUps.filter((f) => !isDone(f.status) && !["cancelled", "canceled"].includes(f.status));
+  const open = followUps.filter((f) => !isDone(f.status));
   const overdue = open.filter((f) => new Date(f.scheduledAt) < now);
   const upcoming = open.filter((f) => new Date(f.scheduledAt) >= now);
   const byCreated = [...followUps].sort((a, b) => a.createdAt.localeCompare(b.createdAt));

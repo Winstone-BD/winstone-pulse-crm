@@ -15,16 +15,6 @@ export type CallRecording = Database["public"]["Tables"]["call_recordings"]["Row
 export type WhatsappMessage = Database["public"]["Tables"]["whatsapp_interactions"]["Row"];
 export type LeadEvent = Database["public"]["Tables"]["lead_events"]["Row"];
 export type LeadStatus = Database["public"]["Enums"]["lead_status"];
-export type PipelineStage = Database["public"]["Enums"]["lead_pipeline_stage"];
-
-/** Sales pipeline stages, in order. Labels are bilingual for the stage picker. */
-export const PIPELINE_STAGES: { key: PipelineStage; bn: string; en: string }[] = [
-  { key: "enquiry", bn: "অনুসন্ধান", en: "Enquiry" },
-  { key: "proposal", bn: "প্রস্তাব", en: "Proposal" },
-  { key: "offer", bn: "অফার", en: "Offer" },
-  { key: "booking", bn: "বুকিং", en: "Booking" },
-  { key: "close", bn: "ক্লোজ", en: "Close" },
-];
 
 export const LEAD_STATUSES: { key: LeadStatus; label: string }[] = [
   { key: "pending", label: "Pending" },
@@ -219,8 +209,6 @@ export type TimelineEntry =
 
 /** Bengali labels for the automatic call lifecycle trail. */
 export const LEAD_EVENT_LABELS: Record<string, string> = {
-  site_visit_outcome: "সাইট ভিজিটের ফলাফল",
-  sms_handoff: "SMS পাঠানো (নিজের SIM)",
   call_started: "কল শুরু হয়েছে",
   call_connected: "কল সংযুক্ত হয়েছে",
   call_ended: "কল শেষ হয়েছে",

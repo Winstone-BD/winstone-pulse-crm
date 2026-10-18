@@ -55,34 +55,3 @@ Matches the phone to an existing lead (existing phone dedupe). Unknown phone →
 unassigned LeadHub intake. The request stays `requested` until the assigned agent or HQ/IT
 confirms (creates a site visit through the existing flow) or dismisses it. The incoming
 message never creates a site visit.
-
----
-
-# Buyer portal → CRM: `enquiry.submitted` (v2 envelope)
-
-Same endpoint, headers, signature, idempotency and responses as above; `event_type: "enquiry.submitted"`.
-Use a key like `hub-enquiry-<request_id>`.
-
-```json
-"payload": {
-  "request_id": "ENQ123",
-  "name": "Customer name",
-  "phone": "01712345678",
-  "project": "winstone-heights",
-  "property_type": "flat",
-  "budget_min_bdt": 5000000,
-  "budget_max_bdt": 9000000,
-  "facing": "south",
-  "amenities": ["lift", "parking", "generator"],
-  "message": "optional",
-  "page_url": "https://winstonebd.com/projects/winstone-heights",
-  "utm_source": "facebook",
-  "utm_medium": "social",
-  "utm_campaign": "oct-heights-post"
-}
-```
-- Required: `request_id`, `name`, `phone`. Everything else optional/nullable.
-- `property_type`: flat | land | commercial | duplex | other. `facing`: north | south | east | west | north_east | north_west | south_east | south_west.
-- Budgets are whole taka integers; min ≤ max. `amenities` ≤ 20 items, each ≤ 60 chars.
-- 201 `enquiry_new_lead` (unassigned LeadHub Nexus lead) or `enquiry_on_existing_lead` (phone already known; no duplicate lead).
-- HQ/IT see every enquiry at `/enquiries` (by day, budget, source/UTM, lead status).

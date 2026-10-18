@@ -80,44 +80,24 @@ export function OfflineSyncBar() {
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
     update();
-    // Flaky networks fire many online/offline events; coalesce them into one
-    // refresh (settle 1.5s, never two at once) and toast at most once a minute.
-    let settle: ReturnType<typeof setTimeout> | null = null;
-    let inFlight = false;
-    let lastToast = 0;
     const back = async () => {
-      if (inFlight || !navigator.onLine) return;
-      inFlight = true;
-      try {
-        if (Date.now() - lastToast > 60_000) {
-          lastToast = Date.now();
-          toast.success(t({ bn: "ইন্টারনেট ফিরে এসেছে — ডেটা আবার লোড হচ্ছে", en: "Back online — refreshing data" }), {
-            id: "reconnect",
-          });
-        }
-        await queryClient.refetchQueries({ type: "active" });
-        const ok: string[] = [];
-        const failed: string[] = [];
-        for (const q of queryClient.getQueryCache().findAll({ type: "active" })) {
-          const k = String(q.queryKey[0]);
-          const label = DATA_LABELS[k] ? t(DATA_LABELS[k]) : k;
-          const list = q.state.status === "error" ? failed : ok;
-          if (!list.includes(label)) list.push(label);
-        }
-        setRefresh({ ok, failed });
-      } finally {
-        inFlight = false;
+      toast.success("ইন্টারনেট ফিরে এসেছে — ডেটা আবার লোড হচ্ছে");
+      await queryClient.refetchQueries({ type: "active" });
+      const ok: string[] = [];
+      const failed: string[] = [];
+      for (const q of queryClient.getQueryCache().findAll({ type: "active" })) {
+        const k = String(q.queryKey[0]);
+        const label = DATA_LABELS[k] ? t(DATA_LABELS[k]) : k;
+        const list = q.state.status === "error" ? failed : ok;
+        if (!list.includes(label)) list.push(label);
       }
+      setRefresh({ ok, failed });
     };
-    const backFn = () => {
-      if (settle) clearTimeout(settle);
-      settle = setTimeout(() => void back(), 1500);
-    };
+    const backFn = () => void back();
     window.addEventListener("online", backFn);
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     return () => {
-      if (settle) clearTimeout(settle);
       window.removeEventListener("online", backFn);
       window.removeEventListener("online", update);
       window.removeEventListener("offline", update);
@@ -236,21 +216,13 @@ export function OfflineSyncBar() {
           <p className="flex items-center gap-1.5 font-bold">
             {online ? <CloudOff className="size-3.5" /> : <WifiOff className="size-3.5" />}
             {online
-              ? t({
-                  bn: `${items.length}টি কাজ শুধু এই ডিভাইসে সেভ আছে — সার্ভার নিশ্চিত না করা পর্যন্ত জমা হয়নি`,
-                  en: `${items.length} item(s) saved on this device only — not submitted until the server confirms`,
-                })
-              : t({
-                  bn: "ইন্টারনেট নেই — কাজ এই ডিভাইসে সেভ হচ্ছে, এখনো সার্ভারে জমা হয়নি। নেট ফিরলে নিজে থেকে পাঠানো হবে",
-                  en: "Offline — work is saved on this device, not yet on the server. It sends automatically when you're back online",
-                })}
+              ? `${items.length}টি কাজ এখনো এই ফোনেই আছে — সার্ভারে পাঠানো হচ্ছে`
+              : "ইন্টারনেট সংযোগ বিচ্ছিন্ন — ড্যাশবোর্ডের ডেটা এখন আপডেট হবে না। কাজ এই ফোনে সেভ হচ্ছে; নেট ফিরলে নিজে থেকেই আবার লোড ও সিঙ্ক হবে"}
           </p>
           {items.slice(0, 5).map((item) => (
             <p key={item.id} className={item.status === "failed" ? "text-destructive" : "text-muted-foreground"}>
               • {item.label} —{" "}
-              {item.status === "failed"
-                ? `${t({ bn: "পাঠানো যায়নি", en: "Not sent" })} (${item.lastError ?? t({ bn: "ত্রুটি", en: "error" })})`
-                : t({ bn: "এই ডিভাইসে সেভ · সিঙ্ক বাকি", en: "Saved on device · sync pending" })}
+              {item.status === "failed" ? `পাঠানো যায়নি (${item.lastError ?? "ত্রুটি"})` : "সিঙ্ক বাকি"}
             </p>
           ))}
           {failed.length ? (

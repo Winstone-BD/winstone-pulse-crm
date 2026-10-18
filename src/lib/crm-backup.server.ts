@@ -81,7 +81,7 @@ export async function listBackups() {
 }
 
 export async function signedDownload(date: string) {
-  const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(path(date), 60, { download: true });
+  const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(path(date), 300, { download: true });
   if (error) throw new Error(error.message);
   return data.signedUrl;
 }

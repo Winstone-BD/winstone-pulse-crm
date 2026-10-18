@@ -3,10 +3,7 @@ import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 const PLAN_CODE = "crm" as const;
 
 import {
-  MAINTENANCE_CURRENCY,
   MAINTENANCE_FEE_USD,
-  MAINTENANCE_FEE_MINOR,
-  moneyLabel,
   clampUnlockMinutes,
   decide,
   defaultDueAt,
@@ -14,17 +11,6 @@ import {
   dhakaTime,
   dhakaPeriod,
   isArchitectIdentity,
-  billingStates,
-  VAT_SETTING_KEY,
-  parseVatSetting,
-  invoiceTotals,
-  nextUngeneratedPeriod,
-  nextPeriod,
-  nextInvoicePreviewFor,
-  CRM_PLAN_NAME,
-  type AccessStatus,
-  type InvoiceStatus,
-  type PaymentState,
   type PaymentStatus,
   type Stage,
   type UnlockStatus,
@@ -32,9 +18,7 @@ import {
 
 export type MaintenanceState = {
   period: string;
-  /** Amount label from this invoice's own stored snapshot (historical rows keep their currency). */
-  amountLabel: string;
-  currency: string;
+  feeUsd: number;
   dueDate: string;
   lockAt: string;
   paymentStatus: PaymentStatus;
@@ -49,12 +33,6 @@ export type MaintenanceState = {
   openRequest: boolean;
   locked: boolean;
   stage: Stage;
-  invoiceStatus: InvoiceStatus;
-  paymentState: PaymentState;
-  accessStatus: AccessStatus;
-  /** Locked while a submitted reference awaits review: recovery state, never a second charge. */
-  recoveryPending: boolean;
-  rejectedReason: string | null;
 };
 
 async function db() {
@@ -92,42 +70,9 @@ export async function audit(entry: {
   if (error) console.error("maintenance audit failed", error);
 }
 
-/** Label from the row's own immutable snapshot: each row shows its own stored currency. */
-function rowAmountLabel(row: { total_cents?: number | null; currency?: string | null; fee_usd?: number | string | null }): string {
-  if (row.total_cents != null) return moneyLabel(row.total_cents, row.currency);
-  return moneyLabel(Math.round(Number(row.fee_usd ?? 0) * 100), row.currency ?? "USD");
-}
-
 let cache: { at: number; state: MaintenanceState } | null = null;
 export function clearMaintenanceCache() {
   cache = null;
-}
-
-/** Admin-configured VAT rate (basis points) or null when not configured. Read-only. */
-export async function readVatRateBps(): Promise<number | null> {
-  const client = await db();
-  const { data } = await client.from("system_settings").select("value").eq("key", VAT_SETTING_KEY).maybeSingle();
-  return parseVatSetting(data?.value ?? null);
-}
-
-/** Read-only preview of the next not-yet-generated invoice. SELECTs only — never inserts or updates. */
-export async function previewNextInvoice(now: Date = new Date()) {
-  const client = await db();
-  const { data } = await client
-    .from("system_maintenance").select("billing_period, payment_status, unlock_status, unlock_expires_at, lock_at")
-    .eq("plan_code", PLAN_CODE).eq("billing_period", dhakaPeriod(now)).maybeSingle();
-  const period = nextUngeneratedPeriod(now, Boolean(data));
-  const status = data
-    ? {
-        period: data.billing_period,
-        paymentStatus: (data.payment_status ?? "unpaid") as string,
-        locked: decide({
-          now, lockAt: data.lock_at, paymentStatus: (data.payment_status ?? "unpaid") as PaymentStatus,
-          unlockStatus: (data.unlock_status ?? "none") as UnlockStatus, unlockExpiresAt: data.unlock_expires_at,
-        }).locked,
-      }
-    : null;
-  return { preview: nextInvoicePreviewFor(period, await readVatRateBps()), status };
 }
 
 async function ensureRow(period: string) {
@@ -139,18 +84,11 @@ async function ensureRow(period: string) {
     .maybeSingle();
   if (data) return data;
   const lockAt = defaultLockAt(period);
-  const vat = invoiceTotals(MAINTENANCE_FEE_MINOR, await readVatRateBps());
   await client.from("system_maintenance").upsert(
     {
       billing_period: period,
       plan_code: PLAN_CODE,
       fee_usd: MAINTENANCE_FEE_USD,
-      base_cents: MAINTENANCE_FEE_MINOR,
-      // Same canonical source as the preview; unconfigured VAT is stored as 0 VAT with the rate left null.
-      vat_rate_bps: vat.vatRateBps,
-      vat_cents: vat.vatMinor ?? 0,
-      total_cents: vat.totalMinor ?? MAINTENANCE_FEE_MINOR,
-      currency: MAINTENANCE_CURRENCY,
       due_date: defaultDueAt(period),
       lock_at: lockAt,
     },
@@ -172,8 +110,6 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
   const client = await db();
   const period = dhakaPeriod(now);
   let row = await ensureRow(period);
-  const amountLabel = rowAmountLabel(row);
-  const CRM_INVOICE_LABEL = amountLabel;
 
   // Server-side expiry: an approved unlock past its time is closed here, once.
   if (
@@ -215,11 +151,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
       .maybeSingle();
     if (flagged) {
       await audit({ actor: "system", actorRole: "system", action: "system_locked", period, previous: "active", next: "locked" });
-      if (row.payment_status === "pending") {
-        await notifyOnce(`maintenance_locked_${period}`, "critical", "Access paused — payment awaiting verification", `CRM access paused at ${dhakaTime(row.lock_at)} (Dhaka) while reference ${row.payment_ref ?? "—"} awaits review. Do not pay again — verify or reject it; verification restores access automatically.`);
-      } else {
-        await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — invoice unverified", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Invoice ${CRM_INVOICE_LABEL} has no verified payment. Submit the payment reference in IT Console.`);
-      }
+      await notifyOnce(`maintenance_locked_${period}`, "critical", "System locked — maintenance unpaid", `CRM locked at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Submit the payment reference in IT Console.`);
     }
   }
   // Invoice milestones for management — one alert per invoice event (deduped by code).
@@ -227,33 +159,17 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     const { isAmberWindow, isRedWindow } = await import("@/lib/maintenance-rules");
     const day = new Date(now.getTime() + 6 * 3600_000).getUTCDate();
     if (day >= 9 && day < 15) {
-      await notifyOnce(`billing_invoice_available_${period}`, "info", "New invoice available", `WINSTONE PULSE : CRM invoice for ${period}: ${amountLabel}. Due ${dhakaTime(row.due_date)}; lock deadline ${dhakaTime(row.lock_at)} (Dhaka).`);
+      await notifyOnce(`billing_invoice_available_${period}`, "info", "New invoice available", `WINSTONE PULSE : CRM invoice for ${period}: $18.16 USD incl. 15% VAT. Due on the 12th; lock deadline 15th 00:00 (Dhaka).`);
     }
-    if (isRedWindow(now) || (!isAmberWindow(now) && day === 13)) {
-      await notifyOnce(`billing_due_approaching_${period}`, "warning", "Payment due date approaching", `Invoice ${period} (${amountLabel}) is due ${dhakaTime(row.due_date)}. Payment status: ${row.payment_status}.`);
+    if (isRedWindow(now) || (!isAmberWindow(now) && day === 11)) {
+      await notifyOnce(`billing_due_approaching_${period}`, "warning", "Payment due date approaching", `Invoice ${period} ($18.16 USD) is due on the 12th. Payment status: ${row.payment_status}.`);
     }
-    if (now.getTime() >= new Date(row.due_date).getTime() + 86_400_000 && day < 15) {
-      await notifyOnce(`billing_overdue_${period}`, "critical", "Invoice overdue", `Invoice ${period} (${amountLabel}) is past its due date ${dhakaTime(row.due_date)} and unverified. Lock at ${dhakaTime(row.lock_at)} (Dhaka).`);
+    if (day >= 13 && day < 15) {
+      await notifyOnce(`billing_overdue_${period}`, "critical", "Invoice overdue", `Invoice ${period} ($18.16 USD) passed its 12th due date unpaid/unverified. Lock at 15th 00:00 (Dhaka).`);
     }
   }
   if (result.stage === "due_today") {
-    await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Invoice ${CRM_INVOICE_LABEL}.`);
-  }
-
-  // Upcoming-invoice reminder: once the current month is verified, remind about the
-  // next invoice in the 30 days before its due date (one alert per period, deduped).
-  if (row.payment_status === "verified") {
-    const next = nextPeriod(period);
-    const msToDue = new Date(defaultDueAt(next)).getTime() - now.getTime();
-    if (msToDue > 0 && msToDue <= 30 * 86_400_000) {
-      const preview = nextInvoicePreviewFor(next, await readVatRateBps());
-      await notifyOnce(
-        `billing_upcoming_invoice_${next}`,
-        "info",
-        "Upcoming invoice reminder",
-        `Next ${CRM_PLAN_NAME} invoice (${preview.totalLabel ?? preview.subtotalLabel}) is due ${dhakaTime(preview.dueAt)} (Dhaka). Pay before the due date to keep access uninterrupted.`,
-      );
-    }
+    await notifyOnce(`maintenance_lock_24h_${period}`, "warning", "Unpaid lock within 24 hours", `Lock at ${dhakaTime(row.lock_at)} (Dhaka). Payment status: ${row.payment_status}. Fee $46.29 USD.`);
   }
 
   const { count } = await client
@@ -264,8 +180,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
 
   const state: MaintenanceState = {
     period,
-    amountLabel,
-    currency: row.currency ?? "USD",
+    feeUsd: Number(row.fee_usd),
     dueDate: row.due_date,
     lockAt: row.lock_at,
     paymentStatus: row.payment_status,
@@ -280,18 +195,13 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
     openRequest: (count ?? 0) > 0,
     locked: result.locked,
     stage: result.stage,
-    ...(() => {
-      const b = billingStates({ now, lockAt: row.lock_at, paymentStatus: row.payment_status, unlockStatus: row.unlock_status, unlockExpiresAt: row.unlock_expires_at, dueAt: row.due_date, rejectedAt: row.payment_rejected_at });
-      return { invoiceStatus: b.invoice, paymentState: b.payment, accessStatus: b.access, recoveryPending: b.recoveryPending };
-    })(),
-    rejectedReason: row.payment_rejected_reason ?? null,
   };
   cache = { at: now.getTime(), state };
   return state;
 }
 
 export const LOCKED_MESSAGE =
-  "SYSTEM MAINTENANCE LOCKED — the CRM maintenance invoice is not verified. Contact IT Console.";
+  "SYSTEM MAINTENANCE LOCKED — monthly maintenance payment ($46.29 USD) is pending. Contact IT Console.";
 
 /** Fail closed: an unexpected error counts as locked for ordinary callers. */
 export async function isLockedForOrdinaryUsers(): Promise<boolean> {
@@ -324,20 +234,15 @@ async function notify(code: string, severity: "info" | "warning" | "critical", t
 export async function submitPayment(input: { actor: string; paymentRef: string; note?: string | null }) {
   const state = await maintenanceAccess();
   if (state.paymentStatus === "verified") return { ok: true, already: true };
-  // Repeated submission of the same reference is a no-op; a different one while pending is refused (no double payment).
-  if (state.paymentStatus === "pending") {
-    if (state.paymentRef === input.paymentRef) return { ok: true, already: true };
-    throw new Error("A payment reference is already awaiting verification — do not pay again. Withdraw it first to replace it.");
-  }
   const client = await db();
   const { error } = await client
     .from("system_maintenance")
-    .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null, payment_rejected_at: null, payment_rejected_reason: null })
+    .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null })
     .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
   if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
-  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, amount: state.amountLabel, currency: state.currency } });
-  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} (${state.amountLabel}). Awaiting System Architect verification.`);
+  await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
+  await notifyOnce(`maintenance_payment_submitted_${state.period}_${input.paymentRef}`, "warning", "New payment submitted for verification", `${input.actor} submitted reference ${input.paymentRef} for ${state.period} ($46.29 USD). Awaiting System Architect verification.`);
   return { ok: true, already: false };
 }
 
@@ -357,24 +262,20 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
 }
 
 /** System Architect (verified Google identity + session) verifies or rejects the pending reference. */
-export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string; expectedRef?: string | null }) {
+export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
   const state = await maintenanceAccess();
   const client = await db();
   const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status, base_cents, vat_cents, total_cents, currency").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
-  if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("Already decided — this payment is no longer awaiting review. Refresh to see the latest status.");
-  // Stale-view guard: the reviewer must be deciding on the reference they actually saw.
-  if (input.expectedRef && input.expectedRef !== row.payment_ref) throw new Error("The submitted reference changed since you opened it — refresh and review again.");
+  if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
   const at = new Date().toISOString();
   const update = input.approve
-    ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active", payment_rejected_at: null, payment_rejected_reason: null }
-    : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null, payment_rejected_at: at, payment_rejected_reason: input.reason };
-  // Compare-and-set: only one concurrent decision can move the row out of "pending".
-  const { data: changed, error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending").eq("payment_ref", row.payment_ref).select("billing_period");
+    ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active" }
+    : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null };
+  const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
   if (error) throw new Error("Could not record decision");
-  if (!changed || changed.length === 0) throw new Error("Already decided — another review finished first. Refresh to see the latest status.");
   clearMaintenanceCache();
   const { data: openReq } = await client.from("maintenance_unlock_requests").select("id").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("status", "requested").order("requested_at", { ascending: false }).limit(1).maybeSingle();
-  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, amount: state.amountLabel, currency: state.currency, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
+  await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, requestId: openReq?.id ?? null, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd, approving_account: input.actor, approved_at: at, unlock_request_id: openReq?.id ?? null } });
   if (input.approve && state.locked) await notifyOnce(`maintenance_restored_${state.period}_paid`, "info", "Workspace access restored", `${state.period} payment verified — access restored.`);
   // Save a permanent receipt for this approval so it can be reopened from payment history.
   let voucher: { no: string; period: string; ref: string; baseCents: number; vatCents: number; totalCents: number; currency: string; verifiedBy: string; at: string } | null = null;
@@ -413,7 +314,7 @@ export async function setLockAt(input: { actor: string; lockAt: string }) {
   return { ok: true };
 }
 
-export async function createUnlockRequest(input: { actor: string; hours: number; reason: string | null; paymentRef?: string | null }) {
+export async function createUnlockRequest(input: { actor: string; hours: number; reason: string | null }) {
   const state = await maintenanceAccess();
   const client = await db();
   const { data, error } = await client
@@ -436,15 +337,13 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
   await client.from("system_maintenance").update({ unlock_status: "requested" }).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).neq("unlock_status", "approved");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "unlock_requested", period: state.period, next: "requested", reason: input.reason, requestId: data.id, durationMinutes: input.hours * 60, metadata: { payment_status: state.paymentStatus } });
-  const { sendUnlockApprovalEmail } = await import("@/lib/unlock-email.server");
-  const mail = await sendUnlockApprovalEmail({ requestId: data.id, requestedBy: input.actor, hours: input.hours, reason: input.reason, paymentVerified: state.paymentStatus === "verified", paymentRef: input.paymentRef ?? state.paymentRef ?? null });
-  return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified", emailed: mail.emailed };
+  return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified" };
 }
 
 export async function maintenanceHistory() {
   const client = await db();
   const [{ data: periods }, { data: requests }, { data: log }, { data: vouchers }] = await Promise.all([
-    client.from("system_maintenance").select("billing_period, fee_usd, fee_bdt, payment_status, payment_ref, payment_verified_at, payment_verified_by, payment_rejected_at, payment_rejected_reason, base_cents, vat_cents, total_cents, currency, due_date, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
+    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
     client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
     client.from("payment_vouchers").select("voucher_no, billing_period, payment_ref, base_cents, vat_cents, total_cents, currency, verified_by, verified_at").eq("plan_code", PLAN_CODE).order("verified_at", { ascending: false }).limit(50),

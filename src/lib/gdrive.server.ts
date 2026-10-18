@@ -1,4 +1,3 @@
-import { integrationFailure } from "./integration-status";
 /**
  * Google Drive connector gateway helpers.
  *
@@ -27,8 +26,7 @@ async function parseResponse<T = Record<string, unknown>>(res: Response): Promis
   const text = await res.text();
   if (!res.ok) {
     console.error(`[gdrive] ${res.status}: ${text.slice(0, 500)}`);
-    const failure = integrationFailure(res.status, text);
-    throw new Error(`Google Drive [${res.status}]: ${failure.message}`);
+    throw new Error(`Google Drive ত্রুটি [${res.status}]: ${text.slice(0, 300)}`);
   }
   return text ? (JSON.parse(text) as T) : null;
 }
@@ -49,11 +47,9 @@ export async function uploadToDrive(opts: {
   mimeType: string;
   bytes: Uint8Array;
   folderId?: string | null;
-  appProperties?: Record<string,string>;
 }) {
   const boundary = `winstone-${crypto.randomUUID()}`;
   const metadata = JSON.stringify({
-    appProperties: opts.appProperties,
     name: opts.name,
     mimeType: opts.mimeType,
     parents: opts.folderId ? [opts.folderId] : undefined,
@@ -154,9 +150,8 @@ export async function driveFolderExists(folderId: string): Promise<boolean> {
       `/files/${folderId}?fields=id,trashed`,
     );
     return Boolean(meta?.id) && meta?.trashed !== true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("[404]")) return false;
-    throw error;
+  } catch {
+    return false;
   }
 }
 
@@ -188,8 +183,7 @@ export async function driveFileMeta(fileId: string): Promise<{
       trashed: meta.trashed === true,
       webViewLink: meta.webViewLink ?? null,
     };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("[404]")) return null;
-    throw error;
+  } catch {
+    return null;
   }
 }

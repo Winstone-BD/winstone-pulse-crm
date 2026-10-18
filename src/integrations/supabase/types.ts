@@ -731,33 +731,6 @@ export type Database = {
           },
         ]
       }
-      bulk_extra_batches: {
-        Row: {
-          created_at: string
-          finished_at: string | null
-          quantity: number
-          request_id: string
-          status: string
-          work_date: string
-        }
-        Insert: {
-          created_at?: string
-          finished_at?: string | null
-          quantity: number
-          request_id: string
-          status?: string
-          work_date: string
-        }
-        Update: {
-          created_at?: string
-          finished_at?: string | null
-          quantity?: number
-          request_id?: string
-          status?: string
-          work_date?: string
-        }
-        Relationships: []
-      }
       call_processing_jobs: {
         Row: {
           attempts: number
@@ -832,7 +805,6 @@ export type Database = {
           customer_objections: string[]
           deal_stage: string | null
           device_id: string | null
-          device_reported_duration_seconds: number | null
           duration_seconds: number
           external_call_id: string | null
           file_name: string | null
@@ -887,7 +859,6 @@ export type Database = {
           customer_objections?: string[]
           deal_stage?: string | null
           device_id?: string | null
-          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           external_call_id?: string | null
           file_name?: string | null
@@ -942,7 +913,6 @@ export type Database = {
           customer_objections?: string[]
           deal_stage?: string | null
           device_id?: string | null
-          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           external_call_id?: string | null
           file_name?: string | null
@@ -1008,13 +978,11 @@ export type Database = {
           call_ended_at: string
           call_started_at: string | null
           category: string | null
-          channel: string
           connected: boolean
           connection_verified: boolean
           created_at: string
           customer_response: string | null
           device_id: string | null
-          device_reported_duration_seconds: number | null
           duration_seconds: number
           evaluation_answers: Json | null
           evaluation_model: string | null
@@ -1050,13 +1018,11 @@ export type Database = {
           call_ended_at?: string
           call_started_at?: string | null
           category?: string | null
-          channel?: string
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
           customer_response?: string | null
           device_id?: string | null
-          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           evaluation_answers?: Json | null
           evaluation_model?: string | null
@@ -1092,13 +1058,11 @@ export type Database = {
           call_ended_at?: string
           call_started_at?: string | null
           category?: string | null
-          channel?: string
           connected?: boolean
           connection_verified?: boolean
           created_at?: string
           customer_response?: string | null
           device_id?: string | null
-          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           evaluation_answers?: Json | null
           evaluation_model?: string | null
@@ -1210,57 +1174,6 @@ export type Database = {
           },
         ]
       }
-      crm_activities: {
-        Row: {
-          actor_user_id: string
-          agent_id: string | null
-          created_at: string
-          detail: Json
-          id: string
-          kind: string
-          lead_id: string | null
-          occurred_at: string
-          summary: string
-        }
-        Insert: {
-          actor_user_id?: string
-          agent_id?: string | null
-          created_at?: string
-          detail?: Json
-          id?: string
-          kind: string
-          lead_id?: string | null
-          occurred_at?: string
-          summary: string
-        }
-        Update: {
-          actor_user_id?: string
-          agent_id?: string | null
-          created_at?: string
-          detail?: Json
-          id?: string
-          kind?: string
-          lead_id?: string | null
-          occurred_at?: string
-          summary?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_activities_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_activities_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       crm_backup_runs: {
         Row: {
           backup_date: string
@@ -1308,77 +1221,6 @@ export type Database = {
           token?: string
         }
         Relationships: []
-      }
-      crm_usage_events: {
-        Row: {
-          amount_basis: string
-          cost_amount: number | null
-          cost_currency: string | null
-          credits: number | null
-          event_type: string
-          evidence: string
-          id: string
-          lead_id: string | null
-          model: string | null
-          month_bucket: string
-          occurred_at: string
-          operation: string
-          quantity: number | null
-          quantity_unit: string | null
-          recorded_at: string
-          source: string
-          source_event_id: string
-          usage_class: string
-        }
-        Insert: {
-          amount_basis: string
-          cost_amount?: number | null
-          cost_currency?: string | null
-          credits?: number | null
-          event_type: string
-          evidence: string
-          id?: string
-          lead_id?: string | null
-          model?: string | null
-          month_bucket?: string
-          occurred_at: string
-          operation: string
-          quantity?: number | null
-          quantity_unit?: string | null
-          recorded_at?: string
-          source: string
-          source_event_id: string
-          usage_class: string
-        }
-        Update: {
-          amount_basis?: string
-          cost_amount?: number | null
-          cost_currency?: string | null
-          credits?: number | null
-          event_type?: string
-          evidence?: string
-          id?: string
-          lead_id?: string | null
-          model?: string | null
-          month_bucket?: string
-          occurred_at?: string
-          operation?: string
-          quantity?: number | null
-          quantity_unit?: string | null
-          recorded_at?: string
-          source?: string
-          source_event_id?: string
-          usage_class?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_usage_events_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       custom_reports: {
         Row: {
@@ -1590,57 +1432,6 @@ export type Database = {
           updated_at?: string
           web_view_link?: string | null
           word_count?: number
-        }
-        Relationships: []
-      }
-      drive_recording_imports: {
-        Row: {
-          agent_id: string | null
-          call_recording_id: string | null
-          created_at: string
-          drive_file_id: string
-          drive_link: string | null
-          file_created_at: string | null
-          file_name: string
-          id: string
-          lead_id: string | null
-          linked_by: string | null
-          match_method: string | null
-          mime_type: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          agent_id?: string | null
-          call_recording_id?: string | null
-          created_at?: string
-          drive_file_id: string
-          drive_link?: string | null
-          file_created_at?: string | null
-          file_name: string
-          id?: string
-          lead_id?: string | null
-          linked_by?: string | null
-          match_method?: string | null
-          mime_type?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string | null
-          call_recording_id?: string | null
-          created_at?: string
-          drive_file_id?: string
-          drive_link?: string | null
-          file_created_at?: string | null
-          file_name?: string
-          id?: string
-          lead_id?: string | null
-          linked_by?: string | null
-          match_method?: string | null
-          mime_type?: string | null
-          status?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1974,7 +1765,6 @@ export type Database = {
           expires_at: string | null
           id: string
           published_at: string
-          request_id: string | null
           severity: string
           title: string
         }
@@ -1988,7 +1778,6 @@ export type Database = {
           expires_at?: string | null
           id?: string
           published_at?: string
-          request_id?: string | null
           severity?: string
           title: string
         }
@@ -2002,7 +1791,6 @@ export type Database = {
           expires_at?: string | null
           id?: string
           published_at?: string
-          request_id?: string | null
           severity?: string
           title?: string
         }
@@ -2010,62 +1798,6 @@ export type Database = {
           {
             foreignKeyName: "it_notices_author_profile_id_fkey"
             columns: ["author_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      it_officer_onboarding: {
-        Row: {
-          approved_at: string | null
-          approved_by: string | null
-          email: string
-          id: string
-          invited_at: string
-          invited_by: string
-          name: string
-          password_set_at: string | null
-          profile_id: string | null
-          role_assigned_at: string | null
-          role_assigned_by: string | null
-          status: string
-          user_id: string | null
-        }
-        Insert: {
-          approved_at?: string | null
-          approved_by?: string | null
-          email: string
-          id?: string
-          invited_at?: string
-          invited_by: string
-          name: string
-          password_set_at?: string | null
-          profile_id?: string | null
-          role_assigned_at?: string | null
-          role_assigned_by?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Update: {
-          approved_at?: string | null
-          approved_by?: string | null
-          email?: string
-          id?: string
-          invited_at?: string
-          invited_by?: string
-          name?: string
-          password_set_at?: string | null
-          profile_id?: string | null
-          role_assigned_at?: string | null
-          role_assigned_by?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "it_officer_onboarding_profile_id_fkey"
-            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2332,7 +2064,6 @@ export type Database = {
           id: string
           quantity: number
           reason: string | null
-          request_id: string | null
           source: string
           work_date: string
         }
@@ -2344,7 +2075,6 @@ export type Database = {
           id?: string
           quantity: number
           reason?: string | null
-          request_id?: string | null
           source?: string
           work_date: string
         }
@@ -2356,7 +2086,6 @@ export type Database = {
           id?: string
           quantity?: number
           reason?: string | null
-          request_id?: string | null
           source?: string
           work_date?: string
         }
@@ -2631,7 +2360,6 @@ export type Database = {
           assigned_agent_id: string | null
           assigned_to: string | null
           assignment_source: string | null
-          buyer_profile: Json
           call_attempts: number
           call_count: number | null
           carried_from_date: string | null
@@ -2648,7 +2376,6 @@ export type Database = {
           notes: string | null
           outcome_category: string | null
           phone_number: string
-          pipeline_stage: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by: string | null
           retry_after: string | null
           serial_no: string | null
@@ -2666,7 +2393,6 @@ export type Database = {
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null
-          buyer_profile?: Json
           call_attempts?: number
           call_count?: number | null
           carried_from_date?: string | null
@@ -2683,7 +2409,6 @@ export type Database = {
           notes?: string | null
           outcome_category?: string | null
           phone_number: string
-          pipeline_stage?: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by?: string | null
           retry_after?: string | null
           serial_no?: string | null
@@ -2701,7 +2426,6 @@ export type Database = {
           assigned_agent_id?: string | null
           assigned_to?: string | null
           assignment_source?: string | null
-          buyer_profile?: Json
           call_attempts?: number
           call_count?: number | null
           carried_from_date?: string | null
@@ -2718,7 +2442,6 @@ export type Database = {
           notes?: string | null
           outcome_category?: string | null
           phone_number?: string
-          pipeline_stage?: Database["public"]["Enums"]["lead_pipeline_stage"]
           reference_by?: string | null
           retry_after?: string | null
           serial_no?: string | null
@@ -3068,36 +2791,6 @@ export type Database = {
         }
         Relationships: []
       }
-      objection_answers: {
-        Row: {
-          answer: string
-          approved_at: string
-          approved_by: string | null
-          id: string
-          objection: string
-          objection_key: string
-          updated_at: string
-        }
-        Insert: {
-          answer: string
-          approved_at?: string
-          approved_by?: string | null
-          id?: string
-          objection: string
-          objection_key: string
-          updated_at?: string
-        }
-        Update: {
-          answer?: string
-          approved_at?: string
-          approved_by?: string | null
-          id?: string
-          objection?: string
-          objection_key?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       os_event_receipts: {
         Row: {
           api_version: string | null
@@ -3371,30 +3064,6 @@ export type Database = {
         }
         Relationships: []
       }
-      privileged_account_allowlist: {
-        Row: {
-          account_kind: string
-          created_at: string
-          email: string
-          provisioned_at: string | null
-          provisioned_user_id: string | null
-        }
-        Insert: {
-          account_kind: string
-          created_at?: string
-          email: string
-          provisioned_at?: string | null
-          provisioned_user_id?: string | null
-        }
-        Update: {
-          account_kind?: string
-          created_at?: string
-          email?: string
-          provisioned_at?: string | null
-          provisioned_user_id?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           approval_status: string
@@ -3472,11 +3141,9 @@ export type Database = {
       }
       project_catalog: {
         Row: {
-          amenities: string[]
           created_at: string
           down_payment: string | null
           extra_charges: string | null
-          facing: string[]
           id: string
           image_url: string | null
           installment_plan: string | null
@@ -3484,8 +3151,6 @@ export type Database = {
           name: string
           notes: string | null
           parking_charge: string | null
-          price_max: number | null
-          price_min: number | null
           price_per_sqft: number | null
           status: string
           total_price: string | null
@@ -3494,11 +3159,9 @@ export type Database = {
           updated_by: string
         }
         Insert: {
-          amenities?: string[]
           created_at?: string
           down_payment?: string | null
           extra_charges?: string | null
-          facing?: string[]
           id?: string
           image_url?: string | null
           installment_plan?: string | null
@@ -3506,8 +3169,6 @@ export type Database = {
           name: string
           notes?: string | null
           parking_charge?: string | null
-          price_max?: number | null
-          price_min?: number | null
           price_per_sqft?: number | null
           status?: string
           total_price?: string | null
@@ -3516,11 +3177,9 @@ export type Database = {
           updated_by: string
         }
         Update: {
-          amenities?: string[]
           created_at?: string
           down_payment?: string | null
           extra_charges?: string | null
-          facing?: string[]
           id?: string
           image_url?: string | null
           installment_plan?: string | null
@@ -3528,8 +3187,6 @@ export type Database = {
           name?: string
           notes?: string | null
           parking_charge?: string | null
-          price_max?: number | null
-          price_min?: number | null
           price_per_sqft?: number | null
           status?: string
           total_price?: string | null
@@ -3942,119 +3599,6 @@ export type Database = {
           },
         ]
       }
-      sales_drafts: {
-        Row: {
-          agent_id: string
-          ai_output: string
-          created_at: string
-          edited_at: string | null
-          edited_output: string | null
-          id: string
-          injection_flagged: boolean
-          lead_id: string | null
-          model: string
-          workflow: string
-        }
-        Insert: {
-          agent_id: string
-          ai_output: string
-          created_at?: string
-          edited_at?: string | null
-          edited_output?: string | null
-          id?: string
-          injection_flagged?: boolean
-          lead_id?: string | null
-          model: string
-          workflow: string
-        }
-        Update: {
-          agent_id?: string
-          ai_output?: string
-          created_at?: string
-          edited_at?: string | null
-          edited_output?: string | null
-          id?: string
-          injection_flagged?: boolean
-          lead_id?: string | null
-          model?: string
-          workflow?: string
-        }
-        Relationships: []
-      }
-      security_findings: {
-        Row: {
-          created_at: string
-          entered_by: string
-          finding_key: string
-          id: string
-          is_new: boolean
-          level: string
-          report_id: string
-          status: string
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          entered_by: string
-          finding_key: string
-          id?: string
-          is_new?: boolean
-          level: string
-          report_id: string
-          status?: string
-          title: string
-        }
-        Update: {
-          created_at?: string
-          entered_by?: string
-          finding_key?: string
-          id?: string
-          is_new?: boolean
-          level?: string
-          report_id?: string
-          status?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "security_findings_report_id_fkey"
-            columns: ["report_id"]
-            isOneToOne: false
-            referencedRelation: "security_scan_reports"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      security_scan_reports: {
-        Row: {
-          created_at: string
-          entered_by: string
-          id: string
-          notes: string | null
-          scanned_at: string
-          scanner: string
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          entered_by: string
-          id?: string
-          notes?: string | null
-          scanned_at: string
-          scanner: string
-          status: string
-        }
-        Update: {
-          created_at?: string
-          entered_by?: string
-          id?: string
-          notes?: string | null
-          scanned_at?: string
-          scanner?: string
-          status?: string
-        }
-        Relationships: []
-      }
       service_bill_review_attempts: {
         Row: {
           actor_email: string | null
@@ -4165,51 +3709,6 @@ export type Database = {
           },
         ]
       }
-      sheet_change_proposals: {
-        Row: {
-          created_at: string
-          current_value: string | null
-          decided_at: string | null
-          decided_by: string | null
-          fingerprint: string
-          id: string
-          kind: string
-          lead_id: string | null
-          proposed: Json
-          result_note: string | null
-          sheet_date: string
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          current_value?: string | null
-          decided_at?: string | null
-          decided_by?: string | null
-          fingerprint: string
-          id?: string
-          kind: string
-          lead_id?: string | null
-          proposed: Json
-          result_note?: string | null
-          sheet_date: string
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          current_value?: string | null
-          decided_at?: string | null
-          decided_by?: string | null
-          fingerprint?: string
-          id?: string
-          kind?: string
-          lead_id?: string | null
-          proposed?: Json
-          result_note?: string | null
-          sheet_date?: string
-          status?: string
-        }
-        Relationships: []
-      }
       sheet_sync_events: {
         Row: {
           attempt: number
@@ -4296,10 +3795,6 @@ export type Database = {
           id: string
           lead_id: string
           notes: string | null
-          outcome: string | null
-          outcome_at: string | null
-          outcome_by: string | null
-          outcome_interest: string | null
           project: string | null
           status: string
           team_calendar_added_at: string | null
@@ -4316,10 +3811,6 @@ export type Database = {
           id?: string
           lead_id: string
           notes?: string | null
-          outcome?: string | null
-          outcome_at?: string | null
-          outcome_by?: string | null
-          outcome_interest?: string | null
           project?: string | null
           status?: string
           team_calendar_added_at?: string | null
@@ -4336,10 +3827,6 @@ export type Database = {
           id?: string
           lead_id?: string
           notes?: string | null
-          outcome?: string | null
-          outcome_at?: string | null
-          outcome_by?: string | null
-          outcome_interest?: string | null
           project?: string | null
           status?: string
           team_calendar_added_at?: string | null
@@ -5230,15 +4717,12 @@ export type Database = {
           created_at: string
           currency: string
           due_date: string
-          fee_bdt: number | null
           fee_usd: number
           id: string
           lock_at: string
           lock_status: string
           locked_logged_at: string | null
           payment_ref: string | null
-          payment_rejected_at: string | null
-          payment_rejected_reason: string | null
           payment_status: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at: string | null
           payment_verified_by: string | null
@@ -5262,15 +4746,12 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date: string
-          fee_bdt?: number | null
           fee_usd?: number
           id?: string
           lock_at: string
           lock_status?: string
           locked_logged_at?: string | null
           payment_ref?: string | null
-          payment_rejected_at?: string | null
-          payment_rejected_reason?: string | null
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
@@ -5294,15 +4775,12 @@ export type Database = {
           created_at?: string
           currency?: string
           due_date?: string
-          fee_bdt?: number | null
           fee_usd?: number
           id?: string
           lock_at?: string
           lock_status?: string
           locked_logged_at?: string | null
           payment_ref?: string | null
-          payment_rejected_at?: string | null
-          payment_rejected_reason?: string | null
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
@@ -5630,77 +5108,6 @@ export type Database = {
         }
         Relationships: []
       }
-      website_enquiries: {
-        Row: {
-          amenities: string[]
-          budget_max_bdt: number | null
-          budget_min_bdt: number | null
-          created_at: string
-          customer_name: string
-          facing: string | null
-          hub_request_id: string
-          id: string
-          lead_id: string | null
-          message: string | null
-          outcome: string
-          page_url: string | null
-          phone: string
-          project: string | null
-          property_type: string | null
-          utm_campaign: string | null
-          utm_medium: string | null
-          utm_source: string | null
-        }
-        Insert: {
-          amenities?: string[]
-          budget_max_bdt?: number | null
-          budget_min_bdt?: number | null
-          created_at?: string
-          customer_name: string
-          facing?: string | null
-          hub_request_id: string
-          id?: string
-          lead_id?: string | null
-          message?: string | null
-          outcome: string
-          page_url?: string | null
-          phone: string
-          project?: string | null
-          property_type?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Update: {
-          amenities?: string[]
-          budget_max_bdt?: number | null
-          budget_min_bdt?: number | null
-          created_at?: string
-          customer_name?: string
-          facing?: string | null
-          hub_request_id?: string
-          id?: string
-          lead_id?: string | null
-          message?: string | null
-          outcome?: string
-          page_url?: string | null
-          phone?: string
-          project?: string | null
-          property_type?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "website_enquiries_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       website_pages: {
         Row: {
           content: string
@@ -5880,23 +5287,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      advance_it_officer_onboarding: {
-        Args: { _action: string; _actor: string; _id: string }
-        Returns: undefined
-      }
-      allocate_extra_leads_atomic: {
-        Args: {
-          _actor: string
-          _agent: string
-          _ids: string[]
-          _label: string
-          _quantity: number
-          _reason: string
-          _request: string
-          _source: string
-        }
-        Returns: Json
-      }
       clean_person_name: { Args: { _raw: string }; Returns: string }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {
@@ -5904,19 +5294,6 @@ export type Database = {
         Returns: {
           lead_id: string
         }[]
-      }
-      finalize_call_report_atomic: {
-        Args: {
-          _agent: string
-          _classification: Json
-          _evaluation_detail: string
-          _followup: Json
-          _lead_patch: Json
-          _outcome: string
-          _report: string
-          _report_patch: Json
-        }
-        Returns: Json
       }
       has_active_license: { Args: { check_env?: string }; Returns: boolean }
       has_pending_call_report: { Args: { _agent_id: string }; Returns: boolean }
@@ -5942,42 +5319,12 @@ export type Database = {
       }
       lead_phone_was_ever_worked: { Args: { _raw: string }; Returns: boolean }
       normalize_bd_phone: { Args: { _raw: string }; Returns: string }
-      pending_lead_age_report: { Args: never; Returns: Json }
-      project_photos_exposure: {
-        Args: never
-        Returns: {
-          bucket_public: boolean
-          policy_count: number
-          policy_names: string[]
-        }[]
-      }
-      publish_notice_atomic: {
-        Args: {
-          _audience: string
-          _author: string
-          _body: string
-          _expiry: string
-          _label: string
-          _recipients: string[]
-          _request: string
-          _role: string
-          _severity: string
-          _title: string
-        }
-        Returns: string
-      }
     }
     Enums: {
       agent_presence: "on_call" | "idle" | "offline"
       app_role: "admin" | "team_leader" | "agent"
       call_direction: "outgoing" | "incoming_callback"
       call_sentiment: "positive" | "neutral" | "negative" | "critical"
-      lead_pipeline_stage:
-        | "enquiry"
-        | "proposal"
-        | "offer"
-        | "booking"
-        | "close"
       lead_status: "pending" | "contacted" | "follow_up" | "closed"
       maintenance_payment_status: "unpaid" | "pending" | "verified"
       maintenance_unlock_status:
@@ -6120,7 +5467,6 @@ export const Constants = {
       app_role: ["admin", "team_leader", "agent"],
       call_direction: ["outgoing", "incoming_callback"],
       call_sentiment: ["positive", "neutral", "negative", "critical"],
-      lead_pipeline_stage: ["enquiry", "proposal", "offer", "booking", "close"],
       lead_status: ["pending", "contacted", "follow_up", "closed"],
       maintenance_payment_status: ["unpaid", "pending", "verified"],
       maintenance_unlock_status: [

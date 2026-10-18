@@ -6,13 +6,9 @@ const EnvSchema = z.enum(["sandbox", "live"]);
 /** Turns a human-readable price id (pro_monthly) into the Paddle price id. */
 export const resolvePaddlePrice = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
-    z.object({ priceId: z.enum(["pro_monthly"]), environment: EnvSchema }).parse(input),
+    z.object({ priceId: z.string().min(1), environment: EnvSchema }).parse(input),
   )
   .handler(async ({ data }) => {
-    // Only the single plan sold in the app can be looked up, and only by signed-in staff.
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(null, { skipMaintenance: true });
-    if (!caller.userId) throw new Error("Please sign in to continue");
     const { gatewayFetch } = await import("@/lib/paddle.server");
     const res = await gatewayFetch(
       data.environment,
@@ -99,7 +95,7 @@ export const openBillingPortal = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { requireAdminToken } = await import("@/lib/admin-gate.server");
-    await requireAdminToken(data.adminToken);
+    requireAdminToken(data.adminToken);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin

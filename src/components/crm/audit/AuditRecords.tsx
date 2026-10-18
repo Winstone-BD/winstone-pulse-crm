@@ -67,7 +67,7 @@ export function RemediationTimeline({ item }: { item: AuditItem }) {
   const [action, setAction] = useState<(typeof REMEDIATION_ACTIONS)[number]>("noted");
   const [note, setNote] = useState("");
   const m = useMutation({
-    mutationFn: () => add({ data: { adminToken, itemNo: itemNumber(item.item), action: rec.data?.commentOnly ? "noted" : action, note } }),
+    mutationFn: () => add({ data: { adminToken, itemNo: itemNumber(item.item), action, note } }),
     onSuccess: () => { setNote(""); toast.success("Step added to the timeline"); void qc.invalidateQueries({ queryKey: ["audit-records"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -95,8 +95,8 @@ export function RemediationTimeline({ item }: { item: AuditItem }) {
       {saved ? (
         <form className="mt-3 space-y-2 rounded-lg border border-border p-3 print:hidden" onSubmit={(e) => { e.preventDefault(); if (note.trim()) m.mutate(); }}>
           <label className="block text-xs font-medium">Step
-            <select value={rec.data.commentOnly ? "noted" : action} disabled={rec.data.commentOnly} onChange={(e) => setAction(e.target.value as typeof action)} className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
-              {(rec.data.commentOnly ? ["noted"] : REMEDIATION_ACTIONS).map((a) => <option key={a} value={a}>{ACTION_LABEL[a]}</option>)}
+            <select value={action} onChange={(e) => setAction(e.target.value as typeof action)} className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
+              {REMEDIATION_ACTIONS.map((a) => <option key={a} value={a}>{ACTION_LABEL[a]}</option>)}
             </select>
           </label>
           <label className="block text-xs font-medium">What was done

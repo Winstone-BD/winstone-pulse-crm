@@ -25,8 +25,7 @@ export class InvalidLeadPhoneError extends Error {
 
 /** Bangladesh local formats and explicit international country-code formats become canonical digits. */
 export function normalizeLeadPhone(raw: string): string {
-  const phone = primaryBangladeshPhone(raw);
-  return phone ? (/^8801[3-9]\d{8}$/.test(phone) ? phone : `+${phone}`) : raw.trim();
+  return primaryBangladeshPhone(raw) ?? (raw.replace(/[^\d+]/g, "") || raw.trim());
 }
 
 export async function intakeLead(input: {

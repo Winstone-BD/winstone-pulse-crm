@@ -8,8 +8,8 @@ import { useSnapshot, type Lead } from "@/lib/crm-data";
 import { useAdminToken } from "@/lib/local-session";
 import { addSiteVisitToTeamCalendar, createSiteVisit, listSiteVisits, setSiteVisitStatus, SITE_VISIT_STATUSES } from "@/lib/site-visits.functions";
 
-export const VISIT_LABEL: Record<string, string> = { scheduled: "নির্ধারিত", confirmed: "কনফার্মড", completed: "সম্পন্ন", offer_made: "অফার দেওয়া", cancelled: "বাতিল", no_show: "আসেননি" };
-const TONE: Record<string, string> = { scheduled: "text-primary", confirmed: "text-primary", offer_made: "text-success", completed: "text-foreground", cancelled: "text-muted-foreground", no_show: "text-destructive" };
+const LABEL: Record<string, string> = { scheduled: "নির্ধারিত", completed: "সম্পন্ন", cancelled: "বাতিল", no_show: "আসেননি" };
+const TONE: Record<string, string> = { scheduled: "text-primary", completed: "text-foreground", cancelled: "text-muted-foreground", no_show: "text-destructive" };
 const when = (iso: string) => new Date(iso).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dhakaDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600_000).toISOString().slice(0, 10);
 
@@ -27,8 +27,7 @@ export function SiteVisitReminder({ leads: given }: { leads?: Lead[] }) {
   const now = Date.now();
   const leadName = new Map(leads.map((l) => [l.id, l.name]));
   const due = (visits.data ?? [])
-    .filter((v) => ((v.status === "scheduled" || v.status === "confirmed") && new Date(v.visit_at).getTime() <= now + 24 * 3600_000)
-      || (v.status === "completed" && !v.outcome_at))
+    .filter((v) => v.status === "scheduled" && new Date(v.visit_at).getTime() <= now + 24 * 3600_000)
     .sort((a, b) => a.visit_at.localeCompare(b.visit_at));
   if (!due.length) return null;
   return (
@@ -39,8 +38,8 @@ export function SiteVisitReminder({ leads: given }: { leads?: Lead[] }) {
           const late = new Date(v.visit_at).getTime() < now;
           return (
             <li key={v.id} className="flex flex-wrap justify-between gap-2">
-              <span className="min-w-0 truncate font-medium">{v.lead_name ?? leadName.get(v.lead_id) ?? "লিড"}{v.project ? ` · ${v.project}` : ""}</span>
-              <span className={late ? "text-destructive" : "text-muted-foreground"}>{when(v.visit_at)}{v.status === "completed" ? " · ফলাফল লিখুন" : late ? " · সময় পেরিয়েছে, অবস্থা আপডেট করুন" : ""}</span>
+              <span className="min-w-0 truncate font-medium">{leadName.get(v.lead_id) ?? "লিড"}{v.project ? ` · ${v.project}` : ""}</span>
+              <span className={late ? "text-destructive" : "text-muted-foreground"}>{when(v.visit_at)}{late ? " · সময় পেরিয়েছে, অবস্থা আপডেট করুন" : ""}</span>
             </li>
           );
         })}
@@ -133,10 +132,10 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
         </form>
       )}
 
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {SITE_VISIT_STATUSES.map((s) => (
           <div key={s} className="rounded-xl border border-border p-2.5">
-            <span className="block text-[11px] text-muted-foreground">{VISIT_LABEL[s]}</span>
+            <span className="block text-[11px] text-muted-foreground">{LABEL[s]}</span>
             <span className={`tabular block text-lg font-bold ${TONE[s]}`}>{counts[s] ?? 0}</span>
           </div>
         ))}
@@ -151,13 +150,13 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
             {rows.map((v) => (
               <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-2.5 text-xs">
                 <span className="min-w-0">
-                  <span className="block truncate font-semibold">{v.lead_name ?? leadById.get(v.lead_id)?.name ?? "লিড"}</span>
+                  <span className="block truncate font-semibold">{leadById.get(v.lead_id)?.name ?? "লিড"}</span>
                   <span className="text-muted-foreground">{when(v.visit_at)}{v.project ? ` · ${v.project}` : ""}</span>
                 </span>
                 <span className="flex items-center gap-2">
                 {v.team_calendar_event_id ? (
                   <span className="rounded-md border border-success/30 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success">✓ টিম ক্যালেন্ডারে</span>
-                ) : (v.status === "scheduled" || v.status === "confirmed") ? (
+                ) : v.status === "scheduled" ? (
                   <button type="button" disabled={toCalendar.isPending} onClick={() => toCalendar.mutate(v.id)}
                     className="h-8 rounded-lg border border-border px-2 text-[11px] font-semibold hover:bg-muted disabled:opacity-50">
                     {toCalendar.isPending && toCalendar.variables === v.id ? "যোগ হচ্ছে…" : "টিম ক্যালেন্ডারে যোগ"}
@@ -165,7 +164,7 @@ export function SiteVisitsPanel({ leads, fromDay, toDay, agentId = null }: { lea
                 ) : null}
                 <select aria-label="অবস্থা" className="h-8 rounded-lg border border-border bg-background px-2 text-xs" value={v.status}
                   disabled={change.isPending} onChange={(e) => change.mutate({ id: v.id, status: e.target.value as (typeof SITE_VISIT_STATUSES)[number] })}>
-                  {SITE_VISIT_STATUSES.map((s) => <option key={s} value={s}>{VISIT_LABEL[s]}</option>)}
+                  {SITE_VISIT_STATUSES.map((s) => <option key={s} value={s}>{LABEL[s]}</option>)}
                 </select>
                 </span>
               </li>

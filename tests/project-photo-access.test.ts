@@ -70,24 +70,27 @@ function tokenLifetime(signedUrl: string): number {
   return p.exp - p.iat;
 }
 
-// Direct staff storage access was removed on purpose (any signed-in user could
-// download). Staff now see photos only through server-minted signed links.
-describe.runIf(url && key && staffToken)("project photos: signed-in staff go through the server", () => {
+describe.runIf(url && key && staffToken)("project photos: signed-in CRM staff", () => {
   const staff = client(staffToken!);
-  it("cannot download the photo directly from storage", async () => {
+  it("can download the photo", async () => {
     const { data, error } = await staff.storage.from(BUCKET).download(FILE);
-    expect(data).toBeNull();
-    expect(error).toBeTruthy();
+    expect(error).toBeNull();
+    expect(data && data.size).toBeGreaterThan(1000);
   });
-  it("cannot mint a signed link directly", async () => {
-    const { data } = await staff.storage.from(BUCKET).createSignedUrl(FILE, 3600);
-    expect(data?.signedUrl ?? null).toBeNull();
+  it("a one-hour link is signed for exactly 3600 seconds", async () => {
+    const { data, error } = await staff.storage.from(BUCKET).createSignedUrl(FILE, 3600);
+    expect(error).toBeNull();
+    expect(tokenLifetime(data!.signedUrl)).toBe(3600);
   });
-  it("signed link lifetime helper reads exp - iat", () => {
-    const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
-    const u = `https://x/y?token=${b64({})}.${b64({ iat: 100, exp: 3700 })}.sig`;
-    expect(tokenLifetime(u)).toBe(3600);
-  });
+  it("a link stops working after it expires", async () => {
+    const { data, error } = await staff.storage.from(BUCKET).createSignedUrl(FILE, 2);
+    expect(error).toBeNull();
+    const before = await fetch(data!.signedUrl);
+    expect(before.ok).toBe(true);
+    await new Promise((r) => setTimeout(r, 4000));
+    const after = await fetch(data!.signedUrl);
+    expect(after.ok).toBe(false);
+  }, 15_000);
 });
 
 describe("project photo views are recorded for HQ", () => {

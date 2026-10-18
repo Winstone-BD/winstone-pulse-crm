@@ -38,11 +38,6 @@ export function LeadDatabasePanel() {
     mutationFn: (saveAsDaily: boolean) =>
       distributeFn({ data: { adminToken, perAgent: quantity, saveAsDaily } }),
     onSuccess: (result) => {
-      if (result.moved === 0 && result.alreadyComplete) {
-        toast.info(
-          `নতুন কিছু দেওয়া হয়নি — ${result.agents} জন এজেন্টেরই আজকের দৈনিক কোটা আগেই পূর্ণ। আরও দিতে IT Console → "সবাইকে একসাথে অতিরিক্ত লিড" ব্যবহার করুন।`,
-        );
-      } else
       toast.success(
         `${result.agents} জন এজেন্টকে মোট ${result.moved}টি লিড দেওয়া হয়েছে — ডেটাবেজে বাকি ${result.remaining}টি${
           result.duplicatesSkipped
@@ -141,16 +136,12 @@ export function LeadDatabasePanel() {
       </div>
 
       {status.data && status.data.agents.length > 0 ? (
-        <div className="space-y-2">
         <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[380px] text-sm">
             <thead className="bg-surface-2 text-xs text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">এজেন্ট</th>
-                <th className="px-3 py-2 text-right font-medium" title="দৈনিক কোটায় গোনা লিড / লক্ষ্য">দৈনিক কোটা</th>
-                <th className="px-3 py-2 text-right font-medium" title="কোটার বাইরে আজ দেওয়া অতিরিক্ত">অতিরিক্ত</th>
-                <th className="px-3 py-2 text-right font-medium" title="আজকের বরাদ্দ ইতিহাসে নতুন দেওয়া">আজ নতুন</th>
-                <th className="px-3 py-2 text-right font-medium" title="আগের দিনের বাকি সহ আজকের বোর্ড">আজকের বোর্ড</th>
+                <th className="px-3 py-2 text-right font-medium">আজকের</th>
                 <th className="px-3 py-2 text-right font-medium">বাকি</th>
                 <th className="px-3 py-2 text-right font-medium">মোট</th>
               </tr>
@@ -159,46 +150,13 @@ export function LeadDatabasePanel() {
               {status.data.agents.map((agent) => (
                 <tr key={agent.id}>
                   <td className="px-3 py-2">{agent.name}</td>
-                  <td className="tabular px-3 py-2 text-right">
-                    <span className={agent.quotaToday >= agent.quotaTarget ? "text-success" : ""}>
-                      {agent.quotaToday}/{agent.quotaTarget}
-                    </span>
-                  </td>
-                  <td className="tabular px-3 py-2 text-right">{agent.extraToday ? `+${agent.extraToday}` : "—"}</td>
-                  <td className="tabular px-3 py-2 text-right">{agent.newToday}</td>
                   <td className="tabular px-3 py-2 text-right">{agent.today}</td>
                   <td className="tabular px-3 py-2 text-right">{agent.pending}</td>
                   <td className="tabular px-3 py-2 text-right font-medium">{agent.total}</td>
                 </tr>
               ))}
-              <tr className="bg-surface-2 font-medium">
-                <td className="px-3 py-2">মোট</td>
-                <td className="tabular px-3 py-2 text-right">
-                  {status.data.agents.reduce((s, a) => s + a.quotaToday, 0)}
-                </td>
-                <td className="tabular px-3 py-2 text-right">
-                  +{status.data.agents.reduce((s, a) => s + a.extraToday, 0)}
-                </td>
-                <td className="tabular px-3 py-2 text-right">
-                  {status.data.agents.reduce((s, a) => s + a.newToday, 0)}
-                </td>
-                <td className="tabular px-3 py-2 text-right">
-                  {status.data.agents.reduce((s, a) => s + a.today, 0)}
-                </td>
-                <td className="tabular px-3 py-2 text-right">
-                  {status.data.agents.reduce((s, a) => s + a.pending, 0)}
-                </td>
-                <td className="tabular px-3 py-2 text-right">
-                  {status.data.agents.reduce((s, a) => s + a.total, 0)}
-                </td>
-              </tr>
             </tbody>
           </table>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          দৈনিক কোটা = আজকের কোটায় গোনা লিড (বিতরণ এই সংখ্যা দেখেই বাকিটা দেয়) · অতিরিক্ত = IT Console/স্বয়ংক্রিয় রিফিল থেকে কোটার বাইরে ·
-          আজ নতুন = আজকের বরাদ্দ ইতিহাসে লেখা নতুন লিড · আজকের বোর্ড = আগের দিনের অসম্পূর্ণ লিডসহ আজকের তালিকা।
-        </p>
         </div>
       ) : null}
 

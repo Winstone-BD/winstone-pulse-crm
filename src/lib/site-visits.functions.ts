@@ -6,7 +6,7 @@ import { z } from "zod";
  * read/write goes through the server-resolved caller. HQ/IT sees and edits
  * all; agents only visits on leads assigned to them. Never deleted.
  */
-export const SITE_VISIT_STATUSES = ["scheduled", "confirmed", "completed", "offer_made", "cancelled", "no_show"] as const;
+export const SITE_VISIT_STATUSES = ["scheduled", "completed", "cancelled", "no_show"] as const;
 const Token = z.string().nullable().optional();
 
 export const listSiteVisits = createServerFn({ method: "POST" })
@@ -17,13 +17,13 @@ export const listSiteVisits = createServerFn({ method: "POST" })
     const c = await siCaller(data.adminToken).catch(() => null);
     if (!c) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null; team_calendar_event_id: string | null; team_calendar_added_at: string | null; outcome: string | null; outcome_interest: string | null; outcome_at: string | null; outcome_by: string | null; lead_name: string | null }> = [];
+    const out: Array<{ id: string; lead_id: string; agent_id: string | null; project: string | null; visit_at: string; status: string; notes: string | null; created_by: string; updated_by: string | null; team_calendar_event_id: string | null; team_calendar_added_at: string | null }> = [];
     for (let a = 0; ; a += 1000) {
-      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by, team_calendar_event_id, team_calendar_added_at, outcome, outcome_interest, outcome_at, outcome_by, leads(name)");
+      let q = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, project, visit_at, status, notes, created_by, updated_by, team_calendar_event_id, team_calendar_added_at");
       if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
       const { data: rows, error } = await q.order("visit_at", { ascending: false }).order("id").range(a, a + 999);
       if (error) throw new Error("সাইট ভিজিট পড়া যায়নি");
-      for (const r of rows ?? []) { const { leads, ...rest } = r as typeof r & { leads?: { name?: string } | null }; out.push({ ...rest, lead_name: leads?.name ?? null }); }
+      out.push(...(rows ?? []));
       if (!rows || rows.length < 1000) return out;
     }
   });
@@ -64,14 +64,7 @@ export const setSiteVisitStatus = createServerFn({ method: "POST" })
     const { siCaller } = await import("@/lib/sales-intel.server");
     const c = await siCaller(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { canMoveVisit } = await import("@/lib/site-visit-rules");
-    let read = supabaseAdmin.from("site_visits").select("status").eq("id", data.id);
-    if (c.scope === "agent") read = read.eq("agent_id", c.agentId!);
-    const { data: cur } = await read.maybeSingle();
-    if (!cur) throw new Error("অবস্থা বদলানো যায়নি");
-    if (!canMoveVisit(cur.status, data.status)) throw new Error("এই অবস্থা থেকে এভাবে বদলানো যায় না");
-    // Compare-and-set on the read status so two taps never skip a stage.
-    let q = supabaseAdmin.from("site_visits").update({ status: data.status, updated_by: c.actor }).eq("id", data.id).eq("status", cur.status);
+    let q = supabaseAdmin.from("site_visits").update({ status: data.status, updated_by: c.actor }).eq("id", data.id);
     if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
     const { data: rows, error } = await q.select("id");
     if (error || !rows?.length) throw new Error("অবস্থা বদলানো যায়নি");
@@ -93,7 +86,7 @@ export const addSiteVisitToTeamCalendar = createServerFn({ method: "POST" })
     if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
     const { data: v } = await q.maybeSingle();
     if (!v) throw new Error("ভিজিট পাওয়া যায়নি বা আপনার অনুমতি নেই");
-    if (v.status !== "scheduled" && v.status !== "confirmed") throw new Error("শুধু নির্ধারিত (কনফার্ম) ভিজিট ক্যালেন্ডারে যোগ করা যায়");
+    if (v.status !== "scheduled") throw new Error("শুধু নির্ধারিত (কনফার্ম) ভিজিট ক্যালেন্ডারে যোগ করা যায়");
     if (v.team_calendar_event_id) return { ok: true, already: true };
     const lovableKey = process.env["LOVABLE_API_KEY"];
     const calKey = process.env["GOOGLE_CALENDAR_API_KEY"];
@@ -127,59 +120,4 @@ export const addSiteVisitToTeamCalendar = createServerFn({ method: "POST" })
       .eq("id", v.id).is("team_calendar_event_id", null);
     if (error) throw new Error("ক্যালেন্ডারে যোগ হয়েছে, কিন্তু রেকর্ড সংরক্ষণ হয়নি");
     return { ok: true, already: false };
-  });
-
-/**
- * Post-visit outcome. Only for visits that actually happened (completed /
- * offer made). Visit's own agent or HQ/IT; also appended to the lead timeline.
- */
-export const logSiteVisitOutcome = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) =>
-    z.object({
-      adminToken: Token,
-      id: z.string().uuid(),
-      interest: z.enum(["hot", "warm", "cold", "not_interested"]),
-      outcome: z.string().trim().min(3).max(1000),
-      offerMade: z.boolean().optional(),
-    }).parse(i),
-  )
-  .handler(async ({ data }) => {
-    const { siCaller } = await import("@/lib/sales-intel.server");
-    const c = await siCaller(data.adminToken);
-    if (c.readOnly) throw new Error("HQ ভিউ সেশন শুধু পড়তে পারে — IT PIN দিয়ে পরিবর্তন করুন");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let read = supabaseAdmin.from("site_visits").select("id, lead_id, agent_id, status").eq("id", data.id);
-    if (c.scope === "agent") read = read.eq("agent_id", c.agentId!);
-    const { data: v } = await read.maybeSingle();
-    if (!v) throw new Error("ভিজিট পাওয়া যায়নি বা আপনার অনুমতি নেই");
-    if (v.status !== "completed" && v.status !== "offer_made") throw new Error("শুধু সম্পন্ন ভিজিটের ফলাফল লেখা যায়");
-    const patch = {
-      outcome: data.outcome, outcome_interest: data.interest, outcome_at: new Date().toISOString(), outcome_by: c.actor, updated_by: c.actor,
-      ...(data.offerMade ? { status: "offer_made" } : {}),
-    };
-    const { error } = await supabaseAdmin.from("site_visits").update(patch).eq("id", v.id);
-    if (error) throw new Error("ফলাফল সংরক্ষণ হয়নি");
-    const { logLeadEvent } = await import("@/lib/lead-events.server");
-    await logLeadEvent({ leadId: v.lead_id, agentId: v.agent_id, kind: "site_visit_outcome",
-      detail: `ভিজিটের ফলাফল (${data.interest}${data.offerMade ? " · অফার দেওয়া হয়েছে" : ""}): ${data.outcome}` });
-    return { ok: true };
-  });
-
-/** Project label for outreach: the lead's most recent site visit project, if any. Owner/HQ only. */
-export const leadProjectLabel = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => z.object({ adminToken: Token, leadId: z.string().uuid() }).parse(i))
-  .handler(async ({ data }) => {
-    const { siCaller } = await import("@/lib/sales-intel.server");
-    const c = await siCaller(data.adminToken).catch(() => null);
-    if (!c) return { project: null };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin.from("site_visits").select("project").eq("lead_id", data.leadId).not("project", "is", null);
-    if (c.scope === "agent") q = q.eq("agent_id", c.agentId!);
-    const { data: v } = await q.order("visit_at", { ascending: false }).limit(1).maybeSingle();
-    if (v?.project) return { project: v.project };
-    let rq = supabaseAdmin.from("call_reports").select("requirement").eq("lead_id", data.leadId);
-    if (c.scope === "agent") rq = rq.eq("agent_id", c.agentId!);
-    const { data: r } = await rq
-      .not("requirement", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
-    return { project: r?.requirement ?? null };
   });

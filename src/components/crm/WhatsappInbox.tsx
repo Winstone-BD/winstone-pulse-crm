@@ -8,7 +8,6 @@ import { MyPhoneLine } from "@/components/crm/MyPhoneSetup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { OUTREACH_TEMPLATES } from "@/lib/outreach-templates";
 import { logMyWhatsappMessage } from "@/lib/agent-desk.functions";
 import { getWhatsappIntegrationStatus, sendWhatsappMessage } from "@/lib/whatsapp.functions";
 import type { Lead, WhatsappMessage } from "@/lib/crm-data";
@@ -89,7 +88,7 @@ export function WhatsappInbox() {
   const mutation = useMutation({
     mutationFn: async (text: string) => {
       if (integrationStatus === "configured") {
-        const result = await sendApi({ data: { adminToken, leadId: active!.lead.id, templateKey: text } });
+        const result = await sendApi({ data: { adminToken, leadId: active!.lead.id, body: text } });
         if (!result.ok) throw new Error(result.error);
         return result;
       }
@@ -236,24 +235,17 @@ export function WhatsappInbox() {
               </div>
 
               <div className="border-t border-border p-3">
-                {integrationStatus === "configured" ? (
-                  <div className="flex flex-wrap gap-2">
-                    <p className="w-full text-[11px] text-muted-foreground">শুধু HQ-অনুমোদিত টেমপ্লেট পাঠানো যায়</p>
-                    {OUTREACH_TEMPLATES.map((t) => (
-                      <Button key={t.key} size="sm" variant="outline" disabled={mutation.isPending}
-                        onClick={() => mutation.mutate(t.key)}>
-                        {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} {t.label}
-                      </Button>
-                    ))}
-                  </div>
-                ) : (
                 <div className="flex items-end gap-2">
                   <Textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     rows={2}
                     className="resize-none"
-                    placeholder="যে মেসেজটি পাঠিয়েছেন তা এখানে লিখে রাখুন"
+                    placeholder={
+                      integrationStatus === "configured"
+                        ? "মেসেজ লিখে পাঠান"
+                        : "যে মেসেজটি পাঠিয়েছেন তা এখানে লিখে রাখুন"
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -274,7 +266,6 @@ export function WhatsappInbox() {
                     )}
                   </Button>
                 </div>
-                )}
               </div>
             </div>
           )}

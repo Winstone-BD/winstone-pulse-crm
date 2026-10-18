@@ -499,28 +499,11 @@ export async function grantExtraLeads(input: {
   reason?: string | null;
   actorProfileId?: string | null;
   actorLabel?: string | null;
-  /** Ledger source — "manual_extra" (LeadHub/IT) or "auto_refill" (empty desk). */
-  source?: "manual_extra" | "auto_refill";
-  /** Idempotency key: a repeated request for the same agent hands out nothing new. */
-  requestId?: string | null;
-}): Promise<{ moved: number; remaining: number; workDate: string; replayed?: boolean }> {
-  const source = input.source ?? "manual_extra";
+}): Promise<{ moved: number; remaining: number; workDate: string }> {
   const { assertDistributionDay } = await import("@/lib/business-day");
   assertDistributionDay();
   const supabaseAdmin = await admin();
   const today = dhakaToday();
-
-  if (input.requestId) {
-    const { data: prior } = await supabaseAdmin
-      .from("lead_extra_grants")
-      .select("quantity")
-      .eq("request_id", input.requestId)
-      .eq("agent_profile_id", input.agentProfileId)
-      .maybeSingle();
-    if (prior) {
-      return { moved: prior.quantity, remaining: await usablePoolCount(), workDate: today, replayed: true };
-    }
-  }
 
   const { data: agent } = await supabaseAdmin
     .from("profiles")
@@ -556,16 +539,71 @@ export async function grantExtraLeads(input: {
   }
   if (picked.length === 0) throw new Error("ডেটাবেজে দেওয়ার মতো নতুন লিড নেই");
 
-  // PostgreSQL accepts NULL RPC arguments; generated types omit that nullability.
-  const args = {
-    _agent: input.agentProfileId, _ids: picked, _quantity: input.quantity,
-    _request: input.requestId ?? null, _reason: input.reason ?? null, _source: source,
-    _actor: input.actorProfileId ?? null, _label: input.actorLabel ?? "IT Console",
-  };
-  const { data: result, error: allocationError } = await supabaseAdmin.rpc("allocate_extra_leads_atomic", args as unknown as import("@/integrations/supabase/types").Database["public"]["Functions"]["allocate_extra_leads_atomic"]["Args"]);
-  if (allocationError) throw new Error("Allocation was not committed; refresh the reviewed plan before retrying");
-  const allocation = result as { moved: number; replayed: boolean; workDate: string };
-  return { ...allocation, remaining: await usablePoolCount() };
+  let moved = 0;
+  for (let start = 0; start < picked.length; start += 100) {
+    const ids = picked.slice(start, start + 100);
+    const { data: updated } = await supabaseAdmin
+      .from("leads")
+      .update({
+        assigned_to: input.agentProfileId,
+        assigned_agent_id: input.agentProfileId,
+        assignment_source: "extra_manual",
+        work_date: today,
+      })
+      .in("id", ids)
+      .is("assigned_to", null)
+      .is("assigned_agent_id", null)
+      .select("id");
+    const takenIds = (updated ?? []).map((row) => row.id);
+    if (takenIds.length === 0) continue;
+    moved += takenIds.length;
+
+    await supabaseAdmin.from("lead_assignments").insert(
+      takenIds.map((leadId) => ({
+        lead_id: leadId,
+        from_agent_id: null,
+        to_agent_id: input.agentProfileId,
+        source: "extra_manual",
+        note: `অতিরিক্ত লিড — ${input.actorLabel ?? "IT Console"} (${today})`,
+      })),
+    );
+    await supabaseAdmin.from("lead_events").insert(
+      takenIds.map((leadId) => ({
+        lead_id: leadId,
+        agent_id: input.agentProfileId,
+        kind: "extra_lead_granted" as const,
+        detail: `অতিরিক্ত লিড দেওয়া হয়েছে (${today}) — ${input.reason ?? "কারণ লেখা হয়নি"}`,
+      })),
+    );
+  }
+
+  await supabaseAdmin.from("lead_extra_grants").insert({
+    agent_profile_id: input.agentProfileId,
+    work_date: today,
+    quantity: moved,
+    reason: input.reason ?? null,
+    source: "manual_extra",
+    granted_by: input.actorProfileId ?? null,
+    granted_by_label: input.actorLabel ?? "IT Console",
+  });
+
+  const { logAudit } = await import("@/lib/audit.server");
+  await logAudit({
+    action: "extra_leads_granted",
+    entityType: "lead_pool",
+    entityId: input.agentProfileId,
+    actorProfileId: input.actorProfileId ?? null,
+    actorLabel: input.actorLabel ?? "IT Console",
+    metadata: {
+      agent: agent.name,
+      requested: input.quantity,
+      moved,
+      reason: input.reason ?? null,
+      workDate: today,
+    },
+  });
+
+  return { moved, remaining: await usablePoolCount(), workDate: today };
 }
 
 /** Extra leads handed out today, per agent — shown next to the base quota. */
@@ -580,138 +618,4 @@ export async function extraGrantsToday(): Promise<Record<string, number>> {
     totals[row.agent_profile_id] = (totals[row.agent_profile_id] ?? 0) + row.quantity;
   }
   return totals;
-}
-
-export type AutoRefillResult = {
-  give: boolean;
-  reason: "has_leads" | "work_not_logged" | "daily_cap" | "briefing" | "no_pool" | null;
-  moved: number;
-  quantity: number;
-  workDate: string;
-};
-
-/**
- * System-driven auto-refill for an empty desk. The rules live in
- * lead-refill.rules.ts; this function gathers the facts and, when the agent is
- * cleared to receive more, hands a small batch through the same guarded
- * `grantExtraLeads` path (duplicate protection, LeadHub ledger, audit trail).
- * Never call this from a client without the agent-session checks in
- * lead-pool.functions.ts.
- */
-export async function autoRefillLeadsForAgent(
-  agentProfileId: string,
-): Promise<AutoRefillResult> {
-  const { assertDistributionDay } = await import("@/lib/business-day");
-  assertDistributionDay();
-  const supabaseAdmin = await admin();
-  const today = dhakaToday();
-
-  const { data: agent } = await supabaseAdmin
-    .from("profiles")
-    .select("id, name, is_active, approval_status")
-    .eq("id", agentProfileId)
-    .maybeSingle();
-  if (!agent || !agent.is_active || agent.approval_status !== "approved") {
-    throw new Error("এই এজেন্ট সক্রিয় নয়");
-  }
-
-  // The 9:05 Dhaka briefing gate: no new batch before the day's briefing is
-  // acknowledged (same rule the call screen enforces).
-  const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
-  const briefingBlock = await requireAgentBriefing(agentProfileId);
-  if (briefingBlock) {
-    return { give: false, reason: "briefing", moved: 0, quantity: 0, workDate: today };
-  }
-
-  const dayStart = new Date(`${today}T00:00:00+06:00`).toISOString();
-  const head = () => supabaseAdmin.from("leads").select("id", { count: "exact", head: true });
-  const [activeRes, assignedRes, reportsRes, refillsRes] = await Promise.all([
-    // Still-open leads: not closed, not snoozed/unresponsive, not completed.
-    head()
-      .eq("assigned_to", agentProfileId)
-      .eq("work_date", today)
-      .not("work_state", "in", "(snoozed,unresponsive,completed)")
-      .neq("status", "closed"),
-    head().eq("assigned_to", agentProfileId).eq("work_date", today),
-    supabaseAdmin
-      .from("call_reports")
-      .select("id", { count: "exact", head: true })
-      .eq("agent_id", agentProfileId)
-      .not("submitted_at", "is", null)
-      .gte("submitted_at", dayStart),
-    supabaseAdmin
-      .from("lead_extra_grants")
-      .select("id", { count: "exact", head: true })
-      .eq("agent_profile_id", agentProfileId)
-      .eq("work_date", today)
-      .eq("source", "auto_refill"),
-  ]);
-
-  const { decideAutoRefill } = await import("@/lib/lead-refill.rules");
-  const decision = decideAutoRefill({
-    activeLeads: activeRes.count ?? 0,
-    assignedToday: assignedRes.count ?? 0,
-    reportsToday: reportsRes.count ?? 0,
-    refillsToday: refillsRes.count ?? 0,
-  });
-  if (!decision.give) {
-    return { give: false, reason: decision.reason, moved: 0, quantity: 0, workDate: today };
-  }
-
-  try {
-    const result = await grantExtraLeads({
-      agentProfileId,
-      quantity: decision.quantity,
-      reason: "স্বয়ংক্রিয় রিফিল — কিউ খালি ও আজকের কাজ লগ হয়েছে",
-      actorProfileId: null,
-      actorLabel: "Auto refill",
-      source: "auto_refill",
-    });
-    return {
-      give: true,
-      reason: null,
-      moved: result.moved,
-      quantity: decision.quantity,
-      workDate: today,
-    };
-  } catch (err) {
-    // Head database empty — nothing to give; not an error the desk should see.
-    if (err instanceof Error && err.message.includes("নতুন লিড নেই")) {
-      return { give: false, reason: "no_pool", moved: 0, quantity: 0, workDate: today };
-    }
-    throw err;
-  }
-}
-
-/**
- * Claim today's single bulk extra-lead batch. Two confirmations racing from
- * different tabs hit the work_date primary key; the loser is refused. The
- * same requestId re-entering after completion is allowed (per-agent ledger
- * rows then replay without handing out anything new).
- */
-export async function claimBulkBatch(requestId: string, quantity: number): Promise<void> {
-  const supabaseAdmin = await admin();
-  const today = dhakaToday();
-  const { error } = await supabaseAdmin
-    .from("bulk_extra_batches")
-    .insert({ work_date: today, request_id: requestId, quantity });
-  if (!error) return;
-  const { data: row } = await supabaseAdmin
-    .from("bulk_extra_batches")
-    .select("request_id, status")
-    .eq("work_date", today)
-    .maybeSingle();
-  if (row && row.request_id === requestId && row.status === "done") return;
-  if (row?.status === "running") {
-    throw new Error("আরেকটি tab/অপারেটর থেকে আজকের batch এখন চলছে — শেষ হলে History দেখুন");
-  }
-  throw new Error("আজকের সবাইকে-একসাথে batch ইতিমধ্যে দেওয়া হয়েছে — History দেখুন, প্রয়োজনে একক এজেন্টকে আলাদা দিন");
-}
-
-export async function finishBulkBatch(requestId: string): Promise<void> {
-  const supabaseAdmin = await admin();
-  await supabaseAdmin
-    .from("bulk_extra_batches")
-    .update({ status: "done", finished_at: new Date().toISOString() })
-    .eq("request_id", requestId);
 }

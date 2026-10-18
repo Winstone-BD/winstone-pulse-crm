@@ -4,7 +4,6 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "test:recovery-browser": "python3 tests/browser/deploy-recovery.browser.py",
     "test:restart": "python3 scripts/restart-recovery-check.py",
     "test:smoke": "python3 scripts/production-smoke-check.py",
     "test:recovery": "python3 scripts/module-recovery-check.py",
@@ -19,13 +18,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "check:mcp-js": "node scripts/check-mcp-js-stable.mjs",
-    "check:mcp-js:compat": "bash scripts/mcp-js-compat-isolated.sh",
     "typecheck": "tsgo --noEmit",
     "format": "prettier --write .",
-    "check:colors": "node scripts/check-dashboard-colors.mjs",
-    "test:home-boundary-browser": "python3 tests/browser/home-error-boundary.browser.py",
-    "test:inbox-browser": "python3 tests/browser/support-inbox.browser.py"
+    "check:colors": "node scripts/check-dashboard-colors.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1",
@@ -34,15 +29,10 @@
   "dependencies": {
     "@firebase/app": "^0.16.3",
     "@firebase/messaging": "^0.13.3",
-    "@fontsource-variable/inter": "^5.3.0",
-    "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@fontsource/caveat": "^5.3.0",
-    "@fontsource/hind-siliguri": "^5.3.0",
     "@hookform/resolvers": "^5.2.2",
-    "@lovable.dev/ai-gateway": "^0.1.1",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@lovable.dev/email-js": "0.1.0",
-    "@lovable.dev/mcp-js": "4.0.0-rc.0",
+    "@lovable.dev/mcp-js": "^2.3.0",
     "@lovable.dev/webhooks-js": "^0.0.1",
     "@paddle/paddle-node-sdk": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -108,7 +98,6 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.25.2",
-    "@modelcontextprotocol/sdk": "1.32.1",
     "@types/node": "^22.16.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.0",

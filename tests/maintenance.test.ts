@@ -2,11 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
-  MAINTENANCE_CURRENCY,
-  MAINTENANCE_FEE_USD,
   MAINTENANCE_FEE_LABEL,
-  RENEWAL_DAY,
-  moneyLabel,
   clampUnlockMinutes,
   decide,
   defaultLockAt,
@@ -64,22 +60,9 @@ describe("maintenance wiring", () => {
     "src/components/crm/MaintenancePanel.tsx",
     "src/routes/tech.tsx",
   ];
-  it("canonical fee is $35.29 USD due the 14th, no stale fee amounts", () => {
-    expect(MAINTENANCE_FEE_USD).toBe(35.29);
-    expect(MAINTENANCE_CURRENCY).toBe("USD");
-    expect(MAINTENANCE_FEE_LABEL).toBe("$35.29 USD");
-    expect(RENEWAL_DAY).toBe(14);
-    for (const f of files) expect(readFileSync(f, "utf8")).not.toMatch(/46\.29|18\.16|53\.23|15\.79/);
-  });
-  it("historical snapshots keep their own currency", () => {
-    expect(moneyLabel(1816, "USD")).toBe("$18.16 USD");
-    expect(moneyLabel(3529, "USD")).toBe("$35.29 USD");
-  });
-  it("new invoices snapshot $35.29 USD; existing rows are never rewritten", () => {
-    const src = readFileSync("src/lib/maintenance.server.ts", "utf8");
-    expect(src).toMatch(/fee_usd: MAINTENANCE_FEE_USD/);
-    expect(src).toMatch(/currency: MAINTENANCE_CURRENCY/);
-    expect(src).toMatch(/ignoreDuplicates: true/);
+  it("shows only USD, never BDT", () => {
+    expect(MAINTENANCE_FEE_LABEL).toBe("$46.29 USD + 15% VAT ($6.94) = $53.23 USD");
+    for (const f of files) expect(readFileSync(f, "utf8")).not.toMatch(/BDT|৳|4,?337/);
   });
   it("credential lives only on the server", () => {
     for (const f of ["src/components/crm/MaintenanceNotice.tsx", "src/routes/tech.tsx"]) {

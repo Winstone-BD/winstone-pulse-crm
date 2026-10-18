@@ -12,6 +12,7 @@ import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
 import {
   CRM_PLAN_NAME,
+  CRM_TOTAL_CENTS,
   MAINTENANCE_FEE_LABEL,
   dhakaClockLabel,
   dhakaDateLabel,
@@ -22,11 +23,8 @@ import {
   paymentDueLabel,
   subscriptionNoticeCopy,
   subscriptionNoticeState,
+  usd,
 } from "@/lib/maintenance-rules";
-
-/** This invoice's own stored amount; falls back to the canonical fee only before the server answers. */
-const feeOf = (s?: { amountLabel?: string } | null) => (s?.amountLabel && s.amountLabel !== "—" ? s.amountLabel : MAINTENANCE_FEE_LABEL);
-const dueDayOf = (s?: { dueDate?: string } | null) => (s?.dueDate ? dhakaDateLabel(s.dueDate) : "14th");
 import { useLang, useT } from "@/lib/i18n";
 import { amberDismissed, dismissAmber, firstRedModalThisSession } from "@/lib/billing-dismiss";
 
@@ -103,9 +101,9 @@ function NoticeBody({ s }: { s: Status }) {
       </p>
       <dl className="grid grid-cols-2 gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
         <dt className="text-muted-foreground">Fee</dt>
-        <dd className="font-semibold">{feeOf(s)}</dd>
+        <dd className="font-semibold">{MAINTENANCE_FEE_LABEL}</dd>
         <dt className="text-muted-foreground">Billing date</dt>
-        <dd className="font-semibold">Due {dueDayOf(s)} · lock {dhakaTime(s.lockAt)} (Dhaka)</dd>
+        <dd className="font-semibold">Renewal 12th · lock 15th 00:00 (Dhaka)</dd>
         <dt className="text-muted-foreground">Lock time</dt>
         <dd className="font-semibold">{dhakaTime(s.lockAt)}</dd>
         <dt className="text-muted-foreground">Current status</dt>
@@ -417,16 +415,12 @@ function RenewalModal({
   month,
   paymentStatus,
   onPay,
-  amountLabel,
-  dueLabel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   month: string;
   paymentStatus: string;
   onPay: () => void;
-  amountLabel: string;
-  dueLabel: string;
 }) {
   const statusText = paymentStatus === "pending" ? "Verification Pending" : paymentDueLabel();
   return (
@@ -438,8 +432,8 @@ function RenewalModal({
           </DialogTitle>
         </DialogHeader>
         <ul className="space-y-1.5 text-sm">
-          <li>● Outstanding Balance: <b>{amountLabel}</b></li>
-          <li>● Payment Due Date: <b>{dueLabel}</b></li>
+          <li>● Outstanding Balance: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including VAT</li>
+          <li>● Payment Due Date: <b>12 {month}</b></li>
           <li>● Lock Deadline: <b>15 {month}, 00:00 Asia/Dhaka</b></li>
           <li>● Payment Status: <b className="text-destructive">{statusText}</b></li>
         </ul>
@@ -496,7 +490,7 @@ function NoticeCardHost({
   const month = dhakaMonthName();
   const copy = subscriptionNoticeCopy(state, {
     month,
-    totalLabel: feeOf(status),
+    totalLabel: `${usd(CRM_TOTAL_CENTS)} USD`,
     lockDate: dhakaDateLabel(status.lockAt),
     lockClock: dhakaClockLabel(status.lockAt),
   });
@@ -567,8 +561,6 @@ function NoticeCardHost({
           onOpenChange={setModal}
           month={month}
           paymentStatus={status.paymentStatus}
-          amountLabel={feeOf(status)}
-          dueLabel={dueDayOf(status)}
           onPay={() => {
             setModal(false);
             setInvoice(true);
@@ -590,7 +582,7 @@ export function NoticePreview() {
   const lockAt = new Date(Date.now() + 7 * 24 * 3600_000).toISOString();
   const opts = {
     month,
-    totalLabel: MAINTENANCE_FEE_LABEL,
+    totalLabel: `${usd(CRM_TOTAL_CENTS)} USD`,
     lockDate: dhakaDateLabel(lockAt),
     lockClock: dhakaClockLabel(lockAt),
   };
@@ -685,7 +677,7 @@ export function MaintenanceProfileNotice() {
         <MaintenanceBadge />
       </div>
       <p className="mt-1">
-        Monthly System Maintenance Fee: <b>{feeOf(data)}</b> · Due: {dueDayOf(data)} · Unpaid lock: 15th 00:00 (Dhaka) ·
+        Monthly System Maintenance Fee: <b>{MAINTENANCE_FEE_LABEL}</b> · Renewal due: 12th · Unpaid lock: 15th 00:00 (Dhaka) ·
         Status: <b className="text-destructive">{statusLabel(data)}</b>
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -743,14 +735,8 @@ export function MaintenanceGate() {
       <div className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-background/95 p-4 backdrop-blur">
         <div className="card-elevated w-full max-w-md space-y-4 border-destructive/40 p-6">
           <h1 className="flex items-center gap-2 text-lg font-bold text-destructive">
-            <Lock className="size-5" /> {data.paymentStatus === "pending" ? "ACCESS PAUSED — VERIFICATION PENDING" : "CRM SUBSCRIPTION ACCESS LOCKED"}
+            <Lock className="size-5" /> SYSTEM MAINTENANCE LOCKED
           </h1>
-          <p className="text-xs text-muted-foreground">Winstone Pulse · CRM Subscription Access · Invoice {feeOf(data)}</p>
-          {data.paymentStatus === "pending" && (
-            <p className="rounded-md border border-border bg-muted/40 p-2 text-sm">
-              {t({ bn: "পেমেন্ট রেফারেন্স জমা হয়েছে এবং যাচাইয়ের অপেক্ষায়। আবার পেমেন্ট করবেন না — যাচাই হলেই অ্যাক্সেস নিজে থেকে ফিরে আসবে। প্রয়োজনে IT Console-এ যোগাযোগ করুন।", en: "Your payment reference was received and is awaiting verification. Do not pay again — access returns automatically once it is verified. Contact IT Console if you need help." })}
-            </p>
-          )}
           <NoticeBody s={data} />
           <LockSignInButton />
           <p className="text-center text-xs text-muted-foreground">
@@ -771,17 +757,17 @@ export function MaintenanceGate() {
       ? t({ bn: "🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি বাকি — সিস্টেম লক। দয়া করে কোম্পানি কর্তৃপক্ষকে জানান।", en: "🔴 Company system maintenance fee is overdue — system locked. Please inform company management." })
       : data.stage === "due_today"
         ? t({
-            bn: `🔴 আজ কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${feeOf(data)}) পরিশোধের শেষ দিন — কর্তৃপক্ষকে মনে করিয়ে দিন।`,
-            en: `🔴 Today is the last day to pay the company's system maintenance fee (${feeOf(data)}) — remind management.`,
+            bn: `🔴 আজ কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) পরিশোধের শেষ দিন — কর্তৃপক্ষকে মনে করিয়ে দিন।`,
+            en: `🔴 Today is the last day to pay the company's system maintenance fee (${MAINTENANCE_FEE_LABEL}) — remind management.`,
           })
         : data.stage === "soon"
           ? t({
-              bn: `🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${feeOf(data)}) শিগগির পরিশোধযোগ্য — ১৫ তারিখ ০০:০০-এ লক। কর্তৃপক্ষকে জানান।`,
-              en: `🔴 The company's system maintenance fee (${feeOf(data)}) is due soon — lock at 00:00 on the 15th. Inform management.`,
+              bn: `🔴 কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) শিগগির পরিশোধযোগ্য — ১৫ তারিখ ০০:০০-এ লক। কর্তৃপক্ষকে জানান।`,
+              en: `🔴 The company's system maintenance fee (${MAINTENANCE_FEE_LABEL}) is due soon — lock at 00:00 on the 15th. Inform management.`,
             })
           : t({
-              bn: `কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${feeOf(data)}) — শেষ তারিখ ১৪ তারিখ, ১৪ তারিখ ২৩:৫৯ পর্যন্ত গ্রেস। ফি কোম্পানি দেয় — কর্তৃপক্ষ না জানলে তাঁদের জানান।`,
-              en: `Company system maintenance fee (${feeOf(data)}) — due on the 14th, grace until 23:59 on the 14th. The company pays the fee — inform management if they are unaware.`,
+              bn: `কোম্পানির সিস্টেম রক্ষণাবেক্ষণ ফি (${MAINTENANCE_FEE_LABEL}) — রিন্যুয়াল দিন ১২ তারিখ, ১৪ তারিখ ২৩:৫৯ পর্যন্ত গ্রেস। ফি কোম্পানি দেয় — কর্তৃপক্ষ না জানলে তাঁদের জানান।`,
+              en: `Company system maintenance fee (${MAINTENANCE_FEE_LABEL}) — renewal due on the 12th, grace until 23:59 on the 14th. The company pays the fee — inform management if they are unaware.`,
             });
   const strong = data.stage !== "upcoming";
   return (
@@ -805,8 +791,10 @@ function InvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
           <DialogTitle>{CRM_PLAN_NAME} — Invoice</DialogTitle>
         </DialogHeader>
         <dl className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 text-sm">
-          <dt className="text-muted-foreground">Monthly maintenance fee</dt><dd className="font-semibold">{feeOf(data)}</dd>
-          <dt className="text-muted-foreground">Due date</dt><dd className="font-semibold">{dueDayOf(data)}</dd>
+          <dt className="text-muted-foreground">Base monthly fee</dt><dd className="font-semibold">$15.79 USD</dd>
+          <dt className="text-muted-foreground">VAT (15%)</dt><dd className="font-semibold">$2.37 USD</dd>
+          <dt className="text-muted-foreground">Total due</dt><dd className="font-semibold">{usd(CRM_TOTAL_CENTS)} USD</dd>
+          <dt className="text-muted-foreground">Due date</dt><dd className="font-semibold">12 {dhakaMonthName()}</dd>
           <dt className="text-muted-foreground">Lock deadline</dt><dd className="font-semibold">15th 00:00 (Dhaka)</dd>
         </dl>
         <p className="text-xs text-muted-foreground">Payment is completed by IT Console / authorized team and verified by the System Architect.</p>

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
- * CRM maintenance invoice endpoints ($35.29 USD from 2026-11; older invoices keep their stored amount). The lock itself is decided in
+ * Monthly maintenance ($46.29 USD) endpoints. The lock itself is decided in
  * maintenance.server.ts; these functions only read it or move it through the
  * IT Console → System Architect workflow.
  */
@@ -33,8 +33,7 @@ export const getMaintenanceStatus = createServerFn({ method: "POST" })
       return {
         ok: true as const,
         period: s.period,
-        amountLabel: s.amountLabel,
-        currency: s.currency,
+        feeUsd: s.feeUsd,
         dueDate: s.dueDate,
         lockAt: s.lockAt,
         paymentStatus: s.paymentStatus,
@@ -43,16 +42,11 @@ export const getMaintenanceStatus = createServerFn({ method: "POST" })
         openRequest: s.openRequest,
         locked: s.locked,
         stage: s.stage,
-        invoiceStatus: s.invoiceStatus,
-        paymentState: s.paymentState,
-        accessStatus: s.accessStatus,
-        recoveryPending: s.recoveryPending,
-        rejectedReason: s.rejectedReason,
         exempt,
       };
     } catch (error) {
       console.error("maintenance status failed", error);
-      return { ok: false as const, locked: true, stage: "locked" as const, exempt, amountLabel: "—", currency: "USD", paymentStatus: "unpaid" as const, invoiceStatus: "OPEN" as const, paymentState: "UNPAID" as const, accessStatus: "LOCKED" as const, recoveryPending: false, rejectedReason: null as string | null, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
+      return { ok: false as const, locked: true, stage: "locked" as const, exempt, feeUsd: 46.29, paymentStatus: "unpaid" as const, unlockStatus: "none" as const, openRequest: false, period: "", dueDate: "", lockAt: "", unlockExpiresAt: null };
     }
   });
 
@@ -79,7 +73,7 @@ export const requestPaymentHelp = createServerFn({ method: "POST" })
       code: "maintenance_payment_help",
       severity: "critical",
       title: "Maintenance payment / unlock requested",
-      detail: `${caller.profile?.name ?? "Executive HQ"} asked IT Console to settle the ${state.period} CRM invoice (${state.amountLabel}).`,
+      detail: `${caller.profile?.name ?? "Executive HQ"} asked IT Console to settle the ${state.period} maintenance fee ($46.29 USD).`,
     });
     return { ok: true };
   });
@@ -91,46 +85,6 @@ export const itMaintenance = createServerFn({ method: "POST" })
     const { maintenanceAccess, maintenanceHistory } = await import("@/lib/maintenance.server");
     const [state, history] = await Promise.all([maintenanceAccess(), maintenanceHistory()]);
     return { state, ...history };
-  });
-
-/** IT Console only: read-only preview of the next invoice before it is generated. No writes. */
-export const nextMaintenanceInvoicePreview = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => Token.parse(input))
-  .handler(async ({ data }) => {
-    await itCaller(data.adminToken);
-    const { previewNextInvoice } = await import("@/lib/maintenance.server");
-    return previewNextInvoice();
-  });
-
-/**
- * Read-only "Billing & Approvals" summary for the IT Console. canApprove is
- * derived on the server from the confirmed Google architect identity — it only
- * decides what to show; every decision still needs the /tech PIN session.
- */
-export const billingApprovalSummary = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => Token.parse(input ?? {}))
-  .handler(async ({ data }) => {
-    await itCaller(data.adminToken);
-    const m = await import("@/lib/maintenance.server");
-    const [state, history, who] = await Promise.all([m.maintenanceAccess(), m.maintenanceHistory(), m.architectFromRequest()]);
-    const openRequests = history.requests
-      .filter((r) => r.status === "requested" && r.billing_period === state.period)
-      .map((r) => ({ id: r.id as string, hours: r.requested_hours as number, reason: (r.reason as string | null) ?? null, requestedBy: r.requested_by as string, requestedAt: r.requested_at as string }));
-    return {
-      period: state.period,
-      amountLabel: state.amountLabel,
-      currency: state.currency,
-      dueDate: state.dueDate,
-      lockAt: state.lockAt,
-      paymentStatus: state.paymentStatus,
-      paymentRef: state.paymentRef,
-      unlockStatus: state.unlockStatus,
-      unlockExpiresAt: state.unlockExpiresAt,
-      locked: state.locked,
-      rejectedReason: state.rejectedReason,
-      openRequests,
-      canApprove: who !== null,
-    };
   });
 
 /** IT submits a real reference only; verification belongs to the System Architect. */
@@ -168,22 +122,6 @@ export const requestSystemUnlock = createServerFn({ method: "POST" })
     const { label } = await itCaller(data.adminToken);
     const { createUnlockRequest } = await import("@/lib/maintenance.server");
     return createUnlockRequest({ actor: label, hours: data.hours, reason: data.reason ?? null });
-  });
-
-/** One form: record the real payment reference, then open an unlock request that emails the approver. */
-export const submitReferenceAndRequestUnlock = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    Token.extend({
-      paymentRef: z.string().trim().min(3).max(120),
-      hours: z.number().int().min(1).max(24),
-      reason: z.string().trim().max(300).optional(),
-    }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const { label } = await itCaller(data.adminToken);
-    const { submitPayment, createUnlockRequest } = await import("@/lib/maintenance.server");
-    await submitPayment({ actor: label, paymentRef: data.paymentRef, note: data.reason ?? null });
-    return createUnlockRequest({ actor: label, hours: data.hours, reason: data.reason ?? null, paymentRef: data.paymentRef });
   });
 
 /* ---------------- System Architect ---------------- */
@@ -232,7 +170,7 @@ export const architectOverview = createServerFn({ method: "POST" })
     await architect(data.session);
     const { maintenanceAccess, maintenanceHistory } = await import("@/lib/maintenance.server");
     const [state, history] = await Promise.all([maintenanceAccess(), maintenanceHistory()]);
-    return { state, requests: history.requests, periods: history.periods, audit: history.audit.slice(0, 60) };
+    return { state, requests: history.requests, audit: history.audit.slice(0, 60) };
   });
 
 export const architectDecision = createServerFn({ method: "POST" })
@@ -262,10 +200,10 @@ export const architectDecision = createServerFn({ method: "POST" })
 /** Architect-only: verify or reject the submitted payment reference (audit reason required). */
 export const architectPaymentDecision = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ session: z.string().min(10), approve: z.boolean(), reason: z.string().trim().min(3).max(300), expectedRef: z.string().trim().min(1).max(120).optional() }).parse(input),
+    z.object({ session: z.string().min(10), approve: z.boolean(), reason: z.string().trim().min(3).max(300) }).parse(input),
   )
   .handler(async ({ data }) => {
     const who = await architect(data.session);
     const { architectReviewPayment } = await import("@/lib/maintenance.server");
-    return architectReviewPayment({ actor: `System Architect (${who.email})`, approve: data.approve, reason: data.reason, expectedRef: data.expectedRef ?? null });
+    return architectReviewPayment({ actor: `System Architect (${who.email})`, approve: data.approve, reason: data.reason });
   });

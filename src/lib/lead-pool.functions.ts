@@ -20,30 +20,8 @@ export type LeadPoolAgent = {
   name: string;
   total: number;
   pending: number;
-  /** Everything on today's board, including leftovers rolled over from earlier days. */
   today: number;
-  /** Leads counted against today's daily quota (same rule the distributor uses). */
-  quotaToday: number;
-  /** That agent's daily quota target. */
-  quotaTarget: number;
-  /** Extra leads granted today (IT Console / auto-refill), above the quota. */
-  extraToday: number;
-  /** New hand-overs recorded in today's assignment history. */
-  newToday: number;
 };
-
-/** Reads every row of a query in 1,000-row pages (the Data API's per-read cap). */
-async function pageAll<T>(
-  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
-): Promise<T[]> {
-  const out: T[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data } = await fetchPage(from, from + 999);
-    out.push(...(data ?? []));
-    if (!data || data.length < 1000) break;
-  }
-  return out;
-}
 
 /** Read access is restricted to the dedicated LeadHub PIN. */
 async function deckReader(adminToken: string | null | undefined) {
@@ -227,9 +205,11 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         .or("assignment_source.is.null,assignment_source.neq.duplicate_skipped")
         .order("created_at", { ascending: true })
         .limit(100),
-      // Paged below — the Data API caps a single read at 1,000 rows, which
-      // silently dropped most of today's leads and showed "0" per agent.
-      Promise.resolve({ data: null }),
+      supabaseAdmin
+        .from("leads")
+        .select("assigned_to, status, work_date")
+        .not("assigned_to", "is", null)
+        .limit(20000),
       supabaseAdmin
         .from("audit_logs")
         .select("created_at, metadata")
@@ -237,64 +217,26 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false })
         .limit(1),
     ]);
-    void assigned;
-    const { assignedTodayByAgent } = await import("@/lib/lead-pool.server");
-    const { dhakaDayStartIso } = await import("@/lib/lead-pool-today");
-    const [rows, quotaHeld, extraRows, historyRows] = await Promise.all([
-      pageAll<{ assigned_to: string | null; status: string | null; work_date: string | null }>(
-        (from, to) =>
-          supabaseAdmin
-            .from("leads")
-            .select("assigned_to, status, work_date")
-            .not("assigned_to", "is", null)
-            .order("id")
-            .range(from, to),
-      ),
-      assignedTodayByAgent(today),
-      pageAll<{ agent_profile_id: string; quantity: number; source: string | null }>((from, to) =>
-        supabaseAdmin
-          .from("lead_extra_grants")
-          .select("agent_profile_id, quantity, source")
-          .eq("work_date", today)
-          .order("id")
-          .range(from, to),
-      ),
-      pageAll<{ to_agent_id: string | null }>((from, to) =>
-        supabaseAdmin
-          .from("lead_assignments")
-          .select("to_agent_id")
-          .gte("created_at", dhakaDayStartIso(today))
-          .order("id")
-          .range(from, to),
-      ),
-    ]);
     const { eligibleLeadIds } = await import("@/lib/lead-eligibility.server");
     const previewIds = new Set(
       await eligibleLeadIds((previewCandidates ?? []).map((lead) => lead.id)),
     );
     const preview = (previewCandidates ?? []).filter((lead) => previewIds.has(lead.id)).slice(0, 12);
 
+    const rows = assigned ?? [];
     const rawImportMetadata = audits?.[0]?.metadata;
     const importMetadata =
       rawImportMetadata && typeof rawImportMetadata === "object" && !Array.isArray(rawImportMetadata)
         ? rawImportMetadata
         : null;
-    const { quotaFor } = await import("@/lib/lead-quota");
     const perAgent: LeadPoolAgent[] = agents.map((agent) => {
       const mine = rows.filter((row) => row.assigned_to === agent.id);
-      const extraToday = extraRows
-        .filter((g) => g.agent_profile_id === agent.id)
-        .reduce((s, g) => s + (g.quantity ?? 0), 0);
       return {
         id: agent.id,
         name: agent.name,
         total: mine.length,
         pending: mine.filter((row) => row.status === "pending").length,
         today: mine.filter((row) => row.work_date === today).length,
-        quotaToday: quotaHeld.get(agent.id) ?? 0,
-        quotaTarget: quotaFor(agent.employee_id, plan.perAgent),
-        extraToday,
-        newToday: historyRows.filter((h) => h.to_agent_id === agent.id).length,
       };
     });
 
@@ -375,7 +317,6 @@ const ExtraInput = z.object({
   agentProfileId: z.string().uuid(),
   quantity: z.number().int().min(1).max(200),
   reason: z.string().trim().max(300).nullable().optional(),
-  requestId: z.string().uuid(),
 });
 
 /**
@@ -393,173 +334,23 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
       reason: data.reason ?? null,
       actorProfileId: null,
       actorLabel: caller.label,
-      requestId: data.requestId,
     });
   });
-
-const BulkExtraInput = z.object({
-  adminToken: z.string().nullable().optional(),
-  quantity: z.number().int().min(1).max(100),
-  reason: z.string().trim().min(5).max(300),
-  /** Explicit confirmation that agents may exceed their daily base quota. */
-  acknowledgeOverQuota: z.literal(true),
-  /** One id per confirmed batch — retries/double clicks never grant twice. */
-  requestId: z.string().uuid(),
-  /** The exact agents shown in the preview; the batch refuses if the active set changed. */
-  expectedAgentIds: z.array(z.string().uuid()).min(1).max(50),
-});
-
-/**
- * The same extra-lead grant for every active agent at once (IT Console).
- * Reuses grantExtraLeads per agent, so each desk gets its own ledger row,
- * lead_assignments/lead_events rows and audit entry. A required reason and an
- * explicit over-quota acknowledgement are enforced server-side.
- */
-export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => BulkExtraInput.parse(input))
-  .handler(async ({ data }) => {
-    const caller = await dispatcher(data.adminToken);
-    const { grantExtraLeads, activeAgents } = await import("@/lib/lead-pool.server");
-    const { assertDistributionDay } = await import("@/lib/business-day");
-    assertDistributionDay();
-    const agents = await activeAgents();
-    const current = new Set(agents.map((a) => a.id));
-    const expected = new Set(data.expectedAgentIds);
-    if (current.size !== expected.size || [...current].some((id) => !expected.has(id))) {
-      throw new Error("সক্রিয় এজেন্টের তালিকা Preview-এর পর বদলেছে — আবার Preview দেখুন");
-    }
-    // Refuse up front when the pool cannot cover every agent's full share,
-    // so a batch never leaves some agents short.
-    const { usablePoolCount } = await import("@/lib/lead-pool.server");
-    const need = agents.length * data.quantity;
-    const available = await usablePoolCount();
-    if (available < need) {
-      throw new Error(`লিডের প্রাপ্যতা: দরকার ${need}টি, যোগ্য আছে ${available}টি — batch চালানো হয়নি`);
-    }
-    // Server-side serialization: one bulk batch per Dhaka day. The primary key
-    // on work_date makes two simultaneous confirmations (two tabs, two
-    // operators) race on a single insert — only one wins.
-    const { claimBulkBatch, finishBulkBatch } = await import("@/lib/lead-pool.server");
-    await claimBulkBatch(data.requestId, data.quantity);
-    const results: { agentId: string; name: string; moved: number; error: string | null }[] = [];
-    let remaining = 0;
-    try {
-      for (const agent of agents) {
-        try {
-          const r = await grantExtraLeads({
-            agentProfileId: agent.id,
-            quantity: data.quantity,
-            reason: `[সবাইকে একসাথে] ${data.reason}`,
-            actorProfileId: null,
-            actorLabel: `${caller.label} · IT Console bulk`,
-            requestId: data.requestId,
-          });
-          remaining = r.remaining;
-          results.push({ agentId: agent.id, name: agent.name, moved: r.moved, error: null });
-        } catch (e) {
-          results.push({
-            agentId: agent.id,
-            name: agent.name,
-            moved: 0,
-            error: e instanceof Error ? e.message : "ব্যর্থ",
-          });
-        }
-      }
-    } finally {
-      await finishBulkBatch(data.requestId);
-    }
-    return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
-  });
-
-/** Searchable history of bulk extra-lead batches (one row per confirmed request). */
-export const bulkExtraHistory = createServerFn({ method: "GET" })
-  .inputValidator((input: unknown) =>
-    z.object({ adminToken: z.string().nullable().optional(), q: z.string().trim().max(80).optional() }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    await dispatcher(data.adminToken);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
-      .from("lead_extra_grants")
-      .select("request_id, agent_profile_id, work_date, quantity, reason, granted_by_label, created_at")
-      .not("request_id", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(2000);
-    const ids = [...new Set((rows ?? []).map((r) => r.agent_profile_id))];
-    const { data: profs } = ids.length
-      ? await supabaseAdmin.from("profiles").select("id, name, employee_id").in("id", ids)
-      : { data: [] as { id: string; name: string; employee_id: string | null }[] };
-    const names = new Map((profs ?? []).map((p) => [p.id, p]));
-    type Batch = {
-      requestId: string; workDate: string; createdAt: string; reason: string; admin: string; total: number;
-      agents: { name: string; employeeId: string | null; moved: number }[];
-    };
-    const batches = new Map<string, Batch>();
-    for (const r of rows ?? []) {
-      const id = r.request_id as string;
-      let b = batches.get(id);
-      if (!b) {
-        b = { requestId: id, workDate: r.work_date, createdAt: r.created_at, reason: (r.reason ?? "").replace(/^\[সবাইকে একসাথে\]\s*/, ""), admin: r.granted_by_label ?? "—", total: 0, agents: [] };
-        batches.set(id, b);
-      }
-      const p = names.get(r.agent_profile_id);
-      b.agents.push({ name: p?.name ?? "অজানা", employeeId: p?.employee_id ?? null, moved: r.quantity });
-      b.total += r.quantity;
-    }
-    const q = (data.q ?? "").toLowerCase();
-    const list = [...batches.values()].filter((b) =>
-      !q ||
-      b.reason.toLowerCase().includes(q) ||
-      b.admin.toLowerCase().includes(q) ||
-      b.workDate.includes(q) ||
-      b.agents.some((a) => a.name.toLowerCase().includes(q) || (a.employeeId ?? "").toLowerCase().includes(q)),
-    );
-    return { batches: list.slice(0, 100) };
-  });
-
-/**
- * Auto-refill for the signed-in agent's own empty desk. The server decides
- * whether a batch is due (see lead-refill.rules.ts) — the agent cannot choose
- * leads or amounts. Friday/holiday, briefing-ack and the daily cap all apply.
- */
-export const autoRefillMyLeads = createServerFn({ method: "POST" }).handler(
-  async (): Promise<{
-    give: boolean;
-    reason: string | null;
-    moved: number;
-    quantity: number;
-    workDate: string | null;
-  }> => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller();
-    if (caller.scope !== "agent" || !caller.profile || caller.readOnly || caller.approval !== "approved") {
-      return { give: false, reason: "not_agent", moved: 0, quantity: 0, workDate: null };
-    }
-    try {
-      const { autoRefillLeadsForAgent } = await import("@/lib/lead-pool.server");
-      return await autoRefillLeadsForAgent(caller.profile.id);
-    } catch {
-      // Distribution day closed (Friday/holiday), maintenance lock, or any other
-      // gate — the desk simply gets nothing; never surface an error here.
-      return { give: false, reason: "unavailable", moved: 0, quantity: 0, workDate: null };
-    }
-  },
-);
 
 /** Base quota vs extra leads for today, per agent. */
 export const quotaOverview = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => TokenInput.parse(input))
   .handler(async ({ data }) => {
     await deckReader(data.adminToken);
-    const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday, assignedTodayByAgent } =
-      await import("@/lib/lead-pool.server");
+    const { activeAgents, dailyPlan, extraGrantsToday, dhakaToday } = await import(
+      "@/lib/lead-pool.server"
+    );
     const { quotaFor } = await import("@/lib/lead-quota");
     const [agents, plan, extra] = await Promise.all([
       activeAgents(),
       dailyPlan(),
       extraGrantsToday(),
     ]);
-    const held = await assignedTodayByAgent(dhakaToday());
     return {
       workDate: dhakaToday(),
       floorQuota: plan.perAgent,
@@ -569,7 +360,6 @@ export const quotaOverview = createServerFn({ method: "GET" })
         employeeId: agent.employee_id ?? null,
         baseQuota: quotaFor(agent.employee_id, plan.perAgent),
         extraToday: extra[agent.id] ?? 0,
-        assignedToday: held.get(agent.id) ?? 0,
       })),
     };
   });
@@ -812,85 +602,4 @@ export const importHistory = createServerFn({ method: "GET" })
         alreadyWorked: Number(m["excludedAlreadyWorkedOrAssigned"] ?? 0),
       };
     });
-  });
-
-async function buildTopUpPlan() {
-  const { activeAgents } = await import("@/lib/lead-pool.server");
-  const { dhakaToday } = await import("@/lib/lead-pool.server");
-  const { newLeadCountsForDay } = await import("@/lib/new-lead-topup.server");
-  const { newLeadNeeds } = await import("@/lib/new-lead-topup");
-  const agents = await activeAgents();
-  const day = dhakaToday();
-  const rows = newLeadNeeds(agents, await newLeadCountsForDay(day));
-  return { day, rows, total: rows.reduce((s, r) => s + r.need, 0) };
-}
-
-/** LeadHub Preview: each agent's NEW leads today and the exact gap to 50. Read-only. */
-export const previewNewLeadTopUp = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) => z.object({ adminToken: z.string().nullable().optional() }).parse(i))
-  .handler(async ({ data }) => {
-    await dispatcher(data.adminToken);
-    const plan = await buildTopUpPlan();
-    const { usablePoolCount } = await import("@/lib/lead-pool.server");
-    return { ...plan, available: await usablePoolCount() };
-  });
-
-/**
- * One reviewed operation: give every agent exactly the NEW leads they need to
- * reach 50 today. The server recomputes the plan and refuses if it differs from
- * what was previewed, refuses if the pool can't cover the full total, and shares
- * the one-bulk-batch-per-day lock. Each grant goes through grantExtraLeads (ledger,
- * lead_assignments, lead_events, audit).
- */
-export const topUpNewLeadsTo50 = createServerFn({ method: "POST" })
-  .inputValidator((i: unknown) =>
-    z.object({
-      adminToken: z.string().nullable().optional(),
-      reason: z.string().trim().min(5).max(300),
-      acknowledgeOverQuota: z.literal(true),
-      requestId: z.string().uuid(),
-      expectedPlan: z.record(z.string().uuid(), z.number().int().min(0).max(50)),
-    }).parse(i),
-  )
-  .handler(async ({ data }) => {
-    const caller = await dispatcher(data.adminToken);
-    const { assertDistributionDay } = await import("@/lib/business-day");
-    assertDistributionDay();
-    const plan = await buildTopUpPlan();
-    const { samePlan } = await import("@/lib/new-lead-topup");
-    const current = Object.fromEntries(plan.rows.map((r) => [r.agentId, r.need]));
-    if (!samePlan(current, data.expectedPlan)) {
-      throw new Error("Preview-এর পর সংখ্যা বদলেছে — আবার Preview দেখুন");
-    }
-    if (plan.total === 0) throw new Error("সবাই আজ ইতিমধ্যে ৫০টি নতুন লিড পেয়েছে");
-    const { grantExtraLeads, usablePoolCount, claimBulkBatch, finishBulkBatch } = await import("@/lib/lead-pool.server");
-    const available = await usablePoolCount();
-    if (available < plan.total) {
-      throw new Error(`লিডের প্রাপ্যতা: দরকার ${plan.total}টি, যোগ্য আছে ${available}টি — কিছুই দেওয়া হয়নি`);
-    }
-    await claimBulkBatch(data.requestId, plan.total);
-    const results: { agentId: string; name: string; need: number; moved: number; error: string | null }[] = [];
-    let remaining = 0;
-    try {
-      for (const r of plan.rows) {
-        if (r.need === 0) { results.push({ agentId: r.agentId, name: r.name, need: 0, moved: 0, error: null }); continue; }
-        try {
-          const g = await grantExtraLeads({
-            agentProfileId: r.agentId,
-            quantity: r.need,
-            reason: `[৫০ পূরণ] ${data.reason}`,
-            actorProfileId: null,
-            actorLabel: `${caller.label} · LeadHub top-up to 50`,
-            requestId: data.requestId,
-          });
-          remaining = g.remaining;
-          results.push({ agentId: r.agentId, name: r.name, need: r.need, moved: g.moved, error: null });
-        } catch (e) {
-          results.push({ agentId: r.agentId, name: r.name, need: r.need, moved: 0, error: e instanceof Error ? e.message : "ব্যর্থ" });
-        }
-      }
-    } finally {
-      await finishBulkBatch(data.requestId);
-    }
-    return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
   });

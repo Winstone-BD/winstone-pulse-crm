@@ -33,7 +33,7 @@ export function noticeDecision(caller: NoticeCaller, action: NoticeAction): Noti
     case "publish":
       if (signedOut) return { kind: "deny", message: NOTICE_SIGN_IN };
       if (caller.scope !== "authority") return { kind: "deny", message: NOTICE_AUTHORITY };
-      // HQ can send oversight notes, not operational mutations. Authority was server verified.
+      if (action === "publish" && caller.readOnly) return { kind: "deny", message: NOTICE_READ_ONLY };
       return { kind: "allow" };
   }
 }

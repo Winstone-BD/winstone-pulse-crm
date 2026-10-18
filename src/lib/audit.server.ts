@@ -75,7 +75,6 @@ export type AuditAction =
   | "accountability_reviewed"
   | "migration_export"
   | "it_notice_published"
-  | "hq_lead_review"
   | "drive_knowledge_indexed"
   | "drive_knowledge_read"
   | "os_event_received"

@@ -4,7 +4,6 @@ import { ClipboardList, Loader2, PhoneIncoming, PhoneOutgoing, Search } from "lu
 import { useState } from "react";
 
 import { CallReportSummary } from "@/components/crm/CallReportSummary";
-import { DeviceReportedTime } from "@/components/crm/DeviceReportedTime";
 import { LeadDossier } from "@/components/crm/LeadDossier";
 import { ReportDetails } from "@/components/crm/ReportDetails";
 import { Badge } from "@/components/ui/badge";
@@ -255,7 +254,6 @@ export function CallReportsPanel() {
                   {` · ${row.duration_seconds ?? 0} সেকেন্ড`}
                 </p>
                 <div className="mt-1">
-                  <DeviceReportedTime seconds={row.device_reported_duration_seconds} />
                   <ReportDetails report={{ ...row, agentName: row.agent?.name ?? null }} />
                 </div>
               </div>

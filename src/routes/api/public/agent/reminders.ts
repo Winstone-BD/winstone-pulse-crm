@@ -13,9 +13,8 @@ export const Route = createFileRoute("/api/public/agent/reminders")({
         const caller = await resolveApiCaller(request);
         if (caller.kind !== "device") return unauthorized();
 
-        const { remindersFor, isCoordinatorProfile } = await import("@/lib/reminders.server");
-        const allVisits = await isCoordinatorProfile(caller.profile.id);
-        return json({ reminders: await remindersFor(caller.profile.id, new Date(), { allVisits }) });
+        const { remindersFor } = await import("@/lib/reminders.server");
+        return json({ reminders: await remindersFor(caller.profile.id) });
       },
     },
   },

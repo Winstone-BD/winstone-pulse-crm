@@ -1,2 +1,0 @@
-CREATE INDEX IF NOT EXISTS lead_events_agent_created_id_idx ON public.lead_events (agent_id, created_at DESC, id);
-COMMENT ON INDEX public.lead_events_agent_created_id_idx IS 'Supports agent-scoped paginated snapshot event history without filtering the global timeline index.';
