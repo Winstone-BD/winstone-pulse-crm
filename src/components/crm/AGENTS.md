@@ -2,3 +2,4 @@
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - AI review reuses grounded outputs: Gemini fields start unchecked; only selected fields enter draft/save. Claude follow-up edits stay local until copied — why: no extra inference or automatic outreach.
+- DailyWorkPanel reuses scoped snapshot, follow-up and report feeds; workspace routes disclose advanced tools without changing access — why: staff see daily work first and unknown or bounded counts stay explicit.

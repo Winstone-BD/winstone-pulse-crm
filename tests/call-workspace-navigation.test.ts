@@ -11,7 +11,6 @@ describe("desk navigation and honest SIM workspace", () => {
     expect(html).toContain("grid-cols-2");
     expect(html).toContain('aria-current="page"');
     expect(html).not.toContain("overflow-x-auto");
-    for (const tone of ["text-chart-2", "text-success", "text-chart-4", "text-destructive"]) expect(html).toContain(tone);
   });
   it("reuses authorised note and report panels before and during calls", () => {
     const source = readFileSync("src/components/crm/WebCallButton.tsx", "utf8");

@@ -55,7 +55,9 @@ function EntryHall() {
   const { scope, account } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
-  const [workspaceChoice, setWorkspaceChoice] = useState<"hq" | "agent" | "leadhub" | "it" | null>(null);
+  const [workspaceChoice, setWorkspaceChoice] = useState<"hq" | "agent" | "leadhub" | "it" | null>(
+    null,
+  );
   const [selectedMode, setSelectedMode] = useState<"android" | "web" | "desktop" | null>(null);
   const t = useT();
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
@@ -77,7 +79,13 @@ function EntryHall() {
   };
 
   const signedInName = account?.profile?.name ?? null;
-  const recommendedWorkspace = account?.itAuthenticated ? "it" : scope === "authority" ? "hq" : scope === "agent" || scope === "coordinator" ? "agent" : null;
+  const recommendedWorkspace = account?.itAuthenticated
+    ? "it"
+    : scope === "authority"
+      ? "hq"
+      : scope === "agent" || scope === "coordinator"
+        ? "agent"
+        : null;
   const activeWorkspace = workspaceChoice ?? recommendedWorkspace;
 
   return (
@@ -90,7 +98,10 @@ function EntryHall() {
           <div className="flex shrink-0 items-center gap-3">
             <SystemStatus />
             {signedInName && (
-              <Link to="/desk" className="hidden max-w-[12rem] truncate rounded-full border border-border bg-card px-3 py-1 text-xs font-medium hover:border-gold sm:inline-block">
+              <Link
+                to="/desk"
+                className="hidden max-w-[12rem] truncate rounded-full border border-border bg-card px-3 py-1 text-xs font-medium hover:border-gold sm:inline-block"
+              >
                 {signedInName}
               </Link>
             )}
@@ -103,175 +114,219 @@ function EntryHall() {
             <p className="text-[10px] font-semibold uppercase text-gold sm:text-[11px]">
               Winstone Properties Ltd. · Find. Build. Invest.
             </p>
-            <h1 className="mt-4 font-hand text-5xl font-semibold leading-[1.05] tracking-normal text-foreground sm:text-6xl lg:text-[5.25rem]">
-              Winstone <span className="text-gold">Pulse</span>
+            <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight sm:text-4xl">
+              One CRM. One data layer. Every device.
             </h1>
-            <p className="mt-3 text-xl font-medium text-foreground sm:text-2xl">
-              The Premium Real Estate CRM.
-            </p>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              {t({ en: "Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.", bn: "লিড, কল, ফলো-আপ ও টিমের পারফরম্যান্স। পুরো সেলস টিমের জন্য এক সংযুক্ত কর্মক্ষেত্র।" })}
-            </p>
+            <p className="mt-3 text-base text-muted-foreground">Choose your workspace</p>
           </div>
-
-          <dl className="mt-7 grid gap-4 sm:grid-cols-3 sm:gap-6">
-            {[
-              { icon: Headphones, label: t({ en: "Manage your team", bn: "টিম ব্যবস্থাপনা" }), value: t({ en: "Agents, roles & performance", bn: "এজেন্ট, দায়িত্ব ও পারফরম্যান্স" }) },
-              { icon: BarChart3, label: t({ en: "Track your pipeline", bn: "পাইপলাইন পর্যবেক্ষণ" }), value: t({ en: "Leads, follow-ups & bookings", bn: "লিড, ফলো-আপ ও বুকিং" }) },
-              { icon: Smartphone, label: t({ en: "Review call activity", bn: "কলের কার্যক্রম পর্যালোচনা" }), value: t({ en: "Call reports & customer history", bn: "কল রিপোর্ট ও গ্রাহকের ইতিহাস" }) },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex min-w-0 items-center gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/50 text-gold">
-                  <Icon className="size-4" />
-                </span>
-                <div className="min-w-0">
-                  <dt className="text-sm font-semibold">{label}</dt>
-                  <dd className="mt-1 text-xs leading-snug text-muted-foreground">{value}</dd>
-                </div>
-              </div>
-            ))}
-          </dl>
         </section>
 
         <OperationalStatus account={account} />
 
-        <h2 className="mt-7 text-center font-hand text-3xl font-semibold leading-snug tracking-normal sm:mt-8 sm:text-4xl">
-          Choose Your Workspace
-          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
-        </h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Select the mode you are using — the same Winstone Pulse opens on every device.
-        </p>
-
-        <div id="device-selection" className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-          <ModeCard
-            illustration={<SmartphoneIllustration />}
-            title="Android"
-            selected={selectedMode === "android"}
-            subtitle="Mobile-first CRM"
-            onClick={() => chooseMode("android")}
-          />
-          <ModeCard
-            illustration={<WebIllustration />}
-            title="Web / iOS"
-            selected={selectedMode === "web"}
-            subtitle="Responsive CRM"
-            onClick={() => chooseMode("web")}
-          />
-          <ModeCard
-            illustration={<DesktopIllustration />}
-            title="Desktop"
-            selected={selectedMode === "desktop"}
-            subtitle="Full CRM Workspace"
-            onClick={() => chooseMode("desktop")}
-          />
-        </div>
-
-        <p className="mt-5 text-center text-[10px] font-medium uppercase sm:text-xs text-muted-foreground">
-          One CRM. One data layer. Every device.
-        </p>
-
-        <div className="mx-auto mt-6 w-full max-w-xl sm:mt-8">
+        <details className="mt-5 border-b border-border pb-4">
+          <summary className="min-h-11 cursor-pointer text-sm text-muted-foreground">
+            {t({ bn: "ডিভাইস পছন্দ · ঐচ্ছিক", en: "Device preference · optional" })}
+          </summary>
+          <div
+            id="device-selection"
+            className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4"
+          >
+            <ModeCard
+              illustration={<SmartphoneIllustration />}
+              title="Android"
+              selected={selectedMode === "android"}
+              subtitle="Mobile-first CRM"
+              onClick={() => chooseMode("android")}
+            />
+            <ModeCard
+              illustration={<WebIllustration />}
+              title="Web / iOS"
+              selected={selectedMode === "web"}
+              subtitle="Responsive CRM"
+              onClick={() => chooseMode("web")}
+            />
+            <ModeCard
+              illustration={<DesktopIllustration />}
+              title="Desktop"
+              selected={selectedMode === "desktop"}
+              subtitle="Full CRM Workspace"
+              onClick={() => chooseMode("desktop")}
+            />
+          </div>
+        </details>
+        <div className="mt-6 w-full sm:mt-8">
           <fieldset className="mb-5">
-            <legend className="mb-3 text-sm font-semibold">{t({ en: "Your role & workspace", bn: "আপনার দায়িত্ব ও কর্মক্ষেত্র" })}</legend>
-            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Role workspace selector">
-              {([
-                { key: "hq", label: "Executive HQ", icon: BarChart3 },
-                { key: "agent", label: "Sales Agent", icon: Headphones },
-                { key: "leadhub", label: "LeadHub Nexus", icon: Database },
-                { key: "it", label: "IT Console", icon: Server },
-              ] as const).map(({ key, label, icon: Icon }) => (
-                <Button key={key} variant="outline" aria-pressed={activeWorkspace === key} onClick={() => setWorkspaceChoice(key)} className={`h-auto min-h-12 min-w-0 justify-start gap-2 whitespace-normal px-3 text-left text-xs ${activeWorkspace === key ? "border-gold bg-accent text-accent-foreground" : "bg-card"}`}>
+            <legend className="mb-3 text-sm font-semibold">
+              {t({ en: "Your role & workspace", bn: "আপনার দায়িত্ব ও কর্মক্ষেত্র" })}
+            </legend>
+            <div
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+              role="group"
+              aria-label="Role workspace selector"
+            >
+              {(
+                [
+                  {
+                    key: "hq",
+                    label: "Executive HQ",
+                    description: "টিমের কাজ ও অপারেশন দেখুন",
+                    icon: BarChart3,
+                  },
+                  {
+                    key: "agent",
+                    label: "Sales Agent",
+                    description: "লিডে কল করুন ও ফলোআপ করুন",
+                    icon: Headphones,
+                  },
+                  {
+                    key: "leadhub",
+                    label: "LeadHub Nexus",
+                    description: "লিড সাজান ও বণ্টন করুন",
+                    icon: Database,
+                  },
+                  {
+                    key: "it",
+                    label: "IT Console",
+                    description: "সিস্টেম ও ইন্টিগ্রেশন দেখুন",
+                    icon: Server,
+                  },
+                ] as const
+              ).map(({ key, label, description, icon: Icon }) => (
+                <Button
+                  key={key}
+                  variant="outline"
+                  aria-pressed={activeWorkspace === key}
+                  onClick={() => setWorkspaceChoice(key)}
+                  className={`h-auto min-h-32 min-w-0 items-start justify-start gap-3 whitespace-normal rounded-lg p-4 text-left text-sm ${activeWorkspace === key ? "border-gold bg-accent text-accent-foreground" : "bg-card"}`}
+                >
                   <Icon className="size-4 shrink-0" />
-                  <span className="min-w-0">{label}{recommendedWorkspace === key && <span className="block text-[10px] font-medium text-muted-foreground">{t({ en: "Your workspace", bn: "আপনার কর্মক্ষেত্র" })}</span>}</span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold">{label}</span>
+                    <span className="mt-2 block text-sm font-normal text-muted-foreground">
+                      {description}
+                    </span>
+                    {recommendedWorkspace === key && (
+                      <span className="block text-[10px] font-medium text-muted-foreground">
+                        {t({ en: "Your workspace", bn: "আপনার কর্মক্ষেত্র" })}
+                      </span>
+                    )}
+                  </span>
                 </Button>
               ))}
             </div>
           </fieldset>
           <Button
             size="lg"
-            className="w-full rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
+            className="w-full sm:max-w-xs rounded-md px-5 text-base font-semibold hover:-translate-y-px hover:bg-charcoal hover:shadow-md active:translate-y-0 active:bg-charcoal/90 transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none"
             aria-expanded={accessOpen}
             aria-controls="workspace-access"
             onClick={() => {
               setAccessOpen(true);
-              window.requestAnimationFrame(() => document.getElementById("workspace-access")?.scrollIntoView({
-                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start",
-              }));
+              window.requestAnimationFrame(() =>
+                document.getElementById("workspace-access")?.scrollIntoView({
+                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                    ? "instant"
+                    : "smooth",
+                  block: "start",
+                }),
+              );
             }}
           >
-            Get started <ChevronRight className="size-5" />
+            {t({ bn: "প্রবেশ করুন", en: "Get started" })} <ChevronRight className="size-5" />
           </Button>
-          {selectedMode === null && <p className="mt-3 text-center text-xs text-muted-foreground">{t({ en: "Optional — pick a device above so we remember your preferred view.", bn: "ঐচ্ছিক — উপরে ডিভাইস বেছে নিলে আপনার পছন্দের ভিউ মনে রাখা হবে।" })}</p>}
+          {selectedMode === null && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              {t({
+                en: "Optional — pick a device above so we remember your preferred view.",
+                bn: "ঐচ্ছিক — উপরে ডিভাইস বেছে নিলে আপনার পছন্দের ভিউ মনে রাখা হবে।",
+              })}
+            </p>
+          )}
         </div>
 
-        {accessOpen && <div id="workspace-access" className="scroll-mt-6">
-        <h2
-          id="workspace-signin"
-          className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
-        >
-          Sign in to your workspace
-          <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
-        </h2>
-        <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
-          <div className={activeWorkspace !== null && activeWorkspace !== "hq" ? "hidden" : "contents"}>
-          <EntryCard
-            icon={<BarChart3 className="size-6" />}
-            title="Executive HQ"
-            description="Live floor performance, leaderboards and ask-anything reports and charts."
-            primary={
-              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
-                <Lock className="size-4" /> Unlock PIN
-              </Button>
-            }
-          />
+        {accessOpen && (
+          <div id="workspace-access" className="scroll-mt-6">
+            <h2
+              id="workspace-signin"
+              className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
+            >
+              Sign in to your workspace
+              <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
+            </h2>
+            <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
+              <div
+                className={
+                  activeWorkspace !== null && activeWorkspace !== "hq" ? "hidden" : "contents"
+                }
+              >
+                <EntryCard
+                  icon={<BarChart3 className="size-6" />}
+                  title="Executive HQ"
+                  description="টিমের কাজ ও অপারেশন দেখুন"
+                  primary={
+                    <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
+                      <Lock className="size-4" /> Unlock PIN
+                    </Button>
+                  }
+                />
+              </div>
+              <div
+                className={
+                  activeWorkspace !== null && activeWorkspace !== "agent" ? "hidden" : "contents"
+                }
+              >
+                <EntryCard
+                  icon={<Headphones className="size-6" />}
+                  title="Sales Agent"
+                  description="লিডে কল করুন ও ফলোআপ করুন"
+                  primary={
+                    <Button asChild className="btn-enter flex-1">
+                      <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
+                        Sign in
+                      </Link>
+                    </Button>
+                  }
+                />
+              </div>
+
+              <div
+                className={
+                  activeWorkspace !== null && activeWorkspace !== "leadhub" ? "hidden" : "contents"
+                }
+              >
+                <EntryCard
+                  icon={<Database className="size-6" />}
+                  title="LeadHub Nexus"
+                  description="লিড সাজান ও বণ্টন করুন"
+                  primary={
+                    <Button className="btn-enter flex-1" onClick={() => openPin("/leadhub")}>
+                      <Lock className="size-4" /> Unlock PIN
+                    </Button>
+                  }
+                />
+              </div>
+
+              <div
+                className={
+                  activeWorkspace !== null && activeWorkspace !== "it" ? "hidden" : "contents"
+                }
+              >
+                <EntryCard
+                  icon={<Server className="size-6" />}
+                  title="IT Console"
+                  description="সিস্টেম ও ইন্টিগ্রেশন দেখুন"
+                  primary={
+                    <Button className="btn-enter flex-1" onClick={() => openPin("/system")}>
+                      <Lock className="size-4" /> Unlock PIN
+                    </Button>
+                  }
+                />
+              </div>
+            </div>
+
+            <AgentOnboardingNotice />
           </div>
-          <div className={activeWorkspace !== null && activeWorkspace !== "agent" ? "hidden" : "contents"}>
-          <EntryCard
-            icon={<Headphones className="size-6" />}
-            title="Sales Agent"
-            description="Your own lead queue, call log, WhatsApp threads and AI coaching."
-            primary={
-              <Button asChild className="btn-enter flex-1">
-                <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
-                  Sign in
-                </Link>
-              </Button>
-            }
-          />
-          </div>
-
-          <div className={activeWorkspace !== null && activeWorkspace !== "leadhub" ? "hidden" : "contents"}>
-          <EntryCard
-            icon={<Database className="size-6" />}
-            title="LeadHub Nexus"
-            description="Canonical lead database, imports, data quality and quantity assignment."
-            primary={
-              <Button className="btn-enter flex-1" onClick={() => openPin("/leadhub")}>
-                <Lock className="size-4" /> Unlock PIN
-              </Button>
-            }
-          />
-          </div>
-
-
-
-          <div className={activeWorkspace !== null && activeWorkspace !== "it" ? "hidden" : "contents"}>
-          <EntryCard
-            icon={<Server className="size-6" />}
-            title="IT Console"
-            description="System configuration, integrations, data health and account approvals."
-            primary={
-              <Button className="btn-enter flex-1" onClick={() => openPin("/system")}>
-                <Lock className="size-4" /> Unlock PIN
-              </Button>
-            }
-          />
-          </div>
-        </div>
-
-        <AgentOnboardingNotice />
-        </div>}
+        )}
 
         {scope !== "none" && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
@@ -333,16 +388,58 @@ function OperationalStatus({ account }: { account: ReturnType<typeof useMyAccoun
     update();
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
-    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
   }, []);
   const status = maintenance.data;
-  const access = account && !account.signedIn ? t({ en: "Shown after sign-in", bn: "সাইন-ইনের পর দেখা যাবে" }) : !status ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : !status.ok ? t({ en: "Status unavailable", bn: "অবস্থা অনুপলব্ধ" }) : status.locked ? t({ en: "Workspace locked", bn: "কর্মক্ষেত্র লক" }) : status.stage === "unlocked" ? t({ en: "Temporary unlock", bn: "সাময়িক আনলক" }) : t({ en: "Workspace open", bn: "কর্মক্ষেত্র খোলা" });
+  const access =
+    account && !account.signedIn
+      ? t({ en: "Shown after sign-in", bn: "সাইন-ইনের পর দেখা যাবে" })
+      : !status
+        ? t({ en: "Checking…", bn: "যাচাই চলছে…" })
+        : !status.ok
+          ? t({ en: "Status unavailable", bn: "অবস্থা অনুপলব্ধ" })
+          : status.locked
+            ? t({ en: "Workspace locked", bn: "কর্মক্ষেত্র লক" })
+            : status.stage === "unlocked"
+              ? t({ en: "Temporary unlock", bn: "সাময়িক আনলক" })
+              : t({ en: "Workspace open", bn: "কর্মক্ষেত্র খোলা" });
   const items = [
-    { label: t({ en: "Device connection", bn: "ডিভাইসের সংযোগ" }), value: online === null ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : online ? t({ en: "Network available", bn: "নেটওয়ার্ক উপলব্ধ" }) : t({ en: "Offline", bn: "অফলাইন" }) },
-    { label: t({ en: "Account", bn: "অ্যাকাউন্ট" }), value: !account ? t({ en: "Checking…", bn: "যাচাই চলছে…" }) : account.signedIn ? account.approval === "approved" ? t({ en: "Approved account", bn: "অনুমোদিত অ্যাকাউন্ট" }) : t({ en: "Approval required", bn: "অনুমোদন প্রয়োজন" }) : t({ en: "Sign-in required", bn: "সাইন-ইন প্রয়োজন" }) },
+    {
+      label: t({ en: "Device connection", bn: "ডিভাইসের সংযোগ" }),
+      value:
+        online === null
+          ? t({ en: "Checking…", bn: "যাচাই চলছে…" })
+          : online
+            ? t({ en: "Network available", bn: "নেটওয়ার্ক উপলব্ধ" })
+            : t({ en: "Offline", bn: "অফলাইন" }),
+    },
+    {
+      label: t({ en: "Account", bn: "অ্যাকাউন্ট" }),
+      value: !account
+        ? t({ en: "Checking…", bn: "যাচাই চলছে…" })
+        : account.signedIn
+          ? account.approval === "approved"
+            ? t({ en: "Approved account", bn: "অনুমোদিত অ্যাকাউন্ট" })
+            : t({ en: "Approval required", bn: "অনুমোদন প্রয়োজন" })
+          : t({ en: "Sign-in required", bn: "সাইন-ইন প্রয়োজন" }),
+    },
     { label: t({ en: "System access", bn: "সিস্টেমে প্রবেশ" }), value: access },
   ];
-  return <section aria-label="Operational status" className="mt-5 border-b border-border pb-5"><dl className="grid gap-4 sm:grid-cols-3">{items.map(({ label, value }) => <div key={label} className="min-w-0"><dt className="text-[11px] text-muted-foreground">{label}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}</dl></section>;
+  return (
+    <section aria-label="Operational status" className="mt-5 border-b border-border pb-5">
+      <dl className="grid gap-4 sm:grid-cols-3">
+        {items.map(({ label, value }) => (
+          <div key={label} className="min-w-0">
+            <dt className="text-[11px] text-muted-foreground">{label}</dt>
+            <dd className="mt-1 text-sm font-semibold">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 function EntryCard({
@@ -399,15 +496,29 @@ function ModeCard({
     >
       <span className="min-w-0">
         <span className="mb-4 grid size-9 place-items-center rounded-md border border-border text-gold">
-          {title === "Android" ? <Smartphone className="size-4" /> : title === "Desktop" ? <Monitor className="size-4" /> : <Globe className="size-4" />}
+          {title === "Android" ? (
+            <Smartphone className="size-4" />
+          ) : title === "Desktop" ? (
+            <Monitor className="size-4" />
+          ) : (
+            <Globe className="size-4" />
+          )}
         </span>
         <span className="block text-lg font-semibold">{title}</span>
         <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{subtitle}</span>
       </span>
       <span className="shrink-0 text-foreground">{illustration}</span>
-      <span className={`col-span-2 flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 text-xs font-semibold ${selected ? "border-gold bg-accent text-accent-foreground" : "border-border bg-secondary text-secondary-foreground"}`}>
-        {selected ? t({ en: "Selected workspace", bn: "নির্বাচিত কর্মক্ষেত্র" }) : t({ en: "Select workspace", bn: "কর্মক্ষেত্র নির্বাচন" })}
-        {selected ? <Check className="size-4 shrink-0" /> : <ArrowUpRight className="size-4 shrink-0" />}
+      <span
+        className={`col-span-2 flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 text-xs font-semibold ${selected ? "border-gold bg-accent text-accent-foreground" : "border-border bg-secondary text-secondary-foreground"}`}
+      >
+        {selected
+          ? t({ en: "Selected workspace", bn: "নির্বাচিত কর্মক্ষেত্র" })
+          : t({ en: "Select workspace", bn: "কর্মক্ষেত্র নির্বাচন" })}
+        {selected ? (
+          <Check className="size-4 shrink-0" />
+        ) : (
+          <ArrowUpRight className="size-4 shrink-0" />
+        )}
       </span>
     </Button>
   );
@@ -433,8 +544,6 @@ function DesktopIllustration() {
   return <DevicePhoto src={desktopAsset.url} alt="Desktop computer" />;
 }
 
-
-
 /** Real liveness only: pings the public health probe, never shows invented numbers. */
 function SystemStatus() {
   const t = useT();
@@ -452,10 +561,19 @@ function SystemStatus() {
       window.clearInterval(id);
     };
   }, []);
-  const label = state === "ok" ? t({ en: "Server online", bn: "সার্ভার অনলাইন" }) : state === "down" ? t({ en: "Server unavailable", bn: "সার্ভার অনুপলব্ধ" }) : t({ en: "Checking server…", bn: "সার্ভার যাচাই…" });
-  const dot = state === "ok" ? "bg-success" : state === "down" ? "bg-destructive" : "bg-muted-foreground";
+  const label =
+    state === "ok"
+      ? t({ en: "Server online", bn: "সার্ভার অনলাইন" })
+      : state === "down"
+        ? t({ en: "Server unavailable", bn: "সার্ভার অনুপলব্ধ" })
+        : t({ en: "Checking server…", bn: "সার্ভার যাচাই…" });
+  const dot =
+    state === "ok" ? "bg-success" : state === "down" ? "bg-destructive" : "bg-muted-foreground";
   return (
-    <span className="inline-flex w-28 shrink-0 items-center gap-1.5 text-[10px] font-medium text-muted-foreground sm:w-32 sm:justify-end sm:text-[11px]" role="status">
+    <span
+      className="inline-flex w-28 shrink-0 items-center gap-1.5 text-[10px] font-medium text-muted-foreground sm:w-32 sm:justify-end sm:text-[11px]"
+      role="status"
+    >
       <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
@@ -465,7 +583,10 @@ function SystemStatus() {
 /** Informational only: agent accounts and devices are provisioned by IT HQ, never self-created. */
 function AgentOnboardingNotice() {
   return (
-    <aside aria-labelledby="agent-onboarding-title" className="mt-6 border-y border-border py-5 sm:py-6">
+    <aside
+      aria-labelledby="agent-onboarding-title"
+      className="mt-6 border-y border-border py-5 sm:py-6"
+    >
       <h2 id="agent-onboarding-title" className="text-base font-semibold tracking-tight">
         Are you a Winstone sales agent?
       </h2>

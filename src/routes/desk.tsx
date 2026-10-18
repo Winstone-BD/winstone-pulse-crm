@@ -19,7 +19,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLang, useT } from "@/lib/i18n";
 import { autoRefillMyLeads } from "@/lib/lead-pool.functions";
 
-
 import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
 import { DeskCommandCenter } from "@/components/crm/desk/DeskCommandCenter";
 import { SiteVisitReminder } from "@/components/crm/hq/SiteVisitsPanel";
@@ -31,7 +30,12 @@ import { MyPhoneSetup } from "@/components/crm/MyPhoneSetup";
 import { MyProfileCard } from "@/components/crm/MyProfileCard";
 import { CarryOverLeads } from "@/components/crm/CarryOverLeads";
 import { LeadDayBoard } from "@/components/crm/LeadDayBoard";
-import { ActivitiesView, OutlookView, PipelineBoard, TasksView } from "@/components/crm/desk/WorkViews";
+import {
+  ActivitiesView,
+  OutlookView,
+  PipelineBoard,
+  TasksView,
+} from "@/components/crm/desk/WorkViews";
 import { FollowUpAlarm } from "@/components/crm/FollowUpAlarm";
 import { FollowUpCalendar } from "@/components/crm/FollowUpCalendar";
 import { VisitCalendar } from "@/components/crm/VisitCalendar";
@@ -54,6 +58,7 @@ import { WhatsappInbox } from "@/components/crm/WhatsappInbox";
 import { Button } from "@/components/ui/button";
 import { DeskTabBar } from "@/components/crm/desk/DeskTabBar";
 import { SocialDesk } from "@/components/crm/social/SocialDesk";
+import { DailyWorkPanel } from "@/components/crm/DailyWorkPanel";
 import { TodayHero } from "@/components/crm/desk/TodayHero";
 import { AiLeadPriority } from "@/components/crm/AiLeadPriority";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -125,41 +130,44 @@ function DeskStats() {
 
   return (
     <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)]">
-    <QuotaGauge done={stats.done} total={stats.leads} />
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Tile
-        icon={<Users className="size-4" />}
-        label={t({ bn: "আমার লিড", en: "My leads" })}
-        value={String(stats.leads)}
-        hint={t({ bn: `${stats.pending}টি এখনো বাকি`, en: `${stats.pending} still pending` })}
-        progress={donePct}
-        progressLabel={t({ bn: `${donePct}% কাজ শেষ`, en: `${donePct}% done` })}
-      />
-      <Tile
-        icon={<PhoneCall className="size-4" />}
-        label={t({ bn: "আজকের কল", en: "Today's calls" })}
-        value={String(stats.calls)}
-        hint={t({ bn: `${stats.connected}টিতে কথা হয়েছে · ${stats.connectRate}%`, en: `${stats.connected} connected · ${stats.connectRate}%` })}
-        delta={stats.callsDelta}
-        deltaUnit={t({ bn: "টি", en: "" })}
-      />
-      <Tile
-        icon={<Timer className="size-4" />}
-        label={t({ bn: "আজকের কথার সময়", en: "Today's talk time" })}
-        value={formatTalkTime(stats.talk)}
-        hint={t({ bn: "সব কল মিলিয়ে", en: "Across all calls" })}
-        delta={stats.talkDelta}
-        deltaUnit={t({ bn: " মিনিট", en: " min" })}
-      />
-      <Tile
-        icon={<MessageCircle className="size-4" />}
-        label={t({ bn: "আজকের হোয়াটসঅ্যাপ", en: "Today's WhatsApp" })}
-        value={String(stats.whatsapp)}
-        hint={t({ bn: "মেসেজ আদান-প্রদান", en: "Messages exchanged" })}
-        delta={stats.whatsappDelta}
-        deltaUnit={t({ bn: "টি", en: "" })}
-      />
-    </div>
+      <QuotaGauge done={stats.done} total={stats.leads} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Tile
+          icon={<Users className="size-4" />}
+          label={t({ bn: "আমার লিড", en: "My leads" })}
+          value={String(stats.leads)}
+          hint={t({ bn: `${stats.pending}টি এখনো বাকি`, en: `${stats.pending} still pending` })}
+          progress={donePct}
+          progressLabel={t({ bn: `${donePct}% কাজ শেষ`, en: `${donePct}% done` })}
+        />
+        <Tile
+          icon={<PhoneCall className="size-4" />}
+          label={t({ bn: "আজকের কল", en: "Today's calls" })}
+          value={String(stats.calls)}
+          hint={t({
+            bn: `${stats.connected}টিতে কথা হয়েছে · ${stats.connectRate}%`,
+            en: `${stats.connected} connected · ${stats.connectRate}%`,
+          })}
+          delta={stats.callsDelta}
+          deltaUnit={t({ bn: "টি", en: "" })}
+        />
+        <Tile
+          icon={<Timer className="size-4" />}
+          label={t({ bn: "আজকের কথার সময়", en: "Today's talk time" })}
+          value={formatTalkTime(stats.talk)}
+          hint={t({ bn: "সব কল মিলিয়ে", en: "Across all calls" })}
+          delta={stats.talkDelta}
+          deltaUnit={t({ bn: " মিনিট", en: " min" })}
+        />
+        <Tile
+          icon={<MessageCircle className="size-4" />}
+          label={t({ bn: "আজকের হোয়াটসঅ্যাপ", en: "Today's WhatsApp" })}
+          value={String(stats.whatsapp)}
+          hint={t({ bn: "মেসেজ আদান-প্রদান", en: "Messages exchanged" })}
+          delta={stats.whatsappDelta}
+          deltaUnit={t({ bn: "টি", en: "" })}
+        />
+      </div>
     </div>
   );
 }
@@ -179,9 +187,17 @@ function QuotaGauge({ done, total }: { done: number; total: number }) {
       className="card-elevated glass-panel flex flex-col items-center p-4 text-center transition-transform active:scale-[0.98]"
       aria-label={t({ bn: `দৈনিক কোটা ${pct}%`, en: `Daily quota ${pct}%` })}
     >
-      <p className="text-xs font-semibold text-muted-foreground">{t({ bn: "আজকের কোটা অগ্রগতি", en: "Today's quota progress" })}</p>
+      <p className="text-xs font-semibold text-muted-foreground">
+        {t({ bn: "আজকের কোটা অগ্রগতি", en: "Today's quota progress" })}
+      </p>
       <svg viewBox="0 0 128 72" className="mt-2 w-44">
-        <path d="M12 66 A52 52 0 0 1 116 66" fill="none" stroke="var(--muted)" strokeWidth="10" strokeLinecap="round" />
+        <path
+          d="M12 66 A52 52 0 0 1 116 66"
+          fill="none"
+          stroke="var(--muted)"
+          strokeWidth="10"
+          strokeLinecap="round"
+        />
         <path
           d="M12 66 A52 52 0 0 1 116 66"
           fill="none"
@@ -190,12 +206,20 @@ function QuotaGauge({ done, total }: { done: number; total: number }) {
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (c * pct) / 100}
-          style={{ transition: "stroke-dashoffset 1s ease-out", filter: `drop-shadow(0 0 6px ${tone})` }}
+          style={{
+            transition: "stroke-dashoffset 1s ease-out",
+            filter: `drop-shadow(0 0 6px ${tone})`,
+          }}
         />
       </svg>
-      <p className="tabular -mt-8 text-2xl font-bold">{showCount ? `${done}/${total}` : `${pct}%`}</p>
+      <p className="tabular -mt-8 text-2xl font-bold">
+        {showCount ? `${done}/${total}` : `${pct}%`}
+      </p>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        {t({ bn: `${done}টি সম্পন্ন · ${Math.max(0, total - done)}টি বাকি · ছুঁয়ে দেখুন`, en: `${done} done · ${Math.max(0, total - done)} remaining · tap to toggle` })}
+        {t({
+          bn: `${done}টি সম্পন্ন · ${Math.max(0, total - done)}টি বাকি · ছুঁয়ে দেখুন`,
+          en: `${done} done · ${Math.max(0, total - done)} remaining · tap to toggle`,
+        })}
       </p>
     </button>
   );
@@ -238,7 +262,11 @@ function Tile({
               delta > 0 ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
             }`}
           >
-            {delta > 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+            {delta > 0 ? (
+              <ArrowUpRight className="size-3" />
+            ) : (
+              <ArrowDownRight className="size-3" />
+            )}
             {Math.abs(delta)}
             {deltaUnit}
           </span>
@@ -265,9 +293,15 @@ function Tile({
 function QueueLockedNote() {
   const t = useT();
   return (
-    <div role="status" className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full border border-warning/40 bg-gradient-to-r from-warning/20 to-destructive/20 px-4 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur-md sm:text-sm">
+    <div
+      role="status"
+      className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full border border-warning/40 bg-gradient-to-r from-warning/20 to-destructive/20 px-4 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur-md sm:text-sm"
+    >
       <span className="size-2 shrink-0 animate-pulse rounded-full bg-warning" aria-hidden />
-      {t({ bn: "আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে", en: "Today's lead queue is awaiting HQ review — follow-ups and reports remain open" })}
+      {t({
+        bn: "আজকের লিড কিউ HQ পর্যালোচনার অপেক্ষায় — ফলো-আপ ও রিপোর্ট খোলা আছে",
+        en: "Today's lead queue is awaiting HQ review — follow-ups and reports remain open",
+      })}
     </div>
   );
 }
@@ -336,8 +370,14 @@ function DeskPage() {
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {account.approval === "rejected"
-                    ? t({ bn: "একজন সুপারভাইজার এই অ্যাকাউন্ট বাতিল করেছেন। ভুল মনে হলে টিম লিডের সঙ্গে কথা বলুন।", en: "A supervisor has rejected this account. If this seems wrong, talk to your team lead." })
-                    : t({ bn: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আইটি কনসোল বা এক্সিকিউটিভ এইচকিউ থেকে শীঘ্রই ডেস্ক খুলে দেওয়া হবে।", en: "Your account has been created. The desk will be unlocked soon from the IT Console or Executive HQ." })}
+                    ? t({
+                        bn: "একজন সুপারভাইজার এই অ্যাকাউন্ট বাতিল করেছেন। ভুল মনে হলে টিম লিডের সঙ্গে কথা বলুন।",
+                        en: "A supervisor has rejected this account. If this seems wrong, talk to your team lead.",
+                      })
+                    : t({
+                        bn: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আইটি কনসোল বা এক্সিকিউটিভ এইচকিউ থেকে শীঘ্রই ডেস্ক খুলে দেওয়া হবে।",
+                        en: "Your account has been created. The desk will be unlocked soon from the IT Console or Executive HQ.",
+                      })}
                 </p>
               </div>
               <Button variant="secondary" onClick={() => void signOut()}>
@@ -347,9 +387,14 @@ function DeskPage() {
           ) : (
             <>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">{t({ bn: "নিজের ডেস্কে সাইন ইন করুন", en: "Sign in to your desk" })}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  {t({ bn: "নিজের ডেস্কে সাইন ইন করুন", en: "Sign in to your desk" })}
+                </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {t({ bn: "এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।", en: "Agents and coordinators should use their own email and password." })}
+                  {t({
+                    bn: "এজেন্ট ও কোঅর্ডিনেটর নিজের ইমেইল ও পাসওয়ার্ড ব্যবহার করবেন।",
+                    en: "Agents and coordinators should use their own email and password.",
+                  })}
                 </p>
               </div>
               <Button asChild size="lg">
@@ -370,13 +415,23 @@ function DeskPage() {
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card px-6 py-12 text-center">
           <StaffAvatar profile={account.profile} className="size-20" />
           <div>
-            <h1 className="text-xl font-bold">{t({ bn: "আপনার ছবি যুক্ত করুন", en: "Add your photo" })}</h1>
+            <h1 className="text-xl font-bold">
+              {t({ bn: "আপনার ছবি যুক্ত করুন", en: "Add your photo" })}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {t({ bn: "প্রত্যেক এজেন্টের অ্যাকাউন্টে নিজের বর্তমান, পরিষ্কার মুখের ছবি থাকা বাধ্যতামূলক। ছবি দেওয়ার পরই ডেস্ক খুলবে ও কল করা যাবে।", en: "Every agent account must have a current, clear photo of their face. The desk unlocks and calls become possible only after the photo is added." })}
+              {t({
+                bn: "প্রত্যেক এজেন্টের অ্যাকাউন্টে নিজের বর্তমান, পরিষ্কার মুখের ছবি থাকা বাধ্যতামূলক। ছবি দেওয়ার পরই ডেস্ক খুলবে ও কল করা যাবে।",
+                en: "Every agent account must have a current, clear photo of their face. The desk unlocks and calls become possible only after the photo is added.",
+              })}
             </p>
           </div>
           <PhotoUpload />
-          <p className="text-xs text-muted-foreground">{t({ bn: "সামনে থেকে, ভালো আলোয়, মুখ স্পষ্ট — সানগ্লাস বা গ্রুপ ছবি নয়।", en: "Front-facing, well lit, face clearly visible — no sunglasses or group photos." })}</p>
+          <p className="text-xs text-muted-foreground">
+            {t({
+              bn: "সামনে থেকে, ভালো আলোয়, মুখ স্পষ্ট — সানগ্লাস বা গ্রুপ ছবি নয়।",
+              en: "Front-facing, well lit, face clearly visible — no sunglasses or group photos.",
+            })}
+          </p>
         </div>
       </AppShell>
     );
@@ -384,141 +439,122 @@ function DeskPage() {
 
   return (
     <AppShell>
-      <div className="hq-luxe grid gap-4 rounded-3xl p-3 pb-24 sm:p-5 md:pb-5">
-        <div className="sticky top-28 z-30 sm:top-16"><DeskTabBar tab={tab} onChange={setTab} /></div>
+      <div className="hq-luxe grid gap-4 pb-24 md:pb-5">
+        <div className="sticky top-28 z-30 sm:top-16">
+          <DeskTabBar tab={tab} onChange={setTab} />
+        </div>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">
-          <TodayHero name={account?.profile?.name?.trim() || account?.profile?.email?.split("@")[0] || null} />
+          <header className="border-b border-border pb-4">
+            <h1 className="text-2xl font-semibold">{t({ bn: "আজকের কাজ", en: "Today’s work" })}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{account?.profile?.name}</p>
+          </header>
 
           <section aria-label={t({ bn: "সতর্কবার্তা", en: "Alerts" })} className="space-y-2">
             <AccountabilityBanner />
             <LeadDeadlineBanner />
             <MyNeglectNotice />
             <VisitRequestsPanel />
-            <SiteVisitReminder />
           </section>
 
           {tab === "today" && (
-            <>
-          <OfficialNewsStrip />
-
-          <details className="group card-elevated overflow-hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
-              {t({ bn: "প্রোফাইল ও ফোন সেটআপ", en: "Profile & phone setup" })}
-              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="space-y-4 border-t border-border p-3 sm:p-4">
-              <MyProfileCard />
-              <MyPhoneSetup />
+            <div className="space-y-6">
+              <AutoLeadRefill />
+              <DailyWorkPanel locked={queueLocked} onFollowUps={() => setTab("calendar")} />
+              <SiteVisitReminder />
+              <details className="border-t border-border pt-4">
+                <summary className="min-h-12 cursor-pointer text-sm font-semibold">
+                  {t({ bn: "আরও / বিস্তারিত", en: "More / Advanced" })}
+                </summary>
+                <div className="space-y-5 pt-4">
+                  <MyProfileCard />
+                  <MyPhoneSetup />
+                  <OfficialNewsStrip />
+                  <SalesChartsDashboard scope="agent" />
+                  <DeskCommandCenter
+                    onJumpTab={setTab}
+                    actions={
+                      <>
+                        <LeadImportDialog />
+                        <NewLeadDialog />
+                      </>
+                    }
+                  />
+                  <DeskStats />
+                  <SmartInsightStrip scope="desk" />
+                  <AiLeadPriority />
+                  <FollowUpAlarm />
+                  {!queueLocked && (
+                    <>
+                      <MobileLeadQueue />
+                      <CarryOverLeads />
+                      <LeadDayBoard />
+                    </>
+                  )}
+                  <CommandAgentPanel surface="desk" />
+                  <PipelinePanel />
+                  <TeamSupportInbox />
+                </div>
+              </details>
             </div>
-          </details>
-
-          <SalesChartsDashboard scope="agent" />
-
-          <DeskCommandCenter
-            onJumpTab={(next) => {
-              setTab(next);
-              document.getElementById("desk-tabs")?.scrollIntoView({ behavior: "smooth" });
-            }}
-            actions={
-              <>
-                <LeadImportDialog />
-                <NewLeadDialog />
-              </>
-            }
-          />
-            </>
           )}
 
-        {tab === "today" && (
-          <div className="space-y-4 sm:space-y-6">
-        <DeskStats />
-
-        <AutoLeadRefill />
-
-        <SmartInsightStrip scope="desk" />
-
-        <AiLeadPriority />
-
-        <FollowUpAlarm />
-
-        {!queueLocked && (
-          <details className="group card-elevated overflow-hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold tracking-wide [&::-webkit-details-marker]:hidden">
-              <span className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-primary" aria-hidden />
-                {t({ bn: "আমার লিড কিউ", en: "My lead queue" })}
-              </span>
-              <ChevronDown className="size-4 text-primary transition-transform duration-300 group-open:rotate-180" />
-            </summary>
-            <div className="space-y-4 border-t border-border p-3 animate-in fade-in slide-in-from-top-2 duration-300 sm:p-4">
-              <MobileLeadQueue />
-              <CarryOverLeads />
-              <LeadDayBoard />
-            </div>
-          </details>
-        )}
-
-        <CommandAgentPanel surface="desk" />
-        <PipelinePanel />
-
-        <TeamSupportInbox />
-
-          </div>
-        )}
-
-        <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
-          <TabsContent value="social">
-            <SocialDesk />
-          </TabsContent>
-          <TabsContent value="support">
-            <TeamSupportPanel />
-          </TabsContent>
-          <TabsContent value="leads" className="space-y-4">
-            {queueLocked ? <QueueLockedNote /> : <LeadTable />}
-          </TabsContent>
-          <TabsContent value="queue" className="space-y-4">
-            {queueLocked ? (
-              <QueueLockedNote />
-            ) : (
-              <>
-                {/* Self-claim retired: LeadHub Nexus is the only assignment path. */}
-                <QueueBoard
-                  title={t(scope === "agent" ? { bn: "আমার লিড", en: "My leads" } : { bn: "ফ্লোর কিউ", en: "Floor queue" })}
-                  canSeeAllAgents={scope !== "agent"}
-                  showManualLog={scope !== "agent"}
-                />
-              </>
-            )}
-          </TabsContent>
-          <TabsContent value="pipeline">
-            {queueLocked ? <QueueLockedNote /> : <PipelineBoard />}
-          </TabsContent>
-          <TabsContent value="tasks">
-            <TasksView />
-          </TabsContent>
-          <TabsContent value="activities">
-            <ActivitiesView />
-          </TabsContent>
-          <TabsContent value="outlook">
-            <OutlookView />
-          </TabsContent>
-          <TabsContent value="calls">
-            <MyCallLog />
-          </TabsContent>
-          <TabsContent value="whatsapp">
-            <WhatsappInbox />
-          </TabsContent>
-          <TabsContent value="calendar" className="space-y-4">
-            <FollowUpsInRange />
-            <FollowUpWeek />
-            <VisitCalendar />
-            <FollowUpCalendar />
-          </TabsContent>
-          <TabsContent value="reports" className="space-y-4">
-            <MyReports />
-            <DocSummaryPanel />
-          </TabsContent>
+          <Tabs id="desk-tabs" value={tab} onValueChange={setTab} className="min-w-0 space-y-4">
+            <TabsContent value="social">
+              <SocialDesk />
+            </TabsContent>
+            <TabsContent value="support">
+              <TeamSupportPanel />
+            </TabsContent>
+            <TabsContent value="leads" className="space-y-4">
+              {queueLocked ? <QueueLockedNote /> : <LeadTable />}
+            </TabsContent>
+            <TabsContent value="queue" className="space-y-4">
+              {queueLocked ? (
+                <QueueLockedNote />
+              ) : (
+                <>
+                  {/* Self-claim retired: LeadHub Nexus is the only assignment path. */}
+                  <QueueBoard
+                    title={t(
+                      scope === "agent"
+                        ? { bn: "আমার লিড", en: "My leads" }
+                        : { bn: "ফ্লোর কিউ", en: "Floor queue" },
+                    )}
+                    canSeeAllAgents={scope !== "agent"}
+                    showManualLog={scope !== "agent"}
+                  />
+                </>
+              )}
+            </TabsContent>
+            <TabsContent value="pipeline">
+              {queueLocked ? <QueueLockedNote /> : <PipelineBoard />}
+            </TabsContent>
+            <TabsContent value="tasks">
+              <TasksView />
+            </TabsContent>
+            <TabsContent value="activities">
+              <ActivitiesView />
+            </TabsContent>
+            <TabsContent value="outlook">
+              <OutlookView />
+            </TabsContent>
+            <TabsContent value="calls">
+              <MyCallLog />
+            </TabsContent>
+            <TabsContent value="whatsapp">
+              <WhatsappInbox />
+            </TabsContent>
+            <TabsContent value="calendar" className="space-y-4">
+              <FollowUpsInRange />
+              <FollowUpWeek />
+              <VisitCalendar />
+              <FollowUpCalendar />
+            </TabsContent>
+            <TabsContent value="reports" className="space-y-4">
+              <MyReports />
+              <DocSummaryPanel />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -537,7 +573,10 @@ function FollowUpsInRange() {
     .filter((l) => l.status === "follow_up" && range.inRange(l.updated_at))
     .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
   return (
-    <section className="card-elevated space-y-3 p-4" aria-label={t({ bn: "তারিখের সীমার ফলো-আপ", en: "Follow-ups in date range" })}>
+    <section
+      className="card-elevated space-y-3 p-4"
+      aria-label={t({ bn: "তারিখের সীমার ফলো-আপ", en: "Follow-ups in date range" })}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold">
           {t({ bn: "এই সময়ের ফলো-আপ", en: "Follow-ups in this range" })} ·{" "}
@@ -547,7 +586,12 @@ function FollowUpsInRange() {
         <DeskRangeChip />
       </div>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t({ bn: "এই তারিখের মধ্যে কোনো ফলো-আপ লিড নেই।", en: "No follow-up leads in this date range." })}</p>
+        <p className="text-sm text-muted-foreground">
+          {t({
+            bn: "এই তারিখের মধ্যে কোনো ফলো-আপ লিড নেই।",
+            en: "No follow-up leads in this date range.",
+          })}
+        </p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {rows.map((l) => (
@@ -555,7 +599,11 @@ function FollowUpsInRange() {
               <p className="truncate font-semibold">{l.name}</p>
               <p className="truncate text-xs tabular-nums text-muted-foreground">
                 {l.phone_number} · {t({ bn: "শেষ পরিবর্তন", en: "last updated" })}{" "}
-                {new Date(l.updated_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short" })}
+                {new Date(l.updated_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", {
+                  timeZone: "Asia/Dhaka",
+                  day: "numeric",
+                  month: "short",
+                })}
               </p>
             </li>
           ))}

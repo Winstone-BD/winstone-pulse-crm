@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from "react";
 
-/** UI language. English is the default; Bengali is a full alternative. A saved choice always wins. */
+/** UI language. Bengali is the default; English stays available. A saved choice always wins. */
 export type Lang = "bn" | "en";
 const KEY = "winstone.lang";
 const listeners = new Set<() => void>();
 
 function read(): Lang {
-  if (typeof window === "undefined") return "en";
-  return window.localStorage.getItem(KEY) === "bn" ? "bn" : "en";
+  if (typeof window === "undefined") return "bn";
+  return window.localStorage.getItem(KEY) === "en" ? "en" : "bn";
 }
 
 export function setLang(lang: Lang) {
@@ -24,7 +24,7 @@ export function useLang(): Lang {
       return () => listeners.delete(cb);
     },
     read,
-    () => "en",
+    () => "bn",
   );
 }
 

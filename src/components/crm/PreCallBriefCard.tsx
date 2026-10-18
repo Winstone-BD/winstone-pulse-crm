@@ -26,77 +26,86 @@ export function PreCallBriefCard({ leadId }: { leadId: string }) {
 
   return (
     <>
-    <section className="rounded-xl border border-primary/25 bg-primary/5 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-          <Sparkles className="size-4" /> AI প্রি-কল ব্রিফিং
-        </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="min-h-9"
-          onClick={() => brief.mutate()}
-          disabled={brief.isPending}
-        >
-          {brief.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          {data ? "আবার তৈরি করুন" : "ব্রিফিং নিন"}
-        </Button>
-      </div>
-
-      {!data && !brief.isPending && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          কল করার আগে এই লিডের আগের কথাবার্তা থেকে করণীয় তৈরি করে নিন।
-        </p>
-      )}
-
-      {data && (
-        <div className="mt-3 space-y-3 text-sm">
-          <p className="font-semibold">{data.headline}</p>
-          <div className="rounded-lg border border-border bg-card p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">শুরুর কথা</p>
-            <p className="mt-1">{data.opener}</p>
+      <section className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <Sparkles className="size-4" /> কলের আগে সংক্ষিপ্ত তথ্য
           </div>
-
-          {data.talkingPoints.length > 0 && (
-            <ul className="list-disc space-y-1 pl-5">
-              {data.talkingPoints.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-          )}
-
-          {data.objections.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                সম্ভাব্য আপত্তি
-              </p>
-              {data.objections.map((item) => (
-                <div key={item.objection} className="rounded-lg border border-border bg-card p-3">
-                  <p className="font-medium">{item.objection}</p>
-                  <p className="mt-1 text-muted-foreground">{item.response}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <p>
-            <span className="text-muted-foreground">পরের কাজ: </span>
-            {data.nextAction}
-          </p>
-          {data.risk && <p className="text-destructive">সতর্কতা: {data.risk}</p>}
-          <p className="text-xs text-muted-foreground">
-            {clockTime(data.generatedAt)}
-            {data.aiAvailable ? "" : " · AI ছাড়া তৈরি"}
-          </p>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="min-h-9"
+            onClick={() => brief.mutate()}
+            disabled={brief.isPending}
+          >
+            {brief.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            {data ? "আবার তৈরি করুন" : "ব্রিফিং নিন"}
+          </Button>
         </div>
-      )}
-    </section>
-    <AgentTemplates leadId={leadId} facts={{ name: data?.leadName ?? null }} />
-    <SalesToolkit leadId={leadId} />
-    <NegotiationCoach leadId={leadId} />
-    <CallCoach leadId={leadId} />
-    <HandoverChecklist leadId={leadId} />
-    <LeadProjectFacts leadId={leadId} />
+
+        {!data && !brief.isPending && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            কল করার আগে এই লিডের আগের কথাবার্তা থেকে করণীয় তৈরি করে নিন।
+          </p>
+        )}
+
+        {Boolean(brief.error) && (
+          <p role="status" className="mt-2 text-sm text-muted-foreground">
+            ব্রিফ তৈরি হয়নি। স্বাভাবিকভাবে কল করতে পারবেন।
+          </p>
+        )}
+        {data && (
+          <div className="mt-3 space-y-3 text-sm">
+            <p className="font-semibold">{data.headline}</p>
+            <div className="rounded-lg border border-border bg-card p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">শুরুর কথা</p>
+              <p className="mt-1">{data.opener}</p>
+            </div>
+
+            {data.talkingPoints.length > 0 && (
+              <ul className="list-disc space-y-1 pl-5">
+                {data.talkingPoints.slice(0, 3).map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            )}
+
+            {data.objections.length > 0 && (
+              <details className="space-y-2">
+                <summary className="min-h-11 cursor-pointer text-sm">আরও / সম্ভাব্য আপত্তি</summary>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  সম্ভাব্য আপত্তি
+                </p>
+                {data.objections.map((item) => (
+                  <div key={item.objection} className="rounded-lg border border-border bg-card p-3">
+                    <p className="font-medium">{item.objection}</p>
+                    <p className="mt-1 text-muted-foreground">{item.response}</p>
+                  </div>
+                ))}
+              </details>
+            )}
+
+            <p>
+              <span className="text-muted-foreground">পরের কাজ: </span>
+              {data.nextAction}
+            </p>
+            {data.risk && <p className="text-destructive">সতর্কতা: {data.risk}</p>}
+            <p className="text-xs text-muted-foreground">
+              {clockTime(data.generatedAt)}
+              {data.aiAvailable ? "" : " · AI ছাড়া তৈরি"}
+            </p>
+          </div>
+        )}
+      </section>
+      <details className="border-t border-border py-3">
+        <summary className="min-h-11 cursor-pointer font-medium">আরও / কলের প্রস্তুতি</summary>
+        <AgentTemplates leadId={leadId} facts={{ name: data?.leadName ?? null }} />
+        <SalesToolkit leadId={leadId} />
+        <NegotiationCoach leadId={leadId} />
+        <CallCoach leadId={leadId} />
+        <HandoverChecklist leadId={leadId} />
+        <LeadProjectFacts leadId={leadId} />
+      </details>
     </>
   );
 }

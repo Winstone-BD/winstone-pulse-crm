@@ -718,3 +718,54 @@ html[lang="bn"] h2 {
 :lang(bn) {
   font-family: "Hind Siliguri", var(--font-sans);
 }
+
+/* Staff-first white foundation. Theme classes change presentation only. */
+:root, .hq-luxe, .theme-light, .theme-exec {
+  --radius: 0.5rem;
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.22 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0 0);
+  --primary: oklch(0.25 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --primary-ink: oklch(0.25 0 0);
+  --secondary: oklch(0.96 0.012 85);
+  --secondary-foreground: oklch(0.25 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.47 0 0);
+  --accent: oklch(0.95 0.025 85);
+  --accent-foreground: oklch(0.25 0 0);
+  --border: oklch(0.90 0 0);
+  --input: oklch(0.86 0 0);
+  --ring: oklch(0.71 0.095 85);
+  --surface: oklch(0.99 0 0);
+  --surface-2: oklch(0.97 0 0);
+  --sidebar: oklch(1 0 0);
+  --ink: oklch(0.22 0 0);
+  --ink-foreground: oklch(0.98 0 0);
+  --enter: var(--primary);
+  --enter-hover: oklch(0.34 0 0);
+  --enter-foreground: var(--primary-foreground);
+  --chart-1: oklch(0.71 0.095 85);
+  --chart-2: oklch(0.55 0 0);
+  --shadow-card: 0 1px 2px oklch(0.2 0 0 / 4%);
+  --shadow-card-hover: 0 2px 6px oklch(0.2 0 0 / 6%);
+}
+.hq-luxe, .theme-light, .theme-exec { background-image: none; }
+.hq-luxe :is(h1,h2,h3,h4,.font-bold,.font-extrabold) { font-weight: 600; letter-spacing: 0; }
+.hq-luxe .card-elevated { border-radius: 0.5rem; }
+.hq-luxe .glass, .hq-luxe .glass-panel { background: var(--card); backdrop-filter: none; }
+.dark .hq-luxe, .dark .theme-light {
+  --background: oklch(0.18 0 0); --foreground: oklch(0.95 0 0);
+  --card: oklch(0.22 0 0); --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.22 0 0); --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.77 0.095 85); --primary-foreground: oklch(0.18 0 0);
+  --primary-ink: oklch(0.77 0.095 85);
+  --secondary: oklch(0.27 0 0); --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.27 0 0); --muted-foreground: oklch(0.73 0 0);
+  --accent: oklch(0.3 0.025 85); --accent-foreground: oklch(0.95 0 0);
+  --border: oklch(0.34 0 0); --input: oklch(0.4 0 0);
+  --surface: oklch(0.18 0 0); --surface-2: oklch(0.25 0 0); --sidebar: oklch(0.22 0 0);
+}

@@ -8,9 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
-import { buildLeadTimeline, lead360Csv, summarize, type L360Call, type TimelineItem } from "@/lib/lead360";
+import {
+  buildLeadTimeline,
+  lead360Csv,
+  summarize,
+  type L360Call,
+  type TimelineItem,
+} from "@/lib/lead360";
 import { exportLead360Search, getLead360, searchLead360 } from "@/lib/lead360.functions";
-import { CONTACT_CLOSE_REASONS, SYSTEM_CLOSE_REASONS, contactCloseReasonLabel } from "@/lib/contact-close-reasons";
+import {
+  CONTACT_CLOSE_REASONS,
+  SYSTEM_CLOSE_REASONS,
+  contactCloseReasonLabel,
+} from "@/lib/contact-close-reasons";
 import { ReportDetails, type ReportLike } from "@/components/crm/ReportDetails";
 import { useAdminToken } from "@/lib/local-session";
 import { SalesBriefCard } from "@/components/crm/sales-intel/SalesIntelPanels";
@@ -27,9 +37,15 @@ const fmt = (iso: string | null, withTime = true) =>
     : "—";
 
 export function Lead360Workspace() {
-  const fromUrl = useRouterState({ select: (st) => String((st.location.search as Record<string, unknown>)["lead"] ?? "") });
+  const fromUrl = useRouterState({
+    select: (st) => String((st.location.search as Record<string, unknown>)["lead"] ?? ""),
+  });
   const [openId, setOpenId] = useState<string | null>(fromUrl || null);
-  return openId ? <Lead360Detail leadId={openId} onBack={() => setOpenId(null)} /> : <Lead360Search onOpen={setOpenId} />;
+  return openId ? (
+    <Lead360Detail leadId={openId} onBack={() => setOpenId(null)} />
+  ) : (
+    <Lead360Search onOpen={setOpenId} />
+  );
 }
 
 function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
@@ -45,7 +61,16 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
   const [reason, setReason] = useState("");
   const [eventKind, setEventKind] = useState("");
   const [cursor, setCursor] = useState(0);
-  const filters = { q, followUpStatus: fu, from: from || null, to: to || null, source: source || null, requirement: requirement || null, reason: reason || null, eventKind: eventKind || null };
+  const filters = {
+    q,
+    followUpStatus: fu,
+    from: from || null,
+    to: to || null,
+    source: source || null,
+    requirement: requirement || null,
+    reason: reason || null,
+    eventKind: eventKind || null,
+  };
   const res = useQuery({
     queryKey: ["lead360-search", filters, cursor, adminToken],
     queryFn: () => search({ data: { adminToken, ...filters, cursor } }),
@@ -59,7 +84,11 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
       if (out.locked) return;
       if (kind === "csv") {
         const url = URL.createObjectURL(new Blob(["\ufeff" + out.csv], { type: "text/csv" }));
-        const a = document.createElement("a"); a.href = url; a.download = "lead360-filtered.csv"; a.click(); URL.revokeObjectURL(url);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "lead360-filtered.csv";
+        a.click();
+        URL.revokeObjectURL(url);
       } else {
         const url = URL.createObjectURL(new Blob([out.html], { type: "text/html" }));
         window.open(url, "_blank");
@@ -72,7 +101,10 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-bold">Lead 360</h2>
-        <p className="text-sm text-muted-foreground">নাম, ফোন, Lead ID, Reference বা Source দিয়ে খুঁজুন — একটি লিডের পুরো যোগাযোগের ইতিহাস এক জায়গায়।</p>
+        <p className="text-sm text-muted-foreground">
+          নাম, ফোন, Lead ID, Reference বা Source দিয়ে খুঁজুন — একটি লিডের পুরো যোগাযোগের ইতিহাস এক
+          জায়গায়।
+        </p>
       </div>
       <form
         className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
@@ -84,61 +116,184 @@ function Lead360Search({ onOpen }: { onOpen: (id: string) => void }) {
       >
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input className="pl-8" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="+8801712… / নাম / Lead ID" />
+          <Input
+            className="pl-8"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="+8801712… / নাম / Lead ID"
+          />
         </div>
-        <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={fu} onChange={(e) => setFu(e.target.value as typeof fu)} aria-label="ফলো-আপ অবস্থা">
+        <select
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          value={fu}
+          onChange={(e) => setFu(e.target.value as typeof fu)}
+          aria-label="ফলো-আপ অবস্থা"
+        >
           <option value="any">সব ফলো-আপ</option>
           <option value="upcoming">Upcoming</option>
           <option value="overdue">Overdue</option>
           <option value="none">ফলো-আপ নেই</option>
         </select>
-        <Input type="date" className="sm:w-40" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="শুরুর তারিখ" />
-        <Input type="date" className="sm:w-40" value={to} onChange={(e) => setTo(e.target.value)} aria-label="শেষ তারিখ" />
-        <Input className="sm:w-36" value={source} onChange={(e) => setSource(e.target.value)} placeholder="Source" aria-label="Source" />
-        <Input className="sm:w-40" value={requirement} onChange={(e) => setRequirement(e.target.value)} placeholder="Requirement / প্রকল্প" aria-label="Requirement" />
-        <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={reason} onChange={(e) => setReason(e.target.value)} aria-label="কারণ">
-          <option value="">সব কারণ</option>
-          {[...CONTACT_CLOSE_REASONS, ...SYSTEM_CLOSE_REASONS].map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
-        </select>
-        <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={eventKind} onChange={(e) => setEventKind(e.target.value)} aria-label="ইভেন্টের ধরন">
-          <option value="">সব ইভেন্ট</option>
-          <option value="contact_closed">Contact closed</option>
-          <option value="outcome_logged">Outcome logged</option>
-          <option value="call_connected">Call connected</option>
-          <option value="self_claimed">Self claimed</option>
-        </select>
-        <Button type="submit">খুঁজুন</Button>
-        <Button type="button" variant="outline" disabled={exporting} onClick={() => runExport("csv")}>CSV</Button>
-        <Button type="button" variant="outline" disabled={exporting} onClick={() => runExport("print")}>Print / PDF</Button>
+        <details className="w-full border-t border-border py-2">
+          <summary className="min-h-11 cursor-pointer text-sm font-medium">আরও ফিল্টার</summary>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Input
+              type="date"
+              className="sm:w-40"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              aria-label="শুরুর তারিখ"
+            />
+            <Input
+              type="date"
+              className="sm:w-40"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              aria-label="শেষ তারিখ"
+            />
+            <Input
+              className="sm:w-36"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              placeholder="Source"
+              aria-label="Source"
+            />
+            <Input
+              className="sm:w-40"
+              value={requirement}
+              onChange={(e) => setRequirement(e.target.value)}
+              placeholder="Requirement / প্রকল্প"
+              aria-label="Requirement"
+            />
+            <select
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              aria-label="কারণ"
+            >
+              <option value="">সব কারণ</option>
+              {[...CONTACT_CLOSE_REASONS, ...SYSTEM_CLOSE_REASONS].map((r) => (
+                <option key={r.code} value={r.code}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            <select
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              value={eventKind}
+              onChange={(e) => setEventKind(e.target.value)}
+              aria-label="ইভেন্টের ধরন"
+            >
+              <option value="">সব ইভেন্ট</option>
+              <option value="contact_closed">Contact closed</option>
+              <option value="outcome_logged">Outcome logged</option>
+              <option value="call_connected">Call connected</option>
+              <option value="self_claimed">Self claimed</option>
+            </select>
+          </div>
+        </details>
+        <Button type="submit" className="min-h-11">
+          খুঁজুন
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-11"
+          onClick={() => {
+            setDraft("");
+            setQ("");
+            setFu("any");
+            setFrom("");
+            setTo("");
+            setSource("");
+            setRequirement("");
+            setReason("");
+            setEventKind("");
+            setCursor(0);
+          }}
+        >
+          ফিল্টার মুছুন
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={exporting}
+          onClick={() => runExport("csv")}
+        >
+          CSV
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={exporting}
+          onClick={() => runExport("print")}
+        >
+          Print / PDF
+        </Button>
       </form>
       {!res.data?.locked && res.data ? (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>মোট {res.data.total} লিড · {cursor + 1}–{cursor + res.data.rows.length}</span>
+          <span>
+            মোট {res.data.total} লিড · {cursor + 1}–{cursor + res.data.rows.length}
+          </span>
           <span className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={cursor === 0} onClick={() => setCursor(Math.max(0, cursor - 40))}>আগে</Button>
-            <Button size="sm" variant="outline" disabled={res.data.nextCursor === null} onClick={() => setCursor(res.data!.nextCursor ?? cursor)}>পরে</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={cursor === 0}
+              onClick={() => setCursor(Math.max(0, cursor - 40))}
+            >
+              আগে
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={res.data.nextCursor === null}
+              onClick={() => setCursor(res.data!.nextCursor ?? cursor)}
+            >
+              পরে
+            </Button>
           </span>
         </div>
       ) : null}
-      {res.data?.locked ? (
-        <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">HQ/IT পিন দিয়ে আনলক করুন।</p>
+      {res.error ? (
+        <p role="alert" className="text-sm text-destructive">
+          লিড পড়া যায়নি। আবার চেষ্টা করুন।
+        </p>
+      ) : res.data?.locked ? (
+        <p className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+          HQ/IT পিন দিয়ে আনলক করুন।
+        </p>
       ) : res.isPending ? (
         <p className="text-sm text-muted-foreground">লোড হচ্ছে…</p>
       ) : !res.data?.rows.length ? (
-        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">কোনো লিড মেলেনি।</p>
+        <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          কোনো লিড মেলেনি।
+        </p>
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border">
           {res.data.rows.map((r) => (
             <li key={r.id} className="px-4 py-3">
-              <button type="button" onClick={() => onOpen(r.id)} className="flex w-full flex-col gap-1 text-left hover:bg-accent sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={() => onOpen(r.id)}
+                className="flex w-full flex-col gap-1 text-left hover:bg-accent sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{r.name || "নাম নেই"}</p>
-                  <p className="text-xs text-muted-foreground">{r.phone} · {r.source ?? "—"}{r.referenceBy ? ` · Ref: ${r.referenceBy}` : ""}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.phone} · {r.source ?? "—"}
+                    {r.referenceBy ? ` · Ref: ${r.referenceBy}` : ""}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span>{r.calls} Calls · {r.followUps} Follow-ups · {r.connected} Connected</span>
+                  <span>
+                    {r.calls} Calls · {r.followUps} Follow-ups · {r.connected} Connected
+                  </span>
                   {r.nextFollowUpAt && (
-                    <Badge variant={r.fuState === "overdue" ? "destructive" : "secondary"}>Next: {fmt(r.nextFollowUpAt, false)}</Badge>
+                    <Badge variant={r.fuState === "overdue" ? "destructive" : "secondary"}>
+                      Next: {fmt(r.nextFollowUpAt, false)}
+                    </Badge>
                   )}
                 </div>
               </button>
@@ -186,7 +341,10 @@ const KIND_STYLE: Record<TimelineItem["kind"], string> = {
 function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void }) {
   const adminToken = useAdminToken();
   const get = useServerFn(getLead360);
-  const res = useQuery({ queryKey: ["lead360", leadId, adminToken], queryFn: () => get({ data: { adminToken, leadId } }) });
+  const res = useQuery({
+    queryKey: ["lead360", leadId, adminToken],
+    queryFn: () => get({ data: { adminToken, leadId } }),
+  });
   const view = useMemo(() => {
     if (!res.data) return null;
     const d = res.data;
@@ -196,7 +354,12 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
       name,
       sum: summarize(d.calls, d.followUps),
       timeline: buildLeadTimeline({
-        lead: { id: d.lead.id, createdAt: d.lead.createdAt, source: d.lead.source, assignedTo: d.lead.assignedTo },
+        lead: {
+          id: d.lead.id,
+          createdAt: d.lead.createdAt,
+          source: d.lead.source,
+          assignedTo: d.lead.assignedTo,
+        },
         calls: d.calls,
         followUps: d.followUps,
         changes: d.changes,
@@ -211,15 +374,26 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="size-4" /> খোঁজে ফিরুন</Button>
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="size-4" /> খোঁজে ফিরুন
+        </Button>
         {view && (
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                const csv = lead360Csv({ lead: view.d.lead.name ?? view.d.lead.id, phone: view.d.lead.phone, generatedAt: new Date() }, view.timeline);
-                const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+                const csv = lead360Csv(
+                  {
+                    lead: view.d.lead.name ?? view.d.lead.id,
+                    phone: view.d.lead.phone,
+                    generatedAt: new Date(),
+                  },
+                  view.timeline,
+                );
+                const url = URL.createObjectURL(
+                  new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }),
+                );
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = `lead360-${view.d.lead.id}.csv`;
@@ -229,7 +403,9 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
             >
               CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()}>Print / PDF</Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              Print / PDF
+            </Button>
           </div>
         )}
       </div>
@@ -240,12 +416,20 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
         <>
           <header className="rounded-xl border border-border p-4">
             <div className="flex items-start gap-3">
-              <span className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><UserRound className="size-5" /></span>
+              <span className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary">
+                <UserRound className="size-5" />
+              </span>
               <div className="min-w-0 space-y-0.5">
                 <h2 className="text-lg font-bold">{view.d.lead.name || "নাম নেই"}</h2>
                 <p className="text-sm">{view.d.lead.phone}</p>
                 <p className="text-xs text-muted-foreground">
-                  {[view.d.lead.address, view.d.lead.requirement, `Source: ${view.d.lead.source ?? "—"}`, view.d.lead.referenceBy ? `Ref: ${view.d.lead.referenceBy}` : null, `Assigned: ${view.name(view.d.lead.assignedTo)}`]
+                  {[
+                    view.d.lead.address,
+                    view.d.lead.requirement,
+                    `Source: ${view.d.lead.source ?? "—"}`,
+                    view.d.lead.referenceBy ? `Ref: ${view.d.lead.referenceBy}` : null,
+                    `Assigned: ${view.name(view.d.lead.assignedTo)}`,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
@@ -255,7 +439,8 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
 
           {view.d.linkedLeads.length > 0 && (
             <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
-              একই নম্বরে আরও {view.d.linkedLeads.length}টি লিড আছে (আলাদা ব্যক্তি হতে পারে, একত্র করা হয়নি):{" "}
+              একই নম্বরে আরও {view.d.linkedLeads.length}টি লিড আছে (আলাদা ব্যক্তি হতে পারে, একত্র
+              করা হয়নি):{" "}
               {view.d.linkedLeads.map((l) => `${l.name ?? "নাম নেই"} (${l.phone})`).join(", ")}
             </div>
           )}
@@ -278,18 +463,33 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
 
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
             <section className="space-y-3">
-              <h3 className="font-semibold">সম্পূর্ণ Activity Timeline <span className="text-xs font-normal text-muted-foreground">— মোট {view.timeline.length}টি ঘটনা</span></h3>
+              <h3 className="font-semibold">
+                সম্পূর্ণ Activity Timeline{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  — মোট {view.timeline.length}টি ঘটনা
+                </span>
+              </h3>
               <ol className="relative space-y-3 border-l border-border pl-5">
                 {view.timeline.map((t) => (
                   <li key={t.id} className="relative">
                     <span className="absolute -left-[25px] top-1.5 size-2.5 rounded-full bg-primary" />
                     <p className="text-xs text-muted-foreground">{fmt(t.at)}</p>
-                    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold ${KIND_STYLE[t.kind]}`}>
-                      {t.kind === "call_not_connected" ? <PhoneMissed className="size-3" /> : t.kind.startsWith("call") ? <Phone className="size-3" /> : <CalendarClock className="size-3" />}
+                    <span
+                      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold ${KIND_STYLE[t.kind]}`}
+                    >
+                      {t.kind === "call_not_connected" ? (
+                        <PhoneMissed className="size-3" />
+                      ) : t.kind.startsWith("call") ? (
+                        <Phone className="size-3" />
+                      ) : (
+                        <CalendarClock className="size-3" />
+                      )}
                       {t.title}
                     </span>
                     <ul className="mt-1 space-y-0.5 text-sm">
-                      {t.lines.map((l, i) => <li key={i}>{l}</li>)}
+                      {t.lines.map((l, i) => (
+                        <li key={i}>{l}</li>
+                      ))}
                     </ul>
                     {t.report ? <ReportDetails report={toReportLike(t.report, view.name)} /> : null}
                   </li>
@@ -303,9 +503,17 @@ function Lead360Detail({ leadId, onBack }: { leadId: string; onBack: () => void 
                 {view.sum.current ? (
                   <>
                     <p className="mt-1 font-bold">{fmt(view.sum.current.scheduledAt)}</p>
-                    <p className="text-xs">Status: {new Date(view.sum.current.scheduledAt) < new Date() ? "Overdue" : "Upcoming"}</p>
-                    <p className="mt-1 text-sm">কারণ: {followUpReasonLabel(view.sum.current.reasonCode, view.sum.current.note)}</p>
-                    <p className="text-xs text-muted-foreground">Created By: {view.name(view.sum.current.agentId)}</p>
+                    <p className="text-xs">
+                      Status:{" "}
+                      {new Date(view.sum.current.scheduledAt) < new Date() ? "Overdue" : "Upcoming"}
+                    </p>
+                    <p className="mt-1 text-sm">
+                      কারণ:{" "}
+                      {followUpReasonLabel(view.sum.current.reasonCode, view.sum.current.note)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Created By: {view.name(view.sum.current.agentId)}
+                    </p>
                   </>
                 ) : (
                   <p className="mt-1 text-sm text-muted-foreground">কোনো সক্রিয় ফলো-আপ নেই</p>

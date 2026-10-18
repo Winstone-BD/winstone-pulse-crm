@@ -146,15 +146,15 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       )}
       <header className="flex flex-wrap items-end gap-3">
         <div>
-          <h2 className="text-base font-semibold">Assign by Agent + Quantity</h2>
+          <h2 className="text-base font-semibold">লিড বণ্টন</h2>
           <p className="text-xs text-muted-foreground">
             এজেন্ট বাছুন, সংখ্যা লিখুন — সবচেয়ে পুরোনো যোগ্য unassigned লিড আগে যাবে। ডুপ্লিকেট/ভুল নম্বর কখনো যাবে না।
           </p>
         </div>
         <div className="ml-auto grid grid-cols-3 gap-2 text-center">
-          <Stat label="Available" value={available} />
-          <Stat label="Requested" value={requested} />
-          <Stat label="Remaining" value={Math.max(0, available - requested)} tone={shortage ? "danger" : undefined} />
+          <Stat label="পুলে আছে" value={available} />
+          <Stat label="দিতে চান" value={requested} />
+          <Stat label="পুলে থাকবে" value={Math.max(0, available - requested)} tone={shortage ? "danger" : undefined} />
         </div>
       </header>
 
@@ -203,10 +203,10 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       </div>
 
       {dupAgents && <p className="text-xs text-destructive">একই এজেন্ট দুইবার বাছা হয়েছে — একটি সারিতে মোট সংখ্যা লিখুন।</p>}
-      {quotaExceeded > 0 && <p className="text-xs font-medium text-destructive">দৈনিক ৫০ quota-এর বাইরে {quotaExceeded}টি অনুরোধ বাদ যাবে।</p>}
+      {quotaExceeded > 0 && <p className="text-xs font-medium text-destructive">দৈনিক কোটার বাইরে {quotaExceeded}টি অনুরোধ বাদ যাবে।</p>}
       {shortage > 0 && (
         <p className="text-xs font-medium text-destructive">
-          Shortage: {shortage} লিড কম আছে। যতগুলো যোগ্য আছে ততগুলোই যাবে, সারির ক্রমে।
+          {shortage}টি লিড কম আছে। যতগুলো যোগ্য আছে ততগুলোই যাবে, সারির ক্রমে।
         </p>
       )}
 
@@ -233,7 +233,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
 
       {confirming && valid.length > 0 && (
         <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
-          <p className="mb-2 font-semibold">Preview — নিশ্চিত করুন</p>
+          <p className="mb-2 font-semibold">বণ্টনের আগে যাচাই</p>
           <ul className="space-y-1">
             {valid.map((v) => {
               const a = byId.get(v.agentId);
@@ -254,13 +254,13 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       <div className="flex flex-wrap gap-2">
         {!confirming ? (
           <Button size="lg" disabled={!valid.length || dupAgents || available === 0 || alloc.data?.distributionOpen === false} onClick={() => setConfirming(true)}>
-            Preview
+            আগে যাচাই করুন
           </Button>
         ) : (
           <>
             <Button size="lg" onClick={() => run.mutate()} disabled={run.isPending}>
               {run.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-              Confirm & assign
+              নিশ্চিত করে বণ্টন করুন
             </Button>
             <Button size="lg" variant="secondary" onClick={() => setConfirming(false)} disabled={run.isPending}>
               বদলান
@@ -272,7 +272,7 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
       {last && (
         <div className="rounded-lg border border-success/40 bg-success/5 p-3 text-sm">
           <p className="mb-1 flex items-center gap-1 font-semibold text-success">
-            <CheckCircle2 className="size-4" /> Assignment result
+            <CheckCircle2 className="size-4" /> বণ্টনের ফলাফল
           </p>
           <ul className="space-y-1">
             {last.map((r) => {
