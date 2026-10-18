@@ -84,6 +84,39 @@ export const startMyCall = createServerFn({ method: "POST" })
     return { blocked: false as const, phone: lead.phone_number, name: lead.name };
   });
 
+/**
+ * WhatsApp call: same gates as a SIM call (briefing, unfinished report), then
+ * opens the mandatory report marked channel=whatsapp. Never claims the call
+ * connected — the agent records that in the report.
+ */
+export const startMyWhatsappCall = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.extend({ leadId: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const me = await agentOf(data.adminToken ?? null);
+    const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+    const briefingBlock = await requireAgentBriefing(me.id);
+    if (briefingBlock) return briefingBlock;
+    const { pendingReportFor, openCallReport } = await import("@/lib/call-reports.server");
+    const pending = await pendingReportFor(me.id);
+    if (pending && pending.lead_id !== data.leadId) {
+      return { blocked: true as const, reason: "আগের কলের রিপোর্ট জমা দিন, তারপর নতুন কল শুরু করা যাবে" };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("id, assigned_to, assigned_agent_id")
+      .eq("id", data.leadId)
+      .maybeSingle();
+    if (!lead) throw new Error("লিড পাওয়া যায়নি");
+    const { leadNotAssignedTo, LEAD_NOT_YOURS } = await import("@/lib/lead-access.server");
+    if (leadNotAssignedTo(lead, me.id)) throw new Error(LEAD_NOT_YOURS);
+    const report = await openCallReport({ leadId: lead.id, agentId: me.id, channel: "whatsapp", durationSeconds: 0 });
+    const { logLeadEvent } = await import("@/lib/lead-events.server");
+    await logLeadEvent({ leadId: lead.id, agentId: me.id, kind: "call_started", detail: `${me.name} WhatsApp কল শুরু করেছেন` });
+    return { blocked: false as const, reportId: report.id };
+  });
+
+
 /** Call ended on the web desk -> open the durable report. */
 export const openMyReport = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
