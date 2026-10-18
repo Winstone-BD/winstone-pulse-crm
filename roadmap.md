@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] 2026-10-18 handover/setup: link Drive; Sheets waits for project-owner access; verify sync with approved folder/spreadsheet. Add Gemini and Claude improvements after reviewing existing features/model availability. Provision Masha (winstoneitteam@gmail.com) through authorized IT path; preserve Zahid Hasan Emon's existing architect identity (zhemongrowth@gmail.com), no duplicate account. Offer credit purchase and produce secret-free handover archive.
 - [x] Monitoring review 2026-10-18: current workspace has 115.33 credits and quick briefs already return saved-facts fallback; old credit-exhaustion finding marked stale. Live AI inference not tested; 14 existing brief/access tests passed.
 - [x] Offline call-time recovery: additive nullable device-reported fields applied; Android queues original event timestamps; call-state freezes terminal timing, rejects wrong-agent/lead replay and uses compare-and-set; reports, synced calls and exports show separate unverified claims; submitted claims cannot replace capped duration. No historical corrections/publication. Synthetic endpoint/rule tests passed; physical Android replay remains blocked on an authorized handset.
 - [x] Distinct WhatsApp report count on the daily performance panel (2026-10-15): call_reports.channel column ('call' default, 'whatsapp' for the mandatory WhatsApp-contact report, upgrade-only); myDayPerformance returns `whatsapp`; LeadDayBoard "দিনের কাজ" shows "হোয়াটসঅ্যাপ রিপোর্ট" beside মোট কল/কথা হয়েছে/রিপোর্ট জমা বাকি. Unpublished.
