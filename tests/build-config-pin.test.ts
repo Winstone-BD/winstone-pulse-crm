@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import pkg from "../package.json";
+import { readFileSync } from "node:fs";
+const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 
 const PKG = "@lovable.dev/vite-tanstack-config";
 
