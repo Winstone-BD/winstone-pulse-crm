@@ -75,10 +75,10 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
     const fromIso = data.from ? new Date(`${data.from}T00:00:00+06:00`).toISOString() : null;
     const toIso = data.to ? new Date(`${data.to}T23:59:59.999+06:00`).toISOString() : null;
 
-    const followUps = await pageAll((a, b) => {
+    let followUps = await pageAll((a, b) => {
       let q = supabaseAdmin
         .from("follow_up_events")
-        .select("id, lead_id, agent_id, customer_name, phone_number, category, priority, note, scheduled_at, status, completed_at, created_at")
+        .select("id, lead_id, agent_id, customer_name, phone_number, category, priority, note, scheduled_at, status, completed_at, created_at, outcome, transition_reason")
         .order("created_at", { ascending: true })
         .range(a, b);
       if (ownAgentId) q = q.eq("agent_id", ownAgentId);
@@ -87,6 +87,12 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
       return q;
     });
 
+    if (ownAgentId) {
+      const owned = await pageAll((a, b) => supabaseAdmin.from("leads").select("id, assigned_to, assigned_agent_id")
+        .or(`assigned_to.eq.${ownAgentId},assigned_agent_id.eq.${ownAgentId}`).order("id").range(a, b));
+      const allowed = new Set(owned.filter(lead => (lead.assigned_to ?? lead.assigned_agent_id) === ownAgentId).map(lead => lead.id));
+      followUps = followUps.filter(event => allowed.has(event.lead_id));
+    }
     const leadIds = [...new Set(followUps.map((f) => f.lead_id))];
     type Report = {
       lead_id: string; agent_id: string | null; call_ended_at: string; connected: boolean;
@@ -134,10 +140,9 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
       const last = reps[reps.length - 1];
       const stopped =
         open.length === 0 &&
-        Boolean(last) &&
-        (STOP_CATEGORIES.has(last!.category ?? "") || Boolean(last!.no_follow_up_reason) || !last!.follow_up_priority);
-      const stopReason = stopped
-        ? contactCloseReasonLabel(last!.no_follow_up_reason, last!.no_follow_up_note) || last!.reason || last!.customer_response || last!.category || "আর ফলো-আপ দেওয়া হয়নি"
+        Boolean(last && (STOP_CATEGORIES.has(last.category ?? "") || last.no_follow_up_reason || !last.follow_up_priority));
+      const stopReason = stopped && last
+        ? contactCloseReasonLabel(last.no_follow_up_reason, last.no_follow_up_note) || last.reason || last.customer_response || last.category || "আর ফলো-আপ দেওয়া হয়নি"
         : null;
 
       const events: Event[] = [
@@ -147,12 +152,12 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
           label: `ফলো-আপ সেট: ${dhakaDay(f.scheduled_at)}`,
           detail: f.note,
         })),
-        ...fus.filter((f) => f.completed_at).map((f) => ({
-          at: f.completed_at!,
+        ...fus.flatMap((f) => f.completed_at ? [{
+          at: f.completed_at,
           kind: "follow_up_done" as const,
           label: "ফলো-আপ সম্পন্ন",
-          detail: null,
-        })),
+          detail: f.outcome ?? f.transition_reason,
+        }] : []),
         ...reps.map((r) => ({
           at: r.call_ended_at,
           kind: "call" as const,
@@ -179,7 +184,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
         temperature: last?.temperature ?? lead?.temperature ?? null,
         priority: fus[fus.length - 1]?.priority ?? null,
         state: stopped ? "stopped" : overdue > 0 ? "overdue" : "active",
-        stoppedAt: stopped ? last!.call_ended_at : null,
+        stoppedAt: stopped && last ? last.call_ended_at : null,
         stopReason,
         scheduledDays: [...new Set(fus.map((f) => dhakaDay(f.scheduled_at)))],
         events,
