@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Megaphone, MessageSquareReply, Send } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ export function NoticeBoardPanel({ composer = false, compact = false }: { compos
   const readFn = useServerFn(markNoticeRead);
   const replyFn = useServerFn(replyToNotice);
   const [title, setTitle] = useState("");
-  const [requestId, setRequestId] = useState<string | null>(null);
+  const requestId = useRef<string | null>(null);
   const [expiry, setExpiry] = useState("");
   const [agentFilter, setAgentFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
@@ -60,10 +60,10 @@ export function NoticeBoardPanel({ composer = false, compact = false }: { compos
   });
 
   const publish = useMutation({
-    mutationFn: () => publishFn({ data: { adminToken, requestId: requestId ?? undefined, expiresAt: expiry ? new Date(`${expiry}:00+06:00`).toISOString() : null, title, body, severity, audienceType, audienceRole: audienceType === "role" ? audienceRole : null, profileIds: selected } }),
+    mutationFn: () => publishFn({ data: { adminToken, requestId: requestId.current ?? crypto.randomUUID(), expiresAt: expiry ? new Date(`${expiry}:00+06:00`).toISOString() : null, title, body, severity, audienceType, audienceRole: audienceType === "role" ? audienceRole : null, profileIds: selected } }),
     onSuccess: (result) => {
       toast.success(`${result.recipients}টি অ্যাকাউন্টে নোটিশ পাঠানো হয়েছে`);
-      setTitle(""); setBody(""); setSelected([]); setRequestId(null); setExpiry("");
+      setTitle(""); setBody(""); setSelected([]); requestId.current=null; setExpiry("");
       void queryClient.invalidateQueries({ queryKey: ["it-notice-board"] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -114,7 +114,7 @@ export function NoticeBoardPanel({ composer = false, compact = false }: { compos
             </div>
           ) : null}
           <Label>মেয়াদ (ঐচ্ছিক, ঢাকা)</Label><Input type="datetime-local" value={expiry} onChange={e=>setExpiry(e.target.value)}/>
-          <Button disabled={publish.isPending || title.trim().length < 2 || body.trim().length < 2} onClick={() => { if (!requestId) setRequestId(crypto.randomUUID()); if (window.confirm("এই বার্তা পাঠাবেন? পাঠানোর পর পরিবর্তন করা যাবে না।")) setTimeout(()=>publish.mutate(),0); }}>
+          <Button disabled={publish.isPending || title.trim().length < 2 || body.trim().length < 2} onClick={() => { if (window.confirm("এই বার্তা পাঠাবেন? পাঠানোর পর পরিবর্তন করা যাবে না।")) { requestId.current ??= crypto.randomUUID(); publish.mutate(); } }}>
             {publish.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} নোটিশ পাঠান
           </Button>
         </div>

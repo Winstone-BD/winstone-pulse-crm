@@ -119,11 +119,12 @@ export const publishNotice = createServerFn({ method: "POST" })
     if (!profiles?.length) throw new Error("কোনো সক্রিয় প্রাপক পাওয়া যায়নি");
 
     const label = caller.readOnly ? "Executive HQ" : (caller.profile?.name ?? "IT Council");
-    const result = await supabaseAdmin.rpc("publish_notice_atomic", {
+    const args = {
       _request: data.requestId ?? crypto.randomUUID(), _title: data.title, _body: data.body, _severity: data.severity,
       _audience: data.audienceType, _role: data.audienceType === "role" ? data.audienceRole ?? null : null,
       _recipients: profiles.map(p => p.id), _author: caller.profile?.id ?? null, _label: label, _expiry: data.expiresAt ?? null,
-    });
+    };
+    const result = await supabaseAdmin.rpc("publish_notice_atomic", args as unknown as import('@/integrations/supabase/types').Database['public']['Functions']['publish_notice_atomic']['Args']);
     if (result.error || !result.data) throw new Error("Message publication could not be confirmed");
     const notice = { id: result.data };
     try {
