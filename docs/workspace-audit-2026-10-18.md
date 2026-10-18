@@ -27,7 +27,7 @@ These findings were source-inspected, not exploited against live data. They rema
 
 - Independent focused authorization runs: 27 Agent/HQ tests and 40 Nexus/IT tests passed (overlapping suites, not additive coverage).
 - First complete run: 545 passed, 1 failed across 79 files. Failure: build-tool declaration drifted to 2.26.5 despite the 2.25.2 override. Restored declared development dependency to the required 2.25.2; final results recorded below after rerun.
-- Latest preview build log at audit start: build OK. No manual build/typecheck run; harness handles them.
+- Final complete rerun: **546 passed / 79 files**, no failures; declared, locked and installed build-tool versions all verified as 2.25.2. Latest harness build log at 16:46:36 UTC: **build OK**. No manual build/typecheck run; harness handles them.
 
 ## Release limits
 
