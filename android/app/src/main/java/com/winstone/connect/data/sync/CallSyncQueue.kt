@@ -145,6 +145,7 @@ object CallSyncQueue {
             unique = "state_${callUid}_$state",
             data = Data.Builder()
                 .putString(KEY_KIND, KIND_CALL_STATE)
+                .putString(KEY_AT, java.time.Instant.now().toString())
                 .putString(KEY_CALL_UID, callUid)
                 .putString(KEY_LEAD, leadId)
                 .putString(KEY_STATE, state)
@@ -276,6 +277,7 @@ class CrmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                                 inputData.getBoolean(CallSyncQueue.KEY_REC_SUPPORTED, false)
                             else null,
                         recordingNote = inputData.getString(CallSyncQueue.KEY_REC_NOTE),
+                        atIso = inputData.getString(CallSyncQueue.KEY_AT),
                         direction = inputData.getString(CallSyncQueue.KEY_DIRECTION) ?: "incoming",
                         source = inputData.getString(CallSyncQueue.KEY_CALL_SOURCE) ?: "realtime",
                         atIso = inputData.getString(CallSyncQueue.KEY_AT),
