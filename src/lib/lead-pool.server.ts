@@ -556,72 +556,16 @@ export async function grantExtraLeads(input: {
   }
   if (picked.length === 0) throw new Error("ডেটাবেজে দেওয়ার মতো নতুন লিড নেই");
 
-  let moved = 0;
-  for (let start = 0; start < picked.length; start += 100) {
-    const ids = picked.slice(start, start + 100);
-    const { data: updated } = await supabaseAdmin
-      .from("leads")
-      .update({
-        assigned_to: input.agentProfileId,
-        assigned_agent_id: input.agentProfileId,
-        assignment_source: "extra_manual",
-        work_date: today,
-      })
-      .in("id", ids)
-      .is("assigned_to", null)
-      .is("assigned_agent_id", null)
-      .select("id");
-    const takenIds = (updated ?? []).map((row) => row.id);
-    if (takenIds.length === 0) continue;
-    moved += takenIds.length;
-
-    await supabaseAdmin.from("lead_assignments").insert(
-      takenIds.map((leadId) => ({
-        lead_id: leadId,
-        from_agent_id: null,
-        to_agent_id: input.agentProfileId,
-        source: "extra_manual",
-        note: `অতিরিক্ত লিড — ${input.actorLabel ?? "IT Console"} (${today})`,
-      })),
-    );
-    await supabaseAdmin.from("lead_events").insert(
-      takenIds.map((leadId) => ({
-        lead_id: leadId,
-        agent_id: input.agentProfileId,
-        kind: "extra_lead_granted" as const,
-        detail: `অতিরিক্ত লিড দেওয়া হয়েছে (${today}) — ${input.reason ?? "কারণ লেখা হয়নি"}`,
-      })),
-    );
-  }
-
-  await supabaseAdmin.from("lead_extra_grants").insert({
-    agent_profile_id: input.agentProfileId,
-    work_date: today,
-    quantity: moved,
-    reason: input.reason ?? null,
-    source,
-    request_id: input.requestId ?? null,
-    granted_by: input.actorProfileId ?? null,
-    granted_by_label: input.actorLabel ?? "IT Console",
-  });
-
-  const { logAudit } = await import("@/lib/audit.server");
-  await logAudit({
-    action: "extra_leads_granted",
-    entityType: "lead_pool",
-    entityId: input.agentProfileId,
-    actorProfileId: input.actorProfileId ?? null,
-    actorLabel: input.actorLabel ?? "IT Console",
-    metadata: {
-      agent: agent.name,
-      requested: input.quantity,
-      moved,
-      reason: input.reason ?? null,
-      workDate: today,
-    },
-  });
-
-  return { moved, remaining: await usablePoolCount(), workDate: today };
+  // PostgreSQL accepts NULL RPC arguments; generated types omit that nullability.
+  const args = {
+    _agent: input.agentProfileId, _ids: picked, _quantity: input.quantity,
+    _request: input.requestId ?? null, _reason: input.reason ?? null, _source: source,
+    _actor: input.actorProfileId ?? null, _label: input.actorLabel ?? "IT Console",
+  };
+  const { data: result, error: allocationError } = await supabaseAdmin.rpc("allocate_extra_leads_atomic", args as unknown as import("@/integrations/supabase/types").Database["public"]["Functions"]["allocate_extra_leads_atomic"]["Args"]);
+  if (allocationError) throw new Error("Allocation was not committed; refresh the reviewed plan before retrying");
+  const allocation = result as { moved: number; replayed: boolean; workDate: string };
+  return { ...allocation, remaining: await usablePoolCount() };
 }
 
 /** Extra leads handed out today, per agent — shown next to the base quota. */

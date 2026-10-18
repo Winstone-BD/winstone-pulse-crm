@@ -97,18 +97,17 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
     for (let i = 0; i < leadIds.length; i += 200) {
       const ids = leadIds.slice(i, i + 200);
       const [r, l] = await Promise.all([
-        supabaseAdmin
+        pageAll((a, b) => supabaseAdmin
           .from("call_reports")
           .select("lead_id, agent_id, call_ended_at, connected, category, reason, no_follow_up_reason, no_follow_up_note, customer_response, temperature, follow_up_priority, status")
           .in("lead_id", ids)
-          .neq("status", "pending")
+          .eq("status", "submitted")
           .order("call_ended_at", { ascending: true })
-          .limit(5000),
+          .order("id", { ascending: true }).range(a, b)),
         supabaseAdmin.from("leads").select("id, name, phone_number, temperature").in("id", ids),
       ]);
-      if (r.error) throw new Error(r.error.message);
       if (l.error) throw new Error(l.error.message);
-      reports.push(...((r.data ?? []) as Report[]));
+      reports.push(...(r as Report[]));
       leads.push(...(l.data ?? []));
     }
 
@@ -125,10 +124,9 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
       const reps = reports.filter((r) => r.lead_id === leadId && (!ownAgentId || r.agent_id === ownAgentId));
       const lead = leadMap.get(leadId);
       const agentId = fus[fus.length - 1]?.agent_id ?? null;
-      const open = fus.filter((f) => f.status !== "done");
+      const open = fus.filter((f) => !["done", "completed", "cancelled", "canceled"].includes(f.status));
       const overdue = open.filter((f) => new Date(f.scheduled_at).getTime() < now).length;
       const nextOpen = open
-        .filter((f) => new Date(f.scheduled_at).getTime() >= now)
         .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
       const last = reps[reps.length - 1];
       const stopped =
@@ -167,7 +165,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
         agentId,
         agentName: agentId ? agentName.get(agentId) ?? "—" : "—",
         followUpsSet: fus.length,
-        followUpsDone: fus.length - open.length,
+        followUpsDone: fus.filter((f) => ["done", "completed"].includes(f.status)).length,
         followUpsOpen: open.length,
         overdue,
         contacts: reps.length,

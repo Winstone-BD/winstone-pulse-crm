@@ -5810,6 +5810,19 @@ export type Database = {
         Args: { _action: string; _actor: string; _id: string }
         Returns: undefined
       }
+      allocate_extra_leads_atomic: {
+        Args: {
+          _actor: string
+          _agent: string
+          _ids: string[]
+          _label: string
+          _quantity: number
+          _reason: string
+          _request: string
+          _source: string
+        }
+        Returns: Json
+      }
       clean_person_name: { Args: { _raw: string }; Returns: string }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {
@@ -5817,6 +5830,19 @@ export type Database = {
         Returns: {
           lead_id: string
         }[]
+      }
+      finalize_call_report_atomic: {
+        Args: {
+          _agent: string
+          _classification: Json
+          _evaluation_detail: string
+          _followup: Json
+          _lead_patch: Json
+          _outcome: string
+          _report: string
+          _report_patch: Json
+        }
+        Returns: Json
       }
       has_active_license: { Args: { check_env?: string }; Returns: boolean }
       has_pending_call_report: { Args: { _agent_id: string }; Returns: boolean }

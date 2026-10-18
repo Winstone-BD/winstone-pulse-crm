@@ -375,6 +375,7 @@ const ExtraInput = z.object({
   agentProfileId: z.string().uuid(),
   quantity: z.number().int().min(1).max(200),
   reason: z.string().trim().max(300).nullable().optional(),
+  requestId: z.string().uuid(),
 });
 
 /**
@@ -392,6 +393,7 @@ export const grantExtraLeadPool = createServerFn({ method: "POST" })
       reason: data.reason ?? null,
       actorProfileId: null,
       actorLabel: caller.label,
+      requestId: data.requestId,
     });
   });
 

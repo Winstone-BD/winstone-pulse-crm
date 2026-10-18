@@ -41,6 +41,8 @@ export const startMyCall = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
     const { requireAgentBriefing } = await import("@/lib/agent-briefing.server");
+    const reviewBlock = await (await import("@/lib/accountability-access.server")).requireAgentReviewClear(me.id);
+    if (reviewBlock) return reviewBlock;
     const briefingBlock = await requireAgentBriefing(me.id);
     if (briefingBlock) return briefingBlock;
     {
