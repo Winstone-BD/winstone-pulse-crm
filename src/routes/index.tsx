@@ -95,6 +95,9 @@ function EntryHall() {
                 The Premium Real Estate CRM
               </span>
             </span>
+            <span className="ml-1 hidden shrink-0 items-center rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-gold md:inline-flex">
+              Gateway
+            </span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span aria-hidden className="size-1.5 rounded-full bg-live" /> Server online
