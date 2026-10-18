@@ -78,13 +78,14 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
     // never cut short by a floor-wide limit or mixed with other agents' work.
     if (caller.scope === "agent" && caller.profile) {
       const me = caller.profile.id;
-      const [profile, ownLeadsA, ownLeadsB] = await Promise.all([
+      const [profile, ownLeads] = await Promise.all([
         supabaseAdmin.from("profiles").select(PROFILE_SAFE_COLUMNS).eq("id", me),
-        supabaseAdmin.from("leads").select("*").eq("assigned_agent_id", me).limit(5000),
-        supabaseAdmin.from("leads").select("*").eq("assigned_to", me).limit(5000),
+        pageAll((a, b) => supabaseAdmin.from("leads").select("*")
+          .or(`assigned_agent_id.eq.${me},assigned_to.eq.${me}`)
+          .order("updated_at", { ascending: false }).order("id").range(a, b)),
       ]);
       const leadMap = new Map<string, any>();
-      for (const l of [...(ownLeadsA.data ?? []), ...(ownLeadsB.data ?? [])]) {
+      for (const l of ownLeads.data ?? []) {
         if (leadOwner(l) === me) leadMap.set(l.id, l);
       }
       const myLeads = [...leadMap.values()].sort((a, b) =>
@@ -98,7 +99,7 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
         pageAll((a, b) => supabaseAdmin.from("lead_events").select("*").eq("agent_id", me)
           .order("created_at", { ascending: false }).order("id").range(a, b)),
       ]);
-      const failed = [profile, ownLeadsA, ownLeadsB, calls, messages, events].find((r) => r.error);
+      const failed = [profile, ownLeads, calls, messages, events].find((r) => r.error);
       if (failed?.error) throw new Error(failed.error.message);
       const dedupe = <T extends { id: string }>(rows: T[]) => [
         ...new Map(rows.map((r) => [r.id, r])).values(),

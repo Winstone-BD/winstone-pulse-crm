@@ -29,6 +29,8 @@
 - IT PIN yields a 10m challenge; completeItAccess checks approved admin roles and issues an 8h user-bound token; officer portraits never grant access — why: PIN/selection cannot identify IT staff.
 - Architect/Super Admin roles come only from the profiles-insert trigger + server-only privileged_account_allowlist (confirmed email, first user binds); payment approval stays architect identity (Google+PIN) — why: no UI/API grants them.
 - Subdirectories have their own AGENTS.md; read it before changing files there.
+- HQ workload uses authority-only canonical handovers; backlog never determines fresh gaps — why: oversight is not assignment authority.
+- Reviewed files use LeadHub-gated importReviewedPoolLeads → intakeLead, owner null, content-based parsing — why: no invented facts or assignment bypass.
 - Homepage role selection only filters existing entry cards; recommendations use getMyAccount and operational access uses useMaintenance with explicit unavailable states — why: navigation must not grant roles or fabricate health/access.
 - Client IP for limits/logs comes only from cf-connecting-ip via requestSourceKey; 429s use rateLimitedResponse (Retry-After, no internals); no IP allowlists/office binding — why: X-Forwarded-For is spoofable and staff work from any network.
 - Handover due dates come only from pure rules in src/lib/handover-due.ts (no stored due dates); pipeline answers use whitelisted question IDs with server counts, never model-generated numbers — why: one rule, no invented figures.

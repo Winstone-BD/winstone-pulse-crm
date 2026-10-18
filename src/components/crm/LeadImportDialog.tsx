@@ -16,10 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { importMyLeads, parseLeadFile, type ParsedLeadRow } from "@/lib/lead-import.functions";
+import { importReviewedPoolLeads, parseLeadFile, type ParsedLeadRow } from "@/lib/lead-import.functions";
 import { useAdminToken } from "@/lib/local-session";
 
-const ACCEPT = ".csv,.tsv,.txt,.json,.pdf,.docx,.xlsx,.pptx,image/*,text/csv,application/pdf";
 
 function toBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -39,7 +38,7 @@ export function LeadImportDialog() {
   const adminToken = useAdminToken();
   const queryClient = useQueryClient();
   const parse = useServerFn(parseLeadFile);
-  const save = useServerFn(importMyLeads);
+  const save = useServerFn(importReviewedPoolLeads);
   const fileInput = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -47,6 +46,7 @@ export function LeadImportDialog() {
 
   const parseMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (file.size > 8 * 1024 * 1024) throw new Error("Maximum file size: 8 MB");
       const dataBase64 = toBase64(await file.arrayBuffer());
       return parse({
         data: {
@@ -104,7 +104,6 @@ export function LeadImportDialog() {
           <input
             ref={fileInput}
             type="file"
-            accept={ACCEPT}
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -133,7 +132,7 @@ export function LeadImportDialog() {
           </div>
 
           {rows.length > 0 && (
-            <div className="overflow-x-auto rounded-xl border border-border">
+            <div className="table-scroll rounded-lg border border-border">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -203,7 +202,7 @@ export function LeadImportDialog() {
 
           {rows.length > 0 && (
             <Label className="text-xs text-muted-foreground">
-              রেফারেন্স খালি রাখলে আপনার নিজের নাম বসে যাবে। সব লিড আপনার নিজের তালিকায় যাবে।
+              সব নতুন লিড অনবরাদ্দ পুলে যাবে। বিদ্যমান মালিকানা বদলাবে না; বরাদ্দ আলাদা LeadHub অনুমোদনে হবে।
             </Label>
           )}
         </div>
