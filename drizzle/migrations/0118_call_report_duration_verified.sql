@@ -1,0 +1,1 @@
+ALTER TABLE public.call_reports ADD COLUMN IF NOT EXISTS duration_verified_at timestamptz, ADD COLUMN IF NOT EXISTS duration_verified_by uuid;

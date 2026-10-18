@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { ClockAlert, Loader2 } from "lucide-react";
+import { BadgeCheck, ClockAlert, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
-import { listDurationMismatches } from "@/lib/call-reports.functions";
+import { listDurationMismatches, verifyDurationMismatch } from "@/lib/call-reports.functions";
 import { fullDateTime } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 
@@ -27,12 +29,23 @@ export function DurationMismatchPanel({ onOpenLead }: { onOpenLead: (leadId: str
     refetchInterval: 60_000,
   });
   const mismatches = data?.mismatches ?? [];
+  const openCount = mismatches.filter((m) => !m.verifiedAt).length;
+  const queryClient = useQueryClient();
+  const verify = useServerFn(verifyDurationMismatch);
+  const mark = useMutation({
+    mutationFn: (reportId: string) => verify({ data: { adminToken, reportId } }),
+    onSuccess: () => {
+      toast.success("যাচাই করা হয়েছে");
+      void queryClient.invalidateQueries({ queryKey: ["duration-mismatches"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
     <section className="space-y-3 rounded-2xl border bg-card p-4">
       <div>
         <h2 className="flex items-center gap-2 text-lg font-bold tracking-tight">
-          <ClockAlert className="size-5 text-primary" /> কলের সময় মেলেনি ({mismatches.length})
+          <ClockAlert className="size-5 text-primary" /> কলের সময় মেলেনি ({openCount} বাকি · {mismatches.length - openCount} যাচাই হয়েছে)
         </h2>
         <p className="text-xs text-muted-foreground sm:text-sm">
           ফোনের মাপা সময়ের সঙ্গে রিপোর্টের সময়ের ব্যবধান ১৫ সেকেন্ডের বেশি হলে এখানে দেখায় — শুধু পর্যালোচনার জন্য।
@@ -51,7 +64,7 @@ export function DurationMismatchPanel({ onOpenLead }: { onOpenLead: (leadId: str
           {mismatches.map((row) => (
             <li
               key={row.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3"
+              className={row.verifiedAt ? "flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-3 opacity-80" : "flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3"}
             >
               <div className="min-w-0 flex-1">
                 <button
@@ -78,6 +91,15 @@ export function DurationMismatchPanel({ onOpenLead }: { onOpenLead: (leadId: str
                 <Badge variant="destructive" className="text-[11px]">
                   ব্যবধান {fmtSeconds(row.differenceSeconds)}
                 </Badge>
+                {row.verifiedAt ? (
+                  <Badge variant="secondary" className="gap-1 text-[11px]">
+                    <BadgeCheck className="size-3" /> যাচাই হয়েছে{row.verifiedByName ? ` · ${row.verifiedByName}` : ""} · {fullDateTime(row.verifiedAt)}
+                  </Badge>
+                ) : (
+                  <Button size="sm" variant="outline" disabled={mark.isPending} onClick={() => mark.mutate(row.id)}>
+                    <BadgeCheck className="size-4" /> যাচাই করেছি
+                  </Button>
+                )}
               </div>
             </li>
           ))}

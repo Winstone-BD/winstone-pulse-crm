@@ -865,7 +865,7 @@ export const listDurationMismatches = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("call_reports")
-      .select("id, lead_id, agent_id, phone_number, duration_seconds, device_reported_duration_seconds, call_ended_at, submitted_at")
+      .select("id, lead_id, agent_id, phone_number, duration_seconds, device_reported_duration_seconds, call_ended_at, submitted_at, duration_verified_at, duration_verified_by")
       .eq("status", "submitted")
       .not("device_reported_duration_seconds", "is", null)
       .order("call_ended_at", { ascending: false })
@@ -876,7 +876,7 @@ export const listDurationMismatches = createServerFn({ method: "POST" })
         Math.abs((r.duration_seconds ?? 0) - (r.device_reported_duration_seconds ?? 0)) >
         DURATION_MISMATCH_TOLERANCE_SECONDS,
     );
-    const ids = [...new Set(flagged.flatMap((r) => [r.lead_id, r.agent_id]).filter(Boolean))] as string[];
+    const ids = [...new Set(flagged.flatMap((r) => [r.lead_id, r.agent_id, r.duration_verified_by]).filter(Boolean))] as string[];
     const { data: people } = ids.length
       ? await supabaseAdmin.from("profiles").select("id, name").in("id", ids)
       : { data: [] };
@@ -897,8 +897,39 @@ export const listDurationMismatches = createServerFn({ method: "POST" })
         differenceSeconds: Math.abs((r.duration_seconds ?? 0) - (r.device_reported_duration_seconds ?? 0)),
         callEndedAt: r.call_ended_at,
         submittedAt: r.submitted_at,
+        verifiedAt: r.duration_verified_at,
+        verifiedByName: r.duration_verified_by ? (personById.get(r.duration_verified_by) ?? null) : null,
       })),
     };
+  });
+
+/** HQ/IT marks a flagged report's call time as reviewed. Only the review flag changes; times stay as recorded. */
+export const verifyDurationMismatch = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.extend({ reportId: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope !== "authority" || caller.readOnly) throw new Error("শুধু HQ/IT যাচাই চিহ্ন দিতে পারে");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("call_reports")
+      .update({ duration_verified_at: new Date().toISOString(), duration_verified_by: caller.profile?.id ?? null })
+      .eq("id", data.reportId)
+      .eq("status", "submitted")
+      .is("duration_verified_at", null)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) return { ok: true as const, already: true as const };
+    const { logAudit } = await import("@/lib/audit.server");
+    await logAudit({
+      action: "call_duration_verified",
+      entityType: "call_report",
+      entityId: data.reportId,
+      actorProfileId: caller.profile?.id ?? null,
+      actorLabel: caller.profile?.name ?? null,
+    });
+    return { ok: true as const, already: false as const };
   });
 
 export const recoverMissedFollowUp = createServerFn({ method: 'POST' })
