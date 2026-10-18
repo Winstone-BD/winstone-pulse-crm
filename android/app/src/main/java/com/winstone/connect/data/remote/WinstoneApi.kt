@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  * number that is not in the CRM.
  */
 object WinstoneApi {
-    const val BASE_URL = "https://webcrm.winstonebd.com"
+    const val BASE_URL = "https://crm.winstonebd.com"
     /**
      * The phone authenticates with its own device token (issued at sign-in and
      * bound to this agent profile). No shared privileged secret ships in the APK.

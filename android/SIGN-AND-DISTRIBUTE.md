@@ -19,7 +19,7 @@ RELEASE_STORE_FILE=/absolute/path/winstone-release.jks
 RELEASE_STORE_PASSWORD=আপনার পাসওয়ার্ড
 RELEASE_KEY_ALIAS=আপনার alias
 RELEASE_KEY_PASSWORD=আপনার key পাসওয়ার্ড
-CRM_BASE_URL=https://webcrm.winstonebd.com
+CRM_BASE_URL=https://crm.winstonebd.com
 ```
 
 `local.properties` কখনো কাউকে পাঠাবেন না।
