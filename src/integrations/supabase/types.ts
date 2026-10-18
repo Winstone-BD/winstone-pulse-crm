@@ -1736,14 +1736,18 @@ export type Database = {
           agent_id: string | null
           category: string
           completed_at: string | null
+          correlation_id: string
           created_at: string
           customer_name: string | null
           customer_response: string | null
           id: string
+          idempotency_key: string | null
           lead_id: string
           next_action: string | null
           note: string | null
           notified_at: string | null
+          outcome: string | null
+          parent_follow_up_id: string | null
           phone_number: string | null
           previous_call_id: string | null
           priority: string
@@ -1754,20 +1758,27 @@ export type Database = {
           reschedule_count: number
           scheduled_at: string
           status: string
+          transition_actor: string | null
+          transition_key: string | null
+          transition_reason: string | null
           updated_at: string
         }
         Insert: {
           agent_id?: string | null
           category: string
           completed_at?: string | null
+          correlation_id?: string
           created_at?: string
           customer_name?: string | null
           customer_response?: string | null
           id?: string
+          idempotency_key?: string | null
           lead_id: string
           next_action?: string | null
           note?: string | null
           notified_at?: string | null
+          outcome?: string | null
+          parent_follow_up_id?: string | null
           phone_number?: string | null
           previous_call_id?: string | null
           priority?: string
@@ -1778,20 +1789,27 @@ export type Database = {
           reschedule_count?: number
           scheduled_at: string
           status?: string
+          transition_actor?: string | null
+          transition_key?: string | null
+          transition_reason?: string | null
           updated_at?: string
         }
         Update: {
           agent_id?: string | null
           category?: string
           completed_at?: string | null
+          correlation_id?: string
           created_at?: string
           customer_name?: string | null
           customer_response?: string | null
           id?: string
+          idempotency_key?: string | null
           lead_id?: string
           next_action?: string | null
           note?: string | null
           notified_at?: string | null
+          outcome?: string | null
+          parent_follow_up_id?: string | null
           phone_number?: string | null
           previous_call_id?: string | null
           priority?: string
@@ -1802,6 +1820,9 @@ export type Database = {
           reschedule_count?: number
           scheduled_at?: string
           status?: string
+          transition_actor?: string | null
+          transition_key?: string | null
+          transition_reason?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1817,6 +1838,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "follow_up_events"
             referencedColumns: ["id"]
           },
           {
@@ -5965,6 +5993,17 @@ export type Database = {
           _title: string
         }
         Returns: string
+      }
+      transition_follow_up_atomic: {
+        Args: {
+          _action: string
+          _actor: string
+          _event: string
+          _key: string
+          _reason: string
+          _scheduled_at: string
+        }
+        Returns: Json
       }
     }
     Enums: {

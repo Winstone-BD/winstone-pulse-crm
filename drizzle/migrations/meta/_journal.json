@@ -750,6 +750,13 @@
       "when": 1791816824936,
       "tag": "0106_billing_invoice_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1792338869565,
+      "tag": "0107_canonical_follow_up_lifecycle",
+      "breakpoints": true
     }
   ]
 }
