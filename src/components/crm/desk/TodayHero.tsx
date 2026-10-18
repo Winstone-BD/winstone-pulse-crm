@@ -87,44 +87,42 @@ export function TodayHero({ name }: { name: string | null }) {
   const today = new Date().toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <section aria-label={t({ bn: "আজকের কাজ", en: "Today's work" })} className="relative overflow-hidden rounded-3xl bg-foreground text-background shadow-lg">
-      <div aria-hidden className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/30 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-28 left-1/3 size-64 rounded-full bg-primary/15 blur-3xl" />
+    <section aria-label={t({ bn: "আজকের কাজ", en: "Today's work" })} className="relative min-w-0 border-y border-border bg-background text-foreground">
       <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-center">
-        <div className="flex min-w-0 items-center gap-5">
+        <div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
           <div className="relative shrink-0">
-            <svg viewBox="0 0 64 64" className="size-24 -rotate-90 sm:size-28" role="img" aria-label={t({ bn: `আজ ${pct}% সম্পন্ন`, en: `${pct}% done today` })}>
-              <circle cx="32" cy="32" r="27" className="fill-none stroke-background/15" strokeWidth="6" />
+            <svg viewBox="0 0 64 64" className="size-20 -rotate-90 sm:size-24" role="img" aria-label={t({ bn: `আজ ${pct}% সম্পন্ন`, en: `${pct}% done today` })}>
+              <circle cx="32" cy="32" r="27" className="fill-none stroke-border" strokeWidth="6" />
               <circle cx="32" cy="32" r="27" className="fill-none stroke-primary transition-all duration-700" strokeWidth="6" strokeLinecap="round" strokeDasharray={2 * Math.PI * 27} strokeDashoffset={2 * Math.PI * 27 * (1 - pct / 100)} />
             </svg>
             <span className="absolute inset-0 grid place-items-center">
               <span className="text-center">
-                <span className="block text-2xl font-black tabular-nums sm:text-3xl">{bn(pct)}%</span>
-                <span className="block text-[10px] opacity-60">{t({ bn: "সম্পন্ন", en: "done" })}</span>
+                <span className="block text-2xl font-semibold tabular-nums">{bn(pct)}%</span>
+                <span className="block text-[10px] text-muted-foreground">{t({ bn: "সম্পন্ন", en: "done" })}</span>
               </span>
             </span>
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">{greeting(lang)} · {today}</p>
-            <h1 className="mt-1 break-words text-3xl font-black leading-tight tracking-tight sm:text-5xl">
+            <h1 className="mt-1 break-words text-3xl font-semibold leading-tight sm:text-4xl">
               {t({ bn: "স্বাগতম", en: "Welcome back" })}
-              {displayName ? <span className="block text-primary">{displayName}</span> : null}
+              {displayName ? <span className="block text-foreground">{displayName}</span> : null}
             </h1>
-            <p className="mt-0.5 text-sm font-medium opacity-80">{t({ bn: "আজকের কাজের এক নজর দেখে নিন।", en: "Here's your day at a glance." })}</p>
-            <p className="mt-1 text-sm opacity-70">{mood(pct, lang)}</p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">{t({ bn: "আজকের কাজের এক নজর দেখে নিন।", en: "Here's your day at a glance." })}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{mood(pct, lang)}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-background/10 px-3 py-1"><b className="tabular-nums">{bn(done)}</b> / {bn(leads.length)} {t({ bn: "শেষ", en: "done" })}</span>
-              <span className="rounded-full bg-background/10 px-3 py-1"><b className="tabular-nums">{bn(remaining)}</b> {t({ bn: "বাকি", en: "remaining" })}</span>
-              <span className="rounded-full bg-destructive/25 px-3 py-1"><Flame className="mr-1 inline size-3" aria-hidden /><b className="tabular-nums">{bn(hot)}</b> {t({ bn: "হট", en: "hot" })}</span>
-              <span className="rounded-full bg-background/10 px-3 py-1"><b className="tabular-nums">{bn(followUps)}</b> {t({ bn: "ফলো-আপ", en: "follow-ups" })}</span>
+              <span className="rounded-md border border-border bg-card px-3 py-1"><b className="tabular-nums">{bn(done)}</b> / {bn(leads.length)} {t({ bn: "শেষ", en: "done" })}</span>
+              <span className="rounded-md border border-border bg-card px-3 py-1"><b className="tabular-nums">{bn(remaining)}</b> {t({ bn: "বাকি", en: "remaining" })}</span>
+              <span className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-1 text-destructive"><Flame className="mr-1 inline size-3" aria-hidden /><b className="tabular-nums">{bn(hot)}</b> {t({ bn: "হট", en: "hot" })}</span>
+              <span className="rounded-md border border-border bg-card px-3 py-1"><b className="tabular-nums">{bn(followUps)}</b> {t({ bn: "ফলো-আপ", en: "follow-ups" })}</span>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-background/10 bg-background/5 p-3 backdrop-blur">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted opacity-70">{t({ bn: "পরবর্তী কল (সংক্ষিপ্ত)", en: "Next call (quick glance)" })}</p>
+        <div className="min-w-0 border-t border-border pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">{t({ bn: "পরবর্তী কল (সংক্ষিপ্ত)", en: "Next call (quick glance)" })}</p>
           {isPending ? (
-            <div className="mt-2 h-12 animate-pulse rounded-lg bg-background/10 motion-reduce:animate-none" />
+            <div className="mt-2 h-12 animate-pulse rounded-md bg-muted motion-reduce:animate-none" />
           ) : !next ? (
             <p className="mt-2 text-xs opacity-70">{t({ bn: "আজকের সব লিড শেষ — দারুণ কাজ! নতুন লিড LeadHub থেকে আসবে।", en: "All of today's leads are done — great work! New leads will arrive from LeadHub." })}</p>
           ) : (
