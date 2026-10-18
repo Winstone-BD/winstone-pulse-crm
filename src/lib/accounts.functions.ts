@@ -568,7 +568,8 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
       "পাসওয়ার্ড রিসেট লিংক তৈরি হয়েছে",
       `IT আপনার অ্যাকাউন্টের জন্য একটি পাসওয়ার্ড রিসেট লিংক তৈরি করেছে (${new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} ঢাকা)। আপনি না চাইলে এখনই HQ/IT-কে জানান।`,
     );
-    return { link: actionLink, name: profile.name };
+    const masked = email.replace(/^(.{2}).*(@.*)$/, "$1***$2");
+    return { sentTo: masked, name: profile.name };
   });
 
 /** After the agent saves a new password, clear the must-change flag. */
