@@ -1,0 +1,2 @@
+ALTER TABLE public.call_reports ADD COLUMN IF NOT EXISTS duration_source text, ADD COLUMN IF NOT EXISTS duration_synced_at timestamptz;
+COMMENT ON COLUMN public.call_reports.duration_source IS 'phone_sync | web_timer | entered | whatsapp_entered; null = unknown (pre-feature)';

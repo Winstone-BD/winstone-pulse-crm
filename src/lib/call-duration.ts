@@ -51,3 +51,45 @@ export function pickPhoneMeasuredSeconds(
   }
   return best?.seconds ?? null;
 }
+
+export type DurationSource = "phone_sync" | "web_timer" | "entered" | "whatsapp_entered";
+
+/** Same as pickPhoneMeasuredSeconds, plus when the phone row was synced. */
+export function pickPhoneMeasuredCall(
+  reportOpenedAt: string | number,
+  rows: Array<{ started_at?: string | null; created_at?: string | null; duration_seconds?: number | null; call_source?: string | null }>,
+): { seconds: number; syncedAt: string | null } | null {
+  const seconds = pickPhoneMeasuredSeconds(reportOpenedAt, rows);
+  if (seconds === null) return null;
+  const opened = new Date(reportOpenedAt).getTime();
+  let best: { gap: number; at: string | null } | null = null;
+  for (const row of rows) {
+    if (String(row.call_source ?? "").startsWith("web")) continue;
+    if (Math.round(plausibleSeconds(row.duration_seconds)) !== seconds) continue;
+    const gap = Math.abs(opened - new Date(row.started_at ?? row.created_at ?? "").getTime());
+    if (!best || gap < best.gap) best = { gap, at: row.created_at ?? null };
+  }
+  return { seconds, syncedAt: best?.at ?? null };
+}
+
+/** Which input resolveCallDuration actually used. WhatsApp calls are never phone-measured. */
+export function resolveDurationSource(input: {
+  channel?: string | null;
+  phoneSeconds?: number | null;
+  storedSeconds?: number | null;
+}): DurationSource {
+  if (input.channel === "whatsapp") return "whatsapp_entered";
+  if (plausibleSeconds(input.phoneSeconds) > 0) return "phone_sync";
+  if (plausibleSeconds(input.storedSeconds) > 0) return "web_timer";
+  return "entered";
+}
+
+export function durationSourceLabel(source: string | null | undefined): string {
+  switch (source) {
+    case "phone_sync": return "ফোনের কল-হিস্টরি থেকে";
+    case "web_timer": return "ওয়েব টাইমার থেকে";
+    case "entered": return "এজেন্টের লেখা সময়";
+    case "whatsapp_entered": return "WhatsApp কল — এজেন্টের লেখা সময়";
+    default: return "উৎস জানা নেই";
+  }
+}

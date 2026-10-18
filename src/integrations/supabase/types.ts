@@ -1016,6 +1016,8 @@ export type Database = {
           device_id: string | null
           device_reported_duration_seconds: number | null
           duration_seconds: number
+          duration_source: string | null
+          duration_synced_at: string | null
           evaluation_answers: Json | null
           evaluation_model: string | null
           evaluation_score: number | null
@@ -1058,6 +1060,8 @@ export type Database = {
           device_id?: string | null
           device_reported_duration_seconds?: number | null
           duration_seconds?: number
+          duration_source?: string | null
+          duration_synced_at?: string | null
           evaluation_answers?: Json | null
           evaluation_model?: string | null
           evaluation_score?: number | null
@@ -1100,6 +1104,8 @@ export type Database = {
           device_id?: string | null
           device_reported_duration_seconds?: number | null
           duration_seconds?: number
+          duration_source?: string | null
+          duration_synced_at?: string | null
           evaluation_answers?: Json | null
           evaluation_model?: string | null
           evaluation_score?: number | null

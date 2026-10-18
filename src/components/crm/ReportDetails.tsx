@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL_CLIENT } from "@/lib/call-categories";
 import { fullDateTime } from "@/lib/crm-format";
+import { durationSourceLabel } from "@/lib/call-duration";
 
 export type ReportLike = {
   status?: string | null;
@@ -21,6 +22,8 @@ export type ReportLike = {
   submitted_at?: string | null;
   created_at?: string | null;
   duration_seconds?: number | null;
+  duration_source?: string | null;
+  duration_synced_at?: string | null;
   agentName?: string | null;
 };
 
@@ -59,6 +62,14 @@ export function ReportDetails({ report, defaultOpen = false }: { report: ReportL
           <Badge variant="outline" className="text-[11px]">
             {CATEGORY_LABEL_CLIENT[report.category] ?? report.category}
           </Badge>
+        ) : null}
+        {report.status === "submitted" ? (
+          <span className="text-muted-foreground">
+            · সময়: {durationSourceLabel(report.duration_source)}
+            {report.duration_source === "phone_sync" && report.duration_synced_at
+              ? ` — সিংক হয়েছে ${fullDateTime(report.duration_synced_at)}`
+              : ""}
+          </span>
         ) : null}
         {report.status === "pending" ? (
           <Badge variant="destructive" className="text-[11px]">জমা হয়নি</Badge>

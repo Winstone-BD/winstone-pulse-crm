@@ -226,6 +226,7 @@ export async function openCallReport(input: {
   callStartedAt?: string | null;
   durationSeconds?: number;
   connected?: boolean;
+  channel?: "call" | "whatsapp";
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -272,6 +273,7 @@ export async function openCallReport(input: {
         call_started_at: input.callStartedAt ?? null,
         duration_seconds: input.durationSeconds ?? 0,
         connected: input.connected ?? true,
+        channel: input.channel ?? "call",
         status: "queued",
       })
       .select("id")
@@ -302,6 +304,7 @@ export async function openCallReport(input: {
       call_started_at: input.callStartedAt ?? null,
       duration_seconds: input.durationSeconds ?? 0,
       connected: input.connected ?? true,
+      channel: input.channel ?? "call",
       status: "pending",
     })
     .select("id")
@@ -421,15 +424,20 @@ export async function submitCallReport(input: {
 
   // Phone-measured call time wins; time spent filling out the report never counts.
   let phoneSeconds: number | null = null;
-  if (report.recording_id) {
+  let phoneSyncedAt: string | null = null;
+  const isWhatsapp = report.channel === "whatsapp";
+  if (report.recording_id && !isWhatsapp) {
     const { data: rec } = await supabaseAdmin
       .from("call_recordings")
-      .select("duration_seconds, call_source")
+      .select("duration_seconds, call_source, created_at")
       .eq("id", report.recording_id)
       .maybeSingle();
-    if (rec && !String(rec.call_source ?? "").startsWith("web")) phoneSeconds = rec.duration_seconds ?? null;
+    if (rec && !String(rec.call_source ?? "").startsWith("web")) {
+      phoneSeconds = rec.duration_seconds ?? null;
+      phoneSyncedAt = rec.created_at ?? null;
+    }
   }
-  if (phoneSeconds === null || phoneSeconds <= 0) {
+  if (!isWhatsapp && (phoneSeconds === null || phoneSeconds <= 0)) {
     // Web Call button: match the call the Android app synced from the phone's call log.
     const since = new Date(new Date(report.created_at).getTime() - 3 * 60 * 60 * 1000).toISOString();
     const { data: phoneRows } = await supabaseAdmin
@@ -440,13 +448,20 @@ export async function submitCallReport(input: {
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(10);
-    const { pickPhoneMeasuredSeconds } = await import("@/lib/call-duration");
-    phoneSeconds = pickPhoneMeasuredSeconds(report.created_at, phoneRows ?? []);
+    const { pickPhoneMeasuredCall } = await import("@/lib/call-duration");
+    const match = pickPhoneMeasuredCall(report.created_at, phoneRows ?? []);
+    phoneSeconds = match?.seconds ?? null;
+    phoneSyncedAt = match?.syncedAt ?? null;
   }
-  const { resolveCallDuration } = await import("@/lib/call-duration");
+  const { resolveCallDuration, resolveDurationSource } = await import("@/lib/call-duration");
+  const durationSource = resolveDurationSource({
+    channel: report.channel,
+    phoneSeconds,
+    storedSeconds: isWhatsapp ? 0 : report.duration_seconds,
+  });
   const durationSeconds = resolveCallDuration({
     phoneSeconds,
-    storedSeconds: report.duration_seconds,
+    storedSeconds: isWhatsapp ? 0 : report.duration_seconds,
     enteredSeconds: input.durationSeconds,
   });
   const noFollowUpNote = (input.followUpNote ?? "").trim();
@@ -489,6 +504,8 @@ export async function submitCallReport(input: {
       follow_up_at: input.followUpAt ?? null,
       connected: received,
       duration_seconds: durationSeconds,
+      duration_source: durationSource,
+      duration_synced_at: durationSource === "phone_sync" ? phoneSyncedAt : null,
       // Only the phone's own measurement counts toward performance ranking.
       connection_verified: received && (report.duration_seconds ?? 0) > 0 && report.connected !== false,
       temperature,
