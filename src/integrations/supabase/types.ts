@@ -6325,6 +6325,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       lead_has_work_history: { Args: { _lead_id: string }; Returns: boolean }
       lead_is_recalled_untouched: {
         Args: { _lead_id: string }
