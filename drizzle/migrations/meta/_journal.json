@@ -813,6 +813,13 @@
       "when": 1792345489363,
       "tag": "0115_pin_guard_count_verified_failures",
       "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1792355691691,
+      "tag": "0116_project_photos_active_staff_only",
+      "breakpoints": true
     }
   ]
 }
