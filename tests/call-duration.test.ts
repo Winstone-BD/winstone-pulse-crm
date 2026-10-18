@@ -13,3 +13,17 @@ describe("call duration", () => {
     expect(webStopwatchSeconds(1000, 1000 + 90_000)).toBe(90);
   });
 });
+
+import { pickPhoneMeasuredSeconds } from "@/lib/call-duration";
+describe("web call uses phone-measured time", () => {
+  const opened = "2026-10-18T10:10:00Z";
+  it("takes the phone call-log duration for the same call", () => {
+    expect(pickPhoneMeasuredSeconds(opened, [{ started_at: "2026-10-18T10:05:00Z", duration_seconds: 187, call_source: "call_log" }])).toBe(187);
+  });
+  it("ignores web stopwatch rows and calls older than 3 hours", () => {
+    expect(pickPhoneMeasuredSeconds(opened, [
+      { started_at: "2026-10-18T10:05:00Z", duration_seconds: 900, call_source: "web" },
+      { started_at: "2026-10-18T06:00:00Z", duration_seconds: 60, call_source: "android_sim" },
+    ])).toBeNull();
+  });
+});
