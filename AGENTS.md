@@ -32,5 +32,5 @@
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
-- Theme colours live only in src/styles.css token overrides (.hq-luxe/.theme-light plus a `.dark` ancestor); the dark toggle only flips a class on <html> — why: the reskin must never touch logic.
+- All workspace wrappers inherit one global token set in src/styles.css; shared Button variants separate action colours from brand accents, and body portals inherit the same palette — why: route-specific themes and saved legacy dark classes must not fragment the requested unified design.
 - Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
