@@ -9,7 +9,7 @@ export function LeadFollowUpHistory({ leadId }: { leadId: string }) {
   const lang = useLang();
   const get = useServerFn(leadFollowUpHistory);
   const res = useQuery({ queryKey: ['lead-follow-up-history', leadId, adminToken], queryFn: () => get({ data: { leadId, adminToken } }) });
-  const labels: Record<string, string> = lang === 'bn' ? { created: 'ফলো-আপ তৈরি', completed: 'সম্পন্ন', rescheduled: 'সময় বদল', cancelled: 'বাতিল', missed: 'মিস হয়েছে' } : { created: 'Follow-up created', completed: 'Completed', rescheduled: 'Rescheduled', cancelled: 'Cancelled', missed: 'Missed' };
+  const labels: Record<string, string> = lang === 'bn' ? { created: 'ফলো-আপ তৈরি', completed: 'সম্পন্ন', rescheduled: 'সময় বদল', cancelled: 'বাতিল', missed: 'মিস হয়েছে', recovered: 'নতুন recovery follow-up তৈরি' } : { created: 'Follow-up created', completed: 'Completed', rescheduled: 'Rescheduled', cancelled: 'Cancelled', missed: 'Missed', recovered: 'Recovery follow-up created' };
   return <section className="space-y-3 border-y border-border py-4">
     <h3 className="text-sm font-semibold">{lang === 'bn' ? 'স্থায়ী ফলো-আপ ইতিহাস' : 'Permanent follow-up history'}</h3>
     {res.isPending ? <p role="status" className="text-xs text-muted-foreground">{lang === 'bn' ? 'লোড হচ্ছে…' : 'Loading…'}</p> : res.isError ? <p role="alert" className="text-xs text-destructive">{lang === 'bn' ? 'ইতিহাস লোড করা যায়নি' : 'Could not load history'}</p> : !res.data?.length ? <p className="text-xs text-muted-foreground">{lang === 'bn' ? 'ফলো-আপের ইতিহাস নেই' : 'No follow-up history'}</p> : <ol className="space-y-3">{res.data.map(row => <li key={row.id} className="border-l-2 border-border pl-3">
