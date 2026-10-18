@@ -4,8 +4,9 @@
  * are present (e.g. a plain CI checkout).
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { canRunDatabaseWriteTests } from "./helpers/database-test-safety";
 
-const hasService = Boolean(process.env["SUPABASE_URL"] && process.env["SUPABASE_SERVICE_ROLE_KEY"]);
+const hasService = canRunDatabaseWriteTests(process.env);
 
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 
