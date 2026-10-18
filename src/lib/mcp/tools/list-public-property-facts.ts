@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { z } from "zod/v4";
+import { toolShape, z } from "../schema";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
@@ -7,12 +7,12 @@ export default defineTool({
   name: "list_public_property_facts",
   title: "List verified property facts",
   description: "Read verified, currently publishable Winstone project and property facts.",
-  inputSchema: {
+  inputSchema: toolShape({
     geography: z.string().trim().min(2).max(100).optional(),
     limit: z.number().int().min(1).max(100).default(50),
-  },
+  }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ geography, limit }, ctx) => {
+  handler: async ({ geography, limit }: { geography?: string; limit?: number }, ctx) => {
     try {
       await requireAllowedUser(ctx);
       const db = await crmDb();
