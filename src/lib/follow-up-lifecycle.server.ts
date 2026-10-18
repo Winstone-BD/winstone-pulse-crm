@@ -21,3 +21,19 @@ export async function replaceReportFollowUp(agentId: string, reportId: string, p
   if (error) throw new Error(error.message);
   return data;
 }
+
+/** Recovery appends a linked task and action; the missed/overdue original stays unchanged. */
+export async function recoverFollowUp(caller: Caller, input: { eventId: string; reason: string; nextAction: string; scheduledAt: string; key: string }) {
+  validateFollowUpTransition('reschedule', input.reason, input.scheduledAt);
+  if (!input.nextAction.trim()) throw new Error('Next action is required');
+  if (caller.readOnly || caller.scope === 'none' || !caller.profile) throw new Error('Authorized agent required');
+  const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
+  const { data: event, error } = await db.from('follow_up_events').select('id, agent_id, lead_id, status, scheduled_at').eq('id', input.eventId).maybeSingle();
+  if (error || !event) throw new Error('Follow-up not found');
+  if (event.agent_id !== caller.profile.id) throw new Error('This follow-up is not assigned to you');
+  await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(caller.profile.id, event.lead_id);
+  if (!['upcoming', 'due', 'missed'].includes(event.status) || Date.parse(event.scheduled_at) > Date.now()) throw new Error('Only missed or overdue follow-ups can be recovered');
+  const { data, error: failure } = await db.rpc('recover_follow_up_atomic', { _event: event.id, _actor: caller.profile.id, _scheduled_at: input.scheduledAt, _reason: input.reason.trim(), _next_action: input.nextAction.trim(), _key: input.key });
+  if (failure) throw new Error(failure.message);
+  return data;
+}

@@ -103,12 +103,14 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
       const dedupe = <T extends { id: string }>(rows: T[]) => [
         ...new Map(rows.map((r) => [r.id, r])).values(),
       ];
+      const { filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+      const ownIds = new Set(myLeads.map(lead => lead.id as string));
       return {
         profiles: profile.data ?? [],
         leads: myLeads,
-        calls: dedupe(calls.data ?? []),
-        messages: dedupe(messages.data ?? []),
-        events: dedupe(events.data ?? []),
+        calls: filterAssignedActivity(dedupe(calls.data ?? []), ownIds),
+        messages: filterAssignedActivity(dedupe(messages.data ?? []), ownIds),
+        events: filterAssignedActivity(dedupe(events.data ?? []), ownIds),
       };
     }
 
@@ -181,7 +183,7 @@ export const getAudioUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: recording, error: lookupError } = await supabaseAdmin
       .from("call_recordings")
-      .select("audio_url, agent_id")
+      .select("audio_url, agent_id, lead_id")
       .eq("id", data.recordingId)
       .maybeSingle();
     if (lookupError) throw new Error("Could not load this recording");
@@ -189,6 +191,7 @@ export const getAudioUrl = createServerFn({ method: "POST" })
     if (caller.scope === "agent" && recording.agent_id !== caller.profile?.id) {
       throw new Error("This recording belongs to another agent");
     }
+    if (caller.scope === 'agent') await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(caller.profile?.id ?? '', recording.lead_id);
     const { data: signed, error } = await supabaseAdmin.storage
       .from("call-audio")
       .createSignedUrl(recording.audio_url, 5 * 60);

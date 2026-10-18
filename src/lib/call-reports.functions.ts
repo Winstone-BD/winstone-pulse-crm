@@ -97,12 +97,12 @@ export const openMyReport = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lead } = await supabaseAdmin
       .from("leads")
-      .select("id, assigned_to")
+      .select("id, assigned_to, assigned_agent_id")
       .eq("id", data.leadId)
       .maybeSingle();
     if (!lead) throw new Error("লিড পাওয়া যায়নি");
     // Only the lead's owner may open a report for it — never someone else's lead.
-    if (lead.assigned_to !== me.id) throw new Error("এই লিড আপনার তালিকায় নেই");
+    if ((lead.assigned_to ?? lead.assigned_agent_id) !== me.id) throw new Error("এই লিড আপনার তালিকায় নেই");
     const { openCallReport } = await import("@/lib/call-reports.server");
     const report = await openCallReport({
       leadId: data.leadId,
@@ -483,7 +483,10 @@ export const myCallReports = createServerFn({ method: "POST" })
       .order("call_ended_at", { ascending: false })
       .limit(data.limit ?? 50);
 
-    const leadIds = [...new Set((reports ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+    const { assignedLeadIds, filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+    const ownIds = await assignedLeadIds(me.id);
+    const visibleReports = filterAssignedActivity(reports ?? [], ownIds);
+    const leadIds = [...new Set(visibleReports.map((r) => r.lead_id).filter(Boolean))] as string[];
     const { data: leads } = leadIds.length
       ? await supabaseAdmin
           .from("leads")
@@ -506,13 +509,13 @@ export const myCallReports = createServerFn({ method: "POST" })
     const { reportEditable } = await import("@/lib/call-reports.server");
     const { compareFollowUpPriority } = await import("@/lib/follow-up-priority");
     return {
-      reports: (reports ?? []).map((r) => ({
+      reports: visibleReports.map((r) => ({
         ...r,
         lead: leadById.get(r.lead_id ?? "") ?? null,
         editable: r.status === "submitted" && reportEditable(r.call_ended_at),
       })),
-      upcoming: [...(upcoming ?? [])].sort((a, b) => compareFollowUpPriority(a, b)),
-      overdueCount: (upcoming ?? []).filter((e) => e.scheduled_at < nowIso).length,
+      upcoming: filterAssignedActivity(upcoming ?? [], ownIds).sort((a, b) => compareFollowUpPriority(a, b)),
+      overdueCount: filterAssignedActivity(upcoming ?? [], ownIds).filter((e) => e.scheduled_at < nowIso).length,
     };
   });
 
@@ -524,6 +527,10 @@ export const summarizeMyReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
     const { briefCallReport } = await import("@/lib/report-summary.server");
+    const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
+    const { data: report } = await db.from('call_reports').select('lead_id, agent_id').eq('id', data.reportId).maybeSingle();
+    if (!report || report.agent_id !== me.id) throw new Error('Report not available');
+    await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(me.id, report.lead_id);
     return briefCallReport(data.reportId, me.id);
   });
 
@@ -544,6 +551,10 @@ export const editMyReport = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const me = await agentOf(data.adminToken ?? null);
     const { editSubmittedReport } = await import("@/lib/call-reports.server");
+    const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
+    const { data: report } = await db.from('call_reports').select('lead_id, agent_id').eq('id', data.reportId).maybeSingle();
+    if (!report || report.agent_id !== me.id) throw new Error('Report not available');
+    await (await import('@/lib/assigned-lead-scope.server')).assertAssignedLead(me.id, report.lead_id);
     return editSubmittedReport({
       reportId: data.reportId,
       agentId: me.id,
@@ -686,9 +697,12 @@ export const listCallReports = createServerFn({ method: "POST" })
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);
 
-    const leadIds = [...new Set((rows ?? []).map((r) => r.lead_id).filter(Boolean))] as string[];
+    const { assignedLeadIds, filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+    const scopedRows = caller.scope === 'agent'
+      ? filterAssignedActivity(rows ?? [], await assignedLeadIds(caller.profile?.id ?? '')) : rows ?? [];
+    const leadIds = [...new Set(scopedRows.map((r) => r.lead_id).filter(Boolean))] as string[];
     const recordingIds = [
-      ...new Set((rows ?? []).map((r) => r.recording_id).filter(Boolean)),
+      ...new Set(scopedRows.map((r) => r.recording_id).filter(Boolean)),
     ] as string[];
 
     const { data: leads } = leadIds.length
@@ -711,7 +725,7 @@ export const listCallReports = createServerFn({ method: "POST" })
     const needle = data.search?.trim().toLowerCase() ?? "";
 
     const { reportEditable } = await import("@/lib/call-reports.server");
-    const reports = (rows ?? [])
+    const reports = scopedRows
       .map((row) => {
         const rec = row.recording_id ? recById.get(row.recording_id) : null;
         const lead = leadById.get(row.lead_id ?? "") ?? null;
@@ -774,6 +788,11 @@ export const myLeadExtras = createServerFn({ method: "POST" })
       .limit(2000);
     if (agentId) follows = follows.eq("agent_id", agentId);
     const [r, f] = await Promise.all([reports, follows]);
+    if (r.error || f.error) throw new Error((r.error ?? f.error)?.message);
+    const { assignedLeadIds, filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+    const ownIds = agentId ? await assignedLeadIds(agentId) : null;
+    const reportRows = ownIds ? filterAssignedActivity(r.data ?? [], ownIds) : r.data ?? [];
+    const followRows = ownIds ? filterAssignedActivity(f.data ?? [], ownIds) : f.data ?? [];
 
     const out = new Map<string, { leadId: string; requirement: string | null; nextFollowUpAt: string | null }>();
     const row = (id: string) => {
@@ -781,8 +800,8 @@ export const myLeadExtras = createServerFn({ method: "POST" })
       out.set(id, existing);
       return existing;
     };
-    for (const rep of r.data ?? []) if (rep.lead_id && !row(rep.lead_id).requirement) row(rep.lead_id).requirement = rep.requirement;
-    for (const ev of f.data ?? []) if (ev.lead_id && !row(ev.lead_id).nextFollowUpAt) row(ev.lead_id).nextFollowUpAt = ev.scheduled_at;
+    for (const rep of reportRows) if (rep.lead_id && !row(rep.lead_id).requirement) row(rep.lead_id).requirement = rep.requirement;
+    for (const ev of followRows) if (ev.lead_id && !row(ev.lead_id).nextFollowUpAt) row(ev.lead_id).nextFollowUpAt = ev.scheduled_at;
     return [...out.values()];
   });
 
@@ -796,4 +815,12 @@ export const rescheduleFollowUp = createServerFn({ method: "POST" })
     const caller = await (await import("@/lib/access.server")).resolveCaller(data.adminToken ?? null);
     await (await import("@/lib/agent-briefing.server")).assertBriefingForCaller(caller);
     return (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, { ...data, action: "reschedule" });
+  });
+
+export const recoverMissedFollowUp = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => TransitionInput.extend({ scheduledAt: z.string().datetime(), nextAction: z.string().trim().min(1).max(2000) }).parse(input))
+  .handler(async ({ data }) => {
+    const caller = await (await import('@/lib/access.server')).resolveCaller(data.adminToken ?? null);
+    await (await import('@/lib/agent-briefing.server')).assertBriefingForCaller(caller);
+    return (await import('@/lib/follow-up-lifecycle.server')).recoverFollowUp(caller, data);
   });
