@@ -27,7 +27,7 @@ function isNewKey(value: string) {
 }
 
 /** Reads the Supabase user id from the bearer token on the current request, if any. */
-async function userIdFromRequest(): Promise<string | null> {
+async function userIdFromRequest(): Promise<{ userId: string; executiveHq: boolean } | null> {
   const request = getRequest();
   const header = request?.headers?.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -41,6 +41,7 @@ async function userIdFromRequest(): Promise<string | null> {
   const client = createClient<Database>(url, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     global: {
+      headers: { Authorization: `Bearer ${token}` },
       fetch: (input, init) => {
         const headers = new Headers(init?.headers);
         if (isNewKey(key) && headers.get("Authorization") === `Bearer ${key}`) {
@@ -54,7 +55,11 @@ async function userIdFromRequest(): Promise<string | null> {
 
   const { data, error } = await client.auth.getClaims(token);
   if (error || !data?.claims?.sub) return null;
-  return String(data.claims.sub);
+  const userId = String(data.claims.sub);
+  const { data: grant, error: grantError } = await client.from("workspace_role_grants")
+    .select("role").eq("user_id", userId).eq("role", "executive_hq").maybeSingle();
+  if (grantError) throw new Error("Account permissions unavailable");
+  return { userId, executiveHq: Boolean(grant) };
 }
 
 /**
@@ -91,8 +96,9 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
     };
   }
 
-  const userId = await userIdFromRequest();
-  if (!userId) return ANON;
+  const identity = await userIdFromRequest();
+  if (!identity) return ANON;
+  const { userId } = identity;
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: profile } = await supabaseAdmin
@@ -111,17 +117,17 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
 
   return {
     scope:
-      profile.role === "admin" ? "authority" : "agent",
+      profile.role === "admin" || identity.executiveHq ? "authority" : "agent",
     profile,
     userId,
     approval,
-    readOnly: false,
+    readOnly: identity.executiveHq && profile.role !== "admin",
   };
 }
 
 /** Authority or coordinator may dispatch leads. */
 export function canDispatch(caller: Caller) {
-  return caller.scope === "authority";
+  return caller.scope === "authority" && !caller.readOnly;
 }
 
 /** Sell Team Admin desks (Abu Haidar). Agent scope + Coordinator Deck intake only. */

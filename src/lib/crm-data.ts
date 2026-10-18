@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { getCrmSnapshot } from "@/lib/crm.functions";
 import { useAdminToken } from "@/lib/local-session";
 import type { SafeProfile } from "@/lib/profile-columns";
+import { useMyAccount } from "@/lib/session";
 
 export type Profile = SafeProfile;
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
@@ -120,11 +121,16 @@ function useLiveCrmRefresh() {
 /** Snapshot for the current device; customer data requires an authority token. */
 export function useSnapshot() {
   const token = useAdminToken();
-  const query = useQuery(snapshotQueryFor({ token }));
+  const { scope, isPending: accountPending } = useMyAccount();
+  const query = useQuery({
+    ...snapshotQueryFor({ token }),
+    queryKey: ["crm-snapshot", token ? "authority" : "session", scope],
+    enabled: !accountPending && scope !== "none",
+  });
   useLiveCrmRefresh();
   return {
     ...(query.data ?? EMPTY_SNAPSHOT),
-    isPending: query.isPending,
+    isPending: accountPending || (scope !== "none" && query.isPending),
     isError: query.isError && !query.data,
     refetch: () => void query.refetch(),
   };
