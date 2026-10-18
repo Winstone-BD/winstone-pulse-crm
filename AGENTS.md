@@ -36,4 +36,4 @@
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - Workspace wrappers and portals inherit src/styles.css tokens; shared Buttons separate actions from accents — why: one palette everywhere.
 - Shared headers stack phone actions, dialogs reserve close-button space, tables contain horizontal scroll — why: improve all workspaces without changing workflows.
-- Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
+- Desk WorkViews are scoped read-only; stages change via reports — why: no second write path.
