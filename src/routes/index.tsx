@@ -147,15 +147,18 @@ function EntryHall() {
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
               {[
-                { icon: Headphones, label: "Manage Your Team" },
-                { icon: BarChart3, label: "Track Sales Pipeline" },
-                { icon: Smartphone, label: "Monitor Call Activity" },
-              ].map(({ icon: Icon, label }) => (
-                <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="grid size-8 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
+                { icon: Headphones, label: "Manage team", sub: "Agents & roles" },
+                { icon: BarChart3, label: "Track pipeline", sub: "Leads & bookings" },
+                { icon: Smartphone, label: "Review calls", sub: "Activity & history" },
+              ].map(({ icon: Icon, label, sub }) => (
+                <span key={label} className="inline-flex items-center gap-2 text-left text-sm font-semibold text-foreground">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
                     <Icon className="size-4" />
                   </span>
-                  {label}
+                  <span className="leading-tight">
+                    {label}
+                    <span className="block text-xs font-normal text-muted-foreground">{sub}</span>
+                  </span>
                 </span>
               ))}
             </div>
