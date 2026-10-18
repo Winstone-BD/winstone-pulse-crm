@@ -49,6 +49,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(appError, { boundary: "tanstack_root_error_component" });
+    window.dispatchEvent(new CustomEvent("winstone:route-error", { detail: appError.message }));
   }, [appError]);
 
   return (

@@ -74,6 +74,7 @@ return match[0];
 }
 var F=window.fetch;if(F){window.fetch=function(){var a=arguments;return F.apply(this,a).then(function(res){try{var u=String(a[0]&&a[0].url||a[0]);if(res.status===500&&u.indexOf("/_serverFn/")>=0){res.clone().text().then(function(t){if(/Invalid server function ID/i.test(t))r("stale-server-fn",u.split("?")[0].slice(-80))}).catch(function(){})}}catch(x){}return res})}}
 window.addEventListener("vite:preloadError",function(e){e.preventDefault();var p=e.payload;var u=p&&(p.src||p.url)||urlFrom(p&&p.message);if(u&&sameOrigin(u)){failingUrl=u}r("preload-error",p&&p.message)});
+window.addEventListener("winstone:route-error",function(e){var m=e.detail;if(!bad(m))return;var u=urlFrom(m);if(u&&sameOrigin(u)){failingUrl=u}r("route-module-error",m)});
 window.addEventListener("error",function(e){var t=e.target;if(t&&t.tagName==="SCRIPT"&&t.type==="module"){failingUrl=t.src;r("script-load-failed",t.src);return}if(bad(e.message)){var u=urlFrom(e.message);if(u&&sameOrigin(u)){failingUrl=u}r("module-error",e.message)}},true);
 window.addEventListener("unhandledrejection",function(e){var m=e.reason&&e.reason.message||e.reason;if(bad(m)){var u=urlFrom(m);if(u&&sameOrigin(u)){failingUrl=u}r("import-rejected",m);return}send("unhandled-rejection",m)});
 window.addEventListener("error",function(e){if(e.target&&e.target!==window)return;if(bad(e.message))return;if(!e.message||/ResizeObserver loop/.test(e.message))return;send("runtime-error",e.message+(e.filename?" @ "+String(e.filename).split("?")[0]+":"+e.lineno:""))});
