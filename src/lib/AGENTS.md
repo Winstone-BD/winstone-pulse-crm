@@ -12,6 +12,7 @@
 - AI summaries (upload/KB/Drive) are cached server-only in ai_summary_cache by content hash; identical content returns the saved copy — why: charge each summary once.
 - Agent snapshots read both owners in one paginated OR query, then filter via leadOwner; agent event history has an agent/time/id index — why: less duplicate reading, unchanged scope.
 - HQ remediation writes are comment-only through hq-review.rules; IT retains status changes — why: review authority must not become operational command authority.
+- HQ lead reviews use hq-lead-review.functions: verify authority and current owner, append a recipient-scoped info notice and lead event; never change lead status/owner or auto-send external messages — why: agent PIN is unnecessary for HQ oversight, not a bypass of agent operational gates.
 - Agent contribution reports (agent_daily_contributions) and HQ reviews (agent_contribution_reviews) are server-only and append-only, accessed only via agent-contribution.functions.ts with resolveCaller scope checks — why: original reports and review history must stay trustworthy.
 - Desk lists read an optional ?from=&to= (Dhaka, inclusive) via src/lib/desk-range.tsx and filter the already-scoped snapshot client-side — why: date filters never widen access.
 - Call-mode shortcuts go through call-shortcuts.ts guards and call the same handlers as the buttons (send.mutate / pickNextEligible); never add a second write path — why: shortcuts must not bypass report validation or gates.
