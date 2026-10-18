@@ -19,6 +19,7 @@ import { TemporaryClosureNotice } from "@/components/crm/TemporaryClosureNotice"
 import { supabase } from "@/integrations/supabase/client";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { isModuleLoadError } from "../lib/module-load-error";
 
 function NotFoundComponent() {
   return (
@@ -39,24 +40,35 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const appError = error instanceof Error ? error : new Error(String(error));
-  console.error(appError);
+  const moduleFailure = isModuleLoadError(appError);
   const router = useRouter();
   useEffect(() => {
+    // Router-caught lazy-import errors do not necessarily reach window.onerror
+    // or Vite's preload event. Feed them into the same bounded recovery path.
+    if (moduleFailure) {
+      window.dispatchEvent(new CustomEvent("winstone:module-load-error", { detail: appError.message }));
+      return;
+    }
+    console.error(appError);
     reportLovableError(appError, { boundary: "tanstack_root_error_component" });
-  }, [appError]);
+  }, [appError, moduleFailure]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {moduleFailure ? "Loading the latest version" : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {moduleFailure ? "Your saved work is unchanged. Please wait, or refresh this page." : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Button
             onClick={() => {
+              if (moduleFailure) {
+                window.location.reload();
+                return;
+              }
               router.invalidate();
               reset();
             }}
