@@ -32,6 +32,7 @@ import { RoleGate } from "@/components/crm/RoleGate";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AppShell } from "@/components/crm/AppShell";
 import { CommandAgentPanel } from "@/components/crm/CommandAgentPanel";
+import { InstructionCopilot } from "@/components/crm/InstructionCopilot";
 import { CopilotDrawer } from "@/components/crm/CopilotDrawer";
 import { SystemCustomizer } from "@/components/crm/SystemCustomizer";
 import { SystemNoticeBar } from "@/components/crm/SystemNoticeBar";
@@ -135,6 +136,7 @@ function SystemBoard() {
       </div>
 
       <SystemNoticeBar surface="it" />
+      <InstructionCopilot surface="system" />
 
       <nav aria-label="IT Console sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:hidden">
         {PAGE_SECTIONS["/system"].map((x) => (

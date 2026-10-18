@@ -85,12 +85,12 @@ export function AllocationTable({ onAssign }: { onAssign: (agentId: string) => v
 }
 
 /** Assign an exact number of leads per agent, one or many at once, with a preview. */
-export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: string | undefined }) {
+export function AssignLeadsWorkspace({ initialAgentId, initialCount }: { initialAgentId?: string | undefined; initialCount?: number | null }) {
   const adminToken = useDeckToken();
   const qc = useQueryClient();
   const alloc = useCoordinatorAllocation();
   const assignFn = useServerFn(assignLeadCounts);
-  const [rows, setRows] = useState<Row[]>(() => [newRow(initialAgentId)]);
+  const [rows, setRows] = useState<Row[]>(() => [{ ...newRow(initialAgentId), count: initialCount ? String(initialCount) : "" }]);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const [confirming, setConfirming] = useState(false);
   const [last, setLast] = useState<{ agentId: string; requested: number; assigned: number }[] | null>(null);

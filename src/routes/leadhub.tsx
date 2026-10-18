@@ -19,6 +19,8 @@ import { LeadHubTokenScope, useLeadHubToken } from "@/lib/local-session";
 import { useMyAccount } from "@/lib/session";
 import { AdminPinDialog } from "@/components/crm/AdminPinDialog";
 import { useT } from "@/lib/i18n";
+import { InstructionCopilot } from "@/components/crm/InstructionCopilot";
+import { useCoordinatorAllocation } from "@/components/crm/deck/AssignLeadsWorkspace";
 
 const SECTIONS = [
   { key: "overview", label: { bn: "ওভারভিউ", en: "Overview" }, icon: ShieldCheck },
@@ -79,6 +81,9 @@ function LeadHubGate() {
 function LeadHubWorkspace() {
   const [section, setSection] = useState<Section>("overview");
   const [assignFor, setAssignFor] = useState<string>();
+  const [assignCount, setAssignCount] = useState<number | null>(null);
+  const [draftKey, setDraftKey] = useState(0);
+  const allocation = useCoordinatorAllocation();
   const agentOptions: { id: string; name: string }[] = [];
   const t = useT();
 
@@ -89,6 +94,12 @@ function LeadHubWorkspace() {
         <h1 className="text-2xl font-bold">LeadHub Nexus</h1>
         <p className="text-sm text-muted-foreground">{t({ bn: "ইমপোর্ট → ঠিকঠাক করা → পরিচয় মেলানো → মূল লিড ডেটাবেস → এজেন্টে বণ্টন", en: "Import → normalize → identity resolve → Canonical Lead Database → agent assignment" })}</p>
       </header>
+      <InstructionCopilot surface="leadhub" onAssignment={(employeeId, count) => {
+        setAssignFor(allocation.data?.agents.find(agent => agent.employeeId?.toUpperCase() === employeeId)?.id);
+        setAssignCount(count);
+        setDraftKey(value => value + 1);
+        setSection("assign");
+      }} />
       <nav aria-label="LeadHub Nexus" className="flex gap-1 overflow-x-auto border-b border-border pb-2">
         {SECTIONS.map(({ key, label, icon: Icon }) => (
           <Button key={key} size="sm" variant={section === key ? "default" : "ghost"} onClick={() => setSection(key)}>
@@ -100,7 +111,7 @@ function LeadHubWorkspace() {
       {section === "overview" && <><DeckKpis /><AllocationTable onAssign={(id) => { setAssignFor(id); setSection("assign"); }} /></>}
       {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
       {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title={t({ bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" })} />}
-      {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
+      {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={`${assignFor ?? "all"}-${draftKey}`} initialAgentId={assignFor} initialCount={assignCount} /></div>}
       {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title={t({ bn: "ডুপ্লিকেট / আলাদা রাখা রেকর্ড", en: "Duplicate / parked records" })} /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title={t({ bn: "ডেটার মান যাচাই", en: "Data quality review" })} /></div>}
     </div>
   );
