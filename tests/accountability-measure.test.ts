@@ -1,0 +1,6 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const s=vi.hoisted(()=>({ submitted:false, queryFilters:[] as string[] }));
+vi.mock("@/integrations/supabase/client.server",()=>({supabaseAdmin:{from(table:string){const q:Record<string,unknown>={};for(const m of ["select","in","gte","lte","limit","or","is"])q[m]=()=>q;q.eq=(k:string,v:string)=>{s.queryFilters.push(`${k}:${v}`);return q;};q.then=(r:(a:unknown)=>void)=>r({error:null,count:0,data:table==="leads"?[{id:"l1",status:"contacted",work_state:"completed",updated_at:"2026-10-18T00:00:00Z",assignment_source:"leadhub"}]:table==="call_reports" && s.submitted?[{lead_id:"l1"}]:[]});return q;}}}));
+beforeEach(()=>{s.submitted=false;s.queryFilters=[];});
+it("mutable completed lead state cannot substitute for a submitted report",async()=>{const{measureAgentDay}=await import("@/lib/accountability.server");expect(await measureAgentDay("a1","2026-10-18")).toMatchObject({completed:0,pending:1});expect(s.queryFilters).toContain("status:submitted");});
+it("submitted report counts the lead exactly once",async()=>{s.submitted=true;const{measureAgentDay}=await import("@/lib/accountability.server");expect(await measureAgentDay("a1","2026-10-18")).toMatchObject({completed:1,pending:0});});
