@@ -84,14 +84,19 @@ export function CommandAgentPanel({ surface }: { surface: Surface }) {
         const result = await ask({
           data: { adminToken: getAdminToken(), surface, question: value, history },
         });
+        // A stale tab or interrupted request can resolve with no body; show an
+        // error on this turn instead of crashing the whole page.
+        if (!result || typeof result.answer !== "string") {
+          throw new Error("উত্তর আসেনি — পেজটি রিফ্রেশ করে আবার চেষ্টা করুন");
+        }
         setTurns((prev) =>
           prev.map((turn) =>
             turn.id === id
               ? {
                   ...turn,
                   answer: result.answer,
-                  facts: result.facts,
-                  actions: result.actions as Action[],
+                  facts: Array.isArray(result.facts) ? result.facts : [],
+                  actions: (Array.isArray(result.actions) ? result.actions : []) as Action[],
                 }
               : turn,
           ),
