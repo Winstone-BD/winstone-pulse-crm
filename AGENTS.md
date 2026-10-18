@@ -26,15 +26,12 @@
 - Bookings start `approval_status='pending'`; only HQ/IT approval (server-checked authority, decision final via trigger) queues the signed OS relay event — why: HQ gatekeeps what reaches Winstone OS.
 - Knowledge Hub (winstonebd.com) data enters the CRM only as public pages (website_pages), verbatim official RSS news (market_news origin='official') and signed `site_visit.requested` events on /api/public/os/events into server-only website_visit_requests; a request becomes a site_visit only when the agent/HQ confirms it — why: no invented facts, one verified bridge.
 - Vite pre-bundles the TanStack router-core/seroval/h3-v2 deps in vite.config optimizeDeps.include — why: late discovery re-optimized on every cold start and broke open tabs (stale chunks / invalid server-fn IDs).
-- Restart recovery is regression-checked by scripts/restart-recovery-check.py (bun run test:restart; sandbox-only, kills local Vite) — why: blank screens after restarts must be caught by a real restart, not unit tests.
-- Module recovery coalesces concurrent failures and bounds each availability probe with a timeout — why: duplicate browser events and hanging requests must not loop reloads or strand a blank tab.
-- Router-caught module import failures dispatch the shared recovery event instead of being reported immediately as fatal crashes — why: lazy-route errors may be caught before browser global error listeners see them.
+- Module recovery: router-caught import failures dispatch the shared recovery event; recovery coalesces failures and times out probes; regression-checked by bun run test:restart (sandbox-only) — why: no reload loops or blank tabs after restarts.
 - Live tests needing a signed-in staff user use tests/fixtures/staff-session.ts (reuses an existing unexpired session, never creates users or prints tokens) — why: preview and live share one database.
 - Board live refresh coalesces realtime changes into one snapshot reload per 8s and hidden tabs only mark it stale — why: per-change full-floor reloads in every tab were the top database load.
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
-- Workspace wrappers and portals inherit src/styles.css tokens; shared Buttons separate actions from accents — why: one palette everywhere.
-- Shared headers stack phone actions, dialogs reserve close-button space, tables contain horizontal scroll — why: improve all workspaces without changing workflows.
+- Wrappers/portals inherit src/styles.css tokens; Buttons separate actions from accents; headers stack phone actions, dialogs reserve close space — why: one palette, phone-safe layouts.
 - Desk WorkViews are scoped read-only; stages change via reports — why: no second write path.
 - Fonts are self-hosted: woff2 files live in public/fonts with @font-face in src/styles.css; never re-add the Google Fonts stylesheet link — why: external render-blocking CSS was the top page-speed cost.
