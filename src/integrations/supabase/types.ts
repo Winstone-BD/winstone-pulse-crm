@@ -1851,6 +1851,13 @@ export type Database = {
             foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
             columns: ["parent_follow_up_id"]
             isOneToOne: false
+            referencedRelation: "current_follow_up_work_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
             referencedRelation: "follow_up_events"
             referencedColumns: ["id"]
           },
@@ -6026,6 +6033,159 @@ export type Database = {
             columns: ["parent_follow_up_id"]
             isOneToOne: false
             referencedRelation: "active_follow_up_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "current_follow_up_work_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "follow_up_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "call_recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "call_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      current_follow_up_work_items: {
+        Row: {
+          agent_id: string | null
+          category: string | null
+          completed_at: string | null
+          correlation_id: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_response: string | null
+          id: string | null
+          idempotency_key: string | null
+          lead_id: string | null
+          next_action: string | null
+          note: string | null
+          notified_at: string | null
+          outcome: string | null
+          parent_follow_up_id: string | null
+          phone_number: string | null
+          previous_call_id: string | null
+          priority: string | null
+          reason_code: string | null
+          recording_id: string | null
+          reminder_minutes: number | null
+          report_id: string | null
+          reschedule_count: number | null
+          scheduled_at: string | null
+          status: string | null
+          transition_actor: string | null
+          transition_key: string | null
+          transition_reason: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          category?: string | null
+          completed_at?: string | null
+          correlation_id?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_response?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          lead_id?: string | null
+          next_action?: string | null
+          note?: string | null
+          notified_at?: string | null
+          outcome?: string | null
+          parent_follow_up_id?: string | null
+          phone_number?: string | null
+          previous_call_id?: string | null
+          priority?: string | null
+          reason_code?: string | null
+          recording_id?: string | null
+          reminder_minutes?: number | null
+          report_id?: string | null
+          reschedule_count?: number | null
+          scheduled_at?: string | null
+          status?: string | null
+          transition_actor?: string | null
+          transition_key?: string | null
+          transition_reason?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          category?: string | null
+          completed_at?: string | null
+          correlation_id?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_response?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          lead_id?: string | null
+          next_action?: string | null
+          note?: string | null
+          notified_at?: string | null
+          outcome?: string | null
+          parent_follow_up_id?: string | null
+          phone_number?: string | null
+          previous_call_id?: string | null
+          priority?: string | null
+          reason_code?: string | null
+          recording_id?: string | null
+          reminder_minutes?: number | null
+          report_id?: string | null
+          reschedule_count?: number | null
+          scheduled_at?: string | null
+          status?: string | null
+          transition_actor?: string | null
+          transition_key?: string | null
+          transition_reason?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_events_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "active_follow_up_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_events_parent_follow_up_id_fkey"
+            columns: ["parent_follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "current_follow_up_work_items"
             referencedColumns: ["id"]
           },
           {
