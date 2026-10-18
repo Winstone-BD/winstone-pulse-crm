@@ -39,7 +39,7 @@ import { FactsBoard } from "@/components/crm/sales-intel/SalesIntelPanels";
 import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReviewPanel";
 import { NeglectDisputePanel } from "@/components/crm/LeadNeglectPanel";
 import { SocialHqPanel } from "@/components/crm/social/SocialHqPanel";
-import { ReportsBoard } from "@/routes/reports";
+import { ReportsBoard } from "@/components/crm/reports/ReportsBoard";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
