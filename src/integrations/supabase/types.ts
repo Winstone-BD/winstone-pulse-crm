@@ -5831,6 +5831,19 @@ export type Database = {
           lead_id: string
         }[]
       }
+      finalize_call_report_atomic: {
+        Args: {
+          _agent: string
+          _classification: Json
+          _evaluation_detail: string
+          _followup: Json
+          _lead_patch: Json
+          _outcome: string
+          _report: string
+          _report_patch: Json
+        }
+        Returns: Json
+      }
       has_active_license: { Args: { check_env?: string }; Returns: boolean }
       has_pending_call_report: { Args: { _agent_id: string }; Returns: boolean }
       has_role: {
