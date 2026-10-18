@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { z } from "zod";
+import { toolShape, z } from "../schema";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
@@ -8,12 +8,12 @@ export default defineTool({
   title: "Lead history",
   description:
     "Full history of one lead: its details plus every call recording summary and WhatsApp message logged against it.",
-  inputSchema: {
+  inputSchema: toolShape({
     lead_id: z.string().uuid().optional().describe("The lead's ID."),
     phone_number: z.string().trim().min(5).max(24).optional().describe("The lead's phone number."),
-  },
+  }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ lead_id, phone_number }, ctx) => {
+  handler: async ({ lead_id, phone_number }: { lead_id?: string; phone_number?: string }, ctx) => {
     try {
       await requireAllowedUser(ctx);
       if (!lead_id && !phone_number) throw new ToolError("Give either lead_id or phone_number.");

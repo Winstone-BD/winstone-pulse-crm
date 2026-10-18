@@ -1,5 +1,5 @@
 import { ToolError, defineTool } from "@lovable.dev/mcp-js";
-import { z } from "zod";
+import { toolShape, z } from "../schema";
 
 import { crmDb, requireAllowedUser, text } from "../access";
 
@@ -8,7 +8,7 @@ export default defineTool({
   title: "List leads",
   description:
     "List leads, newest activity first. Filter by stage, source, assigned employee ID or a name/phone search.",
-  inputSchema: {
+  inputSchema: toolShape({
     status: z
       .enum(["pending", "contacted", "follow_up", "closed"])
       .optional()
@@ -27,9 +27,18 @@ export default defineTool({
       .optional()
       .describe("Match on lead name or phone number."),
     limit: z.number().int().min(1).max(200).default(50),
-  },
+  }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ status, source, employee_id, search, limit }, ctx) => {
+  handler: async (
+    { status, source, employee_id, search, limit }: {
+      status?: "pending" | "contacted" | "follow_up" | "closed";
+      source?: string;
+      employee_id?: string;
+      search?: string;
+      limit?: number;
+    },
+    ctx,
+  ) => {
     try {
       await requireAllowedUser(ctx);
       const db = await crmDb();
@@ -51,7 +60,7 @@ export default defineTool({
           "id, name, phone_number, company, status, outcome_category, call_attempts, source, assigned_to, notes, created_at, updated_at",
         )
         .order("updated_at", { ascending: false })
-        .limit(limit);
+        .limit(limit ?? 50);
       if (status) query = query.eq("status", status);
       if (source) query = query.eq("source", source);
       if (assignedTo) query = query.eq("assigned_to", assignedTo);

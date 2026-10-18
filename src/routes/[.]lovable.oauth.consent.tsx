@@ -24,7 +24,9 @@ type AuthorizationDetails = {
   redirect_to?: string;
 };
 
-function oauth(): OauthNamespace {
+// Named `oauthApi` so the TanStack route wrapper does not treat this local
+// helper as the `oauth` route-option export and fail to import it.
+function oauthApi(): OauthNamespace {
   return (supabase.auth as unknown as { oauth: OauthNamespace }).oauth;
 }
 
@@ -41,7 +43,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) return { signedIn: false as const, details: null };
 
-    const { data, error } = await oauth().getAuthorizationDetails(authorizationId);
+    const { data, error } = await oauthApi().getAuthorizationDetails(authorizationId);
     if (error) throw new Error(error.message);
     const immediate = data?.redirect_url ?? data?.redirect_to;
     if (immediate && !data?.client) throw redirect({ href: immediate });
@@ -122,8 +124,8 @@ function Consent() {
     setBusy(true);
     setError(null);
     const { data, error: decisionError } = approve
-      ? await oauth().approveAuthorization(authorization_id)
-      : await oauth().denyAuthorization(authorization_id);
+      ? await oauthApi().approveAuthorization(authorization_id)
+      : await oauthApi().denyAuthorization(authorization_id);
     if (decisionError) {
       setBusy(false);
       setError(decisionError.message);
