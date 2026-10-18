@@ -167,3 +167,7 @@
 - [ ] Email .ics invite to the agent per event from notify.crm.winstonebd.com — blocked: DNS (TXT + 2 NS) not yet verified
 - [x] Workspace device cards use uploaded photos
 - [x] Android↔web API compatibility test (tests/android-api-compatibility.test.ts): login, report, recording upload, reminders — 7 checks pass; static source-level contract, live device flow unverified.
+- [x] Gateway first download: reports board moved out of route file so charts no longer load on "/" (live Lighthouse 70, was 65)
+- [x] Live "IT Console" rename verified 2026-10-18
+- [ ] Recording audio recovery from agents' phones — blocked: needs agents to run phone-recorder check/upload
+- [ ] 5 call reports with impossible durations (up to 234083s, no device duration) — needs HQ/IT review; data left untouched
