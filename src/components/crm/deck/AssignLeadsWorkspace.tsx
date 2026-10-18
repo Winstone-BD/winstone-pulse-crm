@@ -27,6 +27,9 @@ export function useCoordinatorAllocation() {
     queryKey: ["coord-allocation", adminToken ? "tok" : "session"],
     queryFn: () => fn({ data: { adminToken } }),
     refetchInterval: 60_000,
+    // A request cut off by a server restart returns 500 once; retry quietly.
+    retry: 2,
+    retryDelay: (n) => 1000 * (n + 1),
   });
 }
 
