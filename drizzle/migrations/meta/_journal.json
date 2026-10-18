@@ -960,6 +960,13 @@
       "when": 1792314973324,
       "tag": "0136_extra_grants_idempotent_immutable",
       "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1792315623759,
+      "tag": "0137_bulk_extra_batch_lock",
+      "breakpoints": true
     }
   ]
 }
