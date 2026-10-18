@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Publish corrected HQ/own-agent permission boundaries to crm.winstonebd.com; verify live report and follow-up edit paths without changing roles or fabricating records. Full submissions require an authorized agent session and truthful input.
 - [x] Free-first Winstone AI instruction copilot added to Nexus/IT: editable copy-only build requests and canonical assignment-form proposals; signed-in WIN2607 + quantity 25 verified, quota correctly prevents extra assignment, phone layout verified. No AI calls or customer writes; unpublished.
 - [x] Nexus/IT vault PIN isolation corrected; live genuine Nexus and IT PIN unlock, Nexus database/history/assignment form, HQ populated reads and IT account view passed without page errors/5xx. Current live Agent session has no owned leads, so this does not verify populated agent work. Unpublished fixes.
 - [x] Confirmed PIN policy implemented with atomic server guard: five failures/five-minute pause, account+surface (anonymous signed session, never shared IP), success reset, remaining-time UI. Actual isolated browser verified reset after four failures, block on fifth, reload cannot bypass, access returns after five minutes. Existing roles/PINs/customer data unchanged.
