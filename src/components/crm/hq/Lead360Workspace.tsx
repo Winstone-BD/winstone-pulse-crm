@@ -177,6 +177,8 @@ const KIND_STYLE: Record<TimelineItem["kind"], string> = {
   call_not_connected: "bg-destructive/10 text-destructive",
   follow_up_created: "bg-primary/10 text-primary",
   follow_up_rescheduled: "bg-warning/15 text-warning",
+  follow_up_cancelled: "bg-muted text-muted-foreground",
+  follow_up_missed: "bg-destructive/15 text-destructive",
   follow_up_completed: "bg-success/15 text-success",
   follow_up_updated: "bg-primary/10 text-primary",
   status_changed: "bg-accent text-foreground",

@@ -185,7 +185,7 @@ async function loadFacts(leadId: string): Promise<{ facts: BriefFacts; inventory
       .from("follow_up_events")
       .select("scheduled_at")
       .eq("lead_id", leadId)
-      .neq("status", "done")
+      .in("status", ["upcoming", "due", "missed"])
       .order("scheduled_at", { ascending: true })
       .limit(1),
     supabaseAdmin.from("inventory_requirements").select("label").eq("active", true).limit(60),

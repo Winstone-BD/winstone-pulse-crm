@@ -1,206 +1,88 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, Check } from "lucide-react";
-import { useMemo, useState } from "react";
+import { CalendarClock, Check, RefreshCw, X, AlertTriangle } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { WebCallButton } from "@/components/crm/WebCallButton";
 import { WhatsAppAction } from "@/components/crm/WhatsAppAction";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { completeFollowUp, myFollowUps, rescheduleFollowUp } from "@/lib/call-reports.functions";
-import { dhakaDay } from "@/lib/lead-groups";
+import { completeFollowUp, myFollowUps, rescheduleFollowUp, changeFollowUp } from "@/lib/call-reports.functions";
+import { isOpenFollowUp, type FollowUpAction, type FollowUpHealth } from "@/lib/follow-up-lifecycle";
 import { useAdminToken } from "@/lib/local-session";
-import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
+import { useLang } from "@/lib/i18n";
 
-type View = "day" | "week" | "month" | "agenda";
-
-const STATE_LABEL: Record<string, string> = {
-  overdue: "সময় পার হয়েছে",
-  due: "এখনই করার সময়",
-  upcoming: "আসছে",
-  done: "সম্পন্ন",
-};
-
-const STATE_TONE: Record<string, string> = {
-  overdue: "bg-destructive/15 text-destructive",
-  due: "bg-warning/15 text-warning",
-  upcoming: "bg-primary/10 text-primary",
-  done: "bg-muted text-muted-foreground",
-};
-
-function rangeFor(view: View) {
-  const from = new Date();
-  const to = new Date();
-  from.setHours(0, 0, 0, 0);
-  // Reach back 30 days so every open overdue follow-up stays visible.
-  from.setDate(from.getDate() - 30);
-  if (view === "day") to.setHours(23, 59, 59, 999);
-  else if (view === "week") to.setDate(to.getDate() + 7);
-  else if (view === "month") to.setDate(to.getDate() + 31);
-  else to.setDate(to.getDate() + 90);
-  return { fromIso: from.toISOString(), toIso: to.toISOString() };
-}
-
-/** Follow-up calendar: day / week / month / agenda over follow_up_events. */
+const tones: Record<string, string> = { overdue: "text-destructive", due_today: "text-warning", completed: "text-success", upcoming: "text-info", cancelled: "text-muted-foreground", rescheduled: "text-muted-foreground" };
 export function FollowUpCalendar() {
   const adminToken = useAdminToken();
+  const lang = useLang();
+  const t = (bn: string, en: string) => lang === "bn" ? bn : en;
+  const labels: Record<FollowUpHealth, string> = { overdue: t("সময় পার হয়েছে", "Overdue"), due_today: t("আজ করতে হবে", "Due Today"), completed: t("সম্পন্ন", "Completed"), upcoming: t("আসছে", "Upcoming"), cancelled: t("বাতিল", "Cancelled"), rescheduled: t("সময় পুনর্নির্ধারিত", "Rescheduled") };
+  const actions: Record<FollowUpAction, string> = { complete: t("সম্পন্ন করুন", "Complete"), reschedule: t("সময় বদলান", "Reschedule"), cancel: t("বাতিল করুন", "Cancel follow-up"), miss: t("মিস হয়েছে", "Mark missed") };
   const queryClient = useQueryClient();
   const fetchEvents = useServerFn(myFollowUps);
   const done = useServerFn(completeFollowUp);
-  const moveFn = useServerFn(rescheduleFollowUp);
-  const [editing, setEditing] = useState<string | null>(null);
+  const move = useServerFn(rescheduleFollowUp);
+  const change = useServerFn(changeFollowUp);
+  const [filter, setFilter] = useState<FollowUpHealth | "all">("all");
+  const [editing, setEditing] = useState<{ id: string; action: FollowUpAction; key: string } | null>(null);
+  const [reason, setReason] = useState("");
   const [newAt, setNewAt] = useState("");
-  const move = useMutation({
-    mutationFn: (input: { eventId: string; at: string }) =>
-      moveFn({ data: { adminToken, eventId: input.eventId, scheduledAt: new Date(input.at).toISOString() } }),
+  const events = useQuery({ queryKey: ["follow-ups", "health", adminToken ? "pin" : "session"], queryFn: () => fetchEvents({ data: { adminToken } }), refetchInterval: 60_000 });
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      const data = { adminToken, eventId: editing.id, reason, key: editing.key };
+      if (editing.action === "complete") return done({ data });
+      if (editing.action === "reschedule") return move({ data: { ...data, scheduledAt: new Date(`${newAt}:00+06:00`).toISOString() } });
+      return change({ data: { ...data, action: editing.action } });
+    },
     onSuccess: () => {
-      toast.success("ফলো-আপের সময় বদলানো হয়েছে");
       setEditing(null);
-      void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
-      void queryClient.invalidateQueries({ queryKey: ["followup-reminders"] });
-      void queryClient.invalidateQueries({ queryKey: ["lead-extras"] });
+      toast.success(t("ফলো-আপের ইতিহাস সংরক্ষিত হয়েছে", "Follow-up history saved"));
+      for (const key of ["follow-ups", "followup-reminders", "lead-extras", "lead360", "follow-up-history", "crm-snapshot"]) void queryClient.invalidateQueries({ queryKey: [key] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
-  const [view, setView] = useState<View>("day");
-
-  const range = useMemo(() => rangeFor(view), [view]);
-
-  const events = useQuery({
-    queryKey: ["follow-ups", view, adminToken ? "pin" : "session"],
-    queryFn: () => fetchEvents({ data: { adminToken, ...range } }),
-    refetchInterval: 60_000,
-  });
-
-  const finish = useMutation({
-    mutationFn: (eventId: string) => done({ data: { adminToken, eventId } }),
-    onSuccess: () => {
-      toast.success("ফলো-আপ সম্পন্ন হিসেবে চিহ্নিত হলো");
-      void queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const today = dhakaDay(Date.now());
-  // Past events only matter while still open; finished old ones drop out.
-  const rows = (events.data ?? []).filter(
-    (row) => row.state !== "done" || dhakaDay(row.scheduled_at) >= today,
-  );
-  const overdue = rows.filter((row) => row.state === "overdue").length;
-  const due = rows.filter((row) => row.state === "due").length;
-
-  return (
-    <section className="card-elevated space-y-4 p-4">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-1.5 text-sm font-bold tracking-tight">
-            <CalendarClock className="size-4" /> ফলো-আপ ক্যালেন্ডার
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {overdue > 0 ? `${overdue}টি সময় পার হয়েছে · ` : ""}
-            {due > 0 ? `${due}টি এখনই করার সময় · ` : ""}
-            রিমাইন্ডার কল/মেসেজের ৩০ মিনিট আগে — ফোনে অ্যালার্ম আসবে।
-          </p>
-        </div>
-        <Tabs value={view} onValueChange={(value) => setView(value as View)}>
-          <TabsList>
-            <TabsTrigger value="day">দিন</TabsTrigger>
-            <TabsTrigger value="week">সপ্তাহ</TabsTrigger>
-            <TabsTrigger value="month">মাস</TabsTrigger>
-            <TabsTrigger value="agenda">তালিকা</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </header>
-
-      {rows.length === 0 ? (
-        <p className="rounded-lg bg-muted px-3 py-6 text-center text-xs text-muted-foreground">
-          এই সময়ের মধ্যে কোনো ফলো-আপ নেই।
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {rows.map((event) => (
-            <li
-              key={event.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {event.customer_name ?? "ক্রেতা"}{" "}
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {event.phone_number ?? ""}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(event.scheduled_at).toLocaleString("bn-BD")} · {event.category}
-                  {event.priority ? ` · ${FOLLOW_UP_PRIORITY_LABEL[event.priority] ?? event.priority}` : ""}
-                </p>
-                {event.note ? <p className="mt-1 text-xs">{event.note}</p> : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className={STATE_TONE[event.state]}>
-                  {event.state === "overdue" ? "OVERDUE FOLLOW-UP" : STATE_LABEL[event.state]}
-                </Badge>
-                {event.phone_number ? (
-                  <>
-                    {/* Every follow-up call goes through the report gate. */}
-                    <WebCallButton
-                      leadId={event.lead_id ?? null}
-                      phone={event.phone_number}
-                      name={event.customer_name ?? null}
-                      label="কল"
-                      className="h-8 flex-none rounded-lg px-3 text-xs"
-                    />
-                    <WhatsAppAction
-                      phone={event.phone_number}
-                      leadId={event.lead_id ?? null}
-                      label="মেসেজ"
-                      variant="ghost"
-                    />
-                  </>
-                ) : null}
-                {event.status !== "done" && editing === event.id ? (
-                  <span className="flex items-center gap-1">
-                    <input
-                      type="datetime-local"
-                      aria-label="নতুন সময়"
-                      value={newAt}
-                      onChange={(e) => setNewAt(e.target.value)}
-                      className="h-8 rounded-md border border-border bg-card px-2 text-xs"
-                    />
-                    <Button
-                      size="sm"
-                      disabled={!newAt || move.isPending}
-                      onClick={() => move.mutate({ eventId: event.id, at: newAt })}
-                    >
-                      সেভ
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
-                      বাতিল
-                    </Button>
-                  </span>
-                ) : event.status !== "done" ? (
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(event.id); setNewAt(""); }}>
-                    সময় বদল
-                  </Button>
-                ) : null}
-                {event.status !== "done" ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1"
-                    disabled={finish.isPending}
-                    onClick={() => finish.mutate(event.id)}
-                  >
-                    <Check className="size-3.5" /> হয়েছে
-                  </Button>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+  const all = events.data ?? [];
+  const rows = all.filter(row => filter === "all" || row.health === filter);
+  const start = (id: string, action: FollowUpAction) => { setReason(""); setNewAt(""); setEditing({ id, action, key: crypto.randomUUID() }); };
+  return <section className="min-w-0 space-y-4 border-y border-border py-4">
+    <header className="flex flex-wrap items-center justify-between gap-2">
+      <h2 className="flex items-center gap-2 font-semibold"><CalendarClock className="size-4 text-gold" />{t("ফলো-আপ স্বাস্থ্য", "Follow-up Health")}</h2>
+      <Button variant="ghost" size="sm" onClick={() => setFilter("all")} aria-pressed={filter === "all"}>{t("সব ইতিহাস", "All history")}</Button>
+    </header>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      {(["overdue", "due_today", "completed", "upcoming"] as const).map(key => <Button key={key} variant="outline" className="h-auto min-h-16 flex-col items-start gap-1 bg-card p-3" aria-pressed={filter === key} onClick={() => setFilter(key)}>
+        <span className={tones[key]}>{labels[key]}</span><span className="text-xl font-semibold tabular-nums">{all.filter(row => row.health === key).length}</span>
+      </Button>)}
+    </div>
+    {events.isPending ? <p role="status" className="text-sm text-muted-foreground">{t("লোড হচ্ছে…", "Loading…")}</p> : events.isError ? <div role="alert"><p className="text-sm text-destructive">{t("ফলো-আপ লোড করা যায়নি", "Could not load follow-ups")}</p><Button variant="outline" onClick={() => void events.refetch()}>{t("আবার চেষ্টা", "Retry")}</Button></div> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">{t("এই তালিকায় কোনো ফলো-আপ নেই", "No follow-ups in this list")}</p> : <ul className="max-h-[640px] space-y-2 overflow-y-auto">
+      {rows.map(event => <li key={event.id} className="min-w-0 space-y-2 rounded-lg border border-border bg-card p-3">
+        <div className="flex flex-wrap justify-between gap-2"><p className="break-words font-semibold">{event.customer_name || t("ক্রেতা", "Customer")} <span className="text-xs font-normal text-muted-foreground">{event.phone_number}</span></p><Badge variant="secondary" className={tones[event.health]}>{event.status === "missed" ? t("মিস হয়েছে · সময় পার", "Missed · Overdue") : labels[event.health]}</Badge></div>
+        <p className="text-xs text-muted-foreground">{new Date(event.scheduled_at).toLocaleString(lang === "bn" ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka" })} · {event.category}</p>
+        {event.next_action || event.note ? <p className="break-words text-sm">{event.next_action || event.note}</p> : null}
+        {event.transition_reason ? <p className="break-words text-sm"><span className="font-semibold">{t("ফলাফল / কারণ", "Outcome / reason")}: </span>{event.transition_reason}</p> : null}
+        {event.parent_follow_up_id ? <p className="break-all text-xs text-muted-foreground">{t("আগের ফলো-আপ", "Previous follow-up")}: {event.parent_follow_up_id}</p> : null}
+        {isOpenFollowUp(event.status) && <div className="flex flex-wrap gap-2">
+          {event.phone_number && <><WebCallButton leadId={event.lead_id} phone={event.phone_number} name={event.customer_name} label={t("কল", "Call")} /><WhatsAppAction phone={event.phone_number} leadId={event.lead_id} label={t("মেসেজ", "Message")} variant="ghost" /></>}
+          <Button size="sm" variant="outline" onClick={() => start(event.id, "complete")}><Check className="size-4" />{actions.complete}</Button>
+          <Button size="sm" variant="ghost" onClick={() => start(event.id, "reschedule")}><RefreshCw className="size-4" />{actions.reschedule}</Button>
+          <Button size="sm" variant="ghost" onClick={() => start(event.id, "cancel")}><X className="size-4" />{actions.cancel}</Button>
+          {event.health === "overdue" && event.status !== "missed" && <Button size="sm" variant="ghost" onClick={() => start(event.id, "miss")}><AlertTriangle className="size-4" />{actions.miss}</Button>}
+        </div>}
+      </li>)}
+    </ul>}
+    <Dialog open={Boolean(editing)} onOpenChange={open => { if (!open && !mutation.isPending) setEditing(null); }}><DialogContent><DialogHeader><DialogTitle>{editing ? actions[editing.action] : ""}</DialogTitle></DialogHeader>
+      <form className="space-y-4" onSubmit={e => { e.preventDefault(); mutation.mutate(); }}>
+        {editing?.action === "reschedule" && <div className="space-y-2"><Label htmlFor="follow-up-at">{t("নতুন তারিখ ও সময় (ঢাকা)", "New date and time (Dhaka)")}</Label><Input id="follow-up-at" type="datetime-local" required value={newAt} onChange={e => setNewAt(e.target.value)} /></div>}
+        <div className="space-y-2"><Label htmlFor="follow-up-reason">{t("কারণ / ফলাফল", "Reason / outcome")} *</Label><Textarea id="follow-up-reason" required maxLength={2000} value={reason} onChange={e => setReason(e.target.value)} /></div>
+        <DialogFooter><Button type="button" variant="outline" disabled={mutation.isPending} onClick={() => setEditing(null)}>{t("ফিরুন", "Back")}</Button><Button type="submit" disabled={mutation.isPending || !reason.trim() || (editing?.action === "reschedule" && !newAt)} aria-busy={mutation.isPending}>{t("সংরক্ষণ", "Save")}</Button></DialogFooter>
+      </form>
+    </DialogContent></Dialog>
+  </section>;
 }

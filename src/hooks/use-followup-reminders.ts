@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
@@ -96,7 +97,7 @@ export function useFollowUpReminders(enabled: boolean) {
     if (onActiveCall()) return;
 
     for (const event of events.data) {
-      if (event.status === "done") continue;
+      if (!isOpenFollowUp(event.status)) continue;
       const at = new Date(event.scheduled_at).getTime();
       if (at < now - 5 * 60_000) {
         // Overdue: one quiet "OVERDUE" notice per follow-up, never repeated.

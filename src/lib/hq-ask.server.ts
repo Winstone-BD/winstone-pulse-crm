@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isAuthoritative } from "@/lib/sales-intel-rules";
 
@@ -70,7 +71,7 @@ async function loadFacts() {
       interested_30d: r.filter((x) => x.category === "interested" || x.category === "hot_lead").length,
       site_visits_30d: r.filter(site).length,
       bookings_30d: r.filter((x) => x.category === "closed_converted").length,
-      overdue_followups: followUps.filter((f) => f.agent_id === a.id && !f.completed_at && f.status !== "cancelled" && f.scheduled_at < nowIso).length,
+      overdue_followups: followUps.filter((f) => f.agent_id === a.id && isOpenFollowUp(f.status) && f.scheduled_at < nowIso).length,
     };
   });
 

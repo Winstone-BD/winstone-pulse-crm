@@ -22,17 +22,15 @@ import { shortDate } from "@/lib/crm-format";
 import { useAdminToken } from "@/lib/local-session";
 import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
+import { dhakaDay } from "@/lib/lead-groups";
 import { softMessageDraft } from "@/lib/no-answer-cadence";
 import { FOLLOW_UP_PRIORITY_LABEL } from "@/lib/follow-up-priority";
 
 const ALL = "all";
 
 /** Local day key so "today"/"tomorrow" match the agent's own phone clock. */
-function dayKey(value: Date): string {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(
-    value.getDate(),
-  ).padStart(2, "0")}`;
-}
+function dayKey(value: Date): string { return dhakaDay(value); }
 
 function windowRange() {
   const from = new Date();
@@ -87,10 +85,10 @@ export function FollowUpWeek() {
     };
 
     for (const row of rows) {
-      if (row.status === "done") continue;
+      if (!isOpenFollowUp(row.status)) continue;
       const when = new Date(row.scheduled_at);
       const key = dayKey(when);
-      if (when.getTime() < now.getTime() && key !== today) buckets.overdue.push(row);
+      if (when.getTime() < now.getTime()) buckets.overdue.push(row);
       else if (key === today) buckets.today.push(row);
       else if (key === tomorrow) buckets.tomorrow.push(row);
       else if (key > tomorrow && key <= limitKey) buckets.later.push(row);
@@ -205,7 +203,7 @@ export function FollowUpWeek() {
                         />
                       </div>
                     )}
-                    {typeof event.note === "string" && event.note.startsWith("২য় বার ধরেননি") && (
+                    {typeof event.note === "string" && (event.note.startsWith("২য় বার ধরেননি") || event.note.startsWith("Second unanswered call")) && (
                       <SoftMessageBox name={event.customer_name ?? null} />
                     )}
                   </li>

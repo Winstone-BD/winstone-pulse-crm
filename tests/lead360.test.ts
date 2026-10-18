@@ -41,4 +41,13 @@ describe("Lead 360", () => {
     expect(followUpReasonLabel(null, "পুরোনো নোট")).toBe("পুরোনো নোট");
     expect(followUpReasonLabel("other", "ব্যাংক লোন")).toContain("ব্যাংক লোন");
   });
+  it("does not count cancelled/rescheduled records as open tasks", () => {
+    const rows = [fu("a", "2026-09-20T00:00:00Z", "2026-09-21T00:00:00Z", "cancelled"), fu("b", "2026-09-20T00:00:00Z", "2026-09-21T00:00:00Z", "rescheduled")];
+    expect(summarize([], rows, now)).toMatchObject({ upcoming: 0, overdue: 0, current: null });
+  });
+  it("retains completion outcome and distinct cancellation/missed history", () => {
+    const history = buildLeadTimeline({ lead: { id: "l", createdAt: "2026-09-20T00:00:00Z", source: null, assignedTo: "a1" }, calls: [], followUps: fus,
+      changes: ["completed", "cancelled", "missed"].map(action => ({ id: action, followUpId: "f2", action, oldScheduledAt: null, newScheduledAt: null, reasonCode: "payment", note: "Customer asked to call after salary date", changedBy: "a1", changedAt: "2026-09-28T00:00:00Z" })), events: [], agentName: () => "Agent" });
+    for (const action of ["completed", "cancelled", "missed"]) expect(history.find(row => row.id === `chg:${action}`)?.lines.join(" ")).toContain("Customer asked to call after salary date");
+  });
 });

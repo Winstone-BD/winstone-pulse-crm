@@ -1,3 +1,4 @@
+import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 /** Pure Lead 360 assembly: one lead = one permanent, ordered history. */
 import { followUpReasonLabel } from "@/lib/follow-up-reasons";
 import { contactCloseReasonLabel } from "@/lib/contact-close-reasons";
@@ -33,6 +34,9 @@ export type L360FollowUp = {
   createdAt: string;
   completedAt: string | null;
   rescheduleCount: number;
+  parentFollowUpId?: string | null;
+  outcome?: string | null;
+  reportId?: string | null;
 };
 export type L360Change = {
   id: string;
@@ -60,6 +64,8 @@ export type TimelineItem = {
     | "follow_up_rescheduled"
     | "follow_up_completed"
     | "follow_up_updated"
+    | "follow_up_cancelled"
+    | "follow_up_missed"
     | "status_changed"
     | "pitch_used";
   title: string;
@@ -91,7 +97,7 @@ const fmt = (iso: string | null) =>
 
 export function summarize(calls: L360Call[], followUps: L360FollowUp[], now = new Date()) {
   const connected = calls.filter((c) => c.connected).length;
-  const open = followUps.filter((f) => !isDone(f.status));
+  const open = followUps.filter((f) => isOpenFollowUp(f.status));
   const overdue = open.filter((f) => new Date(f.scheduledAt) < now);
   const upcoming = open.filter((f) => new Date(f.scheduledAt) >= now);
   const byCreated = [...followUps].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
@@ -106,7 +112,7 @@ export function summarize(calls: L360Call[], followUps: L360FollowUp[], now = ne
     completed: followUps.filter((f) => isDone(f.status)).length,
     upcoming: upcoming.length,
     overdue: overdue.length,
-    rescheduled: followUps.reduce((n, f) => n + (f.rescheduleCount || 0), 0),
+    rescheduled: followUps.reduce((n, f) => n + (f.rescheduleCount || (f.status === "rescheduled" ? 1 : 0)), 0),
     firstFollowUpAt: byCreated[0]?.createdAt ?? null,
     lastFollowUpAt: byCreated.at(-1)?.createdAt ?? null,
     nextFollowUpAt: current?.scheduledAt ?? null,
@@ -183,16 +189,18 @@ export function buildLeadTimeline(input: {
   });
   input.changes.forEach((c) => {
     const fu = fuById.get(c.followUpId);
-    const reason = `কারণ: ${followUpReasonLabel(c.reasonCode ?? fu?.reasonCode, c.note ?? fu?.note)}`;
+    const reason = `কারণ / Outcome: ${c.note || followUpReasonLabel(c.reasonCode ?? fu?.reasonCode, fu?.note)}`;
     const by = `Changed By: ${agentName(c.changedBy)}`;
     const map: Record<string, Pick<TimelineItem, "kind" | "title" | "lines">> = {
       created: { kind: "follow_up_created", title: "FOLLOW-UP SCHEDULED", lines: [`সময়: ${fmt(c.newScheduledAt)}`, reason, by] },
       rescheduled: {
         kind: "follow_up_rescheduled",
         title: "FOLLOW-UP RESCHEDULED",
-        lines: [`Original: ${fmt(c.oldScheduledAt)}`, `Changed To: ${fmt(c.newScheduledAt)}`, reason, by],
+        lines: [`Original: ${fmt(c.oldScheduledAt)}`, `New follow-up: ${input.followUps.find(f => f.parentFollowUpId === c.followUpId)?.id ?? "—"}`, `Changed To: ${fmt(input.followUps.find(f => f.parentFollowUpId === c.followUpId)?.scheduledAt ?? c.newScheduledAt)}`, reason, by],
       },
-      completed: { kind: "follow_up_completed", title: "FOLLOW-UP COMPLETED", lines: [by] },
+      completed: { kind: "follow_up_completed", title: "FOLLOW-UP COMPLETED", lines: [reason, by] },
+      cancelled: { kind: "follow_up_cancelled", title: "FOLLOW-UP CANCELLED", lines: [reason, by] },
+      missed: { kind: "follow_up_missed", title: "FOLLOW-UP MISSED", lines: [reason, by] },
     };
     const m = map[c.action] ?? { kind: "follow_up_updated" as const, title: "FOLLOW-UP UPDATED", lines: [reason, by] };
     items.push({ id: `chg:${c.id}`, at: c.changedAt, agentId: c.changedBy, ...m });
