@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { recordingRecovery, assertRecordingRetry, analysisOutcomeOk } from "./recording-recovery";
 
 /**
  * Recording pipeline observability for the IT Console.
@@ -34,6 +35,7 @@ export type PipelineRow = {
   overall: "completed" | "processing" | "retry" | "failed" | "pending";
   attempts: number;
   error: string | null;
+  recovery: ReturnType<typeof recordingRecovery>;
 };
 
 const Input = z.object({ adminToken: z.string().nullable().optional() });
@@ -85,7 +87,7 @@ export const recordingPipeline = createServerFn({ method: "POST" })
     const { data: recordings, error } = await supabaseAdmin
       .from("call_recordings")
       .select(
-        "id, lead_id, agent_id, phone_number, duration_seconds, created_at, started_at, answered_at, finished_at, call_status, recording_status, upload_status, storage_path, sync_status, stt_status, stt_error_message, transcription_text, analysis_status, analysis_error, analysis_attempts, ai_summary, ai_lead_category, ai_temperature, ai_grade",
+        "id, lead_id, agent_id, phone_number, duration_seconds, created_at, updated_at, started_at, answered_at, finished_at, call_status, recording_status, upload_status, storage_path, audio_url, sync_status, stt_status, stt_error_message, transcription_text, analysis_status, analysis_error, analysis_attempts, ai_summary, ai_lead_category, ai_temperature, ai_grade",
       )
       .gte("created_at", since)
       .order("created_at", { ascending: false })
@@ -132,6 +134,7 @@ export const recordingPipeline = createServerFn({ method: "POST" })
 
     const built: PipelineRow[] = rows.map((r) => {
       const backup = backupBy.get(r.id) ?? null;
+      const recovery = recordingRecovery(r, backup?.status);
       const report = reportBy.get(r.id) ?? null;
       const lead = r.lead_id ? (leadBy.get(r.lead_id) ?? null) : null;
 
@@ -144,7 +147,7 @@ export const recordingPipeline = createServerFn({ method: "POST" })
 
       // 2/3. Recording capture and storage in the backend bucket.
       const recordingState: StageState =
-        r.recording_status === "stored"
+        recovery.hasAudio
           ? "success"
           : r.recording_status === "not_available"
             ? "failed"
@@ -212,7 +215,7 @@ export const recordingPipeline = createServerFn({ method: "POST" })
           "সার্ভার",
           supabaseState,
           r.created_at,
-          r.storage_path ? "জমা হয়েছে" : null,
+          recovery.hasAudio ? `অডিও রেফারেন্স আছে · ${r.upload_status}` : "অডিও নেই — ফোন থেকে আসল ফাইল উদ্ধার/আপলোড দরকার",
         ),
         stage(
           "drive",
@@ -268,7 +271,8 @@ export const recordingPipeline = createServerFn({ method: "POST" })
         stages,
         overall,
         attempts,
-        error: r.analysis_error ?? r.stt_error_message ?? backup?.error_message ?? null,
+        error: recovery.reason ?? backup?.error_message ?? null,
+        recovery,
       };
     });
 
@@ -326,6 +330,11 @@ export const retryPipelineItem = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const caller = await requireSupervisor(data.adminToken ?? null, true);
     const { logAudit } = await import("@/lib/audit.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: recording, error } = await supabaseAdmin.from("call_recordings").select("storage_path, audio_url, upload_status, analysis_status, analysis_error, stt_error_message, transcription_text, ai_summary, updated_at").eq("id", data.recordingId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!recording) throw new Error("রেকর্ডিং পাওয়া যায়নি");
+    assertRecordingRetry(recording, data.step);
 
     const audit = async (outcome: string, detail: string | null) => {
       await logAudit({
@@ -348,7 +357,7 @@ export const retryPipelineItem = createServerFn({ method: "POST" })
       const { analyzeOne } = await import("@/lib/analysis-queue.server");
       const outcome = await analyzeOne(data.recordingId);
       await audit(String(outcome), null);
-      return { ok: true as const, outcome: String(outcome), detail: null };
+      return { ok: analysisOutcomeOk(outcome), outcome: String(outcome), detail: recording.analysis_error };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       // A failed retry is recorded on the backup row so the queue keeps the
@@ -394,10 +403,13 @@ export const verifyDriveBackups = createServerFn({ method: "POST" })
 
     let verified = 0;
     let missing = 0;
+    let unverified = 0;
     const failures: { recordingId: string; fileName: string | null }[] = [];
 
     for (const row of backups ?? []) {
-      const meta = row.drive_file_id ? await driveFileMeta(row.drive_file_id) : null;
+      let meta;
+      try { meta = row.drive_file_id ? await driveFileMeta(row.drive_file_id) : null; }
+      catch { unverified += 1; continue; }
       const ok = Boolean(meta && !meta.trashed);
       if (ok) verified += 1;
       else {
@@ -427,8 +439,11 @@ export const verifyDriveBackups = createServerFn({ method: "POST" })
 
     let docsVerified = 0;
     let docsMissing = 0;
+    let docsUnverified = 0;
     for (const doc of docs ?? []) {
-      const meta = doc.drive_file_id ? await driveFileMeta(doc.drive_file_id) : null;
+      let meta;
+      try { meta = doc.drive_file_id ? await driveFileMeta(doc.drive_file_id) : null; }
+      catch { docsUnverified += 1; continue; }
       const ok = Boolean(meta && !meta.trashed);
       if (ok) docsVerified += 1;
       else docsMissing += 1;
@@ -445,8 +460,10 @@ export const verifyDriveBackups = createServerFn({ method: "POST" })
       checked: backups?.length ?? 0,
       verified,
       missing,
+      unverified,
       failures,
       docsVerified,
       docsMissing,
+      docsUnverified,
     };
   });
