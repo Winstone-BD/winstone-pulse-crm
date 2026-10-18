@@ -811,3 +811,84 @@ export const importHistory = createServerFn({ method: "GET" })
       };
     });
   });
+
+async function buildTopUpPlan() {
+  const { activeAgents } = await import("@/lib/lead-pool.server");
+  const { dhakaToday } = await import("@/lib/lead-pool.server");
+  const { newLeadCountsForDay } = await import("@/lib/new-lead-topup.server");
+  const { newLeadNeeds } = await import("@/lib/new-lead-topup");
+  const agents = await activeAgents();
+  const day = dhakaToday();
+  const rows = newLeadNeeds(agents, await newLeadCountsForDay(day));
+  return { day, rows, total: rows.reduce((s, r) => s + r.need, 0) };
+}
+
+/** LeadHub Preview: each agent's NEW leads today and the exact gap to 50. Read-only. */
+export const previewNewLeadTopUp = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ adminToken: z.string().nullable().optional() }).parse(i))
+  .handler(async ({ data }) => {
+    await dispatcher(data.adminToken);
+    const plan = await buildTopUpPlan();
+    const { usablePoolCount } = await import("@/lib/lead-pool.server");
+    return { ...plan, available: await usablePoolCount() };
+  });
+
+/**
+ * One reviewed operation: give every agent exactly the NEW leads they need to
+ * reach 50 today. The server recomputes the plan and refuses if it differs from
+ * what was previewed, refuses if the pool can't cover the full total, and shares
+ * the one-bulk-batch-per-day lock. Each grant goes through grantExtraLeads (ledger,
+ * lead_assignments, lead_events, audit).
+ */
+export const topUpNewLeadsTo50 = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) =>
+    z.object({
+      adminToken: z.string().nullable().optional(),
+      reason: z.string().trim().min(5).max(300),
+      acknowledgeOverQuota: z.literal(true),
+      requestId: z.string().uuid(),
+      expectedPlan: z.record(z.string().uuid(), z.number().int().min(0).max(50)),
+    }).parse(i),
+  )
+  .handler(async ({ data }) => {
+    const caller = await dispatcher(data.adminToken);
+    const { assertDistributionDay } = await import("@/lib/business-day");
+    assertDistributionDay();
+    const plan = await buildTopUpPlan();
+    const { samePlan } = await import("@/lib/new-lead-topup");
+    const current = Object.fromEntries(plan.rows.map((r) => [r.agentId, r.need]));
+    if (!samePlan(current, data.expectedPlan)) {
+      throw new Error("Preview-এর পর সংখ্যা বদলেছে — আবার Preview দেখুন");
+    }
+    if (plan.total === 0) throw new Error("সবাই আজ ইতিমধ্যে ৫০টি নতুন লিড পেয়েছে");
+    const { grantExtraLeads, usablePoolCount, claimBulkBatch, finishBulkBatch } = await import("@/lib/lead-pool.server");
+    const available = await usablePoolCount();
+    if (available < plan.total) {
+      throw new Error(`লিডের প্রাপ্যতা: দরকার ${plan.total}টি, যোগ্য আছে ${available}টি — কিছুই দেওয়া হয়নি`);
+    }
+    await claimBulkBatch(data.requestId, plan.total);
+    const results: { agentId: string; name: string; need: number; moved: number; error: string | null }[] = [];
+    let remaining = 0;
+    try {
+      for (const r of plan.rows) {
+        if (r.need === 0) { results.push({ agentId: r.agentId, name: r.name, need: 0, moved: 0, error: null }); continue; }
+        try {
+          const g = await grantExtraLeads({
+            agentProfileId: r.agentId,
+            quantity: r.need,
+            reason: `[৫০ পূরণ] ${data.reason}`,
+            actorProfileId: null,
+            actorLabel: `${caller.label} · LeadHub top-up to 50`,
+            requestId: data.requestId,
+          });
+          remaining = g.remaining;
+          results.push({ agentId: r.agentId, name: r.name, need: r.need, moved: g.moved, error: null });
+        } catch (e) {
+          results.push({ agentId: r.agentId, name: r.name, need: r.need, moved: 0, error: e instanceof Error ? e.message : "ব্যর্থ" });
+        }
+      }
+    } finally {
+      await finishBulkBatch(data.requestId);
+    }
+    return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
+  });
