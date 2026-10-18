@@ -5926,6 +5926,10 @@ export type Database = {
         Returns: Json
       }
       clean_person_name: { Args: { _raw: string }; Returns: string }
+      create_report_follow_up_atomic: {
+        Args: { _agent: string; _patch: Json; _reason: string; _report: string }
+        Returns: string
+      }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {
         Args: { _lead_ids: string[] }
@@ -5996,12 +6000,12 @@ export type Database = {
       }
       transition_follow_up_atomic: {
         Args: {
-          _action: string
-          _actor: string
+          _action?: string
+          _actor?: string
           _event: string
-          _key: string
-          _reason: string
-          _scheduled_at: string
+          _key?: string
+          _reason?: string
+          _scheduled_at?: string
         }
         Returns: Json
       }
