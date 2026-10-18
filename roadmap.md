@@ -2,7 +2,7 @@
 
 ## Active
 
-- [ ] Global unified palette: consolidate tokens and shared controls; remove legacy theme variants/decoration; audit routes and verify desktop/tablet/Android layouts and automated checks. Frontend only; no live record mutations.
+- [x] Global unified palette: one inherited token set, shared black actions/white forms, flat decoration and semantic statuses; global color check and 503 automated tests pass, production build OK; 48 static paths and four responsive widths checked. Signed-in HQ/IT/Desk checked with own account; LeadHub PIN-protected content and agent-only populated views remain unverified without the relevant authority/session. No backend changes or deployment.
 
 - [x] Replace sideways desk navigation with a colour-accented, non-scrolling section picker; mobile global menu opens from below. Browser verified, no overflow.
 - [x] Bring saved notes and prior reports/history into pre-call and active web-call workspace using existing authorised paths; 11 targeted checks passed. Signed-in saving remains unverified.

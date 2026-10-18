@@ -61,6 +61,8 @@ export const Route = createFileRoute("/hq")({
         content:
           "Track live calls, talk time, verified recordings and AI call summaries in one command center.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   pendingComponent: () => (
