@@ -466,283 +466,60 @@ export async function submitCallReport(input: {
     }
   }
 
-  const { data: claimed, error } = await supabaseAdmin
-    .from("call_reports")
-    .update({
-      status: "submitted",
-      category,
-      summary: input.summary?.trim() || null,
-      note,
-      reason: input.reason?.trim() || null,
-      follow_up_at: input.followUpAt ?? null,
-      connected: received,
-      duration_seconds: durationSeconds,
-      // Only the phone's own measurement counts toward performance ranking.
-      connection_verified: received && storedSeconds > 0 && report.connected !== false,
-      temperature,
-      grade,
-      ai_decision: input.aiDecision ?? null,
-      interest: input.interest ?? null,
-      requirement: input.requirement ?? null,
-      customer_response: input.customerResponse ?? null,
-      next_action: input.nextAction ?? null,
-      no_follow_up_reason: input.followUpAt ? null : (input.noFollowUpReason ?? null),
-      no_follow_up_note: input.followUpAt ? null : noFollowUpNote || null,
-      smart_reasons: input.smartReasons ?? null,
-      evaluation_answers: answers,
-      evaluation_score: evaluation?.score ?? null,
-      evaluation_model: evaluation ? EVALUATION_MODEL : null,
-      follow_up_priority: evaluation?.priority ?? null,
-      next_best_action: evaluation?.nextAction ?? null,
-      submitted_at: new Date().toISOString(),
-    })
-    .eq("id", input.reportId)
-    .eq("agent_id", input.agentId)
-    .neq("status", "submitted")
-    .select("id");
-  if (error) throw new Error(error.message);
-  // A concurrent submit (double tap, offline replay) already won: no side effects twice.
-  if (!claimed?.length) return { ok: true, alreadySubmitted: true as const };
-
-  // Immutable evaluation audit: raw answers, score, rule version, call, agent, time.
-  if (answers) {
-    const { evaluationAuditDetail } = await import("@/lib/lead-evaluation");
-    const { logLeadEvent } = await import("@/lib/lead-events.server");
-    await logLeadEvent({
-      leadId: report.lead_id,
-      agentId: input.agentId,
-      recordingId: report.recording_id ?? null,
-      kind: "evaluation_recorded",
-      detail: evaluationAuditDetail({
-        answers,
-        followUpPending: Boolean(input.followUpAt),
-        reportId: report.id,
-        recordingId: report.recording_id ?? null,
-        agentId: input.agentId,
-        at: new Date().toISOString(),
-      }),
-    });
-  }
-
-
-  // Direction and call state belong to the call itself, so the linked call row
-  // carries what the agent confirmed in the popup.
-  if (report.recording_id && input.direction && input.callStatus) {
-    await supabaseAdmin
-      .from("call_recordings")
-      .update({
-        call_direction: input.direction === "incoming" ? "incoming_callback" : "outgoing",
-        call_status: input.callStatus === "connected" ? "completed" : input.callStatus,
-        duration_seconds: durationSeconds,
-      })
-      .eq("id", report.recording_id);
-  }
-
-  const { data: lead } = await supabaseAdmin
-    .from("leads")
-    .select("id, name, phone_number, status")
-    .eq("id", report.lead_id)
-    .maybeSingle();
-
+  const retryAt = cadence?.retryAt ?? input.followUpAt ?? null;
   const nowIso = new Date().toISOString();
-  const notes =
-    [input.summary?.trim(), input.note?.trim(), input.reason?.trim()].filter(Boolean).join(" — ") ||
-    null;
-
-  if (received && classified) {
-    await supabaseAdmin
-      .from("leads")
-      .update({
-        status: LEAD_STATUS_FOR[category],
-        outcome_category: category,
-        notes,
-        last_call_at: nowIso,
-        temperature,
-        grade,
-        classification_note: input.note?.trim() || null,
-        classified_at: nowIso,
-        classified_by: input.agentId,
-        work_state: "completed",
-        // Customer answered: the 3-strike count stops.
-        unanswered_attempts: 0,
-      })
-      .eq("id", report.lead_id);
-
-    await supabaseAdmin.from("lead_classifications").insert({
-      lead_id: report.lead_id,
-      agent_id: input.agentId,
-      report_id: report.id,
-      temperature: temperature!,
-      grade: grade!,
-      note: input.note?.trim() || null,
-      source: "manual",
-      classified_at: nowIso,
-    });
-  } else {
-    // Not received: the lead stays with the same agent. A did-not-receive call
-    // is parked (snoozed / unresponsive) until its retry time; others retry now.
-    await supabaseAdmin
-      .from("leads")
-      .update({
-        status: "pending",
-        outcome_category: category,
-        notes,
-        last_call_at: nowIso,
-        work_state: cadence ? (cadence.stage === "unresponsive" ? "unresponsive" : "snoozed") : "pending",
-        ...(cadence ? { retry_after: cadence.retryAt, unanswered_attempts: cadence.attempt } : {}),
-        ...(received ? { unanswered_attempts: 0 } : {}),
-      })
-      .eq("id", report.lead_id);
-  }
-
-  let followUpId: string | null = null;
-  if (input.followUpAt) {
-    // Idempotent: a resubmitted report never creates a second follow-up task.
-    const { data: existing } = await supabaseAdmin
-      .from("follow_up_events")
-      .select("id")
-      .eq("report_id", report.id)
-      .maybeSingle();
-    if (existing) followUpId = existing.id;
-  }
-  if (input.followUpAt && !followUpId) {
-    // One open follow-up per lead + agent: a newer report moves the open task
-    // instead of stacking a duplicate reminder for the same customer.
-    const { data: open } = await supabaseAdmin
-      .from("follow_up_events")
-      .select("id")
-      .eq("lead_id", report.lead_id)
-      .eq("agent_id", input.agentId)
-      .neq("status", "done")
-      .order("scheduled_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (open) {
-      await supabaseAdmin
-        .from("follow_up_events")
-        .update({
-          report_id: report.id,
-          category,
-          priority: followUpPriority,
-          note: input.note?.trim() || null,
-          reason_code: input.followUpReason ?? null,
-          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
-          customer_response: input.customerResponse ?? null,
-          next_action: input.nextAction ?? null,
-          previous_call_id: report.recording_id ?? null,
-          scheduled_at: input.followUpAt,
-          reminder_minutes: input.reminderMinutes ?? 30,
-          notified_at: null,
-          status: "upcoming",
-        })
-        .eq("id", open.id);
-      followUpId = open.id;
-    }
-  }
-  if (input.followUpAt && !followUpId) {
-    const { data: event } = await supabaseAdmin
-      .from("follow_up_events")
-      .insert({
-        lead_id: report.lead_id,
-        agent_id: input.agentId,
-        report_id: report.id,
-        recording_id: report.recording_id,
-        customer_name: lead?.name ?? null,
-        phone_number: lead?.phone_number ?? report.phone_number,
-        category,
-        priority: followUpPriority,
-        note: input.note?.trim() || null,
-        reason_code: input.followUpReason ?? null,
-          ...(input.followUpReason === "other" && input.followUpReasonNote ? { note: input.followUpReasonNote } : {}),
-        customer_response: input.customerResponse ?? null,
-        next_action: input.nextAction ?? null,
-        previous_call_id: report.recording_id ?? null,
-        scheduled_at: input.followUpAt,
-        reminder_minutes: input.reminderMinutes ?? 30,
-        status: "upcoming",
-      })
-      .select("id")
-      .single();
-    followUpId = event?.id ?? null;
-  }
-
-  // No new follow-up date → the contact was closed on this report. Settle every
-  // open follow-up for this lead as done (never deleted): the update trigger
-  // writes a permanent 'completed' row to follow_up_changes, so HQ keeps when,
-  // why and by which report the follow-up stopped, and it stops showing overdue.
-  if (!input.followUpAt) {
-    const closeNote = input.noFollowUpReason
-      ? `কল রিপোর্ট সম্পন্ন (${input.noFollowUpReason})${noFollowUpNote ? ` — ${noFollowUpNote}` : ""}`
-      : "কল সম্পন্ন — ফলো-আপ সমাপ্ত";
-    await supabaseAdmin
-      .from("follow_up_events")
-      .update({ status: "done", completed_at: nowIso, report_id: report.id, note: closeNote })
-      .eq("lead_id", report.lead_id)
-      .neq("status", "done");
-  }
-
-  // Did-not-receive: one follow-up on the same queue, owned by the same agent.
-  if (cadence) {
-    const stageNote =
-      cadence.stage === "unresponsive"
-        ? `Unresponsive Pool — ৩ বার ধরেননি; ${7} দিন পর Reactivation Queue`
-        : cadence.stage === "snooze_soft"
-          ? "২য় বার ধরেননি — সফট মেসেজ পাঠিয়ে আবার কল"
-          : "১ম বার ধরেননি — আবার কল";
-    await supabaseAdmin.from("follow_up_events").insert({
-      lead_id: report.lead_id,
-      agent_id: input.agentId,
-      report_id: report.id,
-      recording_id: report.recording_id,
-      customer_name: lead?.name ?? null,
-      phone_number: lead?.phone_number ?? report.phone_number,
-      category,
-      priority: followUpPriority,
-      note: stageNote,
-      reason_code: "call_later",
-      previous_call_id: report.recording_id ?? null,
-      scheduled_at: cadence.retryAt,
-      reminder_minutes: input.reminderMinutes ?? 30,
-      status: "upcoming",
-    });
-  }
-
-  const { logLeadEvent } = await import("@/lib/lead-events.server");
-  await logLeadEvent({
-    leadId: report.lead_id,
-    agentId: input.agentId,
-    recordingId: report.recording_id,
-    kind: "outcome_logged",
-    detail: `${CATEGORY_LABEL[category]}${
-      classified
-        ? ` — ${TEMPERATURE_LABEL[temperature!]} / গ্রেড ${grade}`
-        : " — কথা হয়নি, আবার কল হবে"
-    }${
-      input.followUpAt
-        ? ` — ফলো-আপ ${new Date(input.followUpAt).toLocaleString("bn-BD")}`
-        : input.noFollowUpReason
-          ? ` — ফলো-আপ নেই: ${input.noFollowUpReason}${noFollowUpNote ? ` (${noFollowUpNote})` : ""}`
-          : ""
-    }`,
+  const reportPatch = {
+    status: "submitted", category, summary: input.summary?.trim() || null, note,
+    reason: input.reason?.trim() || null, follow_up_at: retryAt, connected: received,
+    duration_seconds: durationSeconds,
+    connection_verified: received && storedSeconds > 0 && report.connected !== false,
+    temperature, grade, ai_decision: input.aiDecision ?? null,
+    interest: input.interest ?? null, requirement: input.requirement ?? null,
+    customer_response: input.customerResponse ?? null, next_action: input.nextAction ?? null,
+    no_follow_up_reason: retryAt ? null : input.noFollowUpReason ?? null,
+    no_follow_up_note: retryAt ? null : noFollowUpNote || null,
+    smart_reasons: input.smartReasons ?? null, evaluation_answers: answers,
+    evaluation_score: evaluation?.score ?? null, evaluation_model: evaluation ? EVALUATION_MODEL : null,
+    follow_up_priority: evaluation?.priority ?? null, next_best_action: evaluation?.nextAction ?? null,
+  };
+  const notes = [input.summary?.trim(), input.note?.trim(), input.reason?.trim()].filter(Boolean).join(" — ") || null;
+  const leadPatch = received && classified ? {
+    status: LEAD_STATUS_FOR[category], outcome_category: category, notes, last_call_at: nowIso,
+    temperature, grade, classification_note: input.note?.trim() || null, classified_at: nowIso,
+    classified_by: input.agentId, work_state: "completed", unanswered_attempts: 0,
+  } : {
+    status: "pending", outcome_category: category, notes, last_call_at: nowIso,
+    work_state: cadence ? cadence.stage === "unresponsive" ? "unresponsive" : "snoozed" : "pending",
+    ...(cadence ? { retry_after: cadence.retryAt, unanswered_attempts: cadence.attempt } : {}),
+    ...(received ? { unanswered_attempts: 0 } : {}),
+  };
+  const followup = retryAt ? {
+    scheduled_at: retryAt, category, priority: followUpPriority,
+    reason_code: cadence ? "call_later" : input.followUpReason ?? null,
+    note: cadence ? `Retry ${cadence.attempt} — ${cadence.stage}` : input.followUpReason === "other" ? input.followUpReasonNote ?? null : input.note?.trim() || null,
+    customer_response: input.customerResponse ?? null, next_action: input.nextAction ?? null,
+    reminder_minutes: input.reminderMinutes ?? 30,
+  } : null;
+  const { evaluationAuditDetail } = await import("@/lib/lead-evaluation");
+  const evaluationDetail = answers ? evaluationAuditDetail({ answers, followUpPending: Boolean(retryAt), reportId: report.id, recordingId: report.recording_id ?? null, agentId: input.agentId, at: nowIso }) : null;
+  const outcome = `${CATEGORY_LABEL[category]}${classified ? ` — ${TEMPERATURE_LABEL[temperature ?? "cold"]} / ${grade}` : " — কথা হয়নি, আবার কল হবে"}${retryAt ? ` — follow-up ${retryAt}` : ` — ${input.noFollowUpReason ?? ""}`}`;
+  const { data: finalized, error: finalizeError } = await supabaseAdmin.rpc("finalize_call_report_atomic", {
+    _report: report.id, _agent: input.agentId, _report_patch: reportPatch,
+    _lead_patch: leadPatch, _followup: followup, _classification: received && classified ? {} : null,
+    _evaluation_detail: evaluationDetail, _outcome: outcome,
   });
-
-  const { logAudit } = await import("@/lib/audit.server");
-  await logAudit({
-    action: "call_report_submitted",
-    entityType: "call_report",
-    entityId: report.id,
-    actorProfileId: input.agentId,
-    metadata: {
-      leadId: report.lead_id,
-      category,
-      received,
-      temperature,
-      grade,
-      workState: received && classified ? "completed" : "pending",
-      aiDecision: input.aiDecision ?? null,
-      followUpAt: input.followUpAt ?? null,
-    },
-  });
+  if (finalizeError) throw new Error("রিপোর্ট ও ফলো-আপ সেভ হয়নি; খসড়া রেখে আবার চেষ্টা করুন");
+  const result = finalized as { alreadySubmitted: boolean; followUpId?: string | null };
+  if (result.alreadySubmitted) return { ok: true, alreadySubmitted: true as const };
+  const followUpId = result.followUpId ?? null;
+  // Call-state updates are secondary; failure cannot undo the committed report.
+  if (report.recording_id && input.direction && input.callStatus) {
+    await supabaseAdmin.from("call_recordings").update({
+      call_direction: input.direction === "incoming" ? "incoming_callback" : "outgoing",
+      call_status: input.callStatus === "connected" ? "completed" : input.callStatus,
+      duration_seconds: durationSeconds,
+    }).eq("id", report.recording_id);
+  }
 
   // Sync trail for the phone: report accepted -> next lead unlocked.
   const { recordSyncEvent } = await import("@/lib/call-jobs.server");
