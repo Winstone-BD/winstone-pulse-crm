@@ -1,3 +1,4 @@
+import { integrationFailure } from "./integration-status";
 // Server-only: builds the daily one-row-per-lead report and mirrors it into
 // one company Google Spreadsheet (one tab per Dhaka date, rewritten on sync).
 // Every attempt (manual button or cron) records a sheet_sync_events row so the
@@ -46,7 +47,7 @@ async function gw(path: string, init: RequestInit = {}) {
   if (!res.ok) {
     const body = await res.text();
     console.error(`Google Sheets request failed [${res.status}]: ${body}`);
-    throw new Error(`Google Sheets request failed [${res.status}]: ${body.slice(0, 300)}`);
+    throw new Error(`Google Sheets [${res.status}]: ${integrationFailure(res.status,body).message}`);
   }
   return res.json();
 }

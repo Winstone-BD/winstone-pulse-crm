@@ -3,6 +3,7 @@
 // name, then to the nearest call of that lead (±20 min of the file time).
 // Files that cannot be matched wait in a review queue for HQ to link.
 // Files are never moved or deleted in Drive; nothing is invented.
+import { canonicalDriveMatch } from "./integration-status";
 import { driveFetch } from "@/lib/gdrive.server";
 
 const CONFIG_ID = "recordings_inbox_drive";
@@ -41,7 +42,7 @@ export async function ensureInboxFolder() {
   return { id: created.id, url: `https://drive.google.com/drive/folders/${created.id}` };
 }
 
-type DriveFile = { id: string; name: string; mimeType?: string; webViewLink?: string; createdTime?: string };
+type DriveFile = { id: string; name: string; mimeType?: string; webViewLink?: string; createdTime?: string; appProperties?: Record<string,string> };
 
 export async function syncRecordingsInbox() {
   const folder = await getInboxFolder();
@@ -52,7 +53,7 @@ export async function syncRecordingsInbox() {
   do {
     const q = encodeURIComponent(`'${folder.id}' in parents and trashed=false`);
     const r = await driveFetch<{ files?: DriveFile[]; nextPageToken?: string }>(
-      `/files?q=${q}&pageSize=200&fields=nextPageToken,files(id,name,mimeType,webViewLink,createdTime)${pageToken ? `&pageToken=${pageToken}` : ""}`,
+      `/files?q=${q}&pageSize=200&fields=nextPageToken,files(id,name,mimeType,webViewLink,createdTime,appProperties)${pageToken ? `&pageToken=${pageToken}` : ""}`,
     );
     files.push(...(r?.files ?? []));
     pageToken = r?.nextPageToken;
@@ -65,28 +66,15 @@ export async function syncRecordingsInbox() {
   let matched = 0, unmatched = 0;
   for (const f of audio) {
     if (known.has(f.id)) continue;
-    const phone = phoneFromFileName(f.name);
+    
     let leadId: string | null = null, callId: string | null = null, agentId: string | null = null, method: string | null = null;
-    if (phone) {
-      const { data: st } = await d.rpc("lead_phone_status", { _raw: phone });
-      leadId = (Array.isArray(st) ? st[0]?.existing_lead_id : null) ?? null;
-      if (leadId) method = "phone";
+    const canonical = canonicalDriveMatch(f.appProperties);
+    if (canonical) {
+      const {data: call, error: callError} = await d.from("call_recordings").select("id,lead_id,agent_id").eq("id",canonical.callId).eq("lead_id",canonical.leadId).maybeSingle();
+      if (callError) throw new Error("Canonical recording lookup failed");
+      if (call) {leadId=call.lead_id;callId=call.id;agentId=call.agent_id;method="canonical_metadata";}
     }
-    if (leadId && f.createdTime) {
-      const t = Date.parse(f.createdTime);
-      const { data: calls } = await d.from("call_recordings").select("id, agent_id, started_at, created_at").eq("lead_id", leadId)
-        .gte("created_at", new Date(t - 6 * 3_600_000).toISOString()).lte("created_at", new Date(t + 3_600_000).toISOString()).limit(50);
-      let best: { id: string; agent_id: string | null; diff: number } | null = null;
-      for (const c of calls ?? []) {
-        const diff = Math.abs(Date.parse((c.started_at ?? c.created_at) as string) - t);
-        if (diff <= WINDOW_MS && (!best || diff < best.diff)) best = { id: c.id, agent_id: c.agent_id, diff };
-      }
-      if (best) { callId = best.id; agentId = best.agent_id; method = "phone+call_time"; }
-    }
-    if (!agentId && leadId) {
-      const { data: l } = await d.from("leads").select("assigned_to").eq("id", leadId).maybeSingle();
-      agentId = l?.assigned_to ?? null;
-    }
+    // Filename is only a review hint; never establish a customer relationship from it.
     const { error } = await d.from("drive_recording_imports").insert({
       drive_file_id: f.id, file_name: f.name, mime_type: f.mimeType ?? null, drive_link: f.webViewLink ?? null,
       file_created_at: f.createdTime ?? null, lead_id: leadId, call_recording_id: callId, agent_id: agentId,

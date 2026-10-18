@@ -1,3 +1,4 @@
+import { integrationFailure } from "./integration-status";
 /**
  * Shift summaries → Google Sheets. Every generated shift summary is written to
  * a dedicated tab in the workspace spreadsheet, so HQ can read the summary
@@ -79,7 +80,7 @@ async function gatewayFetch(path: string, init?: RequestInit, attempt = 0): Prom
       durationMs,
       errorText: body,
     });
-    throw new Error(`Google Sheets ত্রুটি [${response.status}]: ${body.slice(0, 300)}`);
+    throw new Error(`Google Sheets [${response.status}]: ${integrationFailure(response.status,body).message}`);
   }
   await recordSheetSyncEvent({
     surface: "shift_summary",

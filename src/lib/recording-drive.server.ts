@@ -11,7 +11,7 @@
 
 import { logAudit } from "./audit.server";
 import { resolveAgentDriveFolder, syncAgentDriveFolders } from "./drive-agent-folders.server";
-import { createDriveDoc, getOrCreateDriveFolder, uploadToDrive } from "./gdrive.server";
+import { driveFetch, createDriveDoc, getOrCreateDriveFolder, uploadToDrive } from "./gdrive.server";
 import { syncRecordingDoc } from "./recording-doc.server";
 
 export type DriveBackupSettings = {
@@ -48,6 +48,11 @@ export async function saveDriveBackupSettings(input: {
   actorProfileId?: string | null;
 }) {
   const supabaseAdmin = await adminClient();
+  if (input.enabled) {
+    if (!input.folderId) throw new Error("Approved recordings folder required");
+    const folder = await driveFetch<{mimeType:string; capabilities?:{canAddChildren?:boolean}}>(`/files/${input.folderId}?fields=mimeType,capabilities&supportsAllDrives=true`);
+    if (folder?.mimeType !== "application/vnd.google-apps.folder" || !folder.capabilities?.canAddChildren) throw new Error("Recording folder write permission is not verified");
+  }
   const now = new Date().toISOString();
   const { error } = await supabaseAdmin.from("system_settings").upsert(
     [
@@ -105,7 +110,7 @@ export async function backupRecordingToDrive(recordingId: string) {
     .select("id, status, drive_file_id, drive_file_url")
     .eq("call_recording_id", recordingId)
     .maybeSingle();
-  if (existing?.status === "done" && existing.drive_file_id) {
+  if (existing && ["done", "verified"].includes(existing.status) && existing.drive_file_id) {
     return {
       status: "already_done" as const,
       driveFileId: existing.drive_file_id,
@@ -121,7 +126,7 @@ export async function backupRecordingToDrive(recordingId: string) {
     .eq("id", recordingId)
     .maybeSingle();
   if (!recording) throw new Error("রেকর্ডিং পাওয়া যায়নি");
-  if (recording.recording_status !== "stored" || !recording.storage_path) {
+  if (!["stored", "available"].includes(recording.recording_status ?? "") || !recording.storage_path) {
     throw new Error(`রেকর্ডিং এখনো জমা হয়নি — অবস্থা: ${recording.recording_status ?? "unknown"}`);
   }
 
@@ -165,7 +170,7 @@ export async function backupRecordingToDrive(recordingId: string) {
       );
       targetFolderId = folder.folderId;
     } catch (error) {
-      console.error("[gdrive] agent folder failed, using company folder", error);
+      throw error;
     }
   }
 
@@ -174,6 +179,7 @@ export async function backupRecordingToDrive(recordingId: string) {
     mimeType: recording.mime_type ?? `audio/${ext}`,
     bytes,
     folderId: targetFolderId,
+    appProperties: {call_recording_id: recording.id, ...(recording.lead_id ? {lead_id: recording.lead_id} : {})},
   });
 
   const backup = {
