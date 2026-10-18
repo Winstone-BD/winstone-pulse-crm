@@ -25,7 +25,7 @@ export function AgentLeadProgress({ agents, leads, calls, loading, onOpen }: { a
   const send = useServerFn(sendHqLeadReview);
   const qc = useQueryClient();
   const mutation = useMutation({ mutationFn: ({ leadId, agentId: recipient, comment: text }: { leadId: string; agentId: string; comment: string }) => send({ data: { adminToken: token, leadId, agentId: recipient, comment: text } }),
-    onSuccess: () => { setComment(""); setReviewId(null); toast.success(t("রিভিউ এজেন্টের নোটিশে সেভ হয়েছে", "Review saved to the agent’s notices")); void qc.invalidateQueries({ queryKey: ["notice-board"] }); },
+    onSuccess: () => { setComment(""); setReviewId(null); toast.success(t("রিভিউ এজেন্টের নোটিশে সেভ হয়েছে", "Review saved to the agent’s notices")); void qc.invalidateQueries({ queryKey: ["it-notice-board"] }); },
     onError: error => toast.error(error instanceof Error ? error.message : "Review failed"),
   });
   const assigned = agentId ? assignedAgentLeads(leads, agentId) : [];
