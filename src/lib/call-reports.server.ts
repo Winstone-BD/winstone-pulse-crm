@@ -429,6 +429,20 @@ export async function submitCallReport(input: {
       .maybeSingle();
     if (rec && !String(rec.call_source ?? "").startsWith("web")) phoneSeconds = rec.duration_seconds ?? null;
   }
+  if (phoneSeconds === null || phoneSeconds <= 0) {
+    // Web Call button: match the call the Android app synced from the phone's call log.
+    const since = new Date(new Date(report.created_at).getTime() - 3 * 60 * 60 * 1000).toISOString();
+    const { data: phoneRows } = await supabaseAdmin
+      .from("call_recordings")
+      .select("started_at, created_at, duration_seconds, call_source")
+      .eq("lead_id", report.lead_id)
+      .eq("agent_id", report.agent_id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    const { pickPhoneMeasuredSeconds } = await import("@/lib/call-duration");
+    phoneSeconds = pickPhoneMeasuredSeconds(report.created_at, phoneRows ?? []);
+  }
   const { resolveCallDuration } = await import("@/lib/call-duration");
   const durationSeconds = resolveCallDuration({
     phoneSeconds,
