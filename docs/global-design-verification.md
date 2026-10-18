@@ -1,5 +1,13 @@
 # Global design verification — 2026-10-18
 
+## Full-system polish follow-up
+- Shared page/section headings wrap and stack actions on phones; statistic labels and empty-state hints no longer truncate.
+- Shared dialogs reserve room for the close control, use a 40px close target and spaced mobile footer actions. Inputs/selects and standard buttons have larger phone targets; tables contain horizontal scrolling and have clearer headers; tabs wrap.
+- Desk welcome is a flat ivory section with readable charcoal identity and semantic status chips; decorative blurred orbs removed. All work-selection logic remains unchanged.
+- Final automated run: 73 files / 506 tests PASS; global color check PASS; module-recovery browser regression PASS; latest harness build OK. No separate manual TypeScript/build command was run.
+- Read-only signed-in checks: HQ, IT, Desk, audit log and reports loaded at 1280/768/360px with no document-width overflow or page errors. Gateway/auth and LeadHub entry checked at those widths. PIN dialog verified and closed at all three widths.
+- LeadHub private content still requires its scoped PIN. The requesting-user Desk is not a populated sales-agent session; real call/report submissions remain unverified. No protected decision flow, payment, lead assignment or other record mutation was exercised; no deployment.
+
 ## Implemented
 - One exact ivory/white/charcoal/champagne token set replaces the competing navy, mint, teal, orange, dark and homepage palettes. Existing wrapper class names inherit it, including body-portaled controls.
 - Shared buttons use black/white for primary commands and ivory/charcoal/gold borders for secondary commands. Cards, fields, dialogs, notices and navigation use the same tokens; decorative gradients and heavy shadows are removed.
