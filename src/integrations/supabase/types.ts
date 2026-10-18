@@ -5810,6 +5810,19 @@ export type Database = {
         Args: { _action: string; _actor: string; _id: string }
         Returns: undefined
       }
+      allocate_extra_leads_atomic: {
+        Args: {
+          _actor: string
+          _agent: string
+          _ids: string[]
+          _label: string
+          _quantity: number
+          _reason: string
+          _request: string
+          _source: string
+        }
+        Returns: Json
+      }
       clean_person_name: { Args: { _raw: string }; Returns: string }
       extract_bd_phones: { Args: { _raw: string }; Returns: string[] }
       filter_eligible_lead_ids: {

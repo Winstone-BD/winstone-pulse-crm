@@ -981,6 +981,13 @@
       "when": 1792330951122,
       "tag": "0139_it_officer_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1792331501841,
+      "tag": "0140_canonical_identity_and_atomic_extra_grants",
+      "breakpoints": true
     }
   ]
 }
