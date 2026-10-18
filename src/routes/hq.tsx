@@ -1,5 +1,6 @@
 import { SystemManualCard } from "@/components/crm/SystemManualCard";
 import { AgentWorkloadPanel } from "@/components/crm/hq/AgentWorkloadPanel";
+import { AgentLeadProgress } from "@/components/crm/hq/AgentLeadProgress";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -276,6 +277,7 @@ function ControlBoard() {
 
             {tab === "leads" && (
               <div className="space-y-8">
+                <AgentLeadProgress agents={agents} leads={leads} calls={calls} loading={isPending} onOpen={setOpenLeadId} />
                 <HqClassificationTiles leads={leads} onDrill={setDrill} />
                 <HqMixCards
                   funnelRows={funnelRows}
