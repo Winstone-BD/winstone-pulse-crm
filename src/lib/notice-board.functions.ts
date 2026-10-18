@@ -16,15 +16,17 @@ async function callerFor(adminToken: string | null | undefined, action: NoticeAc
 async function accessibleNoticeIds(caller: Awaited<ReturnType<typeof callerFor>>) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   if (caller.scope === "authority") {
-    const { data } = await supabaseAdmin.from("it_notices").select("id").order("published_at", { ascending: false }).limit(100);
+    const { data, error } = await supabaseAdmin.from("it_notices").select("id").order("published_at", { ascending: false }).limit(100);
+    if (error) throw new Error("Message history unavailable");
     return (data ?? []).map((row) => row.id);
   }
   if (!caller.profile) return [];
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("it_notice_recipients")
     .select("notice_id")
     .eq("profile_id", caller.profile.id)
     .limit(100);
+  if (error) throw new Error("Message deliveries unavailable");
   return (data ?? []).map((row) => row.notice_id);
 }
 
