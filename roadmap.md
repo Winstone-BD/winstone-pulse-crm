@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [x] Fast-loading build published 2026-10-19: self-hosted fonts (zero external font requests), prerendered gateway, charts split out of the first download. Full production build OK; published to crm.winstonebd.com and live-verified — entry page shows "IT Console" (zero "IT HQ"), Get started reaches sign-in, signed-in HQ shows 17 charts, Reports/Desk/System/Live Leads render, LeadHub still PIN-gated, no page errors or 4xx/5xx.
 - [x] Recording recovery controls and safe-agent guide built in preview: original-row authentic upload, visible IDs/30-day sampled list, guarded drive/analysis retries, stale timestamp claims, saved-transcript reuse, honest Drive verification. 49 targeted tests pass; authenticated desktop/360px preview checked, no page errors or overflow. See docs/recording-recovery-verification-2026-10-18.md. Not published.
 - [ ] Actual recovery upload/analysis and live report/follow-up read-back — BLOCKED: genuine phone audio and an actual agent session with approved truthful input are missing. No live customer writes.
 - [ ] Actual Drive backup verification — BLOCKED: accessible connector discovery shows project-owner access unavailable; zero recording backup rows, summary flags are not recording proof. No claim that Drive recordings are backed up.
