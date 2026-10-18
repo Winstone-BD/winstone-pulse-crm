@@ -95,9 +95,6 @@ function EntryHall() {
                 The Premium Real Estate CRM
               </span>
             </span>
-            <span className="ml-1 hidden shrink-0 items-center rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-gold md:inline-flex">
-              Gateway
-            </span>
           </span>
           <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span aria-hidden className="size-1.5 rounded-full bg-live" /> Server online
@@ -105,58 +102,28 @@ function EntryHall() {
         </div>
       </div>
       <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
-        <header className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
-          <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center gap-3 lg:justify-start">
-              <img
-                src={logoAsset.url}
-                alt="Winstone logo"
-                className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
-              />
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-foreground sm:text-base">
-                  Winstone Properties Ltd.
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-                  Find. Build. Invest.
-                </p>
-              </div>
-            </div>
-            <h1 className="mt-8 text-4xl font-semibold uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Winstone Pulse Gateway
+        <header className="border-b border-border pb-8 sm:pb-10">
+          <div className="text-left">
+            <p className="text-[11px] font-semibold uppercase text-gold">
+              Winstone Properties Ltd. · Find. Build. Invest.
+            </p>
+            <h1 className="font-hand mt-5 text-5xl font-semibold leading-[1.15] text-foreground sm:mt-6 sm:text-7xl lg:text-8xl">
+              Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <p className="mt-3 text-xl font-medium text-foreground sm:text-2xl">
               The Premium Real Estate CRM.
             </p>
-            <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.
             </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <Button
-                size="lg"
-                className="rounded-md px-7 text-base font-bold hover:bg-charcoal"
-                onClick={() =>
-                  document
-                    .getElementById("workspace-signin")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
-              >
-                Get started <ChevronRight className="size-5" />
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-md px-7 text-base font-semibold">
-                <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
-                  Sign in
-                </Link>
-              </Button>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
+            <div className="mt-7 grid gap-5 sm:mt-8 sm:grid-cols-3 sm:gap-8">
               {[
-                { icon: Headphones, label: "Manage team", sub: "Agents & roles" },
-                { icon: BarChart3, label: "Track pipeline", sub: "Leads & bookings" },
-                { icon: Smartphone, label: "Review calls", sub: "Activity & history" },
+                { icon: Headphones, label: "Manage your team", sub: "Agents, roles & performance" },
+                { icon: BarChart3, label: "Track your pipeline", sub: "Leads, follow-ups & bookings" },
+                { icon: Smartphone, label: "Review call activity", sub: "Call reports & customer history" },
               ].map(({ icon: Icon, label, sub }) => (
-                <span key={label} className="inline-flex items-center gap-2 text-left text-sm font-semibold text-foreground">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
+                <span key={label} className="inline-flex items-center gap-3 text-left text-sm font-semibold text-foreground">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-full text-gold ring-1 ring-gold/40">
                     <Icon className="size-4" />
                   </span>
                   <span className="leading-tight">
@@ -168,23 +135,6 @@ function EntryHall() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-border bg-card px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Pipeline Value
-                </p>
-                <p className="text-lg font-extrabold tracking-tight">Live, every second</p>
-                <p className="text-xs font-bold text-gold">↑ Updated in real time</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Follow-ups
-                </p>
-                <p className="text-lg font-extrabold tracking-tight">Never missed</p>
-              </div>
-            </div>
-          </div>
         </header>
 
         <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
