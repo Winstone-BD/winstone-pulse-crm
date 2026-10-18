@@ -2,6 +2,8 @@
 
 ## Active
 
+- [ ] Full-system presentation polish: shared controls, readable tables, dialog headers/actions, mobile touch sizes and workspace verification; preserve all data and workflows.
+
 - [x] Global unified palette: one inherited token set, shared black actions/white forms, flat decoration and semantic statuses; global color check and 503 automated tests pass, production build OK; 48 static paths and four responsive widths checked. Signed-in HQ/IT/Desk checked with own account; LeadHub PIN-protected content and agent-only populated views remain unverified without the relevant authority/session. No backend changes or deployment.
 
 - [x] Replace sideways desk navigation with a colour-accented, non-scrolling section picker; mobile global menu opens from below. Browser verified, no overflow.
