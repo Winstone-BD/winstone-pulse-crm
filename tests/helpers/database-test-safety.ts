@@ -5,6 +5,6 @@ export function canRunDatabaseWriteTests(env: Record<string, string | undefined>
   if (!url || !env["SUPABASE_SERVICE_ROLE_KEY"]) return false;
   try {
     const host = new URL(url).hostname;
-    return !host.includes("siepfegeubbqwhodyxcg") && !new URL(env["STAGING_APP_URL"]).hostname.endsWith("winstonebd.com");
+    return host === "127.0.0.1" && new URL(env["STAGING_APP_URL"]).hostname === "127.0.0.1";
   } catch { return false; }
 }

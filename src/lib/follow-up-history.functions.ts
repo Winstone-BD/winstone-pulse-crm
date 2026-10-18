@@ -125,10 +125,9 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
       const reps = reports.filter((r) => r.lead_id === leadId && (!ownAgentId || r.agent_id === ownAgentId));
       const lead = leadMap.get(leadId);
       const agentId = fus[fus.length - 1]?.agent_id ?? null;
-      const open = fus.filter((f) => f.status !== "done");
+      const open = fus.filter((f) => !["done", "completed", "cancelled", "canceled"].includes(f.status));
       const overdue = open.filter((f) => new Date(f.scheduled_at).getTime() < now).length;
       const nextOpen = open
-        .filter((f) => new Date(f.scheduled_at).getTime() >= now)
         .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))[0];
       const last = reps[reps.length - 1];
       const stopped =
@@ -167,7 +166,7 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
         agentId,
         agentName: agentId ? agentName.get(agentId) ?? "—" : "—",
         followUpsSet: fus.length,
-        followUpsDone: fus.length - open.length,
+        followUpsDone: fus.filter((f) => ["done", "completed"].includes(f.status)).length,
         followUpsOpen: open.length,
         overdue,
         contacts: reps.length,

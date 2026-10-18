@@ -260,6 +260,9 @@ export const decideAccount = createServerFn({ method: "POST" })
             role: "agent" as const,
           };
 
+    const officer = await supabaseAdmin.from("it_officer_onboarding").select("id").eq("profile_id", data.profileId).maybeSingle();
+    if (officer.error) throw new Error("Unable to verify account approval path");
+    if (officer.data) throw new Error("IT officer accounts require the dedicated Architect approval flow");
     const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.profileId);
     if (error) throw new Error(error.message);
 

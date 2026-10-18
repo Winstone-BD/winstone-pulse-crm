@@ -29,6 +29,7 @@ export function ExtraLeadPanel() {
   const [agentId, setAgentId] = useState("");
   const [quantity, setQuantity] = useState(5);
   const [reason, setReason] = useState("");
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["quota-overview"],
@@ -39,11 +40,12 @@ export function ExtraLeadPanel() {
   const mutation = useMutation({
     mutationFn: () =>
       grant({
-        data: { adminToken: getAdminToken(), agentProfileId: agentId, quantity, reason: reason || null },
+        data: { adminToken: getAdminToken(), agentProfileId: agentId, quantity, reason: reason || null, requestId: requestId ?? "" },
       }),
     onSuccess: (result) => {
       toast.success(`${result.moved}টি অতিরিক্ত লিড দেওয়া হয়েছে · ডেটাবেজে বাকি ${result.remaining}`);
       setReason("");
+      setRequestId(null);
       void queryClient.invalidateQueries({ queryKey: ["quota-overview"] });
       void queryClient.invalidateQueries({ queryKey: ["lead-pool-status"] });
       void queryClient.invalidateQueries({ queryKey: ["crm-snapshot"] });
@@ -90,7 +92,7 @@ export function ExtraLeadPanel() {
         />
         <Button
           disabled={!agentId || mutation.isPending}
-          onClick={() => mutation.mutate()}
+          onClick={() => { if (!requestId) { setRequestId(crypto.randomUUID()); } else mutation.mutate(); }}
           className="whitespace-nowrap"
         >
           {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "দিন"}
