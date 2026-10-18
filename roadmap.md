@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Complete IT onboarding: audited invitation record, authenticated password setup, Architect approval, separate confirmed IT role grant, server-only state and duplicate protection; no account created without authorized session.
 - [x] IT Console recovery: full TSX split URLs/query strings retained; root router errors notify bounded recovery. Corrected matcher missing parentheses in actual React null-hook crash. Fresh module JavaScript 200, zero errors; simulated module outage waits until restored; exact React use crash triggers recovery to IT access gate. 18 regression tests pass; build OK. No publication or account/permission changes; authenticated console content not tested.
 - [x] HQ Leads tab now includes agent selection, assigned lead list, status/stage/call progress, history and confirmed review comments. Authority and current-owner checks; existing agent-scoped notice delivery, append-only event/audit; no lead mutation or external push. 25 focused tests pass; live authenticated delivery not tested, no customer comments sent.
 - [ ] Renewed Mashat request + uploaded portrait: existing IT officer invitation remains blocked without verified Architect/user-bound IT session; photo is reference only, does not identify or authorize an account. No invite/account created; password only through secure in-app invitation flow.
