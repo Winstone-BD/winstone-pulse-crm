@@ -394,6 +394,52 @@ export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
     return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
   });
 
+/** Searchable history of bulk extra-lead batches (one row per confirmed request). */
+export const bulkExtraHistory = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ adminToken: z.string().nullable().optional(), q: z.string().trim().max(80).optional() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    await dispatcher(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("lead_extra_grants")
+      .select("request_id, agent_profile_id, work_date, quantity, reason, granted_by_label, created_at")
+      .not("request_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    const ids = [...new Set((rows ?? []).map((r) => r.agent_profile_id))];
+    const { data: profs } = ids.length
+      ? await supabaseAdmin.from("profiles").select("id, name, employee_id").in("id", ids)
+      : { data: [] as { id: string; name: string; employee_id: string | null }[] };
+    const names = new Map((profs ?? []).map((p) => [p.id, p]));
+    type Batch = {
+      requestId: string; workDate: string; createdAt: string; reason: string; admin: string; total: number;
+      agents: { name: string; employeeId: string | null; moved: number }[];
+    };
+    const batches = new Map<string, Batch>();
+    for (const r of rows ?? []) {
+      const id = r.request_id as string;
+      let b = batches.get(id);
+      if (!b) {
+        b = { requestId: id, workDate: r.work_date, createdAt: r.created_at, reason: (r.reason ?? "").replace(/^\[সবাইকে একসাথে\]\s*/, ""), admin: r.granted_by_label ?? "—", total: 0, agents: [] };
+        batches.set(id, b);
+      }
+      const p = names.get(r.agent_profile_id);
+      b.agents.push({ name: p?.name ?? "অজানা", employeeId: p?.employee_id ?? null, moved: r.quantity });
+      b.total += r.quantity;
+    }
+    const q = (data.q ?? "").toLowerCase();
+    const list = [...batches.values()].filter((b) =>
+      !q ||
+      b.reason.toLowerCase().includes(q) ||
+      b.admin.toLowerCase().includes(q) ||
+      b.workDate.includes(q) ||
+      b.agents.some((a) => a.name.toLowerCase().includes(q) || (a.employeeId ?? "").toLowerCase().includes(q)),
+    );
+    return { batches: list.slice(0, 100) };
+  });
+
 /**
  * Auto-refill for the signed-in agent's own empty desk. The server decides
  * whether a batch is due (see lead-refill.rules.ts) — the agent cannot choose

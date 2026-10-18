@@ -30,3 +30,10 @@ describe("bulk extra leads idempotency + target lock", () => {
     expect(server).toMatch(/replayed: true/);
   });
 });
+
+describe("bulk extra history", () => {
+  it("is gated by the LeadHub dispatcher", () => {
+    const h = src.slice(src.indexOf("export const bulkExtraHistory"), src.indexOf("export const autoRefillMyLeads"));
+    expect(h).toMatch(/await dispatcher\(data\.adminToken\)/);
+  });
+});
