@@ -7,6 +7,13 @@ import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
 import { streamMessage } from "@lovable.dev/ai-gateway";
 import { aiFailure } from "@/lib/ai-failure";
 import { supportedEvidence } from "@/lib/ai-evidence";
+import { z } from "zod";
+
+// SDK streamMessage currently exposes unknown events; validate the native event contract.
+const claudeDelta = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("content_block_delta"), delta: z.object({ type: z.string(), text: z.string().optional() }) }),
+  z.object({ type: z.literal("message_delta"), delta: z.object({ stop_reason: z.string().nullable().optional() }) }),
+]);
 
 export const DRAFT_MODEL = "anthropic/claude-opus-5";
 
@@ -28,8 +35,11 @@ export async function callClaude(user: string, system: string = SYSTEM): Promise
     const stream = await streamMessage({ model: DRAFT_MODEL, max_tokens: 4000, system, messages: [{ role: "user", content: user }] });
     let text = "";
     for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") text += event.delta.text;
-      if (event.type === "message_delta" && event.delta.stop_reason === "refusal") throw new Error("The AI declined to draft this message");
+      const parsed = claudeDelta.safeParse(event);
+      if (!parsed.success) continue;
+      const delta = parsed.data;
+      if (delta.type === "content_block_delta" && delta.delta.type === "text_delta") text += delta.delta.text ?? "";
+      if (delta.type === "message_delta" && delta.delta.stop_reason === "refusal") throw new Error("The AI declined to draft this message");
     }
     return text;
   } catch (error) { throw aiFailure(error); }
