@@ -4,6 +4,7 @@ import { Loader2, PhoneCall, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { DeviceReportedTime } from "@/components/crm/DeviceReportedTime";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { recentSyncedCalls } from "@/lib/day-export.functions";
@@ -90,6 +91,7 @@ export function SyncedCallsPanel() {
         <ul className="mt-3 max-h-96 space-y-2 overflow-y-auto md:hidden">
           {data.calls.map((call) => (
             <li key={call.id} className="rounded-lg border border-border p-3 text-xs">
+              <DeviceReportedTime seconds={call.deviceReportedDurationSeconds} />
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><div className="min-w-0"><p className="truncate font-semibold">{call.leadName}</p><p className="truncate text-muted-foreground">{call.agentName} · {call.atDhaka}</p></div><span className="tabular font-semibold">{call.durationLabel}</span></div>
               <div className="mt-2 flex items-center justify-between gap-2"><span className="tabular text-muted-foreground">{call.phone}</span>{call.audioUrl ? <a href={call.audioUrl} target="_blank" rel="noreferrer" className="font-medium text-primary underline">শুনুন</a> : <Badge variant="outline">{RECORDING_TEXT[call.recordingStatus] ?? call.recordingStatus}</Badge>}</div>
             </li>
@@ -114,7 +116,7 @@ export function SyncedCallsPanel() {
                   <td className="py-1.5 pr-3">{call.agentName}</td>
                   <td className="py-1.5 pr-3">{call.leadName}</td>
                   <td className="tabular py-1.5 pr-3 text-xs">{call.phone}</td>
-                  <td className="tabular py-1.5 pr-3">{call.durationLabel}</td>
+                  <td className="tabular py-1.5 pr-3">{call.durationLabel}<DeviceReportedTime seconds={call.deviceReportedDurationSeconds} /></td>
                   <td className="py-1.5 text-xs">
                     {call.audioUrl ? (
                       <a

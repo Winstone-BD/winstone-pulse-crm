@@ -87,7 +87,7 @@ export const yearArchiveExport = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("call_reports")
         .select(
-          "id, lead_id, agent_id, status, category, connected, duration_seconds, temperature, grade, summary, note, reason, follow_up_at, submitted_at, created_at",
+          "id, lead_id, agent_id, status, category, connected, duration_seconds, device_reported_duration_seconds, temperature, grade, summary, note, reason, follow_up_at, submitted_at, created_at",
         )
         .gte("created_at", from)
         .lt("created_at", to)

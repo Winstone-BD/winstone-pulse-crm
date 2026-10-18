@@ -225,6 +225,7 @@ export async function openCallReport(input: {
   phoneNumber?: string | null;
   callStartedAt?: string | null;
   durationSeconds?: number;
+  deviceReportedDurationSeconds?: number | null;
   connected?: boolean;
   /** Report origin. "whatsapp" marks the mandatory report opened by a WhatsApp contact. */
   channel?: "call" | "whatsapp";
@@ -282,6 +283,7 @@ export async function openCallReport(input: {
         phone_number: input.phoneNumber ?? null,
         call_started_at: input.callStartedAt ?? null,
         duration_seconds: input.durationSeconds ?? 0,
+        device_reported_duration_seconds: input.deviceReportedDurationSeconds ?? null,
         connected: input.connected ?? true,
         channel: input.channel ?? "call",
         status: "queued",
@@ -313,6 +315,7 @@ export async function openCallReport(input: {
       phone_number: input.phoneNumber ?? null,
       call_started_at: input.callStartedAt ?? null,
       duration_seconds: input.durationSeconds ?? 0,
+      device_reported_duration_seconds: input.deviceReportedDurationSeconds ?? null,
       connected: input.connected ?? true,
       channel: input.channel ?? "call",
       status: "pending",
@@ -433,8 +436,8 @@ export async function submitCallReport(input: {
   // The stored duration wins whenever the phone actually measured the call; the
   // agent's number is only used when nothing was measured.
   const storedSeconds = report.duration_seconds ?? 0;
-  const durationSeconds =
-    storedSeconds > 0 ? storedSeconds : Math.max(0, Math.round(input.durationSeconds ?? 0));
+  const { reportDurationForSubmit } = await import("@/lib/call-timing");
+  const durationSeconds = reportDurationForSubmit(storedSeconds, report.device_reported_duration_seconds, input.durationSeconds);
   const noFollowUpNote = (input.followUpNote ?? "").trim();
   const note = input.followUpAt
     ? input.note?.trim() || null

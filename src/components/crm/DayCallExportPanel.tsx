@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { DeviceReportedTime } from "@/components/crm/DeviceReportedTime";
 import { dayCallExport, type DayCallRow } from "@/lib/day-export.functions";
 import { getAdminToken } from "@/lib/local-session";
 import { recordingDocSync } from "@/lib/recording-doc.functions";
@@ -20,6 +21,7 @@ const HEADER = [
   "কল অবস্থা",
   "সময় (সেকেন্ড)",
   "সময় (মি:সে)",
+  "Device-reported seconds (unverified)",
   "কথা হয়েছে",
   "রেকর্ডিং অবস্থা",
   "রেকর্ডিং লিংক (সাইন করা)",
@@ -49,6 +51,7 @@ function buildCsv(rows: DayCallRow[]) {
         row.callStatus,
         row.durationSeconds,
         row.durationLabel,
+        row.deviceReportedDurationSeconds ?? "",
         row.connected ? "হ্যাঁ" : "না",
         row.recordingStatus,
         row.audioUrl ?? "রেকর্ডিং নেই",
@@ -197,7 +200,7 @@ export function DayCallExportPanel() {
                   <td className="py-1.5 pr-3 text-xs text-muted-foreground">{call.atDhaka}</td>
                   <td className="py-1.5 pr-3">{call.agentName}</td>
                   <td className="py-1.5 pr-3">{call.leadName}</td>
-                  <td className="tabular py-1.5 pr-3">{call.durationLabel}</td>
+                  <td className="tabular py-1.5 pr-3">{call.durationLabel}<DeviceReportedTime seconds={call.deviceReportedDurationSeconds} /></td>
                   <td className="py-1.5 text-xs">
                     {call.audioUrl ? (
                       <a
