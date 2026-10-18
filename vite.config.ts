@@ -117,6 +117,7 @@ export default defineConfig({
         "react-dom/client",
         "react/jsx-runtime",
         "@tanstack/react-router",
+        "@tanstack/react-query",
         "@tanstack/history",
         "@tanstack/router-core",
         "@tanstack/router-core/isServer",
