@@ -36,17 +36,17 @@ export function StatCard({
   loading?: boolean;
 }) {
   return (
-    <div className={`min-w-0 rounded-2xl border border-l-4 border-border bg-card p-4 shadow-sm ${EDGE[tone]}`}>
+    <div className={`min-w-0 rounded-lg border border-l-4 border-border bg-card p-4 shadow-card ${EDGE[tone]}`} aria-busy={loading}>
       <div className="flex items-start justify-between gap-2">
-        <p className="truncate text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="break-words text-sm font-medium leading-snug text-muted-foreground">{label}</p>
         {icon ? <span className={`shrink-0 [&_svg]:size-4 ${ICON[tone]}`} aria-hidden>{icon}</span> : null}
       </div>
       {loading ? (
         <div className="mt-3 h-8 w-20 animate-pulse rounded-lg bg-muted motion-reduce:animate-none" />
       ) : (
-        <p className="mt-2 truncate text-2xl font-bold tabular-nums tracking-tight">{value}</p>
+        <p className="mt-2 break-words text-2xl font-semibold tabular-nums">{value}</p>
       )}
-      {sub && !loading ? <p className="mt-1 truncate text-xs text-muted-foreground">{sub}</p> : null}
+      {sub && !loading ? <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{sub}</p> : null}
     </div>
   );
 }
@@ -66,11 +66,11 @@ export function EmptyState({
   compact?: boolean;
 }) {
   return (
-    <div className={`flex flex-col items-center justify-center text-center ${compact ? "gap-1 py-6" : "gap-2 py-12"}`}>
+    <div className={`flex min-w-0 flex-col items-center justify-center px-4 text-center ${compact ? "gap-1 py-6" : "gap-2 py-12"}`}>
       {icon ? <span className="text-muted-foreground/70 [&_svg]:size-10" aria-hidden>{icon}</span> : null}
       <p className="font-semibold">{title}</p>
-      {hint ? <p className="max-w-sm text-sm text-muted-foreground">{hint}</p> : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+      {hint ? <p className="max-w-sm break-words text-sm leading-relaxed text-muted-foreground">{hint}</p> : null}
+      {action ? <div className="mt-2 flex max-w-full flex-wrap justify-center gap-2">{action}</div> : null}
     </div>
   );
 }
@@ -78,12 +78,12 @@ export function EmptyState({
 /** Page title block used by reference-style sections. */
 export function SectionTitle({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+    <div className="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div className="min-w-0">
-        <h2 className="truncate text-2xl font-bold tracking-tight">{title}</h2>
-        {sub ? <p className="truncate text-sm text-muted-foreground">{sub}</p> : null}
+        <h2 className="break-words text-2xl font-semibold leading-snug">{title}</h2>
+        {sub ? <p className="mt-1 break-words text-sm leading-relaxed text-muted-foreground">{sub}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">{actions}</div> : null}
     </div>
   );
 }

@@ -82,6 +82,7 @@ export function AdminPinDialog({
             type="password"
             inputMode="text"
             autoComplete="off"
+            aria-label={surface === "leadhub" ? "LeadHub PIN" : "Master PIN"}
             autoFocus
             placeholder={surface === "leadhub" ? "LeadHub PIN" : "Master PIN"}
             value={pin}
@@ -96,6 +97,7 @@ export function AdminPinDialog({
           />
           <Button
             className="w-full"
+            aria-busy={attempt.isPending}
             disabled={pin.length < 4 || attempt.isPending}
             onClick={() => attempt.mutate(pin)}
           >

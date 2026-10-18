@@ -83,7 +83,7 @@ export function NewLeadDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4 [&_label]:mb-1.5 [&_label]:block">
           <div>
             <Label className="text-xs text-muted-foreground">নাম</Label>
             <Input

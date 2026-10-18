@@ -33,5 +33,6 @@
 - Call UI reuses scoped notes/history and reporting; SIM controls use Android Telecom InCallService with explicit dialer-role consent, never a browser bridge — why: real controls, unchanged CRM gates.
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
-- All workspace wrappers inherit one global token set in src/styles.css; shared Button variants separate action colours from brand accents, and body portals inherit the same palette — why: route-specific themes and saved legacy dark classes must not fragment the requested unified design.
+- Workspace wrappers and portals inherit src/styles.css tokens; shared Buttons separate actions from accents — why: one palette everywhere.
+- Shared headers stack phone actions, dialogs reserve close-button space, tables contain horizontal scroll — why: improve all workspaces without changing workflows.
 - Desk work views (Pipeline/Tasks/Activities/Outlook in desk/WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
