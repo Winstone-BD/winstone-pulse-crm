@@ -547,13 +547,12 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
     await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
       app_metadata: { ...(authUser.user.app_metadata ?? {}), must_change_password: true },
     });
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${safeOrigin}/reset-password` },
+    // The recovery link goes ONLY to the employee's own sign-in email — it is
+    // never returned to the IT screen, so IT cannot take over the account.
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${safeOrigin}/reset-password`,
     });
-    const actionLink = link?.properties?.action_link;
-    if (error || !actionLink) throw new Error(error?.message ?? "লিংক তৈরি হয়নি");
+    if (error) throw new Error("রিসেট ইমেইল পাঠানো যায়নি");
 
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({

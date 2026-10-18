@@ -59,8 +59,8 @@ export function AgentOnboarding() {
     mutationFn: (profileId: string) =>
       issue({ data: { adminToken: getAdminToken() ?? "", profileId, origin: window.location.origin } }),
     onSuccess: (res, profileId) => {
-      setShown({ id: profileId, link: res.link });
-      toast.success(`${res.name}-এর জন্য একবার ব্যবহারযোগ্য লিংক তৈরি হয়েছে`);
+      setShown({ id: profileId, link: res.sentTo });
+      toast.success(`${res.name}-এর নিজের ইমেইলে (${res.sentTo}) রিসেট লিংক পাঠানো হয়েছে`);
       void qc.invalidateQueries({ queryKey: agentActivityKey });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "লিংক তৈরি হয়নি"),
@@ -143,19 +143,9 @@ export function AgentOnboarding() {
                 {r.mustChangePassword && " · নতুন পাসওয়ার্ড সেট বাকি"}
               </p>
               {shown?.id === r.profileId && (
-                <div className="mt-2 flex items-center gap-2 rounded-md bg-muted p-2">
-                  <code className="min-w-0 flex-1 truncate text-xs">{shown.link}</code>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(shown.link);
-                      toast.success("কপি হয়েছে — এখনই পাঠান");
-                      setShown(null);
-                    }}
-                  >
-                    <Copy className="size-3.5" /> কপি
-                  </Button>
-                </div>
+                <p className="mt-2 rounded-md bg-muted p-2 text-xs">
+                  রিসেট লিংক শুধু কর্মীর নিজের ইমেইলে গেছে: {shown.link}
+                </p>
               )}
             </li>
           );
