@@ -38,9 +38,9 @@ export function ExtraLeadPanel() {
   });
 
   const mutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (key: string) =>
       grant({
-        data: { adminToken: getAdminToken(), agentProfileId: agentId, quantity, reason: reason || null, requestId: requestId ?? "" },
+        data: { adminToken: getAdminToken(), agentProfileId: agentId, quantity, reason: reason || null, requestId: key },
       }),
     onSuccess: (result) => {
       toast.success(`${result.moved}টি অতিরিক্ত লিড দেওয়া হয়েছে · ডেটাবেজে বাকি ${result.remaining}`);
@@ -92,7 +92,7 @@ export function ExtraLeadPanel() {
         />
         <Button
           disabled={!agentId || mutation.isPending}
-          onClick={() => { if (!requestId) { setRequestId(crypto.randomUUID()); } else mutation.mutate(); }}
+          onClick={() => { const key = requestId ?? crypto.randomUUID(); setRequestId(key); mutation.mutate(key); }}
           className="whitespace-nowrap"
         >
           {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "দিন"}
