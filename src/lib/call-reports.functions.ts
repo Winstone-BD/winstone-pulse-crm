@@ -816,6 +816,58 @@ export const rescheduleFollowUp = createServerFn({ method: "POST" })
     return (await import("@/lib/follow-up-lifecycle.server")).transitionFollowUp(caller, { ...data, action: "reschedule" });
   });
 
+/** A stored duration this far from the phone's measured time counts as a mismatch. */
+export const DURATION_MISMATCH_TOLERANCE_SECONDS = 15;
+
+/**
+ * HQ/IT review list: submitted reports whose stored duration disagrees with
+ * the time the phone measured. Read-only — nothing is changed from here.
+ */
+export const listDurationMismatches = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => Base.parse(input))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    if (caller.scope !== "authority") return { mismatches: [] as const };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("call_reports")
+      .select("id, lead_id, agent_id, phone_number, duration_seconds, device_reported_duration_seconds, call_ended_at, submitted_at")
+      .eq("status", "submitted")
+      .not("device_reported_duration_seconds", "is", null)
+      .order("call_ended_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    const flagged = (rows ?? []).filter(
+      (r) =>
+        Math.abs((r.duration_seconds ?? 0) - (r.device_reported_duration_seconds ?? 0)) >
+        DURATION_MISMATCH_TOLERANCE_SECONDS,
+    );
+    const ids = [...new Set(flagged.flatMap((r) => [r.lead_id, r.agent_id]).filter(Boolean))] as string[];
+    const { data: people } = ids.length
+      ? await supabaseAdmin.from("profiles").select("id, name").in("id", ids)
+      : { data: [] };
+    const { data: leads } = ids.length
+      ? await supabaseAdmin.from("leads").select("id, name, phone_number").in("id", ids)
+      : { data: [] };
+    const personById = new Map((people ?? []).map((p) => [p.id, p.name]));
+    const leadById = new Map((leads ?? []).map((l) => [l.id, l]));
+    return {
+      mismatches: flagged.map((r) => ({
+        id: r.id,
+        leadId: r.lead_id,
+        leadName: r.lead_id ? (leadById.get(r.lead_id)?.name ?? null) : null,
+        phoneNumber: r.lead_id ? (leadById.get(r.lead_id)?.phone_number ?? r.phone_number) : r.phone_number,
+        agentName: r.agent_id ? (personById.get(r.agent_id) ?? null) : null,
+        storedSeconds: r.duration_seconds ?? 0,
+        phoneSeconds: r.device_reported_duration_seconds ?? 0,
+        differenceSeconds: Math.abs((r.duration_seconds ?? 0) - (r.device_reported_duration_seconds ?? 0)),
+        callEndedAt: r.call_ended_at,
+        submittedAt: r.submitted_at,
+      })),
+    };
+  });
+
 export const recoverMissedFollowUp = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => TransitionInput.extend({ scheduledAt: z.string().datetime(), nextAction: z.string().trim().min(1).max(2000) }).parse(input))
   .handler(async ({ data }) => {
