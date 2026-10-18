@@ -9,3 +9,6 @@ it("rejects the shared live backend even with explicit opt-in", () => {
 it("permits an explicitly opted-in isolated staging backend", () => {
   expect(canRunDatabaseWriteTests({ RUN_DATABASE_WRITE_TESTS: "1", STAGING_APP_URL: "http://127.0.0.1:8081", SUPABASE_URL: "http://127.0.0.1:54321", SUPABASE_SERVICE_ROLE_KEY: "synthetic" })).toBe(true);
 });
+it("does not treat a preview alias as isolation", () => {
+ expect(canRunDatabaseWriteTests({ RUN_DATABASE_WRITE_TESTS:"1", STAGING_APP_URL:"https://preview.example.test", SUPABASE_URL:"https://preview-proxy.example.test", SUPABASE_SERVICE_ROLE_KEY:"synthetic" })).toBe(false);
+});

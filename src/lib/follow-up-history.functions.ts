@@ -97,18 +97,17 @@ export const listFollowUpHistory = createServerFn({ method: "POST" })
     for (let i = 0; i < leadIds.length; i += 200) {
       const ids = leadIds.slice(i, i + 200);
       const [r, l] = await Promise.all([
-        supabaseAdmin
+        pageAll((a, b) => supabaseAdmin
           .from("call_reports")
           .select("lead_id, agent_id, call_ended_at, connected, category, reason, no_follow_up_reason, no_follow_up_note, customer_response, temperature, follow_up_priority, status")
           .in("lead_id", ids)
-          .neq("status", "pending")
+          .eq("status", "submitted")
           .order("call_ended_at", { ascending: true })
-          .limit(5000),
+          .order("id", { ascending: true }).range(a, b)),
         supabaseAdmin.from("leads").select("id, name, phone_number, temperature").in("id", ids),
       ]);
-      if (r.error) throw new Error(r.error.message);
       if (l.error) throw new Error(l.error.message);
-      reports.push(...((r.data ?? []) as Report[]));
+      reports.push(...(r as Report[]));
       leads.push(...(l.data ?? []));
     }
 

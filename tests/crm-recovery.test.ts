@@ -13,6 +13,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
 } }));
 vi.mock("@/lib/call-jobs.server", () => ({ recordSyncEvent: async () => undefined }));
 vi.mock("@/lib/classification-review.server", () => ({ reviewSubmittedReport: async () => ({ mismatchAlertId:null,missingRecordingAlertId:null }) }));
+vi.mock("@/lib/report-sheet.server", () => ({ syncReportsToSheet: async () => ({ok:false}) }));
 beforeEach(() => { s.fail=false; s.status="pending"; s.finalizes=[]; s.writes=0; });
 const noAnswer = { reportId:"r1",agentId:"a1",category:"no_answer",summary:"No answer",direction:"outgoing",callStatus:"no_answer",durationSeconds:0,followUpNeeded:false,noFollowUpReason:"not_connected" };
 it("international intake retains explicit country-code prefix", () => {
