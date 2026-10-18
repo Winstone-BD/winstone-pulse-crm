@@ -946,6 +946,13 @@
       "when": 1792063207598,
       "tag": "0134_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1792311916241,
+      "tag": "0135_preserve_device_reported_call_duration",
+      "breakpoints": true
     }
   ]
 }

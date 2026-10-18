@@ -805,6 +805,7 @@ export type Database = {
           customer_objections: string[]
           deal_stage: string | null
           device_id: string | null
+          device_reported_duration_seconds: number | null
           duration_seconds: number
           external_call_id: string | null
           file_name: string | null
@@ -859,6 +860,7 @@ export type Database = {
           customer_objections?: string[]
           deal_stage?: string | null
           device_id?: string | null
+          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           external_call_id?: string | null
           file_name?: string | null
@@ -913,6 +915,7 @@ export type Database = {
           customer_objections?: string[]
           deal_stage?: string | null
           device_id?: string | null
+          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           external_call_id?: string | null
           file_name?: string | null
@@ -984,6 +987,7 @@ export type Database = {
           created_at: string
           customer_response: string | null
           device_id: string | null
+          device_reported_duration_seconds: number | null
           duration_seconds: number
           evaluation_answers: Json | null
           evaluation_model: string | null
@@ -1025,6 +1029,7 @@ export type Database = {
           created_at?: string
           customer_response?: string | null
           device_id?: string | null
+          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           evaluation_answers?: Json | null
           evaluation_model?: string | null
@@ -1066,6 +1071,7 @@ export type Database = {
           created_at?: string
           customer_response?: string | null
           device_id?: string | null
+          device_reported_duration_seconds?: number | null
           duration_seconds?: number
           evaluation_answers?: Json | null
           evaluation_model?: string | null
