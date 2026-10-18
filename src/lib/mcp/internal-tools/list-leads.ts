@@ -10,7 +10,22 @@ export default defineTool({
     "List leads, newest activity first. Filter by stage, source, assigned employee ID or a name/phone search.",
   inputSchema: toolShape({
     status: z
-...
+      .enum(["pending", "contacted", "follow_up", "closed"])
+      .optional()
+      .describe("Lead stage."),
+    source: z.string().trim().min(1).max(40).optional().describe("Where the lead came from."),
+    employee_id: z.string().trim().min(2).max(32).optional().describe("Only leads of this agent."),
+    search: z
+      .string()
+      .trim()
+      .min(2)
+      .max(60)
+      .regex(
+        /^[\p{L}\p{N}\s+.'-]+$/u,
+        "Search may only contain letters, numbers, spaces, +, period, apostrophe, or hyphen.",
+      )
+      .optional()
+      .describe("Match on lead name or phone number."),
     limit: z.number().int().min(1).max(200).default(50),
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },

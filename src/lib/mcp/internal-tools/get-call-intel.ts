@@ -12,7 +12,11 @@ export default defineTool({
     lead_id: z.string().uuid().optional().describe("The lead's ID."),
     phone_number: z.string().trim().min(5).max(24).optional().describe("The lead's phone number."),
     limit: z
-...
+      .number()
+      .int()
+      .min(1)
+      .max(50)
+      .optional()
       .describe("Max recordings to return (default 5)."),
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
