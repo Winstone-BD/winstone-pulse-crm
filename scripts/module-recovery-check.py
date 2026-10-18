@@ -41,7 +41,7 @@ async def main():
         loads = []
         page.on("load", lambda: loads.append(1))
         await page.evaluate(
-            "m => { for (let i = 0; i < 4; i++) window.dispatchEvent(new ErrorEvent('error', { message: m })); }",
+            "m => { for (let i = 0; i < 4; i++) window.dispatchEvent(new CustomEvent('winstone:module-load-error', { detail: m })); }",
             FAIL_MSG,
         )
         try:
@@ -60,7 +60,7 @@ async def main():
         await page.evaluate(
             """m => { sessionStorage.setItem('deployment-reload-attempted','1');
                      sessionStorage.setItem('deployment-reload-attempted:n','3');
-                     window.dispatchEvent(new ErrorEvent('error', { message: m })); }""",
+                     window.dispatchEvent(new CustomEvent('winstone:module-load-error', { detail: m })); }""",
             FAIL_MSG,
         )
         try:
