@@ -127,7 +127,7 @@ async function resolveCallerInner(adminToken?: string | null): Promise<Caller> {
 
 /** Authority or coordinator may dispatch leads. */
 export function canDispatch(caller: Caller) {
-  return caller.scope === "authority";
+  return caller.scope === "authority" && !caller.readOnly;
 }
 
 /** Sell Team Admin desks (Abu Haidar). Agent scope + Coordinator Deck intake only. */
