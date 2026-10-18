@@ -385,6 +385,8 @@ export async function submitCallReport(input: {
   if (!report) throw new Error("রিপোর্ট পাওয়া যায়নি");
   if (report.agent_id !== input.agentId) throw new Error("এই রিপোর্ট আপনার নয়");
   if (report.status === "submitted") return { ok: true, alreadySubmitted: true as const };
+  const { data: currentLead, error: ownerError } = await supabaseAdmin.from("leads").select("assigned_to, assigned_agent_id").eq("id", report.lead_id).maybeSingle();
+  if (ownerError || !currentLead || (currentLead.assigned_to ?? currentLead.assigned_agent_id) !== input.agentId) throw new Error("This lead is no longer assigned to you");
 
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
