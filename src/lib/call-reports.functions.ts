@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { followUpHealth } from "@/lib/follow-up-lifecycle";
 import { FOLLOW_UP_REASON_CODES } from "@/lib/follow-up-reasons";
 import { createServerFn } from "@tanstack/react-start";
@@ -414,8 +415,7 @@ export const myFollowUps = createServerFn({ method: "POST" })
     // Paged through every matching row — no silent truncation. Agents only get their own.
     const events: import("@/integrations/supabase/types").Database["public"]["Tables"]["follow_up_events"]["Row"][] = [];
     for (let from = 0; ; from += 1000) {
-      let query = supabaseAdmin
-        .from(data.activeOnly ? "active_follow_up_events" : "follow_up_events")
+      let query = (data.activeOnly ? followUpWork(supabaseAdmin) : supabaseAdmin.from("follow_up_events"))
         .select("*")
         .order("scheduled_at", { ascending: true })
         .order("id")
@@ -497,8 +497,7 @@ export const myCallReports = createServerFn({ method: "POST" })
     const leadById = new Map((leads ?? []).map((l) => [l.id, l]));
 
     const nowIso = new Date().toISOString();
-    const { data: upcoming } = await supabaseAdmin
-      .from("active_follow_up_events")
+    const { data: upcoming } = await followUpWork(supabaseAdmin)
       .select(
         "id, lead_id, customer_name, phone_number, category, priority, note, scheduled_at, status",
       )
@@ -781,8 +780,7 @@ export const myLeadExtras = createServerFn({ method: "POST" })
       .order("submitted_at", { ascending: false })
       .limit(2000);
     if (agentId) reports = reports.eq("agent_id", agentId);
-    let follows = supabaseAdmin
-      .from("active_follow_up_events")
+    let follows = followUpWork(supabaseAdmin)
       .select("lead_id, scheduled_at")
       .in("status", ["upcoming", "due", "missed"])
       .order("scheduled_at", { ascending: true })

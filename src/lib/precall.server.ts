@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { assignmentReasons, clampBrief, followUpScript, ruleBrief, type BriefFacts, type QuickBrief } from "@/lib/precall-brief";
 import type { CallRecording, Lead } from "@/lib/crm-data";
 
@@ -181,8 +182,7 @@ async function loadFacts(leadId: string): Promise<{ facts: BriefFacts; inventory
       .eq("status", "submitted")
       .order("submitted_at", { ascending: false })
       .limit(1),
-    supabaseAdmin
-      .from("active_follow_up_events")
+    followUpWork(supabaseAdmin)
       .select("scheduled_at")
       .eq("lead_id", leadId)
       .in("status", ["upcoming", "due", "missed"])

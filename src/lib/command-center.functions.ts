@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -38,8 +39,7 @@ export const getCommandCenterFeed = createServerFn({ method: "POST" })
         return q.order("created_at", { ascending: true }).order("id").range(a, b);
       }),
       pageAll((a, b) => {
-        let q = supabaseAdmin
-          .from("current_follow_up_work_items")
+        let q = followUpWork(supabaseAdmin, "current")
           .select("id, lead_id, agent_id, status, scheduled_at, completed_at");
         if (me) q = q.eq("agent_id", me);
         return q.order("created_at", { ascending: true }).order("id").range(a, b);

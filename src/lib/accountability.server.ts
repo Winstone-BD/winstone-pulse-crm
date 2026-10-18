@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import {
   ACCOUNTABILITY_START_DATE,
   computeAccountability,
@@ -43,8 +44,7 @@ export async function measureAgentDay(agentId: string, day: string): Promise<Acc
       (l.status !== "pending" && l.updated_at <= end),
   }));
 
-  const { data: fus } = await db
-    .from("current_follow_up_work_items")
+  const { data: fus } = await followUpWork(db, "current")
     .select("id, lead_id, customer_name, scheduled_at, status, completed_at")
     .eq("agent_id", agentId)
     .lte("scheduled_at", end)

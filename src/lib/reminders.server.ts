@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 /**
  * Reminders: the two things an agent must never forget.
  *
@@ -94,8 +95,7 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     });
   }
 
-  const { data: followUps } = await supabaseAdmin
-    .from("active_follow_up_events")
+  const { data: followUps } = await followUpWork(supabaseAdmin)
     .select("id, lead_id, customer_name, phone_number, note, category, priority, scheduled_at, reminder_minutes")
     .eq("agent_id", profileId)
     .in("status", ["upcoming", "due", "missed"])
