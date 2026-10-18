@@ -1,0 +1,3 @@
+ALTER POLICY "Users read events for assigned leads or admin/team_lead" ON public.lead_events USING (public.has_role((SELECT auth.uid()),'admin') OR public.has_role((SELECT auth.uid()),'team_leader') OR lead_id IN (SELECT l.id FROM public.leads l WHERE coalesce(l.assigned_to,l.assigned_agent_id) IN (SELECT p.id FROM public.profiles p WHERE p.user_id=(SELECT auth.uid()))));
+CREATE OR REPLACE VIEW public.active_follow_up_events WITH (security_invoker=true) AS SELECT f.* FROM public.follow_up_events f WHERE f.status IN ('upcoming','due','missed') AND NOT EXISTS(SELECT 1 FROM public.follow_up_events child WHERE child.parent_follow_up_id=f.id);
+GRANT SELECT ON public.active_follow_up_events TO authenticated,service_role;

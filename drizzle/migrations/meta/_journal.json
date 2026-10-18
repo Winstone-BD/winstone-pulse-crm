@@ -778,6 +778,13 @@
       "when": 1792340310160,
       "tag": "0110_enforce_current_assigned_lead_api_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1792340446723,
+      "tag": "0111_optimize_assigned_event_visibility",
+      "breakpoints": true
     }
   ]
 }
