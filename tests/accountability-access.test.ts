@@ -1,0 +1,7 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const s=vi.hoisted(()=>({ locked:true, error:false, statuses:[] as unknown[] }));
+vi.mock("@/integrations/supabase/client.server",()=>({ supabaseAdmin:{ from(){const q:Record<string,unknown>={};for(const m of ["select","eq","lte","limit"])q[m]=()=>q;q.neq=(_field:string,status:string)=>{s.statuses.push(status);return q;};q.then=(r:(a:unknown)=>void)=>r({data:s.locked?[{id:"review"}]:[],error:s.error?{message:"unavailable"}:null});return q;} } }));
+beforeEach(()=>{s.locked=true;s.error=false;s.statuses=[];});
+it("existing unapproved HQ review blocks calls",async()=>{const{requireAgentReviewClear}=await import("@/lib/accountability-access.server");expect(await requireAgentReviewClear("a1")).toMatchObject({blocked:true});expect(s.statuses).toEqual(["approved"]);});
+it("no unresolved review permits calls",async()=>{s.locked=false;const{requireAgentReviewClear}=await import("@/lib/accountability-access.server");expect(await requireAgentReviewClear("a1")).toBeNull();});
+it("review lookup failure is not silently treated as unlocked",async()=>{s.error=true;const{requireAgentReviewClear}=await import("@/lib/accountability-access.server");await expect(requireAgentReviewClear("a1")).rejects.toThrow("Unable to verify");});
