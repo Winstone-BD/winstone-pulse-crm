@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Active
+- [ ] Add a free-first Winstone AI copilot instruction center to LeadHub Nexus and IT Console; require human confirmation and preserve canonical permissions.
+- [ ] Strengthen Nexus/IT PIN protection without disclosing PINs; verify authorized key workflows on crm.winstonebd.com without fabricated customer/staff writes.
 - [x] Protected live reads: signed-in Desk/follow-ups/HQ and genuine LeadHub PIN unlock + canonical database/history verified. Preview fixes HQ-granted own-work scope and read-only write gaps; 555 tests pass, build OK. No customer changes or publication. See docs/protected-workflows-2026-10-18.md.
 - [ ] Protected mutation completion: blocked by truthful staff daily report and authorized customer-specific test actions; corrected preview is not published. Durable PIN throttle remains unresolved.
 - [x] Four-workspace audit recorded in docs/workspace-audit-2026-10-18.md: signed-in Agent/follow-ups/HQ populated, Nexus PIN gate intact, IT /system renders for read-only HQ with denied subpanels. No customer writes. Three write-gate risks and PIN throttling gap found; full privileged actions remain unverified.
