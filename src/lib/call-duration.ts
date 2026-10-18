@@ -8,9 +8,9 @@ import { plausibleSeconds } from "@/lib/lead-groups";
  * Time spent filling out the report is never counted.
  */
 export function resolveCallDuration(input: {
-  phoneSeconds?: number | null;
-  storedSeconds?: number | null;
-  enteredSeconds?: number | null;
+  phoneSeconds?: number | null | undefined;
+  storedSeconds?: number | null | undefined;
+  enteredSeconds?: number | null | undefined;
 }): number {
   const phone = plausibleSeconds(input.phoneSeconds);
   if (phone > 0) return Math.round(phone);
