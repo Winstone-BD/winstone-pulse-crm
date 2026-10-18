@@ -36,10 +36,10 @@ describe("notice board requests", () => {
     expect(noticeDecision(pending, "reply")).toEqual({ kind: "deny", message: NOTICE_READ_ONLY });
   });
 
-  it("IT publishes; a read-only HQ view can see recipients but not publish", () => {
+  it("HQ oversight can publish messages without gaining operational writes", () => {
     expect(noticeDecision(it_, "publish").kind).toBe("allow");
     expect(noticeDecision(hqView, "recipients").kind).toBe("allow");
-    expect(noticeDecision(hqView, "publish")).toEqual({ kind: "deny", message: NOTICE_READ_ONLY });
+    expect(noticeDecision(hqView, "publish")).toEqual({ kind: "allow" });
     // PIN sessions have no personal inbox: marking read is a harmless no-op.
     expect(noticeDecision(it_, "read")).toEqual({ kind: "empty" });
   });

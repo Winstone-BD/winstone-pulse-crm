@@ -9,7 +9,7 @@ async function callerFor(adminToken: string | null | undefined, action: NoticeAc
   const { resolveCaller } = await import("@/lib/access.server");
   const caller = await resolveCaller(adminToken ?? null);
   const decision = noticeDecision(caller, action);
-  if (decision.kind === "deny" && !(caller.scope === "authority" && caller.readOnly && ["publish", "recipients"].includes(action))) throw new Error(decision.message);
+  if (decision.kind === "deny") throw new Error(decision.message);
   return caller;
 }
 
