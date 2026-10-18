@@ -28,6 +28,7 @@ export type AuditAction =
   | "device_registered"
   | "device_revoked"
   | "recording_reprocessed"
+  | "recording_audio_recovered"
   | "alert_acknowledged"
   | "report_sheet_sync"
   | "agent_account_created"

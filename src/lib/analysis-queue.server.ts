@@ -8,6 +8,7 @@
  * idempotent and safe to call from the upload route, the IT Console and cron.
  */
 const MAX_ATTEMPTS = 5;
+import { analysisLeaseExpired } from "./recording-recovery";
 
 export type AnalysisState = "pending" | "processing" | "completed" | "failed" | "not_available";
 
@@ -37,13 +38,14 @@ export async function analyzeOne(recordingId: string): Promise<AnalysisState> {
 
   const { data: row } = await supabaseAdmin
     .from("call_recordings")
-    .select("id, lead_id, agent_id, analysis_attempts, audio_url, analysis_status")
+    .select("id, lead_id, agent_id, analysis_attempts, audio_url, storage_path, analysis_status, updated_at")
     .eq("id", recordingId)
     .maybeSingle();
   if (!row) return "failed";
   if (row.analysis_status === "completed") return "completed";
+  if (row.analysis_status === "processing" && !analysisLeaseExpired(row.updated_at)) return "processing";
 
-  if (!row.audio_url) {
+  if (!row.audio_url && !row.storage_path) {
     await supabaseAdmin
       .from("call_recordings")
       .update({
@@ -62,10 +64,16 @@ export async function analyzeOne(recordingId: string): Promise<AnalysisState> {
   }
 
   const attempts = (row.analysis_attempts ?? 0) + 1;
-  await supabaseAdmin
+  const { data: claimed, error: claimError } = await supabaseAdmin
     .from("call_recordings")
     .update({ analysis_status: "processing", analysis_attempts: attempts })
-    .eq("id", recordingId);
+    .eq("id", recordingId)
+    .eq("updated_at", row.updated_at)
+    .eq("analysis_status", row.analysis_status)
+    .select("id")
+    .maybeSingle();
+  if (claimError) throw new Error(claimError.message);
+  if (!claimed) return "processing";
   await upsertCallJob({
     recordingId,
     jobType: "transcription",

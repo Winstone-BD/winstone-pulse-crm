@@ -21,3 +21,4 @@
 - Instruction copilot drafts locally without AI calls; LeadHub prefills the existing confirmation form, IT links to Nexus, app changes stay copy-only — why: no second write path or hidden credit usage.
 - IT/HQ vault checks read only master/it_console PINs, never LeadHub — why: Nexus credentials must not unlock IT.
 - PIN unlock uses pin-auth.server.ts and atomic begin/finish attempt RPCs, scoped to verified account or signed HttpOnly PIN-session cookie plus surface; only completed wrong-PIN verification increments failures, leases never do — why: preserve valid entry and five-failure/five-minute isolation without shared-IP blocking.
+- Recording recovery shares recording-recovery.ts prerequisites; analysis claims unchanged timestamps, reuses saved transcripts, and distinguishes Drive access failures from missing files — why: no blind retries, duplicate billing or false backup failures.

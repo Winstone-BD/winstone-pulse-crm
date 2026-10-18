@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import type { CommandAnswer, Surface } from "@/lib/command-agent.server";
+import { assertRecordingRetry, analysisOutcomeOk } from "./recording-recovery";
 
 /**
  * Command Agent server entry points, shared by all four surfaces.
@@ -284,8 +285,14 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
     if (type === "retry_recording") {
       requireAuthority(caller);
       const recordingId = str(params, "recording_id");
-      const step = str(params, "step") === "drive" ? "drive" : "analysis";
+      const requestedStep = str(params, "step");
+      if (requestedStep !== "drive" && requestedStep !== "analysis") throw new Error("আটকে থাকা ধাপ নিশ্চিত করুন: drive অথবা analysis");
+      const step = requestedStep;
       if (!recordingId) throw new Error("কোন রেকর্ডিং আবার চালানো হবে তা বেছে নিন");
+      const { data: recording, error } = await supabaseAdmin.from("call_recordings").select("storage_path, audio_url, upload_status, analysis_status, analysis_error, stt_error_message, transcription_text, ai_summary, updated_at").eq("id", recordingId).maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!recording) throw new Error("রেকর্ডিং পাওয়া যায়নি");
+      assertRecordingRetry(recording, step);
 
       if (step === "drive") {
         const { backupRecordingToDrive } = await import("@/lib/recording-drive.server");
@@ -296,7 +303,7 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
       const { analyzeOne } = await import("@/lib/analysis-queue.server");
       const outcome = await analyzeOne(recordingId);
       await audit(`analysis:${outcome}`);
-      return { ok: true, message: `ট্রান্সক্রিপ্ট / এআই: ${String(outcome)}` };
+      return { ok: analysisOutcomeOk(outcome), message: `ট্রান্সক্রিপ্ট / এআই: ${String(outcome)}` };
     }
 
     if (type === "verify_drive") {
@@ -314,8 +321,11 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
 
       let verified = 0;
       let missing = 0;
+      let unverified = 0;
       for (const row of backups ?? []) {
-        const meta = row.drive_file_id ? await driveFileMeta(row.drive_file_id) : null;
+        let meta;
+        try { meta = row.drive_file_id ? await driveFileMeta(row.drive_file_id) : null; }
+        catch { unverified += 1; continue; }
         const ok = Boolean(meta && !meta.trashed);
         if (ok) verified += 1;
         else missing += 1;
@@ -329,8 +339,8 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
       }
       await audit(`drive_verified:${verified}/missing:${missing}`);
       return {
-        ok: missing === 0,
-        message: `Drive যাচাই: ${verified}টি ঠিক আছে, ${missing}টি পাওয়া যায়নি`,
+        ok: verified > 0 && missing === 0 && unverified === 0,
+        message: `Drive যাচাই: ${verified}টি ঠিক আছে, ${missing}টি পাওয়া যায়নি, ${unverified}টি যাচাই করা যায়নি; ${backups?.length ?? 0}টি সংরক্ষিত ফাইল পরীক্ষা হয়েছে।`,
       };
     }
 
@@ -366,8 +376,9 @@ export const runCommandAgentAction = createServerFn({ method: "POST" })
       let failed = 0;
       for (const row of stuck) {
         try {
-          await analyzeOne(row.id);
-          done += 1;
+          const outcome = await analyzeOne(row.id);
+          if (analysisOutcomeOk(outcome)) done += 1;
+          else failed += 1;
         } catch {
           failed += 1;
         }

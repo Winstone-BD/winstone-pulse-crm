@@ -209,18 +209,21 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     .eq("id", recordingId)
     .single();
   if (error || !recording) throw new Error(error?.message ?? "Recording not found");
-  if (!recording.audio_url) throw new Error("Recording has no audio file");
+  const audioPath = recording.storage_path ?? recording.audio_url;
+  if (!audioPath) throw new Error("Recording has no audio file");
 
   const { data: file, error: downloadError } = await supabaseAdmin.storage
     .from(AUDIO_BUCKET)
-    .download(recording.audio_url);
+    .download(audioPath);
   if (downloadError || !file) throw new Error(downloadError?.message ?? "Audio download failed");
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const filename = recording.audio_url.split("/").pop() ?? "recording.mp3";
+  const filename = audioPath.split("/").pop() ?? "recording.mp3";
 
   try {
-    const stt = await transcribeCall(bytes, filename);
+    const stt = recording.transcription_text
+      ? { status: "completed" as const, transcript: recording.transcription_text, provider: recording.stt_provider, model: recording.stt_model, language: recording.stt_language, fallbackUsed: recording.stt_fallback_used, errorCode: null, errorMessage: null, requestId: recording.stt_request_id, durationMs: recording.stt_duration_ms }
+      : await transcribeCall(bytes, filename);
     const provider = {
       stt_provider: stt.provider,
       stt_model: stt.model,
@@ -246,12 +249,14 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
     }
 
     const transcript = stt.transcript;
-    await logAiUsage({
+    if (!recording.transcription_text) await logAiUsage({
       category: "transcription",
       model: stt.model ?? stt.provider,
       actorProfileId: recording.agent_id,
       detail: recordingId,
     });
+    // Persist the transcript before AI so an AI-only failure does not re-bill STT.
+    await supabaseAdmin.from("call_recordings").update({ ...provider, stt_status: "completed", transcription_text: transcript, transcribed_at: recording.transcribed_at ?? new Date().toISOString() }).eq("id", recordingId);
     const analysis = await analyzeTranscript(transcript, recording.duration_seconds);
     await logAiUsage({
       category: "analysis",
@@ -284,7 +289,7 @@ export async function processRecording(recordingId: string): Promise<"done" | "e
   } catch (err) {
     await supabaseAdmin
       .from("call_recordings")
-      .update({ stt_status: "failed", sync_status: "failed" })
+      .update({ analysis_error: err instanceof Error ? err.message.slice(0, 500) : "analysis failed" })
 
       .eq("id", recordingId);
     throw err;

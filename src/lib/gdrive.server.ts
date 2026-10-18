@@ -183,7 +183,9 @@ export async function driveFileMeta(fileId: string): Promise<{
       trashed: meta.trashed === true,
       webViewLink: meta.webViewLink ?? null,
     };
-  } catch {
-    return null;
+  } catch (error) {
+    // Permission, connection and provider failures are NOT proof of deletion.
+    if (error instanceof Error && error.message.includes("[404]")) return null;
+    throw error;
   }
 }

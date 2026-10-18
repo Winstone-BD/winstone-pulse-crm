@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Caller } from "@/lib/access.server";
 import { logAiUsage } from "@/lib/ai-usage.server";
+import { recordingRecovery } from "./recording-recovery";
 
 /**
  * Command Agent — one in-app assistant shared by all four surfaces
@@ -98,7 +99,7 @@ export async function buildCommandFacts(caller: Caller, surface: Surface) {
     supabaseAdmin
       .from("call_recordings")
       .select(
-        "id, agent_id, lead_id, duration_seconds, created_at, sync_status, analysis_status, stt_status, ai_summary, ai_temperature, ai_grade",
+        "id, agent_id, lead_id, duration_seconds, created_at, updated_at, sync_status, upload_status, storage_path, audio_url, analysis_status, analysis_error, stt_status, stt_error_message, transcription_text, ai_summary, ai_temperature, ai_grade",
       )
       .order("created_at", { ascending: false })
       .limit(600),
@@ -211,15 +212,18 @@ export async function buildCommandFacts(caller: Caller, surface: Surface) {
 
   const pipeline = {
     recordings_recent: (calls ?? []).length,
-    not_uploaded: (calls ?? []).filter((c) => c.sync_status === "failed").length,
+    sample_limit: 600,
+    counts_are_sampled: true,
+    not_uploaded: (calls ?? []).filter((c) => recordingRecovery(c).missingUpload).length,
     awaiting_transcript: (calls ?? []).filter(
-      (c) => c.stt_status !== "completed" && c.stt_status !== "done",
+      (c) => recordingRecovery(c).hasAudio && !c.transcription_text && c.analysis_status !== "not_available",
     ).length,
-    awaiting_ai: (calls ?? []).filter((c) => !c.ai_summary).length,
+    awaiting_ai: (calls ?? []).filter((c) => c.transcription_text && !c.ai_summary && c.analysis_status !== "not_available").length,
     stuck_recording_ids: (calls ?? [])
-      .filter((c) => c.analysis_status === "failed" || c.sync_status === "failed")
+      .filter((c) => recordingRecovery(c).blockedStage !== null)
       .slice(0, 15)
       .map((c) => c.id),
+    recording_problems: (calls ?? []).filter((c) => recordingRecovery(c).blockedStage !== null).slice(0, 25).map((c) => ({ recording_id: c.id, agent_id: c.agent_id, lead_id: c.lead_id, upload_status: c.upload_status, analysis_status: c.analysis_status, ...recordingRecovery(c) })),
   };
 
   return {

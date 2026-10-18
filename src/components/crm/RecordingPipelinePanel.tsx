@@ -9,10 +9,13 @@ import {
   recordingPipeline,
   retryPipelineItem,
   verifyDriveBackups,
+  recoverRecordingAudio,
   type PipelineRow,
   type StageState,
 } from "@/lib/pipeline.functions";
 import { useAdminToken } from "@/lib/local-session";
+import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n";
 
 const FILTERS: {
   key: Parameters<typeof recordingPipeline>[0] extends never ? string : string;
@@ -70,16 +73,30 @@ const OVERALL_LABEL: Record<PipelineRow["overall"], string> = {
  */
 export function RecordingPipelinePanel() {
   const [filter, setFilter] = useState("all");
+  const [days, setDays] = useState(30);
+  const [recordingId, setRecordingId] = useState("");
+  const t = useT();
   const adminToken = useAdminToken();
   const loadPipeline = useServerFn(recordingPipeline);
   const runRetry = useServerFn(retryPipelineItem);
   const runVerify = useServerFn(verifyDriveBackups);
+  const runRecover = useServerFn(recoverRecordingAudio);
+  const recover = useMutation({
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      if (!window.confirm(t({ bn: "এটি কি একই কলের আসল অডিও? মূল রেকর্ডিংয়ে আপলোড হবে; বিশ্লেষণ আলাদাভাবে চালাতে হবে।", en: "Is this the same call’s genuine audio? It will restore the original recording; analysis runs separately." }))) return null;
+      if (file.size > 24 * 1024 * 1024) throw new Error("24 MB maximum");
+      const base64 = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] ?? ""); reader.onerror = () => reject(new Error("File read failed")); reader.readAsDataURL(file); });
+      return runRecover({ data: { adminToken, recordingId: id, audioBase64: base64, extension: file.name.split(".").pop() ?? "" } });
+    },
+    onSuccess: (result) => { if (result) { toast.success(t({ bn: "মূল রেকর্ডিংয়ে অডিও উদ্ধার হয়েছে; বিশ্লেষণ এখনও চালানো হয়নি।", en: "Audio restored on the original recording; analysis has not run." })); void queryClient.invalidateQueries({ queryKey: ["recording-pipeline"] }); } },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const queryClient = useQueryClient();
 
   const pipeline = useQuery({
-    queryKey: ["recording-pipeline", filter],
+    queryKey: ["recording-pipeline", filter, days, adminToken],
     queryFn: () =>
-      loadPipeline({ data: { adminToken, filter: filter as "all", days: 7, limit: 60 } }),
+      loadPipeline({ data: { adminToken, filter: filter as "all", days, limit: 200 } }),
     refetchInterval: 30_000,
   });
 
@@ -97,9 +114,9 @@ export function RecordingPipelinePanel() {
   const verify = useMutation({
     mutationFn: () => runVerify({ data: { adminToken, limit: 25 } }),
     onSuccess: (result) => {
-      toast.success(
-        `Drive যাচাই: ${result.verified}টি ফাইল আছে, ${result.missing}টি পাওয়া যায়নি (সারসংক্ষেপ ডক ${result.docsVerified} ঠিক / ${result.docsMissing} নেই)`,
-      );
+      const message = `Drive: ${result.checked}টি পরীক্ষা · ${result.verified}টি আছে · ${result.missing}টি নেই · ${result.unverified}টি যাচাই হয়নি`;
+      if (!result.checked || result.missing || result.unverified) toast.warning(message);
+      else toast.success(message);
       void queryClient.invalidateQueries({ queryKey: ["recording-pipeline"] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -141,6 +158,12 @@ export function RecordingPipelinePanel() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs">{t({ bn: "সময়সীমা (দিন)", en: "Period (days)" })}<Input type="number" min={1} max={30} value={days} onChange={(event) => setDays(Math.min(30, Math.max(1, Number(event.target.value) || 1)))} className="mt-1 w-24" /></label>
+        <label className="min-w-0 flex-1 text-xs">{t({ bn: "রেকর্ডিং ID খুঁজুন", en: "Find recording ID" })}<Input value={recordingId} onChange={(event) => setRecordingId(event.target.value.trim())} className="mt-1" /></label>
+      </div>
+      <p className="text-xs text-muted-foreground">{t({ bn: "নির্বাচিত সময়ের সর্বশেষ সর্বোচ্চ ২০০টি রেকর্ডিং; মোট সিস্টেম নয়। অডিও রেফারেন্স থাকা মানেই ফাইল যাচাই নয়।", en: "Up to 200 latest recordings in the selected period, not system totals. An audio reference does not prove file availability." })}</p>
+      {verify.data && <p className="break-words text-xs text-muted-foreground">Drive: {verify.data.checked} / {verify.data.verified} / {verify.data.missing} / {verify.data.unverified}{verify.data.failures.map((failure) => ` · ${failure.recordingId}`).join("")}</p>}
       {totals && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {(
@@ -163,7 +186,9 @@ export function RecordingPipelinePanel() {
 
       <div className="flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (
-          <button
+          <Button
+            size="sm"
+            variant={filter === f.key ? "default" : "outline"}
             key={f.key}
             type="button"
             onClick={() => setFilter(f.key)}
@@ -174,7 +199,7 @@ export function RecordingPipelinePanel() {
             }`}
           >
             {f.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -187,13 +212,9 @@ export function RecordingPipelinePanel() {
       )}
 
       <div className="space-y-3">
-        {rows.map((row) => {
-          const driveFailed = row.stages.find((s) => s.key === "drive")?.state === "failed";
-          const aiStuck = row.stages.some(
-            (s) =>
-              (s.key === "stt" || s.key === "ai") &&
-              (s.state === "failed" || s.state === "pending"),
-          );
+        {rows.filter((row) => !recordingId || row.recordingId.includes(recordingId)).map((row) => {
+          const driveFailed = row.recovery.driveRetry;
+          const aiStuck = row.recovery.analysisRetry;
           return (
             <div key={row.recordingId} className="rounded-xl border border-border/60 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -221,6 +242,8 @@ export function RecordingPipelinePanel() {
                 </span>
               </div>
 
+              <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">{row.recordingId}</p>
+              {row.recovery.missingUpload && <p className="mt-2 text-xs text-destructive">{t({ bn: "আগে ফোন থেকে একই কলের আসল অডিও উদ্ধার/আপলোড করুন। অ্যালার্ট বন্ধ বা বিশ্লেষণ রিট্রাই সমাধান নয়।", en: "Recover/upload the same call’s real audio first. Dismissing the alert or retrying analysis does not repair missing audio." })}</p>}
               <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
                 {row.stages.map((s) => (
                   <div key={s.key} className="rounded-lg bg-surface-2 px-2.5 py-1.5">
@@ -233,7 +256,7 @@ export function RecordingPipelinePanel() {
                       </span>
                     </div>
                     {s.detail && (
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 break-words text-[11px] text-muted-foreground">
                         {s.detail}
                       </p>
                     )}
@@ -244,6 +267,7 @@ export function RecordingPipelinePanel() {
               {row.error && <p className="mt-2 text-xs text-destructive">{row.error}</p>}
 
               <div className="mt-2 flex flex-wrap items-center gap-2">
+                {row.recovery.missingUpload && <label className="min-w-0 text-xs">{t({ bn: "একই কলের আসল অডিও আপলোড (২৪ MB)", en: "Upload this call’s genuine audio (24 MB)" })}<Input type="file" accept="audio/*,.m4a,.amr,.3gp" disabled={recover.isPending} onChange={(event) => { const file = event.target.files?.[0]; if (file) recover.mutate({ id: row.recordingId, file }); event.target.value = ""; }} className="mt-1 max-w-full" /></label>}
                 <span className="text-[11px] text-muted-foreground">চেষ্টা: {row.attempts}</span>
                 {driveFailed && (
                   <Button
