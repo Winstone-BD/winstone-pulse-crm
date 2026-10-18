@@ -81,6 +81,32 @@ function browserAsyncHooksStub() {
   };
 }
 
+// Build-tool pin guard: runs on every preview start AND every build.
+// Any place in package.json (or the installed copy) that drifts from the
+// locked version is reported loudly; builds refuse to continue.
+const PINNED_BUILD_TOOL = "2.25.2";
+(() => {
+  const name = "@lovable.dev/vite-tanstack-config";
+  const problems: string[] = [];
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.resolve("package.json"), "utf8"));
+    for (const field of ["dependencies", "devDependencies", "overrides", "resolutions"]) {
+      const v = pkg[field]?.[name];
+      if (v !== undefined && v !== PINNED_BUILD_TOOL) problems.push(`package.json ${field}: ${v}`);
+    }
+    const installed = JSON.parse(
+      fs.readFileSync(path.resolve("node_modules", name, "package.json"), "utf8"),
+    ).version;
+    if (installed !== PINNED_BUILD_TOOL) problems.push(`installed: ${installed}`);
+  } catch (e) {
+    problems.push(`could not verify (${(e as Error).message})`);
+  }
+  if (problems.length === 0) return;
+  const msg = `[build-tool pin] ${name} must be exactly ${PINNED_BUILD_TOOL} — unexpected change: ${problems.join("; ")}`;
+  if (process.argv.includes("build")) throw new Error(msg);
+  console.error(`\n\u001b[31m${msg}\u001b[0m\n`);
+})();
+
 export default defineConfig({
   plugins: [mcpPlugin(), browserAsyncHooksStub()],
   vite: {
