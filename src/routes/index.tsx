@@ -181,7 +181,7 @@ function EntryHall() {
         </div>
 
         <p className="mt-5 text-center text-[10px] font-medium uppercase sm:mt-8 sm:text-xs tracking-[0.25em] text-muted-foreground">
-          One CRM. One data layer. Every device.
+          The same Winstone Pulse on every device.
         </p>
 
         <h2
