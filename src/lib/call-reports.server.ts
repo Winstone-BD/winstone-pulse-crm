@@ -476,7 +476,7 @@ export async function submitCallReport(input: {
       connected: received,
       duration_seconds: durationSeconds,
       // Only the phone's own measurement counts toward performance ranking.
-      connection_verified: received && storedSeconds > 0 && report.connected !== false,
+      connection_verified: received && (report.duration_seconds ?? 0) > 0 && report.connected !== false,
       temperature,
       grade,
       ai_decision: input.aiDecision ?? null,
