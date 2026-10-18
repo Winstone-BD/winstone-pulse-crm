@@ -556,11 +556,13 @@ export async function grantExtraLeads(input: {
   }
   if (picked.length === 0) throw new Error("ডেটাবেজে দেওয়ার মতো নতুন লিড নেই");
 
-  const { data: result, error: allocationError } = await supabaseAdmin.rpc("allocate_extra_leads_atomic", {
+  // PostgreSQL accepts NULL RPC arguments; generated types omit that nullability.
+  const args = {
     _agent: input.agentProfileId, _ids: picked, _quantity: input.quantity,
     _request: input.requestId ?? null, _reason: input.reason ?? null, _source: source,
     _actor: input.actorProfileId ?? null, _label: input.actorLabel ?? "IT Console",
-  });
+  };
+  const { data: result, error: allocationError } = await supabaseAdmin.rpc("allocate_extra_leads_atomic", args as unknown as import("@/integrations/supabase/types").Database["public"]["Functions"]["allocate_extra_leads_atomic"]["Args"]);
   if (allocationError) throw new Error("Allocation was not committed; refresh the reviewed plan before retrying");
   const allocation = result as { moved: number; replayed: boolean; workDate: string };
   return { ...allocation, remaining: await usablePoolCount() };

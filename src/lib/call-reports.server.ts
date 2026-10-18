@@ -503,11 +503,12 @@ export async function submitCallReport(input: {
   const { evaluationAuditDetail } = await import("@/lib/lead-evaluation");
   const evaluationDetail = answers ? evaluationAuditDetail({ answers, followUpPending: Boolean(retryAt), reportId: report.id, recordingId: report.recording_id ?? null, agentId: input.agentId, at: nowIso }) : null;
   const outcome = `${CATEGORY_LABEL[category]}${classified ? ` — ${TEMPERATURE_LABEL[temperature ?? "cold"]} / ${grade}` : " — কথা হয়নি, আবার কল হবে"}${retryAt ? ` — follow-up ${retryAt}` : ` — ${input.noFollowUpReason ?? ""}`}`;
-  const { data: finalized, error: finalizeError } = await supabaseAdmin.rpc("finalize_call_report_atomic", {
+  const finalizeArgs = {
     _report: report.id, _agent: input.agentId, _report_patch: reportPatch,
     _lead_patch: leadPatch, _followup: followup, _classification: received && classified ? {} : null,
     _evaluation_detail: evaluationDetail, _outcome: outcome,
-  });
+  };
+  const { data: finalized, error: finalizeError } = await supabaseAdmin.rpc("finalize_call_report_atomic", finalizeArgs as unknown as import("@/integrations/supabase/types").Database["public"]["Functions"]["finalize_call_report_atomic"]["Args"]);
   if (finalizeError) throw new Error("রিপোর্ট ও ফলো-আপ সেভ হয়নি; খসড়া রেখে আবার চেষ্টা করুন");
   const result = finalized as { alreadySubmitted: boolean; followUpId?: string | null };
   if (result.alreadySubmitted) return { ok: true, alreadySubmitted: true as const };
