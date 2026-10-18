@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { WebsiteAnswerBox } from "@/components/crm/WebsiteAnswerBox";
 import { askCommandAgent, runCommandAgentAction } from "@/lib/command-agent.functions";
 import { getAdminToken } from "@/lib/local-session";
+import { normalizeAgentResult } from "@/lib/command-agent-result";
 
 type Surface = "desk" | "dispatch" | "hq" | "system";
 
@@ -84,19 +85,18 @@ export function CommandAgentPanel({ surface }: { surface: Surface }) {
         const result = await ask({
           data: { adminToken: getAdminToken(), surface, question: value, history },
         });
-        // A stale tab or interrupted request can resolve with no body; show an
-        // error on this turn instead of crashing the whole page.
-        if (!result || typeof result.answer !== "string") {
-          throw new Error("উত্তর আসেনি — পেজটি রিফ্রেশ করে আবার চেষ্টা করুন");
-        }
+        // A stale tab or interrupted request can resolve with no body or an
+        // empty answer; show an error on this turn instead of crashing.
+        const safe = normalizeAgentResult(result);
+        if (!safe.ok) throw new Error(safe.error);
         setTurns((prev) =>
           prev.map((turn) =>
             turn.id === id
               ? {
                   ...turn,
-                  answer: result.answer,
-                  facts: Array.isArray(result.facts) ? result.facts : [],
-                  actions: (Array.isArray(result.actions) ? result.actions : []) as Action[],
+                  answer: safe.answer,
+                  facts: safe.facts,
+                  actions: safe.actions as Action[],
                 }
               : turn,
           ),
