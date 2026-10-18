@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { isAuthoritative } from "@/lib/sales-intel-rules";
@@ -51,7 +52,7 @@ async function loadFacts() {
     pageAll((a, b) => db.from("leads").select("id, assigned_to, status, source, created_at").order("id").range(a, b)),
     pageAll((a, b) => db.from("call_recordings").select("agent_id, duration_seconds, created_at").gte("created_at", since).order("id").range(a, b)),
     pageAll((a, b) => db.from("call_reports").select("agent_id, category, customer_response, next_action, created_at").eq("status", "submitted").gte("created_at", since).order("id").range(a, b)),
-    pageAll((a, b) => db.from("follow_up_events").select("agent_id, status, scheduled_at, completed_at").order("id").range(a, b)),
+    pageAll((a, b) => followUpWork(db, "current").select("agent_id, status, scheduled_at, completed_at").order("id").range(a, b)),
     db.from("market_facts").select("category, geography, metric, value, unit, source_name, effective_date, status, expiry_date, review_date").then((r) => r.data ?? []),
   ]);
 

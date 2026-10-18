@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -439,8 +440,7 @@ export const listLeadStore = createServerFn({ method: "GET" })
         ? supabaseAdmin.from("profiles").select("id, name, employee_id").in("id", ownerIds)
         : Promise.resolve({ data: [] as { id: string; name: string; employee_id: string | null }[] }),
       ids.length
-        ? supabaseAdmin
-            .from("follow_up_events")
+        ? followUpWork(supabaseAdmin)
             .select("lead_id, scheduled_at, status")
             .in("lead_id", ids)
             .order("scheduled_at", { ascending: true })

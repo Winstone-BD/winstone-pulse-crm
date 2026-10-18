@@ -1,0 +1,2 @@
+CREATE OR REPLACE VIEW public.current_follow_up_work_items WITH (security_invoker=true) AS SELECT f.* FROM public.follow_up_events f WHERE f.status NOT IN ('upcoming','due','missed') OR NOT EXISTS(SELECT 1 FROM public.follow_up_events child WHERE child.parent_follow_up_id=f.id);
+GRANT SELECT ON public.current_follow_up_work_items TO authenticated,service_role;

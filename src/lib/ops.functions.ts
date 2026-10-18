@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 import { isOpenFollowUp } from "@/lib/follow-up-lifecycle";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -35,8 +36,7 @@ export const callOpsSummary = createServerFn({ method: "POST" })
           .from("call_recordings")
           .select("id, analysis_status, analysis_error, recorder_source, is_two_sided, created_at")
           .gte("created_at", since),
-        supabaseAdmin
-          .from("follow_up_events")
+        followUpWork(supabaseAdmin, "current")
           .select("id, agent_id, status, scheduled_at, reminder_minutes"),
         supabaseAdmin
           .from("agent_devices")

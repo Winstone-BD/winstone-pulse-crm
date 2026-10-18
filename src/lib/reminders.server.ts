@@ -1,3 +1,4 @@
+import { followUpWork } from "@/lib/follow-up-work.server";
 /**
  * Reminders: the two things an agent must never forget.
  *
@@ -65,6 +66,8 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
   const supabaseAdmin = await admin();
   const nowMs = now.getTime();
   const out: Reminder[] = [];
+  const { assignedLeadIds, filterAssignedActivity } = await import('@/lib/assigned-lead-scope.server');
+  const ownIds = await assignedLeadIds(profileId);
 
   const { data: reports } = await supabaseAdmin
     .from("call_reports")
@@ -73,7 +76,7 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
-  for (const row of reports ?? []) {
+  for (const row of filterAssignedActivity(reports ?? [], ownIds)) {
     const openedMs = new Date(row.created_at).getTime();
     if (nowMs - openedMs < REPORT_GRACE_MINUTES * 60_000) continue;
     const lead = (row as { leads?: { name?: string } | null }).leads;
@@ -92,14 +95,13 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     });
   }
 
-  const { data: followUps } = await supabaseAdmin
-    .from("follow_up_events")
+  const { data: followUps } = await followUpWork(supabaseAdmin)
     .select("id, lead_id, customer_name, phone_number, note, category, priority, scheduled_at, reminder_minutes")
     .eq("agent_id", profileId)
     .in("status", ["upcoming", "due", "missed"])
     .order("scheduled_at", { ascending: true });
 
-  for (const row of followUps ?? []) {
+  for (const row of filterAssignedActivity(followUps ?? [], ownIds)) {
     const dueMs = new Date(row.scheduled_at).getTime();
     const windowMs = dueMs - (row.reminder_minutes ?? 30) * 60_000;
     if (nowMs < windowMs) continue;

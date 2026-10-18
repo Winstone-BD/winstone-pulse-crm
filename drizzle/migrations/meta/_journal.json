@@ -764,6 +764,34 @@
       "when": 1792339111565,
       "tag": "0108_follow_up_atomic_creation_and_retry",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1792340037935,
+      "tag": "0109_immutable_follow_up_recovery",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1792340310160,
+      "tag": "0110_enforce_current_assigned_lead_api_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1792340446723,
+      "tag": "0111_optimize_assigned_event_visibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1792340532821,
+      "tag": "0112_current_follow_up_work_items",
+      "breakpoints": true
     }
   ]
 }
