@@ -1018,6 +1018,8 @@ export type Database = {
           duration_seconds: number
           duration_source: string | null
           duration_synced_at: string | null
+          duration_verified_at: string | null
+          duration_verified_by: string | null
           evaluation_answers: Json | null
           evaluation_model: string | null
           evaluation_score: number | null
@@ -1062,6 +1064,8 @@ export type Database = {
           duration_seconds?: number
           duration_source?: string | null
           duration_synced_at?: string | null
+          duration_verified_at?: string | null
+          duration_verified_by?: string | null
           evaluation_answers?: Json | null
           evaluation_model?: string | null
           evaluation_score?: number | null
@@ -1106,6 +1110,8 @@ export type Database = {
           duration_seconds?: number
           duration_source?: string | null
           duration_synced_at?: string | null
+          duration_verified_at?: string | null
+          duration_verified_by?: string | null
           evaluation_answers?: Json | null
           evaluation_model?: string | null
           evaluation_score?: number | null
