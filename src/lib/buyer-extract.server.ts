@@ -8,6 +8,9 @@
  */
 import { EXTRACT_FIELDS, type ExtractFieldKey } from "@/lib/agent-templates";
 import { sanitizeNotes, UNTRUSTED_RULE } from "@/lib/prompt-guard";
+import { streamChatCompletion } from "@lovable.dev/ai-gateway";
+import { aiFailure } from "@/lib/ai-failure";
+import { supportedEvidence } from "@/lib/ai-evidence";
 
 export const EXTRACT_MODEL = "google/gemini-3.8-flash";
 
@@ -22,48 +25,28 @@ Reply ONLY as JSON with this exact shape:
 budget: maximum budget exactly as written (e.g. "৮৫ লাখ", "1.2 crore", "৳45,00,000"). property_type: ফ্ল্যাট / জমি / কমার্শিয়াল / রিসোর্ট শেয়ার / other, as stated. timeline: when the buyer wants to purchase. decision_maker: who decides. installment: whether/how many months of installment is needed. nrb: whether the buyer lives abroad (yes/no).`;
 
 async function callGemini(user: string): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI service is not configured");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({ model: EXTRACT_MODEL, stream: true, messages: [{ role: "system", content: EXTRACT_SYSTEM }, { role: "user", content: user }] }),
-  });
-  if (!res.ok || !res.body) {
-    console.error("gemini extract gateway", res.status, await res.text().catch(() => ""));
-    if (res.status === 402) throw new Error("AI credits are exhausted — please add credits");
-    if (res.status === 403) throw new Error("AI access is blocked for this workspace right now");
-    if (res.status === 429) throw new Error("AI is busy — try again in a moment");
-    throw new Error("The AI service is unavailable right now");
-  }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = "", text = "", filtered = false;
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let i: number;
-    while ((i = buf.indexOf("\n\n")) >= 0) {
-      const frame = buf.slice(0, i);
-      buf = buf.slice(i + 2);
-      const data = frame.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
-      if (!data || data === "[DONE]") continue;
-      try {
-        const e = JSON.parse(data) as { choices?: { delta?: { content?: string }; finish_reason?: string }[] };
-        const ch = e.choices?.[0];
-        if (ch?.delta?.content) text += ch.delta.content;
-        if (ch?.finish_reason === "content_filter") filtered = true;
-      } catch {
-        /* partial frame — ignore */
-      }
+  try {
+    const stream = await streamChatCompletion({ model: EXTRACT_MODEL, messages: [{ role: "system", content: EXTRACT_SYSTEM }, { role: "user", content: user }] });
+    let text = "";
+    for await (const event of stream) {
+      const choice = event.choices?.[0];
+      if (choice?.finish_reason === "content_filter") throw new Error("The AI declined to analyse this note");
+      text += choice?.delta?.content ?? "";
     }
-  }
-  if (filtered && !text) throw new Error("The AI declined to analyse this note");
-  return text;
+    return text;
+  } catch (error) { throw aiFailure(error); }
 }
 
 export type ExtractedField = { value: string; evidence: string };
+
+export function groundExtraction(fields: Partial<Record<ExtractFieldKey, ExtractedField>>, source: string) {
+  const grounded: Partial<Record<ExtractFieldKey, ExtractedField>> = {};
+  for (const key of EXTRACT_FIELDS) {
+    const field = fields[key];
+    if (field && supportedEvidence(field.evidence, source)) grounded[key] = field;
+  }
+  return grounded;
+}
 
 /** Pure: parse Gemini's JSON reply into found fields. Throws on unreadable output. */
 export function parseExtraction(text: string): Partial<Record<ExtractFieldKey, ExtractedField>> {
@@ -97,6 +80,7 @@ export async function extractBuyerProfile(leadId: string, agentId: string, autho
   if (!raw.trim()) throw new Error("No call notes saved yet — record a call first");
   const notes = sanitizeNotes(raw, 3000);
   const facts = { name: lead.name, area: lead.area ?? lead.address ?? null, requirement: rep?.requirement ?? null, temperature: lead.temperature ?? null };
-  const fields = parseExtraction(await callGemini(`${JSON.stringify(facts)}\n${notes.wrapped}`));
+  const source = `${JSON.stringify(facts)}\n${notes.text}`;
+  const fields = groundExtraction(parseExtraction(await callGemini(`${JSON.stringify(facts)}\n${notes.wrapped}`)), source);
   return { fields, flagged: notes.flagged };
 }
