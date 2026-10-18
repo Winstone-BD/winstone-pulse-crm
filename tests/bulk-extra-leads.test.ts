@@ -43,3 +43,18 @@ describe("bulk extra availability guard", () => {
     expect(block).toMatch(/available < need/);
   });
 });
+
+import { readFileSync as __r } from "node:fs";
+import { describe as __d, it as __i, expect as __e } from "vitest";
+__d("bulk extra batch serialization", () => {
+  const fn = __r("src/lib/lead-pool.functions.ts", "utf8");
+  const srv = __r("src/lib/lead-pool.server.ts", "utf8");
+  __i("claims the per-day lock before any grant", () => {
+    __e(fn.indexOf("claimBulkBatch(data.requestId")).toBeGreaterThan(-1);
+    __e(fn.indexOf("claimBulkBatch(data.requestId")).toBeLessThan(fn.indexOf("requestId: data.requestId,\n          });"));
+  });
+  __i("a different request on the same day is refused", () => {
+    __e(srv).toMatch(/from\("bulk_extra_batches"\)\s*\.insert\(\{ work_date: today/);
+    __e(srv).toContain("row.request_id === requestId && row.status === \"done\"");
+  });
+});
