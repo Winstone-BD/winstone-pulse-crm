@@ -2,6 +2,8 @@
 
 ## Active
 
+- [ ] Global unified palette: consolidate tokens and shared controls; remove legacy theme variants/decoration; audit routes and verify desktop/tablet/Android layouts and automated checks. Frontend only; no live record mutations.
+
 - [x] Replace sideways desk navigation with a colour-accented, non-scrolling section picker; mobile global menu opens from below. Browser verified, no overflow.
 - [x] Bring saved notes and prior reports/history into pre-call and active web-call workspace using existing authorised paths; 11 targeted checks passed. Signed-in saving remains unverified.
 - [ ] Full SIM mute/speaker/hang-up verification blocked: browser has no telephony bridge; existing Android controls require a real authorised phone/device test. Web labels explicitly distinguish phone controls from opening the report.
