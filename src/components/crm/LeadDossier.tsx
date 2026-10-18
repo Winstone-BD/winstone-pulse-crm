@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { CallAudioPlayer } from "@/components/crm/CallAudioPlayer";
 import { PreCallBriefCard } from "@/components/crm/PreCallBriefCard";
 import { LeadNotesPanel } from "@/components/crm/LeadNotesPanel";
+import { LeadFollowUpHistory } from "@/components/crm/LeadFollowUpHistory";
 import { LeadProjectFacts, VisitRequestsPanel } from "@/components/crm/KnowledgeHubCards";
 import { LeadProjectSales } from "@/components/crm/ProjectCatalog";
 import { LeadReportsSection } from "@/components/crm/LeadReportsSection";
@@ -178,6 +179,8 @@ export function LeadDossier({
               <div id="lead-notes" className="scroll-mt-14">
                 <LeadNotesPanel leadId={lead.id} />
               </div>
+
+              <LeadFollowUpHistory leadId={lead.id} />
 
               <h3 id="lead-timeline" className="scroll-mt-14 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 টাইমলাইন / সিস্টেম ইভেন্ট

@@ -96,7 +96,7 @@ export async function remindersFor(profileId: string, now = new Date()): Promise
     .from("follow_up_events")
     .select("id, lead_id, customer_name, phone_number, note, category, priority, scheduled_at, reminder_minutes")
     .eq("agent_id", profileId)
-    .eq("status", "upcoming")
+    .in("status", ["upcoming", "due", "missed"])
     .order("scheduled_at", { ascending: true });
 
   for (const row of followUps ?? []) {
