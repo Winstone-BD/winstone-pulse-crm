@@ -26,7 +26,10 @@ export const inviteItOfficer = createServerFn({ method: "POST" })
     const { error: auditError } = await db.from("audit_logs").insert({ action: "it_officer_invitation_requested", entity_type: "profile", actor_profile_id: caller.profile?.id ?? null, actor_label: caller.profile?.name ?? "Architect", metadata: { email } });
     if (auditError) throw new Error("Unable to audit invitation");
     const invited = await db.auth.admin.inviteUserByEmail(email, { redirectTo: "https://crm.winstonebd.com/reset-password", data: { name: data.name } });
-    if (invited.error || !invited.data.user) throw new Error("Invitation could not be confirmed; check account status before trying again");
+    if (invited.error || !invited.data.user) {
+      await db.from("it_officer_onboarding").update({ status: "failed" }).eq("id", reservation.data.id);
+      throw new Error("Invitation could not be confirmed; check account status before trying again");
+    }
     const { data: profile, error: profileError } = await db.from("profiles").select("id").eq("user_id", invited.data.user.id).maybeSingle();
     if (profileError) throw new Error("Invitation sent; profile status needs review — do not resend");
     if (!profile) {
@@ -86,7 +89,7 @@ export const setInvitedItPassword = createServerFn({ method: "POST" })
     const user = await context.supabase.auth.getUser();
     if (!user.data.user?.email_confirmed_at || user.data.user.email?.toLowerCase() !== row.data.email) throw new Error("Verify the invitation email first");
     if (!["invited", "password_set"].includes(row.data.status)) throw new Error("IT password setup already completed");
-    const updated = await context.supabase.auth.updateUser({ password: data.password });
+    const updated = await db.auth.admin.updateUserById(context.userId, { password: data.password });
     if (updated.error) throw new Error(updated.error.message);
     const advanced = await db.rpc("advance_it_officer_onboarding", { _id: row.data.id, _action: "password_set", _actor: context.userId });
     if (advanced.error) throw new Error("Password saved; onboarding confirmation needs review");
