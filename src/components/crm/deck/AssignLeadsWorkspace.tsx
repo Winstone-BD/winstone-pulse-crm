@@ -207,6 +207,27 @@ export function AssignLeadsWorkspace({ initialAgentId }: { initialAgentId?: stri
         </p>
       )}
 
+      {(() => {
+        const reasons: string[] = [];
+        if (alloc.isError) reasons.push("PIN/অনুমতি: LeadHub সেশন যাচাই হয়নি — আবার PIN দিয়ে আনলক করুন।");
+        if (alloc.data?.distributionOpen === false) reasons.push(`দিন বন্ধ: ${alloc.data.distributionNotice ?? "আজ বিতরণ বন্ধ"}`);
+        if (alloc.data && available === 0) reasons.push("লিডের প্রাপ্যতা: ডেটাবেজে দেওয়ার মতো যোগ্য নতুন লিড নেই।");
+        const full = rows
+          .map((r) => byId.get(r.agentId))
+          .filter((a): a is NonNullable<typeof a> => !!a && !!alloc.data && a.today >= alloc.data.perAgent);
+        if (full.length)
+          reasons.push(
+            `কোটা পূর্ণ: ${full.map((a) => `${a.name} (আজ ${a.today}/${alloc.data?.perAgent})`).join(", ")} — অতিরিক্ত দিতে IT Console → "সবাইকে একসাথে অতিরিক্ত লিড" ব্যবহার করুন।`,
+          );
+        if (!reasons.length && rawRequested > 0 && requested === 0) reasons.push("কোটা: অনুরোধ দৈনিক কোটার বাইরে, তাই ০ যাবে।");
+        return reasons.length ? (
+          <div role="alert" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs">
+            <p className="mb-1 font-semibold">কেন ০ লিড যাবে</p>
+            <ul className="list-disc space-y-0.5 pl-4">{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+          </div>
+        ) : null;
+      })()}
+
       {confirming && valid.length > 0 && (
         <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
           <p className="mb-2 font-semibold">Preview — নিশ্চিত করুন</p>
