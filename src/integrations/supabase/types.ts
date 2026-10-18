@@ -1309,6 +1309,77 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_usage_events: {
+        Row: {
+          amount_basis: string
+          cost_amount: number | null
+          cost_currency: string | null
+          credits: number | null
+          event_type: string
+          evidence: string
+          id: string
+          lead_id: string | null
+          model: string | null
+          month_bucket: string
+          occurred_at: string
+          operation: string
+          quantity: number | null
+          quantity_unit: string | null
+          recorded_at: string
+          source: string
+          source_event_id: string
+          usage_class: string
+        }
+        Insert: {
+          amount_basis: string
+          cost_amount?: number | null
+          cost_currency?: string | null
+          credits?: number | null
+          event_type: string
+          evidence: string
+          id?: string
+          lead_id?: string | null
+          model?: string | null
+          month_bucket?: string
+          occurred_at: string
+          operation: string
+          quantity?: number | null
+          quantity_unit?: string | null
+          recorded_at?: string
+          source: string
+          source_event_id: string
+          usage_class: string
+        }
+        Update: {
+          amount_basis?: string
+          cost_amount?: number | null
+          cost_currency?: string | null
+          credits?: number | null
+          event_type?: string
+          evidence?: string
+          id?: string
+          lead_id?: string | null
+          model?: string | null
+          month_bucket?: string
+          occurred_at?: string
+          operation?: string
+          quantity?: number | null
+          quantity_unit?: string | null
+          recorded_at?: string
+          source?: string
+          source_event_id?: string
+          usage_class?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_usage_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_reports: {
         Row: {
           assigned_to: string | null
@@ -1903,6 +1974,7 @@ export type Database = {
           expires_at: string | null
           id: string
           published_at: string
+          request_id: string | null
           severity: string
           title: string
         }
@@ -1916,6 +1988,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           published_at?: string
+          request_id?: string | null
           severity?: string
           title: string
         }
@@ -1929,6 +2002,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           published_at?: string
+          request_id?: string | null
           severity?: string
           title?: string
         }
@@ -5868,6 +5942,7 @@ export type Database = {
       }
       lead_phone_was_ever_worked: { Args: { _raw: string }; Returns: boolean }
       normalize_bd_phone: { Args: { _raw: string }; Returns: string }
+      pending_lead_age_report: { Args: never; Returns: Json }
       project_photos_exposure: {
         Args: never
         Returns: {
@@ -5875,6 +5950,21 @@ export type Database = {
           policy_count: number
           policy_names: string[]
         }[]
+      }
+      publish_notice_atomic: {
+        Args: {
+          _audience: string
+          _author: string
+          _body: string
+          _expiry: string
+          _label: string
+          _recipients: string[]
+          _request: string
+          _role: string
+          _severity: string
+          _title: string
+        }
+        Returns: string
       }
     }
     Enums: {
