@@ -73,10 +73,10 @@ function ProjectsPage() {
 
   const kpis = [
     { label: "মোট প্রজেক্ট", value: rows.length, icon: Building2, tone: "text-primary bg-primary/10" },
-    { label: "আগ্রহী লিড", value: totals.leads, icon: Users, tone: "text-sky-400 bg-sky-400/10" },
-    { label: "কল রিপোর্ট", value: totals.calls, icon: Phone, tone: "text-amber-400 bg-amber-400/10" },
-    { label: "সাইট ভিজিট", value: totals.visits, icon: CalendarCheck, tone: "text-violet-400 bg-violet-400/10" },
-    { label: "বুকিং", value: totals.bookings, icon: TicketCheck, tone: "text-emerald-400 bg-emerald-400/10" },
+    { label: "আগ্রহী লিড", value: totals.leads, icon: Users, tone: "text-gold bg-accent" },
+    { label: "কল রিপোর্ট", value: totals.calls, icon: Phone, tone: "text-warning bg-warning/10" },
+    { label: "সাইট ভিজিট", value: totals.visits, icon: CalendarCheck, tone: "text-gold bg-accent" },
+    { label: "বুকিং", value: totals.bookings, icon: TicketCheck, tone: "text-success bg-success/10" },
   ];
 
   return (
@@ -132,7 +132,7 @@ function ProjectsPage() {
                   <div className="flex items-start gap-3">
                     <span className="grid size-14 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Building2 className="size-7" /></span>
                     <div className="min-w-0 flex-1">
-                      <span className={`inline-block rounded px-2 py-0.5 text-[11px] font-semibold ${r.active ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"}`}>
+                      <span className={`inline-block rounded px-2 py-0.5 text-[11px] font-semibold ${r.active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
                         {r.active ? "চালু" : "বন্ধ"}
                       </span>
                       <h2 className="mt-1 truncate text-base font-bold">{r.project}</h2>
@@ -166,10 +166,10 @@ function ProjectsPage() {
                       <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
                       <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="লিড" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                      <Bar dataKey="কল" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-                      <Bar dataKey="সাইট ভিজিট" fill="#22c55e" radius={[3, 3, 0, 0]} />
-                      <Bar dataKey="বুকিং" fill="#ef4444" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="লিড" fill="var(--chart-1)" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="কল" fill="var(--chart-2)" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="সাইট ভিজিট" fill="var(--chart-4)" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="বুকিং" fill="var(--chart-3)" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -197,7 +197,7 @@ function ProjectsPage() {
 function Stat({ v, l, accent }: { v: number | null; l: string; accent?: boolean }) {
   return (
     <div>
-      <p className={`text-lg font-bold tabular-nums ${accent ? "text-emerald-400" : ""}`}>{v ?? "—"}</p>
+      <p className={`text-lg font-bold tabular-nums ${accent ? "text-success" : ""}`}>{v ?? "—"}</p>
       <p className="text-[11px] text-muted-foreground">{l}</p>
     </div>
   );

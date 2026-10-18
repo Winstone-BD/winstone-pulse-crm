@@ -79,11 +79,11 @@ export function SheetSyncHealthPanel() {
             </div>
             <div className="rounded-xl border border-border/60 bg-background/50 p-3">
               <p className="text-xs text-muted-foreground">সফল</p>
-              <p className="text-xl font-semibold text-emerald-500">{totals?.successes ?? 0}</p>
+              <p className="text-xl font-semibold text-success">{totals?.successes ?? 0}</p>
             </div>
             <div className="rounded-xl border border-border/60 bg-background/50 p-3">
               <p className="text-xs text-muted-foreground">রিট্রাই</p>
-              <p className="text-xl font-semibold text-amber-500">{totals?.retries ?? 0}</p>
+              <p className="text-xl font-semibold text-warning">{totals?.retries ?? 0}</p>
             </div>
             <div className="rounded-xl border border-border/60 bg-background/50 p-3">
               <p className="text-xs text-muted-foreground">কোটা ত্রুটি (429)</p>
@@ -164,8 +164,8 @@ export function SheetSyncHealthPanel() {
                               event.outcome === "failure"
                                 ? "text-destructive"
                                 : event.outcome === "retry"
-                                  ? "text-amber-500"
-                                  : "text-emerald-500"
+                                  ? "text-warning"
+                                  : "text-success"
                             }
                           >
                             {OUTCOME_LABEL[event.outcome] ?? event.outcome}

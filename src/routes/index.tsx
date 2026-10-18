@@ -114,7 +114,7 @@ function EntryHall() {
                 className="size-14 rounded-full object-cover ring-1 ring-border sm:size-16"
               />
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-gold sm:text-base">
+                <p className="text-sm font-semibold uppercase tracking-wide text-foreground sm:text-base">
                   Winstone Properties Ltd.
                 </p>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
@@ -122,11 +122,11 @@ function EntryHall() {
                 </p>
               </div>
             </div>
-            <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Winstone <span className="text-gold">Pulse Gateway</span>
+            <h1 className="mt-8 text-4xl font-semibold uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+              Winstone Pulse Gateway
             </h1>
-            <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              The Premium <span className="text-gold">Real Estate CRM.</span>
+            <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              The Premium Real Estate CRM.
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
               Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.

@@ -145,7 +145,7 @@ export function MyProfileCard() {
                   style={{ backgroundColor: `hsl(${value} 65% 45%)` }}
                   aria-label={`Colour ${value}`}
                 >
-                  {hue === value && <Check className="size-4 text-white" />}
+                  {hue === value && <Check className="size-4 text-button-foreground" />}
                 </button>
               ))}
             </div>

@@ -142,9 +142,9 @@ function NavContent({
                     data-nav-link
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
-                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-xl px-3 py-2 text-[13px] font-medium text-foreground/75 transition-all duration-200 hover:bg-card hover:text-foreground data-[status=active]:bg-primary data-[status=active]:font-semibold data-[status=active]:text-primary-foreground data-[status=active]:shadow-md`}
+                    className={`${FOCUS} group flex items-center gap-2.5 ${collapsed ? "justify-center" : ""} relative min-h-10 rounded-lg border border-transparent px-3 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent data-[status=active]:border-gold/50 data-[status=active]:bg-accent data-[status=active]:font-semibold data-[status=active]:text-foreground`}
                   >
-                    <Icon className="size-4 shrink-0" />
+                    <Icon className="size-4 shrink-0 text-gold" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                   {!collapsed && subs && path === item.to && (

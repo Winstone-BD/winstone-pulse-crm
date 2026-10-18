@@ -278,8 +278,8 @@ function Board() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />
+              <span className="relative inline-flex size-2 rounded-full bg-success" />
             </span>
             লাইভ — প্রতি ১০ সেকেন্ডে হালনাগাদ
             {lastSync && (
@@ -328,11 +328,11 @@ function Board() {
           </div>
           <p className="mt-1 text-2xl font-bold tabular-nums">{failures.length}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-          <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="rounded-2xl border border-success/30 bg-success/5 p-4">
+          <div className="flex items-center gap-2 text-sm text-success">
             <CheckCircle2 className="size-4" /> সফলভাবে ঠিক হয়েছে
           </div>
-          <p className="mt-1 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{recovered}</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-success">{recovered}</p>
           <p className="text-xs text-muted-foreground">রিলোডের পর পেজ স্বাভাবিক — এরর নয়</p>
         </div>
         <div
@@ -462,7 +462,7 @@ function Board() {
                       <td className="p-2">{KIND_LABEL[r.kind] ?? r.kind}</td>
                       <td className="p-2">
                         {ok ? (
-                          <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                          <Badge variant="outline" className="border-success/40 text-success">
                             ঠিক হয়েছে
                           </Badge>
                         ) : (
@@ -512,7 +512,7 @@ function Board() {
                 <DialogTitle className="flex items-center gap-2">
                   {KIND_LABEL[selected.kind] ?? selected.kind}
                   {isResolved(selected, reloads) ? (
-                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                    <Badge variant="outline" className="border-success/40 text-success">
                       ঠিক হয়েছে
                     </Badge>
                   ) : (
@@ -544,7 +544,7 @@ function Board() {
                       .map((r, i) => (
                         <li key={i} className="flex justify-between gap-2">
                           <span className="tabular-nums">{dhakaTime(r.at)}</span>
-                          <span className={isResolved(r, reloads) ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}>
+                          <span className={isResolved(r, reloads) ? "text-success" : "text-destructive"}>
                             {isResolved(r, reloads) ? "ঠিক হয়েছে" : "অমীমাংসিত"}
                           </span>
                         </li>
