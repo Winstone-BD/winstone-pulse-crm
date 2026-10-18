@@ -12,6 +12,7 @@ import {
   Server,
   Smartphone,
   Database,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -122,12 +123,10 @@ function EntryHall() {
               Winstone <span className="text-gold">Pulse</span>
             </h1>
             <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Close more deals, <span className="text-gold">less chaos.</span>
+              The Premium <span className="text-gold">Real Estate CRM.</span>
             </p>
             <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
-              The visual CRM that your sales team will actually love using. Drag, drop, and close —
-              live sales monitoring, lead management, call activity, follow-up deadlines and team
-              performance, all in one place.
+              Leads, calls, follow-ups and team performance. One connected workspace for your sales floor.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Button
@@ -149,15 +148,18 @@ function EntryHall() {
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
               {[
-                { icon: Headphones, label: "Manage Your Team" },
-                { icon: BarChart3, label: "Track Sales Pipeline" },
-                { icon: Smartphone, label: "Monitor Call Activity" },
-              ].map(({ icon: Icon, label }) => (
-                <span key={label} className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="grid size-8 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
+                { icon: Headphones, label: "Manage team", sub: "Agents & roles" },
+                { icon: BarChart3, label: "Track pipeline", sub: "Leads & bookings" },
+                { icon: Smartphone, label: "Review calls", sub: "Activity & history" },
+              ].map(({ icon: Icon, label, sub }) => (
+                <span key={label} className="inline-flex items-center gap-2 text-left text-sm font-semibold text-foreground">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold/10 text-gold ring-1 ring-gold/40">
                     <Icon className="size-4" />
                   </span>
-                  {label}
+                  <span className="leading-tight">
+                    {label}
+                    <span className="block text-xs font-normal text-muted-foreground">{sub}</span>
+                  </span>
                 </span>
               ))}
             </div>
@@ -190,7 +192,7 @@ function EntryHall() {
           Select the mode you are using — the same Winstone Pulse opens on every device.
         </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-4">
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-4 lg:grid-cols-4">
           <ModeCard
             icon={<Smartphone />}
             illustration={<SmartphoneIllustration />}
@@ -211,6 +213,13 @@ function EntryHall() {
             title="Desktop"
             subtitle="Full CRM Workspace"
             onClick={() => chooseMode("desktop")}
+          />
+          <ModeCard
+            icon={<ShieldCheck />}
+            illustration={<div className="grid h-full w-full place-items-center rounded-lg bg-secondary text-gold"><ShieldCheck className="size-10" /></div>}
+            title="IT Console"
+            subtitle="Secure administration"
+            onClick={() => openPin("/system")}
           />
         </div>
 
