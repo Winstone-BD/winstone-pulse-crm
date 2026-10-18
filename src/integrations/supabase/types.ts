@@ -731,6 +731,33 @@ export type Database = {
           },
         ]
       }
+      bulk_extra_batches: {
+        Row: {
+          created_at: string
+          finished_at: string | null
+          quantity: number
+          request_id: string
+          status: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string | null
+          quantity: number
+          request_id: string
+          status?: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string | null
+          quantity?: number
+          request_id?: string
+          status?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
       call_processing_jobs: {
         Row: {
           attempts: number

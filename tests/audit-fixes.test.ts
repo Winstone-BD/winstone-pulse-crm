@@ -8,7 +8,7 @@ const read = (p: string) => readFileSync(p, "utf8");
 /** Tables with RLS on and intentionally no policies: reached only via server-only admin code. */
 const SERVER_ONLY_TABLES = [
   "agent_accountability_reviews", "agent_briefing_acknowledgements", "agent_contribution_reviews", "agent_daily_contributions",
-  "ai_summary_cache", "architect_auth_attempts", "audit_findings", "audit_remediation_events", "bookings", "crm_backup_runs",
+  "ai_summary_cache", "architect_auth_attempts", "audit_findings", "audit_remediation_events", "bookings", "bulk_extra_batches", "crm_backup_runs",
   "crm_backup_secret", "drive_documents", "drive_recording_imports", "email_event_receipts", "follow_up_changes",
   "inventory_requirements", "it_notice_recipients", "it_notice_replies", "it_notices", "knowledge_versions",
   "lead_neglect_notices", "lead_neglect_recalls", "lead_personal_notes", "lead_phone_keys", "lead_state_changes",

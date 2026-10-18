@@ -376,28 +376,37 @@ export const grantExtraLeadsToAll = createServerFn({ method: "POST" })
     if (available < need) {
       throw new Error(`লিডের প্রাপ্যতা: দরকার ${need}টি, যোগ্য আছে ${available}টি — batch চালানো হয়নি`);
     }
+    // Server-side serialization: one bulk batch per Dhaka day. The primary key
+    // on work_date makes two simultaneous confirmations (two tabs, two
+    // operators) race on a single insert — only one wins.
+    const { claimBulkBatch, finishBulkBatch } = await import("@/lib/lead-pool.server");
+    await claimBulkBatch(data.requestId, data.quantity);
     const results: { agentId: string; name: string; moved: number; error: string | null }[] = [];
     let remaining = 0;
-    for (const agent of agents) {
-      try {
-        const r = await grantExtraLeads({
-          agentProfileId: agent.id,
-          quantity: data.quantity,
-          reason: `[সবাইকে একসাথে] ${data.reason}`,
-          actorProfileId: null,
-          actorLabel: `${caller.label} · IT Console bulk`,
-          requestId: data.requestId,
-        });
-        remaining = r.remaining;
-        results.push({ agentId: agent.id, name: agent.name, moved: r.moved, error: null });
-      } catch (e) {
-        results.push({
-          agentId: agent.id,
-          name: agent.name,
-          moved: 0,
-          error: e instanceof Error ? e.message : "ব্যর্থ",
-        });
+    try {
+      for (const agent of agents) {
+        try {
+          const r = await grantExtraLeads({
+            agentProfileId: agent.id,
+            quantity: data.quantity,
+            reason: `[সবাইকে একসাথে] ${data.reason}`,
+            actorProfileId: null,
+            actorLabel: `${caller.label} · IT Console bulk`,
+            requestId: data.requestId,
+          });
+          remaining = r.remaining;
+          results.push({ agentId: agent.id, name: agent.name, moved: r.moved, error: null });
+        } catch (e) {
+          results.push({
+            agentId: agent.id,
+            name: agent.name,
+            moved: 0,
+            error: e instanceof Error ? e.message : "ব্যর্থ",
+          });
+        }
       }
+    } finally {
+      await finishBulkBatch(data.requestId);
     }
     return { results, moved: results.reduce((s, r) => s + r.moved, 0), remaining };
   });

@@ -738,3 +738,36 @@ export async function autoRefillLeadsForAgent(
     throw err;
   }
 }
+
+/**
+ * Claim today's single bulk extra-lead batch. Two confirmations racing from
+ * different tabs hit the work_date primary key; the loser is refused. The
+ * same requestId re-entering after completion is allowed (per-agent ledger
+ * rows then replay without handing out anything new).
+ */
+export async function claimBulkBatch(requestId: string, quantity: number): Promise<void> {
+  const supabaseAdmin = await admin();
+  const today = dhakaToday();
+  const { error } = await supabaseAdmin
+    .from("bulk_extra_batches")
+    .insert({ work_date: today, request_id: requestId, quantity });
+  if (!error) return;
+  const { data: row } = await supabaseAdmin
+    .from("bulk_extra_batches")
+    .select("request_id, status")
+    .eq("work_date", today)
+    .maybeSingle();
+  if (row && row.request_id === requestId && row.status === "done") return;
+  if (row?.status === "running") {
+    throw new Error("আরেকটি tab/অপারেটর থেকে আজকের batch এখন চলছে — শেষ হলে History দেখুন");
+  }
+  throw new Error("আজকের সবাইকে-একসাথে batch ইতিমধ্যে দেওয়া হয়েছে — History দেখুন, প্রয়োজনে একক এজেন্টকে আলাদা দিন");
+}
+
+export async function finishBulkBatch(requestId: string): Promise<void> {
+  const supabaseAdmin = await admin();
+  await supabaseAdmin
+    .from("bulk_extra_batches")
+    .update({ status: "done", finished_at: new Date().toISOString() })
+    .eq("request_id", requestId);
+}
