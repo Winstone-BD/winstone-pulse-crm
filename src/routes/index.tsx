@@ -12,6 +12,7 @@ import {
   Server,
   Smartphone,
   Database,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -191,7 +192,7 @@ function EntryHall() {
           Select the mode you are using — the same Winstone Pulse opens on every device.
         </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-4">
+        <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-4 lg:grid-cols-4">
           <ModeCard
             icon={<Smartphone />}
             illustration={<SmartphoneIllustration />}
@@ -212,6 +213,13 @@ function EntryHall() {
             title="Desktop"
             subtitle="Full CRM Workspace"
             onClick={() => chooseMode("desktop")}
+          />
+          <ModeCard
+            icon={<ShieldCheck />}
+            illustration={<div className="grid h-full w-full place-items-center rounded-lg bg-secondary text-gold"><ShieldCheck className="size-10" /></div>}
+            title="IT Console"
+            subtitle="Secure administration"
+            onClick={() => openPin("/system")}
           />
         </div>
 
