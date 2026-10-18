@@ -57,7 +57,7 @@ export default defineTool({
         notes: notes
           ? `${notes}\n\n(added via agent integration by ${email})`
           : `Added via agent integration by ${email}`,
-        source,
+        source: source ?? "mcp",
         ownerId: assignedTo,
       });
       const { data, error } = await db
