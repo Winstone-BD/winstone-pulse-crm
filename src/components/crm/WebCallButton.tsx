@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { webStopwatchSeconds } from "@/lib/call-duration";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, PhoneOutgoing, Sparkles, Square, NotebookPen, MicOff, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -129,7 +130,7 @@ export function WebCallButton({
 
   const end = useMutation({
     mutationFn: () => {
-      const seconds = live ? Math.floor((Date.now() - live.startedAt) / 1000) : 0;
+      const seconds = webStopwatchSeconds(live?.startedAt, Date.now());
       const connected = seconds >= 10;
       if (leadId) {
         return finish({ data: { adminToken, leadId, durationSeconds: seconds, connected } });
