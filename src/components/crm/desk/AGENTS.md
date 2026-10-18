@@ -1,2 +1,2 @@
-- Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
+- Desk shows daily work, follow-ups and reports first; all other sections remain in a non-scrolling More grid — why: daily staff work stays obvious without removing deep links.
 - Work views (Pipeline/Tasks/Activities/Outlook in WorkViews.tsx) are read-only over the scoped snapshot; stage changes stay in call reports — why: no second write path.
