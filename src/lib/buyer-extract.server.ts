@@ -80,7 +80,7 @@ export async function extractBuyerProfile(leadId: string, agentId: string, autho
   if (!raw.trim()) throw new Error("No call notes saved yet — record a call first");
   const notes = sanitizeNotes(raw, 3000);
   const facts = { name: lead.name, area: lead.area ?? lead.address ?? null, requirement: rep?.requirement ?? null, temperature: lead.temperature ?? null };
-  const source = `${JSON.stringify(facts)}\n${notes.text}`;
+  const source = `${JSON.stringify(facts)}\n${notes.wrapped}`;
   const fields = groundExtraction(parseExtraction(await callGemini(`${JSON.stringify(facts)}\n${notes.wrapped}`)), source);
   return { fields, flagged: notes.flagged };
 }
