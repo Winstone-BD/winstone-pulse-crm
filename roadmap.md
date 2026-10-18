@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [x] 2026-10-18 SEO: distinct homepage and retired dispatch titles/social previews; HQ explicit social defaults. Static route review and homepage/LeadHub/dispatch browser verification passed with no page errors; preview build OK. Both stale findings corrected awaiting rescan. No publish or operational changes.
 - [x] 2026-10-18 setup: Drive linked and minimal about read returned HTTP 200; existing Head/Architect login verified active+approved+admin, no duplicate/rename. Gemini evidence grounding and Claude evidence/next-question drafts added via SDK; 34 focused tests passed; preview build OK; safe version 2.25.2. Five-file secret-free handover ZIP created and inspected. Nothing published.
 - [ ] Sheets linking/sync — blocked on project-owner permission (rechecked still blocked), then approved spreadsheet and row read-back. Drive folder write/recording link needs sanctioned fixture and authority session; no delivery claim.
 - [ ] Masha officer account — requested email known; secure Architect+user-bound IT token invitation form added, not invoked. Blocked on real Architect IT session and subsequent verified role approval; Head account already exists. Real two-step login and AI signed-in inference remain unverified (browser /system showed loading, not console contents).
