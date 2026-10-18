@@ -3230,6 +3230,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pin_auth_attempt_state: {
+        Row: {
+          blocked_until: string | null
+          failures: number
+          lease_id: string | null
+          lease_until: string | null
+          subject_hash: string
+          surface: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          failures?: number
+          lease_id?: string | null
+          lease_until?: string | null
+          subject_hash: string
+          surface: string
+        }
+        Update: {
+          blocked_until?: string | null
+          failures?: number
+          lease_id?: string | null
+          lease_until?: string | null
+          subject_hash?: string
+          surface?: string
+        }
+        Relationships: []
+      }
       pin_rotations: {
         Row: {
           actor_label: string | null
@@ -6251,6 +6278,10 @@ export type Database = {
         }
         Returns: Json
       }
+      begin_pin_auth_attempt: {
+        Args: { _subject: string; _surface: string }
+        Returns: Json
+      }
       clean_person_name: { Args: { _raw: string }; Returns: string }
       create_report_follow_up_atomic: {
         Args: { _agent: string; _patch: Json; _reason: string; _report: string }
@@ -6273,6 +6304,15 @@ export type Database = {
           _outcome: string
           _report: string
           _report_patch: Json
+        }
+        Returns: Json
+      }
+      finish_pin_auth_attempt: {
+        Args: {
+          _lease: string
+          _subject: string
+          _success: boolean
+          _surface: string
         }
         Returns: Json
       }
