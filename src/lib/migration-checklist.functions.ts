@@ -65,8 +65,10 @@ export const setMigrationChecklistItem = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }): Promise<{ states: ChecklistStateMap }> => {
-    const { resolveCaller, requireAuthority } = await import("./access.server");
-    requireAuthority(await resolveCaller(data.adminToken ?? null));
+    const { resolveCaller, requireAuthority, requireWrite } = await import("./access.server");
+    const caller = await resolveCaller(data.adminToken ?? null);
+    requireAuthority(caller);
+    requireWrite(caller);
 
     if (!MIGRATION_CHECKLIST.some((item) => item.id === data.id)) {
       throw new Error("অজানা চেকলিস্ট আইটেম");

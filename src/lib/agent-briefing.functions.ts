@@ -4,8 +4,8 @@ import { z } from "zod";
 const Input = z.object({ adminToken: z.string().nullable().optional() });
 
 async function agent(adminToken?: string | null) {
-  const { resolveCaller } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
+  const { resolveWorkCaller } = await import("@/lib/access.server");
+  const caller = await resolveWorkCaller(adminToken ?? null);
   if (caller.scope !== "agent" || !caller.profile) throw new Error("Agent account required");
   return caller.profile;
 }
@@ -13,8 +13,8 @@ async function agent(adminToken?: string | null) {
 export const getMyBriefingStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data }) => {
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveWorkCaller } = await import("@/lib/access.server");
+    const caller = await resolveWorkCaller(data.adminToken ?? null);
     const { agentBriefingStatus } = await import("@/lib/agent-briefing.server");
     // HQ/IT and signed-out sessions never face the agent briefing gate.
     if (caller.scope !== "agent" || !caller.profile) {

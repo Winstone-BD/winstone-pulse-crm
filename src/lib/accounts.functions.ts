@@ -162,11 +162,11 @@ export const registerMyAccount = createServerFn({ method: "POST" })
 /** Who am I? Drives the role-aware shell, nav and landing redirect. */
 export const getMyAccount = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ adminToken: z.string().nullable().optional() }).parse(input ?? {}),
+    z.object({ adminToken: z.string().nullable().optional(), view: z.enum(["default", "agent"]).optional() }).parse(input ?? {}),
   )
   .handler(async ({ data }) => {
-    const { resolveCaller, deckAccess } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.adminToken ?? null);
+    const { resolveCaller, resolveWorkCaller, deckAccess } = await import("@/lib/access.server");
+    const caller = await (data.view === "agent" ? resolveWorkCaller(data.adminToken) : resolveCaller(data.adminToken));
     return {
       scope: caller.scope,
       deck: deckAccess(caller),

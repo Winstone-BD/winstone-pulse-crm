@@ -11,6 +11,7 @@ const OptionalToken = z.string().nullable().optional();
 
 const SnapshotScope = z.object({
   token: z.string().nullable().optional(),
+  view: z.enum(["default", "agent"]).optional(),
 });
 
 /**
@@ -68,8 +69,8 @@ export const getCrmSnapshot = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SnapshotScope.parse(input ?? {}))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { resolveCaller } = await import("@/lib/access.server");
-    const caller = await resolveCaller(data.token ?? null);
+    const { resolveCaller, resolveWorkCaller } = await import("@/lib/access.server");
+    const caller = await (data.view === "agent" ? resolveWorkCaller(data.token) : resolveCaller(data.token));
 
     if (caller.scope === "none")
       return { profiles: [], leads: [], calls: [], messages: [], events: [] };

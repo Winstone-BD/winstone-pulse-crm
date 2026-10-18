@@ -175,3 +175,19 @@ export const HQ_READ_ONLY =
 export function requireWrite(caller: Caller) {
   if (caller.readOnly) throw new Error(HQ_READ_ONLY);
 }
+
+/** Own-work endpoints retain original agent rights; PIN sessions never impersonate staff. */
+export async function resolveWorkCaller(adminToken?: string | null): Promise<Caller> {
+  const caller = await resolveCaller(adminToken);
+  if (caller.scope === "authority" && caller.readOnly && caller.userId && caller.profile?.role === "agent") {
+    return { ...caller, scope: "agent", readOnly: false };
+  }
+  return caller;
+}
+
+/** Genuine HQ PIN booking review is an existing exception, unlike supplemental oversight. */
+export async function requireBookingReviewer(caller: Caller, token?: string | null) {
+  requireAuthority(caller);
+  const { adminTokenScope } = await import("@/lib/admin-gate.server");
+  if (caller.readOnly && adminTokenScope(token) !== "hq") throw new Error(HQ_READ_ONLY);
+}

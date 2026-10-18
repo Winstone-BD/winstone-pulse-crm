@@ -1,3 +1,4 @@
+import { useLocation } from "@tanstack/react-router";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { leadOwner } from "./lead-owner";
@@ -31,10 +32,10 @@ export type CrmSnapshot = Awaited<ReturnType<typeof getCrmSnapshot>>;
  * Authority PIN and coordinators see the whole floor, an agent sees only
  * their own leads, and anyone else receives an empty snapshot.
  */
-export const snapshotQueryFor = (scope: { token: string | null }) =>
+export const snapshotQueryFor = (scope: { token: string | null; view?: "default" | "agent" }) =>
   queryOptions({
-    queryKey: ["crm-snapshot", scope.token ? "authority" : "session"],
-    queryFn: () => getCrmSnapshot({ data: { token: scope.token } }),
+    queryKey: ["crm-snapshot", scope.token ? "authority" : "session", scope.view ?? "default"],
+    queryFn: () => getCrmSnapshot({ data: { token: scope.token, view: scope.view } }),
     // Live changes arrive through realtime below; the poll is only a safety net.
     // Each poll re-reads the whole floor, so keep it rare (was 45s — the top DB cost).
     refetchInterval: 180_000,
@@ -121,10 +122,12 @@ function useLiveCrmRefresh() {
 /** Snapshot for the current device; customer data requires an authority token. */
 export function useSnapshot() {
   const token = useAdminToken();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const view = pathname === "/desk" ? "agent" as const : "default" as const;
   const { scope, isPending: accountPending } = useMyAccount();
   const query = useQuery({
-    ...snapshotQueryFor({ token }),
-    queryKey: ["crm-snapshot", token ? "authority" : "session", scope],
+    ...snapshotQueryFor({ token, view }),
+    queryKey: ["crm-snapshot", token ? "authority" : "session", scope, view],
     enabled: !accountPending && scope !== "none",
   });
   useLiveCrmRefresh();

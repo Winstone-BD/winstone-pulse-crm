@@ -25,8 +25,8 @@ export function contributionError(text: string): string | null {
 const Input = z.object({ adminToken: z.string().nullable().optional() });
 
 async function me(adminToken?: string | null) {
-  const { resolveCaller } = await import("@/lib/access.server");
-  const caller = await resolveCaller(adminToken ?? null);
+  const { resolveWorkCaller } = await import("@/lib/access.server");
+  const caller = await resolveWorkCaller(adminToken ?? null);
   return caller.scope === "agent" && caller.profile ? caller.profile : null;
 }
 
