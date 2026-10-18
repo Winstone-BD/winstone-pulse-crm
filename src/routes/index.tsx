@@ -14,7 +14,7 @@ import {
   Database,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import logoAsset from "@/assets/winstone-mark.png.asset.json";
 import androidAsset from "@/assets/device-android.png.asset.json";
@@ -57,12 +57,6 @@ function EntryHall() {
   const navigate = useNavigate();
   const { scope } = useMyAccount();
   const [pinOpen, setPinOpen] = useState(false);
-  const [showWorkspaces, setShowWorkspaces] = useState(false);
-  useEffect(() => {
-    if (showWorkspaces) {
-      document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [showWorkspaces]);
   const [pinTarget, setPinTarget] = useState<"/hq" | "/system" | "/leadhub">("/hq");
 
   const openPin = (target: "/hq" | "/system" | "/leadhub") => {
@@ -78,13 +72,13 @@ function EntryHall() {
     } catch {
       // storage blocked: layout still adapts to the screen
     }
-    document.getElementById("workspace-start")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const [role, setRole] = useState<RoleKey>("agent");
   const startRole = () => {
-    setShowWorkspaces(true);
-    if (showWorkspaces) document.getElementById("workspace-signin")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (role === "agent") void navigate({ to: "/auth", search: { role: "agent", mode: "signin" } as never });
+    else openPin(role === "hq" ? "/hq" : role === "leadhub" ? "/leadhub" : "/system");
   };
 
   return (
@@ -201,7 +195,7 @@ function EntryHall() {
               </button>
             ))}
           </div>
-          <Button id="workspace-start" size="lg" aria-expanded={showWorkspaces} aria-controls="workspace-portals" className="btn-enter mt-4 w-full rounded-md text-base font-bold" onClick={startRole}>
+          <Button size="lg" className="btn-enter mt-4 w-full rounded-md text-base font-bold" onClick={startRole}>
             Get started <ChevronRight className="size-5" />
           </Button>
           <p className="mt-2 text-center text-xs text-muted-foreground">
@@ -209,25 +203,14 @@ function EntryHall() {
           </p>
         </div>
 
-        <div id="workspace-portals" hidden={!showWorkspaces}>
         <h2
           id="workspace-signin"
-          className="font-hand mt-12 scroll-mt-20 text-center text-3xl font-semibold tracking-normal sm:text-4xl"
+          className="font-hand mt-12 scroll-mt-6 text-center text-3xl font-semibold tracking-normal sm:text-4xl"
         >
           Sign in to your workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
-          <EntryCard
-            icon={<BarChart3 className="size-6" />}
-            title="Executive HQ"
-            description="Live floor performance, leaderboards and ask-anything reports and charts."
-            primary={
-              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
-                <Lock className="size-4" /> Unlock PIN
-              </Button>
-            }
-          />
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
@@ -260,6 +243,17 @@ function EntryHall() {
           />
 
           <EntryCard
+            icon={<BarChart3 className="size-6" />}
+            title="Executive HQ"
+            description="Live floor performance, leaderboards and ask-anything reports and charts."
+            primary={
+              <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
+                <Lock className="size-4" /> Unlock PIN
+              </Button>
+            }
+          />
+
+          <EntryCard
             icon={<Server className="size-6" />}
             title="IT Console"
             description="System configuration, integrations, data health and account approvals."
@@ -269,7 +263,6 @@ function EntryHall() {
               </Button>
             }
           />
-        </div>
         </div>
 
         <section className="mt-10 border-y border-border py-6">
