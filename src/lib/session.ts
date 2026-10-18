@@ -1,3 +1,4 @@
+import { useLocation } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -53,9 +54,11 @@ export type Account = Awaited<ReturnType<typeof getMyAccount>>;
 /** Who is using this device: PIN authority, coordinator, agent, or nobody. */
 export function useMyAccount() {
   const token = useAdminToken();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const view = pathname === "/desk" ? "agent" as const : "default" as const;
   const query = useQuery({
-    queryKey: ["my-account", token ? "pin" : "session"],
-    queryFn: () => getMyAccount({ data: { adminToken: token } }),
+    queryKey: ["my-account", token ? "pin" : "session", view],
+    queryFn: () => getMyAccount({ data: { adminToken: token, view } }),
     staleTime: 60_000,
     gcTime: 30 * 60_000,
     refetchInterval: 120_000,
