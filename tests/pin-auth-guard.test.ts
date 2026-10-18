@@ -12,6 +12,23 @@ beforeEach(() => {
   mocks.mintAdminToken.mockReturnValue("unit-token");
 });
 describe("PIN attempt server boundary", () => {
+  it("keeps the same account separate on Nexus and IT surfaces", async () => {
+    mocks.rpc.mockResolvedValue({ data: { allowed: false, retryAfterSeconds: 300 }, error: null });
+    await guardedPinUnlock("leadhub", "unit-pin");
+    await guardedPinUnlock("system", "unit-pin");
+    const nexus = mocks.rpc.mock.calls[0]?.[1];
+    const system = mocks.rpc.mock.calls[1]?.[1];
+    expect(nexus?._subject).toBe(system?._subject);
+    expect(nexus?._surface).toBe("leadhub");
+    expect(system?._surface).toBe("system");
+  });
+  it("does not share account counters between different users", async () => {
+    mocks.rpc.mockResolvedValue({ data: { allowed: false, retryAfterSeconds: 300 }, error: null });
+    await guardedPinUnlock("system", "unit-pin");
+    mocks.resolveCaller.mockResolvedValue({ userId: "other-account" });
+    await guardedPinUnlock("system", "unit-pin");
+    expect(mocks.rpc.mock.calls[0]?.[1]._subject).not.toBe(mocks.rpc.mock.calls[1]?.[1]._subject);
+  });
   it("refuses even a correct PIN while the five-minute block is active", async () => {
     mocks.rpc.mockResolvedValueOnce({ data: { allowed: false, retryAfterSeconds: 300 }, error: null });
     expect(await guardedPinUnlock("system", "unit-pin")).toEqual({ ok: false, retryAfterSeconds: 300 });

@@ -806,6 +806,13 @@
       "when": 1792344418925,
       "tag": "0114_pin_auth_attempt_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1792345489363,
+      "tag": "0115_pin_guard_count_verified_failures",
+      "breakpoints": true
     }
   ]
 }

@@ -20,4 +20,4 @@
 - Active follow-up feeds use active_follow_up_events/current_follow_up_work_items views, while history reads the original table — why: recovery preserves its source without duplicating reminders or active counts.
 - Instruction copilot drafts locally without AI calls; LeadHub prefills the existing confirmation form, IT links to Nexus, app changes stay copy-only — why: no second write path or hidden credit usage.
 - IT/HQ vault checks read only master/it_console PINs, never LeadHub — why: Nexus credentials must not unlock IT.
-- PIN unlock uses pin-auth.server.ts and atomic begin/finish attempt RPCs, scoped to verified account or signed HttpOnly PIN-session cookie plus surface — why: concurrent requests cannot bypass five failures/five-minute pause or block a shared IP; success alone clears the counter.
+- PIN unlock uses pin-auth.server.ts and atomic begin/finish attempt RPCs, scoped to verified account or signed HttpOnly PIN-session cookie plus surface; only completed wrong-PIN verification increments failures, leases never do — why: preserve valid entry and five-failure/five-minute isolation without shared-IP blocking.
