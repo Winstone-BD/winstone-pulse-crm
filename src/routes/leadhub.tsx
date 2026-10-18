@@ -10,6 +10,7 @@ import { LeadDatabasePanel } from "@/components/crm/LeadDatabasePanel";
 import { HeadLeadIntakePanel } from "@/components/crm/HeadLeadIntakePanel";
 import { SnapshotSkeleton } from "@/components/crm/SnapshotSkeleton";
 import { AllocationTable, AssignLeadsWorkspace } from "@/components/crm/deck/AssignLeadsWorkspace";
+import { TopUpTo50Panel } from "@/components/crm/deck/TopUpTo50Panel";
 import { DeckKpis } from "@/components/crm/deck/DeckKpis";
 import { ImportHistoryPanel } from "@/components/crm/deck/ImportHistoryPanel";
 import { LeadStorePanel } from "@/components/crm/deck/LeadStorePanel";
@@ -102,7 +103,7 @@ function LeadHubWorkspace() {
       {section === "overview" && <><DeckKpis /><AllocationTable onAssign={(id) => { setAssignFor(id); setSection("assign"); }} /></>}
       {section === "import" && <div className="space-y-4"><div className="flex justify-end"><CsvImportDialog /></div><HeadLeadIntakePanel /><ImportHistoryPanel /></div>}
       {section === "database" && <LeadStorePanel agents={agentOptions} canAssign={false} title={t({ bn: "মূল লিড ডেটাবেস", en: "Canonical Lead Database" })} />}
-      {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
+      {section === "assign" && <div className="space-y-4"><LeadDatabasePanel /><TopUpTo50Panel /><AssignLeadsWorkspace key={assignFor ?? "all"} initialAgentId={assignFor} /></div>}
       {section === "neglected" && <NeglectedLeadsPanel />}
       {section === "history" && <div className="space-y-4"><ImportHistoryPanel /><LeadStorePanel agents={agentOptions} canAssign={false} defaultAssignment="duplicate" title={t({ bn: "ডুপ্লিকেট / আলাদা রাখা রেকর্ড", en: "Duplicate / parked records" })} /><LeadStorePanel agents={agentOptions} canAssign={false} defaultQuality="invalid_phone" title={t({ bn: "ডেটার মান যাচাই", en: "Data quality review" })} /></div>}
     </div>
