@@ -188,14 +188,17 @@ function EntryHall() {
           id="workspace-signin"
           className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
         >
-          Sign in to your workspace
+          One CRM. One data layer. Every device.
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Choose your workspace
+        </p>
         <div className="mt-5 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
           <EntryCard
             icon={<Headphones className="size-6" />}
             title="Sales Agent"
-            description="Your own lead queue, call log, WhatsApp threads and AI coaching."
+            description="Work leads, calls and follow-ups."
             primary={
               <Button asChild className="btn-enter flex-1">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
@@ -215,7 +218,7 @@ function EntryHall() {
           <EntryCard
             icon={<Database className="size-6" />}
             title="LeadHub Nexus"
-            description="Canonical lead database, imports, data quality and quantity assignment."
+            description="Import, organize and distribute leads."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/leadhub")}>
                 <Lock className="size-4" /> Unlock PIN
@@ -226,7 +229,7 @@ function EntryHall() {
           <EntryCard
             icon={<BarChart3 className="size-6" />}
             title="Executive HQ"
-            description="Live floor performance, leaderboards and ask-anything reports and charts."
+            description="View team performance and manage operations."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/hq")}>
                 <Lock className="size-4" /> Unlock PIN
@@ -237,7 +240,7 @@ function EntryHall() {
           <EntryCard
             icon={<Server className="size-6" />}
             title="IT Console"
-            description="System configuration, integrations, data health and account approvals."
+            description="System health, access and integrations."
             primary={
               <Button className="btn-enter flex-1" onClick={() => openPin("/system")}>
                 <Lock className="size-4" /> Unlock PIN
