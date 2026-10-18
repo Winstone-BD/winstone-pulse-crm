@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Lock, LockOpen } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { unlockAdmin } from "@/lib/crm.functions";
 import { setAdminToken, setLeadHubToken, useAdminToken } from "@/lib/local-session";
+import { useT } from "@/lib/i18n";
 
 /** Controlled PIN modal. Once unlocked the token is kept in localStorage. */
 export function AdminPinDialog({
@@ -31,12 +32,20 @@ export function AdminPinDialog({
 }) {
   const [pin, setPin] = useState("");
   const [attemptNo, setAttemptNo] = useState(0);
+  const [remaining, setRemaining] = useState(0);
+  const t = useT();
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const timer = window.setTimeout(() => setRemaining(value => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [remaining]);
   const unlock = useServerFn(unlockAdmin);
 
   const attempt = useMutation({
     mutationFn: (value: string) => unlock({ data: { pin: value, surface } }),
     onSuccess: (result) => {
       if (result.ok) {
+        setRemaining(0);
         if (surface === "leadhub") setLeadHubToken(result.token);
         else setAdminToken(result.token);
         toast.success(
@@ -46,7 +55,8 @@ export function AdminPinDialog({
         onOpenChange(false);
         onUnlocked?.();
       } else {
-        toast.error("Wrong PIN");
+        setRemaining(result.retryAfterSeconds);
+        toast.error(result.retryAfterSeconds > 0 ? t({ bn: "PIN প্রবেশে সাময়িক বিরতি", en: "PIN entry temporarily paused" }) : t({ bn: "ভুল PIN", en: "Wrong PIN" }));
         setPin("");
         setAttemptNo((n) => n + 1);
       }
@@ -88,17 +98,17 @@ export function AdminPinDialog({
             value={pin}
             onChange={(event) => setPin(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && pin.length >= 4 && !attempt.isPending) {
+              if (event.key === "Enter" && pin.length >= 4 && !attempt.isPending && remaining === 0) {
                 attempt.mutate(pin);
               }
             }}
-            disabled={attempt.isPending}
+            disabled={attempt.isPending || remaining > 0}
             className="text-center tracking-[0.3em]"
           />
           <Button
             className="w-full"
             aria-busy={attempt.isPending}
-            disabled={pin.length < 4 || attempt.isPending}
+            disabled={pin.length < 4 || attempt.isPending || remaining > 0}
             onClick={() => attempt.mutate(pin)}
           >
             {attempt.isPending ? (
@@ -108,6 +118,7 @@ export function AdminPinDialog({
             )}
             Unlock
           </Button>
+          {remaining > 0 && <p role="alert" className="text-center text-sm text-destructive">{t({ bn: "PIN প্রবেশে সাময়িক বিরতি। বাকি", en: "PIN entry temporarily paused. Remaining" })}: {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}</p>}
         </div>
       </DialogContent>
     </Dialog>
