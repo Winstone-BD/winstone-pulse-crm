@@ -8,7 +8,7 @@ import { resilientQueryDefaults } from "./lib/query-resilience";
 // hold the build open after every page is written. Unref them during
 // prerendering only — the live server and browser keep normal timers.
 const isPrerendering =
-  typeof process !== "undefined" && process.env.TSS_PRERENDERING === "true";
+  typeof process !== "undefined" && process.env["TSS_PRERENDERING"] === "true";
 if (isPrerendering) {
   timeoutManager.setTimeoutProvider({
     setTimeout: (cb, ms) => {
