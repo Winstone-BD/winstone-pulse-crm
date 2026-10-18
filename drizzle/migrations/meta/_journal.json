@@ -771,6 +771,13 @@
       "when": 1791832684224,
       "tag": "0109_lock_payment_vouchers",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1792334671180,
+      "tag": "0110_project_photos_staff_select_policy",
+      "breakpoints": true
     }
   ]
 }
