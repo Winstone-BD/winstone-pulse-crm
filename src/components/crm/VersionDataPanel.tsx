@@ -62,7 +62,7 @@ export function VersionDataPanel() {
           <div>
             <h2 className="text-base font-semibold">সংস্করণভিত্তিক ডেটা নিশ্চয়তা</h2>
             <p className="text-xs text-muted-foreground">
-              প্রতিটি অ্যাপ সংস্করণের লিড ও রিপোর্ট সংরক্ষিত; সংস্করণ বদলালে বা ফেলে দিলে সেই ডেটা নতুন সংস্করণে আবার বুঝিয়ে দেওয়া যায়
+              অ্যাপ থেকে পাওয়া সংস্করণ-টেলিমেট্রির হিসাব; এটি CRM-এর মোট লিড বা রিপোর্টের হিসাব নয়।
             </p>
           </div>
         </div>
@@ -82,14 +82,14 @@ export function VersionDataPanel() {
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "মোট লিড", value: totals?.leads ?? 0 },
-          { label: "মোট রিপোর্ট", value: totals?.reports ?? 0 },
-          { label: "অফলাইনে তোলা", value: totals?.offlineCaptured ?? 0 },
-          { label: "বোঝানো বাকি", value: totals?.pendingHandoff ?? 0 },
+          { label: "রেকর্ডকৃত লিড", value: totals?.leads },
+          { label: "রেকর্ডকৃত রিপোর্ট", value: totals?.reports },
+          { label: "অফলাইনে তোলা", value: totals?.offlineCaptured },
+          { label: "বোঝানো বাকি", value: totals?.pendingHandoff },
         ].map((card) => (
           <div key={card.label} className="rounded-xl border border-border/70 bg-background/60 p-3">
             <p className="text-xs text-muted-foreground">{card.label}</p>
-            <p className="text-xl font-semibold">{card.value.toLocaleString("bn-BD")}</p>
+            <p className="text-xl font-semibold">{coverage.isError || card.value == null ? '—' : card.value.toLocaleString("bn-BD")}</p>
           </div>
         ))}
       </div>
@@ -111,7 +111,7 @@ export function VersionDataPanel() {
             {versions.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-4 text-center text-muted-foreground">
-                  এখনও কোনো সংস্করণের ডেটা রেকর্ড হয়নি।
+                  সংস্করণ-টেলিমেট্রি অনুপস্থিত; শূন্য মান CRM-এ ডেটা নেই এমন প্রমাণ নয়।
                 </td>
               </tr>
             ) : (

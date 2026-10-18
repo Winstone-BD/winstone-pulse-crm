@@ -24,17 +24,23 @@ export async function logAiUsage(input: {
   units?: number;
   actorProfileId?: string | null;
   detail?: string | null;
+  leadId?: string | null;
+  sourceEventId?: string;
 }): Promise<void> {
   try {
-    const { error } = await supabaseAdmin.from("ai_usage_events").insert({
+    const { data: event, error } = await supabaseAdmin.from("ai_usage_events").insert({
       category: input.category,
       model: input.model ?? null,
       units: input.units ?? 1,
       est_credits: AI_USAGE_RATES[input.category] * (input.units ?? 1),
       actor_profile_id: input.actorProfileId ?? null,
       detail: input.detail ?? null,
-    });
+    }).select('id,created_at').single();
     if (error) throw error;
+    if (event) {
+      const { ingestUsageEvent } = await import('./usage-ledger.server');
+      await ingestUsageEvent({source:'runtime_ai_observation',source_event_id:input.sourceEventId ?? event.id,usage_class:'run',event_type:'ai_observation',operation:input.category,model:input.model??null,lead_id:input.leadId??null,quantity:input.units??1,quantity_unit:'operations',amount_basis:'unknown',evidence:'Observed operation; provider billing amount unavailable. Legacy flat rates are not actual costs.',occurred_at:event.created_at});
+    }
   } catch (err) {
     console.error("[ai-usage] log failed", err);
   }
