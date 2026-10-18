@@ -1,6 +1,4 @@
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
-/** This app (CRM) only reads and changes its own subscription; the OS plan is independent. */
-const PLAN_CODE = "crm" as const;
 
 import {
   MAINTENANCE_FEE_USD,
@@ -80,24 +78,23 @@ async function ensureRow(period: string) {
   const { data } = await client
     .from("system_maintenance")
     .select("*")
-    .eq("plan_code", PLAN_CODE).eq("billing_period", period)
+    .eq("billing_period", period)
     .maybeSingle();
   if (data) return data;
   const lockAt = defaultLockAt(period);
   await client.from("system_maintenance").upsert(
     {
       billing_period: period,
-      plan_code: PLAN_CODE,
       fee_usd: MAINTENANCE_FEE_USD,
       due_date: defaultDueAt(period),
       lock_at: lockAt,
     },
-    { onConflict: "billing_period,plan_code", ignoreDuplicates: true },
+    { onConflict: "billing_period", ignoreDuplicates: true },
   );
   const { data: row, error } = await client
     .from("system_maintenance")
     .select("*")
-    .eq("plan_code", PLAN_CODE).eq("billing_period", period)
+    .eq("billing_period", period)
     .single();
   if (error || !row) throw new Error("Maintenance state unavailable");
   await audit({ actor: "system", actorRole: "system", action: "maintenance_due", period, next: "unpaid" });
@@ -175,7 +172,7 @@ export async function maintenanceAccess(now: Date = new Date()): Promise<Mainten
   const { count } = await client
     .from("maintenance_unlock_requests")
     .select("id", { count: "exact", head: true })
-    .eq("plan_code", PLAN_CODE).eq("billing_period", period)
+    .eq("billing_period", period)
     .eq("status", "requested");
 
   const state: MaintenanceState = {
@@ -238,7 +235,7 @@ export async function submitPayment(input: { actor: string; paymentRef: string; 
   const { error } = await client
     .from("system_maintenance")
     .update({ payment_status: "pending", payment_ref: input.paymentRef, payment_verified_at: null, payment_verified_by: null })
-    .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
+    .eq("billing_period", state.period);
   if (error) throw new Error("Could not submit payment");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "payment_submitted", period: state.period, previous: state.paymentStatus, next: "pending", reason: input.note ?? null, metadata: { payment_ref: input.paymentRef, fee_usd: state.feeUsd } });
@@ -254,7 +251,7 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
   const { error } = await client
     .from("system_maintenance")
     .update({ payment_status: "unpaid", payment_verified_at: null, payment_verified_by: null })
-    .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
+    .eq("billing_period", state.period);
   if (error) throw new Error("Could not update payment status");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "payment_withdrawn", period: state.period, previous: state.paymentStatus, next: "unpaid", reason: input.reason ?? null });
@@ -265,13 +262,13 @@ export async function withdrawPayment(input: { actor: string; reason?: string | 
 export async function architectReviewPayment(input: { actor: string; approve: boolean; reason: string }) {
   const state = await maintenanceAccess();
   const client = await db();
-  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("plan_code", PLAN_CODE).eq("billing_period", state.period).single();
+  const { data: row } = await client.from("system_maintenance").select("payment_ref, payment_status").eq("billing_period", state.period).single();
   if (!row || row.payment_status !== "pending" || !row.payment_ref) throw new Error("No submitted payment to review");
   const at = new Date().toISOString();
   const update = input.approve
     ? { payment_status: "verified" as const, payment_verified_at: at, payment_verified_by: input.actor, lock_status: "active" }
     : { payment_status: "unpaid" as const, payment_verified_at: null, payment_verified_by: null };
-  const { error } = await client.from("system_maintenance").update(update).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).eq("payment_status", "pending");
+  const { error } = await client.from("system_maintenance").update(update).eq("billing_period", state.period).eq("payment_status", "pending");
   if (error) throw new Error("Could not record decision");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "architect", action: input.approve ? "payment_verified" : "payment_rejected", period: state.period, previous: "pending", next: input.approve ? "verified" : "unpaid", reason: input.reason, metadata: { payment_ref: row.payment_ref, fee_usd: state.feeUsd } });
@@ -292,7 +289,7 @@ export async function setLockAt(input: { actor: string; lockAt: string }) {
   const { error } = await client
     .from("system_maintenance")
     .update({ lock_at: input.lockAt, locked_logged_at: null })
-    .eq("plan_code", PLAN_CODE).eq("billing_period", state.period);
+    .eq("billing_period", state.period);
   if (error) throw new Error("Could not change lock time");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "lock_time_changed", period: state.period, previous: state.lockAt, next: input.lockAt });
@@ -306,7 +303,6 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
     .from("maintenance_unlock_requests")
     .insert({
       billing_period: state.period,
-      plan_code: PLAN_CODE,
       requested_by: input.actor,
       requested_hours: input.hours,
       reason: input.reason,
@@ -319,7 +315,7 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
     if (error.code === "23505") throw new Error("An unlock request is already waiting for the System Architect");
     throw new Error("Could not create unlock request");
   }
-  await client.from("system_maintenance").update({ unlock_status: "requested" }).eq("plan_code", PLAN_CODE).eq("billing_period", state.period).neq("unlock_status", "approved");
+  await client.from("system_maintenance").update({ unlock_status: "requested" }).eq("billing_period", state.period).neq("unlock_status", "approved");
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "it_console", action: "unlock_requested", period: state.period, next: "requested", reason: input.reason, requestId: data.id, durationMinutes: input.hours * 60, metadata: { payment_status: state.paymentStatus } });
   return { ok: true, requestId: data.id, paymentVerified: state.paymentStatus === "verified" };
@@ -328,8 +324,8 @@ export async function createUnlockRequest(input: { actor: string; hours: number;
 export async function maintenanceHistory() {
   const client = await db();
   const [{ data: periods }, { data: requests }, { data: log }] = await Promise.all([
-    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").eq("plan_code", PLAN_CODE).order("billing_period", { ascending: false }).limit(24),
-    client.from("maintenance_unlock_requests").select("*").eq("plan_code", PLAN_CODE).order("requested_at", { ascending: false }).limit(50),
+    client.from("system_maintenance").select("billing_period, fee_usd, payment_status, payment_ref, payment_verified_at, payment_verified_by, lock_at, unlock_status, unlock_expires_at").order("billing_period", { ascending: false }).limit(24),
+    client.from("maintenance_unlock_requests").select("*").order("requested_at", { ascending: false }).limit(50),
     client.from("maintenance_audit").select("id, at, actor, actor_role, action, billing_period, previous_state, new_state, reason, request_id, duration_minutes, expires_at, metadata").order("at", { ascending: false }).limit(200),
   ]);
   return { periods: periods ?? [], requests: requests ?? [], audit: log ?? [] };
@@ -440,8 +436,7 @@ export async function architectDecide(input: {
     .select("*")
     .eq("id", input.requestId)
     .maybeSingle();
-  // Entitlements are independent: this app only decides its own plan's requests.
-  if (!request || request.plan_code !== PLAN_CODE) throw new Error("Request not found");
+  if (!request) throw new Error("Request not found");
   if (request.status !== "requested") throw new Error("This request has already been decided");
   const now = new Date();
 
@@ -452,7 +447,7 @@ export async function architectDecide(input: {
       .update({ status: "denied", decided_at: now.toISOString(), decided_by: input.actor, decision_reason: input.reason })
       .eq("id", request.id)
       .eq("status", "requested");
-    await client.from("system_maintenance").update({ unlock_status: "denied" }).eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period).neq("unlock_status", "approved");
+    await client.from("system_maintenance").update({ unlock_status: "denied" }).eq("billing_period", request.billing_period).neq("unlock_status", "approved");
     clearMaintenanceCache();
     await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_denied", period: request.billing_period, previous: "requested", next: "denied", reason: input.reason, requestId: request.id });
     return { ok: true, status: "denied" as const };
@@ -486,7 +481,7 @@ export async function architectDecide(input: {
       approval_reason: input.reason,
       lock_status: "active",
     })
-    .eq("plan_code", PLAN_CODE).eq("billing_period", request.billing_period);
+    .eq("billing_period", request.billing_period);
   clearMaintenanceCache();
   await audit({ actor: input.actor, actorRole: "system_architect", action: "unlock_approved", period: request.billing_period, previous: "locked", next: "active", reason: input.reason, requestId: request.id, durationMinutes: minutes, expiresAt: expires });
   await notifyOnce(`maintenance_restored_${request.billing_period}_${request.id}`, "info", "Workspace access restored", `Access restored for ${request.billing_period} by System Architect until ${dhakaTime(expires)} (Dhaka).`);

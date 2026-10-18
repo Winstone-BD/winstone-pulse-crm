@@ -2535,7 +2535,6 @@ export type Database = {
           id: string
           payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request: string | null
-          plan_code: string
           reason: string | null
           requested_at: string
           requested_by: string
@@ -2553,7 +2552,6 @@ export type Database = {
           id?: string
           payment_status_at_request: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request?: string | null
-          plan_code?: string
           reason?: string | null
           requested_at?: string
           requested_by: string
@@ -2571,7 +2569,6 @@ export type Database = {
           id?: string
           payment_status_at_request?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at_request?: string | null
-          plan_code?: string
           reason?: string | null
           requested_at?: string
           requested_by?: string
@@ -4667,10 +4664,8 @@ export type Database = {
         Row: {
           approval_reason: string | null
           approved_by: string | null
-          base_cents: number | null
           billing_period: string
           created_at: string
-          currency: string
           due_date: string
           fee_usd: number
           id: string
@@ -4681,25 +4676,19 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at: string | null
           payment_verified_by: string | null
-          plan_code: string
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
-          total_cents: number | null
           unlock_expires_at: string | null
           unlock_started_at: string | null
           unlock_status: Database["public"]["Enums"]["maintenance_unlock_status"]
           updated_at: string
-          vat_cents: number | null
-          vat_rate_bps: number | null
         }
         Insert: {
           approval_reason?: string | null
           approved_by?: string | null
-          base_cents?: number | null
           billing_period: string
           created_at?: string
-          currency?: string
           due_date: string
           fee_usd?: number
           id?: string
@@ -4710,25 +4699,19 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
-          plan_code?: string
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          total_cents?: number | null
           unlock_expires_at?: string | null
           unlock_started_at?: string | null
           unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
           updated_at?: string
-          vat_cents?: number | null
-          vat_rate_bps?: number | null
         }
         Update: {
           approval_reason?: string | null
           approved_by?: string | null
-          base_cents?: number | null
           billing_period?: string
           created_at?: string
-          currency?: string
           due_date?: string
           fee_usd?: number
           id?: string
@@ -4739,17 +4722,13 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["maintenance_payment_status"]
           payment_verified_at?: string | null
           payment_verified_by?: string | null
-          plan_code?: string
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
-          total_cents?: number | null
           unlock_expires_at?: string | null
           unlock_started_at?: string | null
           unlock_status?: Database["public"]["Enums"]["maintenance_unlock_status"]
           updated_at?: string
-          vat_cents?: number | null
-          vat_rate_bps?: number | null
         }
         Relationships: []
       }

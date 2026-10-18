@@ -1,7 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { getRequestIP, useSession as getServerSession } from "@tanstack/react-start/server";
-/** This app (CRM) only reads and changes its own subscription; the OS plan is independent. */
-const PLAN_CODE = "crm" as const;
 
 import { dhakaPeriod } from "@/lib/maintenance-rules";
 import {
@@ -143,7 +141,7 @@ export async function currentServiceBill(
   let { data: row, error } = await client
     .from("system_maintenance")
     .select("id, created_at, due_date, review_status, reviewed_by, reviewed_at")
-    .eq("plan_code", PLAN_CODE).eq("billing_period", period)
+    .eq("billing_period", period)
     .maybeSingle();
   if (error) throw new Error("Service bill is unavailable");
   if (!row) {
@@ -152,7 +150,7 @@ export async function currentServiceBill(
     const result = await client
       .from("system_maintenance")
       .select("id, created_at, due_date, review_status, reviewed_by, reviewed_at")
-      .eq("plan_code", PLAN_CODE).eq("billing_period", period)
+      .eq("billing_period", period)
       .single();
     row = result.data;
     error = result.error;

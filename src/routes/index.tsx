@@ -68,7 +68,7 @@ function EntryHall() {
   return (
     <div className="theme-exec min-h-screen bg-background">
       <main className="mx-auto flex min-h-screen w-full max-w-6xl animate-rise flex-col px-4 py-10 sm:px-6 sm:py-14">
-        <header className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+        <header className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center gap-3 lg:justify-start">
               <img
@@ -85,22 +85,21 @@ function EntryHall() {
                 </p>
               </div>
             </div>
-            <h1 className="mt-6 font-hand text-4xl font-bold leading-[1.2] tracking-normal text-foreground sm:mt-8 sm:text-7xl sm:leading-[1.05] sm:tracking-tight">
-
+            <h1 className="mt-8 text-4xl font-black uppercase leading-[1.05] tracking-tight text-foreground sm:text-6xl">
               Winstone <span className="text-gold">Pulse</span>
             </h1>
-            <p className="mt-2 font-hand text-2xl font-semibold leading-snug tracking-normal text-foreground sm:mt-3 sm:text-4xl sm:tracking-tight">
+            <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
               Close more deals, <span className="text-gold">less chaos.</span>
             </p>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base lg:mx-0">
+            <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
               The visual CRM that your sales team will actually love using. Drag, drop, and close —
               live sales monitoring, lead management, call activity, follow-up deadlines and team
               performance, all in one place.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-7 lg:justify-start">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Button
                 size="lg"
-                className="min-w-36 rounded-md px-7 text-base font-bold hover:bg-charcoal"
+                className="rounded-md px-7 text-base font-bold hover:bg-charcoal"
                 onClick={() =>
                   document
                     .getElementById("workspace-signin")
@@ -109,13 +108,13 @@ function EntryHall() {
               >
                 Get started <ChevronRight className="size-5" />
               </Button>
-              <Button asChild size="lg" variant="outline" className="min-w-36 rounded-md px-7 text-base font-semibold">
+              <Button asChild size="lg" variant="outline" className="rounded-md px-7 text-base font-semibold">
                 <Link to="/auth" search={{ role: "agent", mode: "signin" }}>
                   Sign in
                 </Link>
               </Button>
             </div>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 sm:mt-8 sm:gap-x-6 lg:justify-start">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
               {[
                 { icon: Headphones, label: "Manage Your Team" },
                 { icon: BarChart3, label: "Track Sales Pipeline" },
@@ -150,7 +149,7 @@ function EntryHall() {
           </div>
         </header>
 
-        <h2 className="mt-10 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight">
+        <h2 className="mt-10 text-center text-xl font-bold tracking-tight sm:text-3xl">
           Choose Your Workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />
         </h2>
@@ -185,7 +184,7 @@ function EntryHall() {
 
         <h2
           id="workspace-signin"
-          className="mt-10 scroll-mt-6 text-center font-hand text-2xl font-semibold leading-snug tracking-normal sm:text-4xl sm:tracking-tight"
+          className="mt-10 scroll-mt-6 text-center text-xl font-bold tracking-tight"
         >
           Sign in to your workspace
           <span aria-hidden className="mx-auto mt-2 block h-0.5 w-12 bg-gold" />

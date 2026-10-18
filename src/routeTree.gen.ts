@@ -30,7 +30,6 @@ import { Route as HqRouteImport } from './routes/hq'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as IngestRouteImport } from './routes/ingest'
-import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LeadhubRouteImport } from './routes/leadhub'
 import { Route as LiveLeadsRouteImport } from './routes/live-leads'
@@ -217,11 +216,6 @@ const InboxRoute = InboxRouteImport.update({
 const IngestRoute = IngestRouteImport.update({
   id: '/ingest',
   path: '/ingest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InsightsRoute = InsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InventoryRoute = InventoryRouteImport.update({
@@ -679,7 +673,6 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
-  '/insights': typeof InsightsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
@@ -785,7 +778,6 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
-  '/insights': typeof InsightsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
@@ -892,7 +884,6 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/ingest': typeof IngestRoute
-  '/insights': typeof InsightsRoute
   '/inventory': typeof InventoryRoute
   '/leadhub': typeof LeadhubRoute
   '/live-leads': typeof LiveLeadsRoute
@@ -1000,7 +991,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
-    | '/insights'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
@@ -1106,7 +1096,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
-    | '/insights'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
@@ -1212,7 +1201,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/ingest'
-    | '/insights'
     | '/inventory'
     | '/leadhub'
     | '/live-leads'
@@ -1319,7 +1307,6 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   InboxRoute: typeof InboxRoute
   IngestRoute: typeof IngestRoute
-  InsightsRoute: typeof InsightsRoute
   InventoryRoute: typeof InventoryRoute
   LeadhubRoute: typeof LeadhubRoute
   LiveLeadsRoute: typeof LiveLeadsRoute
@@ -1551,13 +1538,6 @@ declare module '@tanstack/react-router' {
       path: '/ingest'
       fullPath: '/ingest'
       preLoaderRoute: typeof IngestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/insights': {
-      id: '/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inventory': {
@@ -2159,7 +2139,6 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   InboxRoute: InboxRoute,
   IngestRoute: IngestRoute,
-  InsightsRoute: InsightsRoute,
   InventoryRoute: InventoryRoute,
   LeadhubRoute: LeadhubRoute,
   LiveLeadsRoute: LiveLeadsRoute,

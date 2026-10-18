@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MaintenanceCountdown, NoticePreview } from "@/components/crm/MaintenanceNotice";
+import { MaintenanceCountdown } from "@/components/crm/MaintenanceNotice";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -26,17 +26,6 @@ function Tone({ tone, children }: { tone: "red" | "amber" | "green"; children: R
         : "border-success/40 bg-success/10 text-success";
   return <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${cls}`}>{children}</span>;
 }
-
-const HISTORY_ACTIONS: Record<string, { label: string; tone: "red" | "amber" | "green" }> = {
-  maintenance_due: { label: "Invoice issued", tone: "amber" },
-  payment_submitted: { label: "Payment submitted", tone: "amber" },
-  payment_withdrawn: { label: "Submission withdrawn", tone: "red" },
-  payment_verified: { label: "Verified", tone: "green" },
-  payment_rejected: { label: "Rejected", tone: "red" },
-  lock_time_changed: { label: "Deadline changed", tone: "amber" },
-  system_locked: { label: "Workspace locked", tone: "red" },
-  unlock_approved: { label: "Access restored", tone: "green" },
-};
 
 /** Dhaka wall-clock value for a datetime-local input. */
 function toLocalInput(iso: string) {
@@ -186,54 +175,30 @@ export function MaintenancePanel() {
       </div>
 
       <div>
-        <p className="mb-1 text-sm font-semibold">Billing notice preview</p>
-        <p className="mb-2 text-xs text-muted-foreground">How each payment notice looks before publishing — amber, blue, red, and verified. Display-only; nothing here changes the real invoice.</p>
-        <NoticePreview />
-      </div>
-
-      <div>
-        <p className="mb-1 text-sm font-semibold">Subscription payment history</p>
-        <p className="mb-2 text-xs text-muted-foreground">Each invoice with its deadline, every payment submission and the verification result. Read-only.</p>
-        <div className="space-y-2">
-          {periods.length === 0 && <p className="text-xs text-muted-foreground">No invoices yet.</p>}
-          {periods.map((p) => {
-            const events = audit
-              .filter((a) => a.billing_period === p.billing_period && HISTORY_ACTIONS[a.action])
-              .slice()
-              .sort((a, b) => a.at.localeCompare(b.at));
-            const deadlinePassed = p.lock_at ? new Date(p.lock_at).getTime() <= Date.now() : false;
-            return (
-              <details key={p.billing_period} className="rounded border border-border bg-card" open={p.billing_period === state.period}>
-                <summary className="flex cursor-pointer flex-wrap items-center gap-2 p-3 text-xs">
-                  <span className="font-semibold">Invoice {p.billing_period}</span>
-                  <span>${Number(p.fee_usd).toFixed(2)} USD incl. VAT</span>
-                  <Tone tone={p.payment_status === "verified" ? "green" : p.payment_status === "pending" ? "amber" : "red"}>
-                    {p.payment_status === "verified" ? "VERIFIED" : p.payment_status === "pending" ? "VERIFICATION PENDING" : "UNPAID"}
-                  </Tone>
-                  <span className="ml-auto text-muted-foreground">
-                    Deadline {p.lock_at ? dhakaTime(p.lock_at) : "—"}
-                    {p.payment_status !== "verified" && deadlinePassed ? " · passed" : ""}
-                  </span>
-                </summary>
-                <ol className="space-y-1.5 border-t border-border p-3 text-xs">
-                  {events.length === 0 && <li className="text-muted-foreground">No submissions recorded for this invoice.</li>}
-                  {events.map((e) => {
-                    const meta = (e.metadata ?? {}) as { payment_ref?: string };
-                    const kind = HISTORY_ACTIONS[e.action]!;
-                    return (
-                      <li key={e.id} className="flex flex-wrap items-baseline gap-x-2">
-                        <Tone tone={kind.tone}>{kind.label}</Tone>
-                        <span className="text-muted-foreground">{dhakaTime(e.at)}</span>
-                        <span>by {e.actor}</span>
-                        {meta.payment_ref && <span>· Ref {meta.payment_ref}</span>}
-                        {e.reason && <span className="w-full text-muted-foreground">“{e.reason}”</span>}
-                      </li>
-                    );
-                  })}
-                </ol>
-              </details>
-            );
-          })}
+        <p className="mb-2 text-sm font-semibold">Month-wise payment history</p>
+        <div className="table-scroll rounded border border-border">
+          <table className="w-full min-w-[720px] text-xs">
+            <thead className="bg-muted/50 text-left"><tr><th className="p-2">Month</th><th className="p-2">Amount</th><th className="p-2">Reference</th><th className="p-2">Status</th><th className="p-2">Submitted</th><th className="p-2">Verified</th></tr></thead>
+            <tbody>
+              {periods.map((p) => {
+                const sub = audit.find((a) => a.billing_period === p.billing_period && a.action === "payment_submitted");
+                return (
+                  <tr key={p.billing_period} className="border-t border-border">
+                    <td className="p-2 font-medium">{p.billing_period}</td>
+                    <td className="p-2">${Number(p.fee_usd).toFixed(2)} USD</td>
+                    <td className="p-2">{p.payment_ref ?? "—"}</td>
+                    <td className="p-2">
+                      <Tone tone={p.payment_status === "verified" ? "green" : p.payment_status === "pending" ? "amber" : "red"}>
+                        {p.payment_status === "verified" ? "PAID" : p.payment_status === "pending" ? "SUBMITTED" : "UNPAID"}
+                      </Tone>
+                    </td>
+                    <td className="p-2">{sub ? `${sub.actor} · ${dhakaTime(sub.at)}` : "—"}</td>
+                    <td className="p-2">{p.payment_verified_by ? `${p.payment_verified_by} · ${dhakaTime(p.payment_verified_at)}` : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 

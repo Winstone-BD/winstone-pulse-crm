@@ -143,4 +143,3 @@
 - [ ] Auto Google Calendar events for site visits + follow-ups (only real saved times/places) — blocked: Google Calendar connection not linkable (owner lacks access); also need: shared office calendar vs each agent's own
 - [ ] Email .ics invite to the agent per event from notify.crm.winstonebd.com — blocked: DNS (TXT + 2 NS) not yet verified
 - [x] Workspace device cards use uploaded photos
-- [x] Subscription notice card: amber "Payment due soon" (dismissible), blue "verification in progress", red "Workspace suspension pending" with live deadline chip and one red "Review invoice & pay" action (#DC2626 / hover #B91C1C on #FEF2F2), verified removes the notice and shows "Subscription active". Red reserved for payment; HQ/IT entry buttons stay deep green. 510 tests, typecheck clean, build OK, phone+desktop checked. Amber/blue/verified states not seen on screen (October CRM invoice is unpaid, so live state is red). Not published.

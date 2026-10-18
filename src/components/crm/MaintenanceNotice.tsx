@@ -1,32 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { CalendarClock, Check, ChevronRight, Clock, FileText, Lock, LogIn, ShieldAlert } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Lock, LogIn, ShieldAlert } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { lovable } from "@/integrations/lovable";
-import { cn } from "@/lib/utils";
 import { useAdminToken } from "@/lib/local-session";
 import { getMaintenanceStatus, requestPaymentHelp } from "@/lib/maintenance.functions";
-import {
-  CRM_PLAN_NAME,
-  CRM_TOTAL_CENTS,
-  MAINTENANCE_FEE_LABEL,
-  dhakaClockLabel,
-  dhakaDateLabel,
-  dhakaMonthName,
-  dhakaTime,
-  deadlineLeftLabel,
-  nextRenewalDueAt,
-  paymentDueLabel,
-  subscriptionNoticeCopy,
-  subscriptionNoticeState,
-  usd,
-} from "@/lib/maintenance-rules";
+import { CRM_PLAN_NAME, CRM_TOTAL_CENTS, MAINTENANCE_FEE_LABEL, dhakaMonthName, dhakaTime, isAmberWindow, isRedWindow, nextRenewalDueAt, paymentDueLabel, usd } from "@/lib/maintenance-rules";
 import { useLang, useT } from "@/lib/i18n";
-import { amberDismissed, dismissAmber, firstRedModalThisSession } from "@/lib/billing-dismiss";
 
 export function useMaintenance() {
   const adminToken = useAdminToken();
@@ -39,7 +23,6 @@ export function useMaintenance() {
 }
 
 type Status = NonNullable<ReturnType<typeof useMaintenance>["data"]>;
-type NoticeState = "amber" | "blue" | "red";
 
 function statusLabel(s: Status) {
   if (s.stage === "paid") return "VERIFIED";
@@ -123,7 +106,7 @@ export function MaintenanceBadge() {
   const [open, setOpen] = useState(false);
   if (!data) return null;
   if (data.stage === "paid") {
-    return <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">🟢 Subscription active</span>;
+    return <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">🟢 VERIFIED</span>;
   }
   if (!needsNotice(data) && !data.openRequest) return null;
   const amber = data.openRequest || data.paymentStatus === "pending";
@@ -207,384 +190,11 @@ export function MaintenanceCountdown() {
   );
 }
 
-/* ------------------------------------------------------------------ *
- * Subscription notice card — the one payment notice design.
- * Red (#DC2626 CTA / #FEF2F2 canvas / #FCA5A5 accent) is reserved for
- * this notice; Executive HQ and IT Console actions stay deep green.
- * ------------------------------------------------------------------ */
-
-type Tone = {
-  card: string;
-  stripe: string;
-  badgeOuter: string;
-  badgeInner: string;
-  title: string;
-  body: string;
-  chip: string;
-  chipLabel: string;
-  chipLeft: string;
-  chipMeta: string;
-  divider: string;
-  cta: string;
-};
-
-const TONES: Record<NoticeState, Tone> = {
-  red: {
-    card: "border-pay-danger-border bg-pay-danger-bg",
-    stripe: "bg-pay-danger",
-    badgeOuter: "bg-pay-danger-border/45",
-    badgeInner: "bg-pay-danger text-pay-danger-fg",
-    title: "text-pay-danger-ink",
-    body: "text-pay-danger-body",
-    chip: "border-pay-danger-border/70 bg-pay-danger-border/25",
-    chipLabel: "text-pay-danger-ink",
-    chipLeft: "text-pay-danger",
-    chipMeta: "text-pay-danger-body",
-    divider: "bg-pay-danger-border/60",
-    cta: "bg-pay-danger text-pay-danger-fg hover:bg-pay-danger-hover active:bg-pay-danger-hover shadow-lg",
-  },
-  amber: {
-    card: "border-warning/50 bg-warning/12",
-    stripe: "bg-warning",
-    badgeOuter: "bg-warning/25",
-    badgeInner: "bg-warning text-warning-foreground",
-    title: "text-warning",
-    body: "text-muted-foreground",
-    chip: "border-warning/45 bg-warning/15",
-    chipLabel: "text-warning",
-    chipLeft: "text-warning",
-    chipMeta: "text-muted-foreground",
-    divider: "bg-warning/40",
-    cta: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 shadow-lg",
-  },
-  blue: {
-    card: "border-verify/50 bg-verify/12",
-    stripe: "bg-verify",
-    badgeOuter: "bg-verify/25",
-    badgeInner: "bg-verify text-pay-danger-fg",
-    title: "text-verify",
-    body: "text-muted-foreground",
-    chip: "border-verify/45 bg-verify/15",
-    chipLabel: "text-verify",
-    chipLeft: "text-verify",
-    chipMeta: "text-muted-foreground",
-    divider: "bg-verify/40",
-    cta: "bg-primary text-primary-foreground hover:bg-primary/90",
-  },
-};
-
-/** Ticks once a second so the notice countdown stays live. */
-function useNow(intervalMs = 1000): number | null {
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    setNow(Date.now());
-    const t = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(t);
-  }, [intervalMs]);
-  return now;
-}
-
-function DeadlineChip({
-  tone,
-  label,
-  left,
-  date,
-  clock,
-  stacked,
-}: {
-  tone: Tone;
-  label: string;
-  left: string | null;
-  date: string;
-  clock: string;
-  stacked?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border",
-        stacked ? "mt-3 flex items-center justify-between gap-3 px-3 py-2" : "w-36 shrink-0 px-3 py-2 text-center",
-        tone.chip,
-      )}
-    >
-      <div className={cn("flex items-center gap-1.5", tone.chipLabel, stacked ? "min-w-0" : "justify-center")}>
-        <CalendarClock className="size-3 shrink-0" aria-hidden />
-        <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
-      </div>
-      <div className={stacked ? "text-right" : ""}>
-        {left && <p className={cn("text-base font-extrabold leading-tight tabular-nums", tone.chipLeft)}>{left}</p>}
-        <p className={cn("text-[11px] font-semibold leading-tight", tone.chipMeta)}>{date}</p>
-        <p className={cn("text-[11px] leading-tight", tone.chipMeta)}>{clock}</p>
-      </div>
-    </div>
-  );
-}
-
-function NoticeCard({
-  state,
-  title,
-  body,
-  cta,
-  onCta,
-  onDismiss,
-  deadline,
-}: {
-  state: NoticeState;
-  title: string;
-  body: string[];
-  cta: string | null;
-  onCta?: () => void;
-  onDismiss?: (() => void) | undefined;
-  deadline: { label: string; left: string | null; date: string; clock: string };
-}) {
-  const tone = TONES[state];
-  const badge =
-    state === "blue" ? <Check className="size-3.5" aria-hidden /> : state === "amber" ? <Clock className="size-3.5" aria-hidden /> : <span className="text-[15px] font-black leading-none">!</span>;
-  return (
-    <div
-      role={state === "red" ? "alert" : "status"}
-      className={cn("relative overflow-hidden rounded-2xl border pl-5 shadow-card backdrop-blur-sm", tone.card)}
-    >
-      <span aria-hidden className={cn("absolute inset-y-px left-px w-1.5 rounded-l-[14px]", tone.stripe)} />
-      {onDismiss && (
-        <button
-          type="button"
-          aria-label="Dismiss reminder"
-          onClick={onDismiss}
-          className="absolute right-2 top-2 rounded-full px-1.5 py-0.5 text-xs font-bold opacity-60 transition hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          ✕
-        </button>
-      )}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <span className={cn("grid size-11 shrink-0 place-items-center rounded-full", tone.badgeOuter)}>
-            <span className={cn("grid size-7 place-items-center rounded-full", tone.badgeInner)}>{badge}</span>
-          </span>
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <h2 className={cn("pr-5 text-[15px] font-extrabold leading-snug", tone.title)}>{title}</h2>
-            {body.map((p) => (
-              <p key={p} className={cn("text-[12.5px] leading-relaxed", tone.body)}>
-                {p}
-              </p>
-            ))}
-          </div>
-          <span aria-hidden className={cn("hidden w-px self-stretch sm:block", tone.divider)} />
-          <span className="hidden sm:block">
-            <DeadlineChip tone={tone} {...deadline} />
-          </span>
-        </div>
-        <span className="sm:hidden">
-          <DeadlineChip tone={tone} {...deadline} stacked />
-        </span>
-        {cta && (
-          <Button
-            onClick={onCta}
-            className={cn("mt-3 h-11 w-full justify-between rounded-xl px-4 text-sm font-bold", tone.cta)}
-          >
-            <span className="inline-flex items-center gap-2">
-              <FileText className="size-4" aria-hidden />
-              {cta}
-            </span>
-            <ChevronRight className="size-4" aria-hidden />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Floating placement for the CRM-wide notice: bottom-centre on phones, bottom-right on desktops. */
-function NoticeShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 pb-24 sm:justify-end sm:p-5 sm:pb-28">
-      <div className="pointer-events-auto w-full max-w-lg">{children}</div>
-    </div>
-  );
-}
-
-/** Once-per-session renewal modal for authorized management while payment is unverified. */
-function RenewalModal({
-  open,
-  onOpenChange,
-  month,
-  paymentStatus,
-  onPay,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  month: string;
-  paymentStatus: string;
-  onPay: () => void;
-}) {
-  const statusText = paymentStatus === "pending" ? "Verification Pending" : paymentDueLabel();
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive">
-            <ShieldAlert className="size-5" /> Action Required: Subscription Renewal
-          </DialogTitle>
-        </DialogHeader>
-        <ul className="space-y-1.5 text-sm">
-          <li>● Outstanding Balance: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including VAT</li>
-          <li>● Payment Due Date: <b>12 {month}</b></li>
-          <li>● Lock Deadline: <b>15 {month}, 00:00 Asia/Dhaka</b></li>
-          <li>● Payment Status: <b className="text-destructive">{statusText}</b></li>
-        </ul>
-        <p className="text-sm text-muted-foreground">Complete payment and ensure verification before the deadline.</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Button className="bg-pay-danger text-pay-danger-fg hover:bg-pay-danger-hover active:bg-pay-danger-hover" asChild>
-            <a href="/tech?auto=1" onClick={() => onOpenChange(false)}>Pay Online</a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="/system">Submit Transfer Receipt</a>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/** One card per billing state. Dismissal is display-only and never touches the invoice. */
-function NoticeCardHost({ state, status, float }: { state: NoticeState; status: Status; float: boolean }) {
-  const now = useNow();
-  const [invoice, setInvoice] = useState(false);
-  const [modal, setModal] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const period = status.period ?? "";
-  useEffect(() => {
-    if (state === "amber") setHidden(amberDismissed(period));
-  }, [state, period]);
-  useEffect(() => {
-    if (state === "red" && status.exempt && firstRedModalThisSession(period)) setModal(true);
-  }, [state, period, status.exempt]);
-
-  const month = dhakaMonthName();
-  const copy = subscriptionNoticeCopy(state, {
-    month,
-    totalLabel: `${usd(CRM_TOTAL_CENTS)} USD`,
-    lockDate: dhakaDateLabel(status.lockAt),
-    lockClock: dhakaClockLabel(status.lockAt),
-  });
-  if (hidden) return <InvoiceDialog open={invoice} onOpenChange={setInvoice} />;
-  const ms = now === null ? null : new Date(status.lockAt).getTime() - now;
-  const card = (
-    <NoticeCard
-      state={state}
-      title={copy.title}
-      body={copy.body}
-      cta={copy.cta}
-      onCta={() => setInvoice(true)}
-      onDismiss={
-        state === "amber"
-          ? () => {
-              dismissAmber(period);
-              setHidden(true);
-            }
-          : undefined
-      }
-      deadline={{
-        label: state === "blue" ? "Verification window" : "Payment deadline",
-        left: state === "blue" || ms === null ? null : deadlineLeftLabel(ms),
-        date: dhakaDateLabel(status.lockAt),
-        clock: dhakaClockLabel(status.lockAt),
-      }}
-    />
-  );
-  const body = (
-    <>
-      {!(float && (invoice || modal)) && card}
-      {state === "red" && status.exempt && (
-        <RenewalModal
-          open={modal}
-          onOpenChange={setModal}
-          month={month}
-          paymentStatus={status.paymentStatus}
-          onPay={() => {
-            setModal(false);
-            setInvoice(true);
-          }}
-        />
-      )}
-      <InvoiceDialog open={invoice} onOpenChange={setInvoice} />
-    </>
-  );
-  return float ? <NoticeShell>{body}</NoticeShell> : <div className="mt-3">{body}</div>;
-}
-
-/** IT-only preview of every notice state with a fabricated deadline. Display-only — never touches the real invoice. */
-export function NoticePreview() {
-  const [state, setState] = useState<"amber" | "blue" | "red" | "green">("amber");
-  const month = dhakaMonthName();
-  const lockAt = new Date(Date.now() + 7 * 24 * 3600_000).toISOString();
-  const opts = {
-    month,
-    totalLabel: `${usd(CRM_TOTAL_CENTS)} USD`,
-    lockDate: dhakaDateLabel(lockAt),
-    lockClock: dhakaClockLabel(lockAt),
-  };
-  const msLeft = new Date(lockAt).getTime() - Date.now();
-  const deadline = (s: NoticeState) => ({
-    label: s === "blue" ? "Verification window" : "Payment deadline",
-    left: s === "blue" ? null : deadlineLeftLabel(msLeft),
-    date: dhakaDateLabel(lockAt),
-    clock: dhakaClockLabel(lockAt),
-  });
-  const tabs: { id: "amber" | "blue" | "red" | "green"; label: string }[] = [
-    { id: "amber", label: "Amber" },
-    { id: "blue", label: "Blue" },
-    { id: "red", label: "Red" },
-    { id: "green", label: "Green" },
-  ];
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Billing notice state">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={state === t.id}
-            onClick={() => setState(t.id)}
-            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-              state === t.id
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {state === "green" ? (
-        <div className="rounded-2xl border border-border bg-card p-3 text-sm">
-          <span className="font-semibold text-primary">🟢 Subscription active</span>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Verified payment — after successful verification no notice is shown on the dashboard.
-          </p>
-        </div>
-      ) : (
-        <NoticeCard
-          state={state}
-          title={subscriptionNoticeCopy(state, opts).title}
-          body={subscriptionNoticeCopy(state, opts).body}
-          cta={subscriptionNoticeCopy(state, opts).cta}
-          deadline={deadline(state)}
-        />
-      )}
-    </div>
-  );
-}
-
-/** Profile-card version: the same notice design, inline on Agent and Executive profiles. */
+/** Profile-card version: prominent red box for Agent and Executive profiles. */
 export function MaintenanceProfileNotice() {
   const { data } = useMaintenance();
   if (!data) return null;
-  if (data.paymentStatus !== "verified" && !data.locked) {
-    const state = subscriptionNoticeState(data.paymentStatus, data.locked);
-    if (state) return <NoticeCardHost state={state} status={data} float={false} />;
-  }
+  if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <UpcomingInvoiceWidget />;
   if (!needsNotice(data)) return <MaintenanceCountdown />;
   return (
     <div className="notice-highlight mt-3 rounded-lg border-destructive/40 bg-destructive/10 p-3 pl-4 text-sm">
@@ -606,7 +216,7 @@ export function MaintenanceProfileNotice() {
 
 const OPEN_PATHS = ["/system", "/tech", "/auth", "/service-bill-alert", "/service-bill-unlock"];
 
-/** CRM-wide notice card before the lock, full lock screen after it. */
+/** CRM-wide banner before the lock, full lock screen after it. */
 export function MaintenanceGate() {
   const t = useT();
   const { data } = useMaintenance();
@@ -631,10 +241,8 @@ export function MaintenanceGate() {
     );
   }
 
-  if (data.paymentStatus === "verified") return null; // verified → notice removed automatically
-  const notice = subscriptionNoticeState(data.paymentStatus, data.locked);
-  if (notice) return <NoticeCardHost state={notice} status={data} float />;
-  if (!data.locked) return null;
+  if (data.paymentStatus !== "verified" && !data.locked && isRedWindow()) return <UrgentRenewal period={data.period ?? ""} admin={data.exempt} paymentStatus={data.paymentStatus} />;
+  if (data.paymentStatus !== "verified" && !data.locked && isAmberWindow()) return <AmberReminderBanner period={data.period ?? ""} />;
   if (!needsNotice(data)) return null;
   const text =
     data.stage === "locked"
@@ -685,5 +293,94 @@ function InvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
         {data && <RequestButton />}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Phase 1 amber banner. Dismissal is per user/browser and per billing period; it never touches the invoice. */
+function AmberReminderBanner({ period }: { period: string }) {
+  const key = `billing-amber-dismissed:${period}`;
+  const [hidden, setHidden] = useState(true);
+  const [open, setOpen] = useState(false);
+  useEffect(() => setHidden(localStorage.getItem(key) === "1"), [key]);
+  if (hidden) return <InvoiceDialog open={open} onOpenChange={setOpen} />;
+  return (
+    <>
+      <div role="status" className="fixed inset-x-0 bottom-0 z-[60] border-t border-warning/50 bg-warning/15 px-3 py-2 text-xs backdrop-blur sm:text-sm">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+          <p className="min-w-0 flex-1">
+            <b className="text-warning">Subscription Reminder</b> — Your monthly invoice for {CRM_PLAN_NAME} ({usd(CRM_TOTAL_CENTS)} USD) is available. Payment is due on 12 {dhakaMonthName()}.
+          </p>
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setOpen(true)}>View Invoice</Button>
+          <Button size="sm" className="h-7" onClick={() => setOpen(true)}>Pay Now</Button>
+          <Button size="sm" variant="ghost" className="h-7" aria-label="Dismiss reminder" onClick={() => { localStorage.setItem(key, "1"); setHidden(true); }}>✕</Button>
+        </div>
+      </div>
+      <InvoiceDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+
+function UpcomingInvoiceWidget() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+      <p className="font-bold text-warning">Upcoming Invoice Due</p>
+      <p className="mt-1">Complete payment by 12 {dhakaMonthName()} to maintain uninterrupted access to your CRM pipelines and sales monitoring.</p>
+      <p className="mt-1">Total Due: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including 15% VAT.</p>
+      <Button size="sm" className="mt-2" onClick={() => setOpen(true)}>Settle Invoice</Button>
+      <InvoiceDialog open={open} onOpenChange={setOpen} />
+      <MaintenanceCountdown />
+    </div>
+  );
+}
+
+/** Phase 2: persistent crimson banner (no dismiss) + once-per-session modal for HQ/IT authorities. */
+function UrgentRenewal({ period, admin, paymentStatus }: { period: string; admin: boolean; paymentStatus: string }) {
+  const [invoice, setInvoice] = useState(false);
+  const [modal, setModal] = useState(false);
+  const key = `billing-red-modal:${period}`;
+  useEffect(() => {
+    if (admin && sessionStorage.getItem(key) !== "1") {
+      sessionStorage.setItem(key, "1");
+      setModal(true);
+    }
+  }, [admin, key]);
+  const month = dhakaMonthName();
+  const statusText =
+    paymentStatus === "pending" ? "Verification Pending" : paymentDueLabel();
+  return (
+    <>
+      <div role="alert" className="fixed inset-x-0 bottom-0 z-[60] bg-destructive px-3 py-2 text-xs text-destructive-foreground sm:text-sm">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+          <p className="min-w-0 flex-1">
+            <b>Urgent Payment Notice</b> — Your {CRM_PLAN_NAME} subscription requires payment. The final access deadline is 15 {month} at 00:00 Asia/Dhaka. If the invoice remains unpaid and unverified, the subscribed workspace will be locked automatically.
+          </p>
+          <Button size="sm" variant="secondary" className="h-7" onClick={() => setInvoice(true)}>Complete Payment Immediately</Button>
+        </div>
+      </div>
+      <Dialog open={modal} onOpenChange={setModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <ShieldAlert className="size-5" /> Action Required: Subscription Renewal
+            </DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-1.5 text-sm">
+            <li>● Outstanding Balance: <b>{usd(CRM_TOTAL_CENTS)} USD</b>, including VAT</li>
+            <li>● Payment Due Date: <b>12 {month}</b></li>
+            <li>● Lock Deadline: <b>15 {month}, 00:00 Asia/Dhaka</b></li>
+            <li>● Payment Status: <b className="text-destructive">{statusText}</b></li>
+          </ul>
+          <p className="text-sm text-muted-foreground">Complete payment and ensure verification before the deadline.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button onClick={() => { setModal(false); setInvoice(true); }}>Pay Online</Button>
+            <Button variant="outline" asChild>
+              <a href="/system">Submit Transfer Receipt</a>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <InvoiceDialog open={invoice} onOpenChange={setInvoice} />
+    </>
   );
 }
