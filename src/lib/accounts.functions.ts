@@ -547,13 +547,12 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
     await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
       app_metadata: { ...(authUser.user.app_metadata ?? {}), must_change_password: true },
     });
-    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${safeOrigin}/reset-password` },
+    // The recovery link goes ONLY to the employee's own sign-in email — it is
+    // never returned to the IT screen, so IT cannot take over the account.
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${safeOrigin}/reset-password`,
     });
-    const actionLink = link?.properties?.action_link;
-    if (error || !actionLink) throw new Error(error?.message ?? "লিংক তৈরি হয়নি");
+    if (error) throw new Error("রিসেট ইমেইল পাঠানো যায়নি");
 
     const { logAudit } = await import("@/lib/audit.server");
     await logAudit({
@@ -569,7 +568,8 @@ export const issuePasswordResetLink = createServerFn({ method: "POST" })
       "পাসওয়ার্ড রিসেট লিংক তৈরি হয়েছে",
       `IT আপনার অ্যাকাউন্টের জন্য একটি পাসওয়ার্ড রিসেট লিংক তৈরি করেছে (${new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })} ঢাকা)। আপনি না চাইলে এখনই HQ/IT-কে জানান।`,
     );
-    return { link: actionLink, name: profile.name };
+    const masked = email.replace(/^(.{2}).*(@.*)$/, "$1***$2");
+    return { sentTo: masked, name: profile.name };
   });
 
 /** After the agent saves a new password, clear the must-change flag. */
