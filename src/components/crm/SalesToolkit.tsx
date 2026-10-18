@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useLang } from "@/lib/i18n";
 import { getAdminToken } from "@/lib/local-session";
 import { matchProjects, parseBDT, taka } from "@/lib/project-match";
 import {
@@ -79,11 +80,14 @@ function ProjectMatcher() {
 }
 
 function FollowupPair({ leadId }: { leadId: string }) {
+  const lang = useLang();
+  const t = (bn: string, en: string) => lang === "bn" ? bn : en;
+  const [reviewed, setReviewed] = useState<{ whatsapp: string; sms: string } | null>(null);
   const run = useServerFn(draftFollowupPair);
   const qc = useQueryClient();
   const m = useMutation({
     mutationFn: () => run({ data: { token: getAdminToken(), leadId } }),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["sales", "drafts"] }),
+    onSuccess: data => { setReviewed({ whatsapp: data.whatsapp, sms: data.sms }); void qc.invalidateQueries({ queryKey: ["sales", "drafts"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
   const d = m.data;
@@ -98,11 +102,11 @@ function FollowupPair({ leadId }: { leadId: string }) {
       {d && (
         <div className="space-y-2 text-sm">
           {d.flagged && <p className="text-xs text-destructive">নোটে সন্দেহজনক নির্দেশ ছিল — AI সেটি মানেনি।</p>}
-          {[["WhatsApp", d.whatsapp], ["SMS", d.sms]].map(([label, text]) => (
-            <div key={label} className="rounded-lg border border-border p-3">
-              <div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{label}</span>
-                <Button size="sm" variant="ghost" onClick={() => text && copy(text)}><Copy className="size-4" /></Button></div>
-              <p className="whitespace-pre-wrap">{text}</p>
+          {(["whatsapp", "sms"] as const).map(channel => (
+            <div key={channel} className="rounded-lg border border-border p-3">
+              <div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">{channel === "whatsapp" ? "WhatsApp" : "SMS"}</span>
+                <Button size="sm" variant="ghost" aria-label={t("সম্পাদিত খসড়া কপি", "Copy reviewed draft")} onClick={() => copy(reviewed?.[channel] ?? d[channel])}><Copy className="size-4" /></Button></div>
+              <Textarea aria-label={t(`${channel} খসড়া`, `${channel} draft`)} rows={4} value={reviewed?.[channel] ?? d[channel]} onChange={event => setReviewed(current => ({ ...(current ?? { whatsapp: d.whatsapp, sms: d.sms }), [channel]: event.target.value }))} />
             </div>
           ))}
           <p className="text-xs">পরের ফলো-আপ: {d.when}</p>

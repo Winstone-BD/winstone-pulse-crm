@@ -4,16 +4,22 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { applyExtraction, buildTemplate, EXTRACT_FIELDS, EXTRACT_LABELS, type TemplateFacts, type TemplateId } from "@/lib/agent-templates";
 import { getBuyerCheckFacts } from "@/lib/buyer-facts.functions";
 import { extractBuyerCheck, saveBuyerCheck } from "@/lib/buyer-extract.functions";
 import { getAdminToken } from "@/lib/local-session";
+import { useLang } from "@/lib/i18n";
+import { selectedBuyerFields } from "@/lib/buyer-review";
+import type { ExtractFieldKey } from "@/lib/agent-templates";
 
 type Extracted = Awaited<ReturnType<typeof extractBuyerCheck>>["fields"];
 
 /** Pre-filled buyer-check / call-prep drafts from saved CRM facts. Nothing is sent or saved. */
 export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: TemplateFacts }) {
+  const lang = useLang();
+  const t = (bn: string, en: string) => lang === "bn" ? bn : en;
   const loadFacts = useServerFn(getBuyerCheckFacts);
   const runExtract = useServerFn(extractBuyerCheck);
   const runSave = useServerFn(saveBuyerCheck);
@@ -25,6 +31,7 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
   const [ai, setAi] = useState<Extracted | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiFlagged, setAiFlagged] = useState(false);
+  const [selected, setSelected] = useState<ExtractFieldKey[]>([]);
 
   const open = async (id: TemplateId) => {
     let f: TemplateFacts = facts;
@@ -43,6 +50,7 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
     setFlagged(t.flagged);
     setTpl(id);
     setAi(null);
+    setSelected([]);
     setAiFlagged(false);
   };
 
@@ -52,6 +60,7 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
     try {
       const r = await runExtract({ data: { token: getAdminToken(), leadId } });
       setAi(r.fields);
+      setSelected([]);
       setAiFlagged(r.flagged);
       if (!Object.keys(r.fields).length) toast.info("নোটে নতুন তথ্য পাওয়া যায়নি");
     } catch (e) {
@@ -62,14 +71,16 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
   };
 
   const found = ai ? EXTRACT_FIELDS.filter((k) => ai[k]) : [];
+  const reviewed = selectedBuyerFields(ai, selected);
+  const unknown = ai ? EXTRACT_FIELDS.filter(k => !ai[k]) : [];
 
   const confirmSave = async () => {
-    if (!leadId || !ai) return;
+    if (!leadId || !ai || !selected.length) return;
     if (!window.confirm("এই তথ্যগুলো লিডে সেভ হবে (শুধু খালি ঘর পূরণ হবে)। নিশ্চিত?")) return;
     setSaving(true);
     try {
-      const r = await runSave({ data: { token: getAdminToken(), leadId, fields: ai as Record<string, { value: string; evidence?: string }> } });
-      setText(applyExtraction(text, ai));
+      const r = await runSave({ data: { token: getAdminToken(), leadId, fields: reviewed } });
+      setText(applyExtraction(text, reviewed));
       if (r.saved.length) toast.success(`${r.saved.length}টি ঘর লিডে সেভ হয়েছে${r.skipped.length ? ` — ${r.skipped.length}টি আগে থেকেই পূরণ ছিল, বদলানো হয়নি` : ""}`);
       else toast.info("সব ঘর আগে থেকেই পূরণ — কিছু বদলানো হয়নি");
     } catch (e) {
@@ -116,24 +127,27 @@ export function AgentTemplates({ leadId, facts }: { leadId?: string; facts: Temp
               {ai && (found.length > 0 ? (
                 <>
                   <ul className="space-y-1 text-xs">
-                    {found.map((k) => (
-                      <li key={k}>
-                        <span className="font-medium">{EXTRACT_LABELS[k].replace(/: $/, ":")}</span>{" "}
-                        {ai[k]!.value}
-                        {ai[k]!.evidence ? <span className="text-muted-foreground"> — “{ai[k]!.evidence}”</span> : null}
-                      </li>
-                    ))}
+                    {found.map((k) => {
+                      const field = ai[k];
+                      if (!field) return null;
+                      return <li key={k} className="flex items-start gap-2">
+                        <Checkbox aria-label={t(`যাচাই: ${EXTRACT_LABELS[k]}`, `Review ${k}`)} checked={selected.includes(k)} onCheckedChange={checked => setSelected(keys => checked === true ? [...keys.filter(key => key !== k), k] : keys.filter(key => key !== k))} />
+                        <div><span className="font-medium">{EXTRACT_LABELS[k].replace(/: $/, ":")}</span>{" "}{field.value}
+                        {field.evidence ? <span className="text-muted-foreground"> — “{field.evidence}”</span> : null}</div>
+                      </li>;
+                    })}
                   </ul>
-                  <Button size="sm" variant="default" disabled={saving || !leadId} onClick={() => void confirmSave()}>
+                  <Button size="sm" variant="default" disabled={saving || !leadId || !selected.length} onClick={() => void confirmSave()}>
                     {saving ? <Loader2 className="size-4 animate-spin" /> : null} নিশ্চিত করে লিডে সেভ করুন
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setText(applyExtraction(text, ai)); toast.success("সাজেশন খসড়ায় বসানো হয়েছে — মিলিয়ে দেখে সম্পাদনা করুন"); }}>
+                  <Button size="sm" variant="outline" disabled={!selected.length} onClick={() => { setText(applyExtraction(text, reviewed)); toast.success("সাজেশন খসড়ায় বসানো হয়েছে — মিলিয়ে দেখে সম্পাদনা করুন"); }}>
                     যাচাইয়ের ঘরে বসান
                   </Button>
                 </>
               ) : (
                 <p className="text-xs text-muted-foreground">নোটে নতুন তথ্য পাওয়া যায়নি — “যাচাই প্রয়োজন” ঘরগুলো খালি রইল।</p>
               ))}
+              {unknown.length > 0 && <p className="text-xs text-muted-foreground">{t("অজানা", "Unknown")}: {unknown.map(k => EXTRACT_LABELS[k].replace(/: $/, "")).join(" · ")}</p>}
               <p className="text-xs text-muted-foreground">Gemini শুধু সাজেশন দেয় — কোনো তথ্য সেভ হয় না, কিছু পাঠানো হয় না।</p>
             </div>
           )}
