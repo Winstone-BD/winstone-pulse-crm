@@ -65,8 +65,12 @@
   --color-gold: var(--gold);
   --color-gold-strong: var(--gold-strong);
   --color-charcoal: var(--charcoal);
-  --font-display: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Outfit", "Inter", "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-button-foreground: var(--button-foreground);
+  --color-button-hover: var(--button-hover);
+  --color-gold-hover: var(--gold-hover);
+  --color-gold-ink: var(--gold-ink);
+  --font-display: "Inter", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
@@ -108,71 +112,76 @@
   }
 }
 
+/* One palette for all routes, legacy workspace wrappers and body portals.
+   oklch(from …) preserves the exact requested sRGB colours. Wrappers inherit
+   rather than redefining tokens, including when an old dark preference exists. */
 :root {
-  --radius: 0.75rem;
-  /* White foundation (home-page look) across the whole app */
-  --background: oklch(0.995 0.002 85);
-  --foreground: oklch(0.18 0.01 80);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 80);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 80);
-  /* Winstone gold: the single action colour */
-  --primary: oklch(0.76 0.13 80);
-  --primary-foreground: oklch(0.18 0.02 80);
-  --secondary: oklch(0.93 0.045 85);
-  --secondary-foreground: oklch(0.2 0.02 80);
-  --muted: oklch(0.96 0.005 85);
-  --muted-foreground: oklch(0.45 0.012 80);
-  --accent: oklch(0.94 0.04 85);
-  --accent-foreground: oklch(0.25 0.03 80);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  /* Soft warm hairlines on white */
-  --border: oklch(0.9 0.01 85);
-  --input: oklch(0.88 0.01 85);
-  --ring: oklch(0.76 0.13 80);
-  --surface: oklch(0.985 0.003 85);
-  --surface-2: oklch(0.97 0.006 85);
-  /* Deep navy ink panel for contrast sections (waveform, dark headers) */
-  --ink: oklch(0.21 0.035 265);
-  --ink-foreground: oklch(0.95 0.008 85);
-  --ink-muted: oklch(0.78 0.02 265);
-  /* Gold live, dim amber idle */
-  /* Semantic: live/connected/completed = green (not brand gold). */
-  --live: oklch(0.74 0.16 150);
-  --live-foreground: oklch(0.18 0.03 150);
-  --idle: oklch(0.66 0.09 80);
-  --idle-foreground: oklch(0.18 0.02 80);
-  --offline: oklch(0.42 0.01 80);
-  --offline-foreground: oklch(0.95 0.008 85);
-  --verified: oklch(0.8 0.13 85);
-  --verified-foreground: oklch(0.2 0.02 85);
-  --critical: oklch(0.55 0.2 25);
-  --whatsapp: oklch(0.74 0.12 85);
-  /* Single status set for the black + gold theme; all AA on --background */
-  --warning: oklch(0.8 0.15 70);
-  --warning-foreground: oklch(0.2 0.02 85);
-  --info: oklch(0.86 0.06 90);
-  --success: oklch(0.74 0.16 150);
-  --danger: oklch(0.72 0.17 28);
-  /* Charts: 1 brand gold (volume), 2 slate blue (secondary), 3 green (connected/success),
-     4 neutral grey (other), 5 red (negative/failed). */
-  --chart-1: oklch(0.78 0.13 85);
-  --chart-2: oklch(0.68 0.1 250);
-  --chart-3: oklch(0.74 0.16 150);
-  --chart-4: oklch(0.75 0.16 55);
-  --chart-5: oklch(0.64 0.2 25);
-  /* Executive HQ presentation accents (investor / board view only) */
-  --exec-navy: oklch(0.21 0.035 265);
-  --exec-blue: oklch(0.66 0.16 258);
-  --exec-emerald: oklch(0.72 0.14 163);
-  --exec-amber: oklch(0.79 0.15 72);
-  --exec-red: oklch(0.65 0.2 25);
-  --exec-gold: oklch(0.82 0.13 85);
-  --shadow-card: 0 1px 2px oklch(0.3 0.02 80 / 6%), 0 8px 24px -12px oklch(0.3 0.02 80 / 18%);
-  --shadow-card-hover: 0 12px 30px -12px oklch(0.3 0.02 80 / 25%);
-  --shadow-glass: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 10px 28px -12px oklch(0.3 0.02 80 / 20%);
+  --radius: 0.5rem;
+  --background: oklch(from #F5F2EA l c h);
+  --foreground: oklch(from #171717 l c h);
+  --card: oklch(from #FFFFFF l c h);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --gold: oklch(from #C6A15B l c h);
+  --gold-hover: oklch(from #AD8744 l c h);
+  --gold-strong: var(--gold-hover);
+  --gold-ink: oklch(0.46 0.08 80);
+  --charcoal: var(--foreground);
+  --button-foreground: var(--card);
+  --button-hover: oklch(0.27 0 0);
+  --primary: var(--gold);
+  --primary-foreground: var(--foreground);
+  --secondary: var(--background);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--background);
+  --muted-foreground: oklch(from #77736C l c h);
+  --accent: color-mix(in oklab, var(--gold) 14%, var(--card));
+  --accent-foreground: var(--foreground);
+  --border: oklch(from #DED8CC l c h);
+  --input: var(--border);
+  --ring: var(--gold);
+  --sidebar: var(--card);
+  --surface: var(--card);
+  --surface-2: var(--background);
+  --ink: var(--charcoal);
+  --ink-foreground: var(--card);
+  --ink-muted: oklch(0.8 0.008 85);
+  --live: oklch(0.53 0.14 150);
+  --live-foreground: var(--card);
+  --success: var(--live);
+  --verified: var(--success);
+  --verified-foreground: var(--card);
+  --whatsapp: var(--success);
+  --idle: oklch(0.54 0.1 75);
+  --idle-foreground: var(--card);
+  --warning: oklch(0.56 0.12 70);
+  --warning-foreground: var(--card);
+  --info: oklch(0.5 0.08 250);
+  --offline: var(--muted-foreground);
+  --offline-foreground: var(--card);
+  --destructive: oklch(0.53 0.2 25);
+  --destructive-foreground: var(--card);
+  --critical: var(--destructive);
+  --danger: var(--destructive);
+  --chart-1: var(--gold);
+  --chart-2: var(--info);
+  --chart-3: var(--success);
+  --chart-4: var(--muted-foreground);
+  --chart-5: var(--destructive);
+  --exec-navy: var(--charcoal);
+  --exec-blue: var(--info);
+  --exec-emerald: var(--success);
+  --exec-amber: var(--warning);
+  --exec-red: var(--destructive);
+  --exec-gold: var(--gold);
+  --shadow-card: 0 1px 2px oklch(0.2 0 0 / 4%);
+  --shadow-card-hover: var(--shadow-card);
+  --shadow-glass: none;
+  --enter: var(--charcoal);
+  --enter-hover: var(--button-hover);
+  --enter-foreground: var(--card);
+  color-scheme: light;
 }
 
 @layer base {
@@ -249,7 +258,8 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
+    font-weight: 600;
   }
 
   /* One visible gold focus ring everywhere, so keyboard users never lose the
@@ -263,27 +273,24 @@
 
 /* Faint dot grid on the cream foundation */
 @utility grid-noise {
-  background-image: radial-gradient(oklch(0.3 0.02 80 / 8%) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-image: none;
 }
 
 @utility tabular {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 /* Glassmorphism for nav, drawers and modal headers */
 @utility glass {
-  background-color: color-mix(in oklab, var(--card) 80%, transparent);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  background-color: var(--card);
   box-shadow: var(--shadow-glass);
 }
 
 /* Metric / content card */
 @utility card-elevated {
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background-color: var(--card);
   box-shadow: var(--shadow-card);
@@ -299,14 +306,8 @@
 /* Shimmering skeleton */
 @utility skeleton {
   border-radius: var(--radius-md);
-  background: linear-gradient(
-    100deg,
-    var(--surface-2) 30%,
-    color-mix(in oklab, var(--card) 88%, var(--primary) 12%) 50%,
-    var(--surface-2) 70%
-  );
-  background-size: 200% 100%;
-  animation: var(--animate-shimmer);
+  background-color: var(--surface-2);
+  animation: pulse 1.6s ease-in-out infinite;
 }
 
 /* Green pulsing glow ring for on-call avatars */
@@ -364,74 +365,11 @@
   }
 }
 
-/* White-first scope (home page): same token names, light values. */
-.theme-light {
-  --background: oklch(0.995 0.002 85);
-  --foreground: oklch(0.18 0.01 80);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 80);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 80);
-  --primary: oklch(0.76 0.13 80);
-  --primary-foreground: oklch(0.18 0.02 80);
-  --secondary: oklch(0.93 0.045 85);
-  --secondary-foreground: oklch(0.2 0.02 80);
-  --muted: oklch(0.96 0.005 85);
-  --muted-foreground: oklch(0.45 0.012 80);
-  --accent: oklch(0.94 0.04 85);
-  --accent-foreground: oklch(0.25 0.03 80);
-  --border: oklch(0.9 0.01 85);
-  --input: oklch(0.88 0.01 85);
-  --surface-2: oklch(0.97 0.006 85);
-  --shadow-card: 0 1px 2px oklch(0.3 0.02 80 / 6%), 0 8px 24px -12px oklch(0.3 0.02 80 / 18%);
-  --shadow-card-hover: 0 12px 30px -12px oklch(0.3 0.02 80 / 25%);
-  background: var(--background);
-  color: var(--foreground);
-}
-
-/* Premium slim dark theme (HQ + Desk): neutral slate-black, hairline borders,
-   no muddy brown wash, almost no drop shadow. Gold stays the one action colour. */
-.hq-luxe {
-  /* Light corporate theme: off-white canvas, white cards, deep navy primary,
-     champagne-gold accent. Same token names, so every screen follows. */
-  --background: oklch(0.984 0.003 248);
-  --foreground: oklch(0.29 0.03 262);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.29 0.03 262);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.29 0.03 262);
-  --primary: oklch(0.27 0.07 256);
-  --primary-foreground: oklch(0.985 0.003 248);
-  --secondary: oklch(0.955 0.008 250);
-  --secondary-foreground: oklch(0.29 0.03 262);
-  --muted: oklch(0.965 0.006 250);
-  --muted-foreground: oklch(0.5 0.03 257);
-  --accent: oklch(0.95 0.035 85);
-  --accent-foreground: oklch(0.38 0.07 70);
-  --border: oklch(0.925 0.013 255);
-  --input: oklch(0.9 0.015 255);
-  --ring: oklch(0.45 0.12 256);
-  --surface: oklch(0.975 0.004 248);
-  --surface-2: oklch(0.96 0.006 250);
-  --chart-1: oklch(0.27 0.07 256);
-  --chart-2: oklch(0.55 0.15 250);
-  --chart-3: oklch(0.6 0.14 160);
-  --chart-4: oklch(0.72 0.14 75);
-  --chart-5: oklch(0.58 0.2 25);
-  --shadow-card: 0 1px 2px oklch(0.3 0.03 260 / 6%), 0 8px 24px -14px oklch(0.3 0.03 260 / 16%);
-  --shadow-card-hover: 0 1px 2px oklch(0.3 0.03 260 / 8%), 0 14px 32px -14px oklch(0.3 0.03 260 / 24%);
-  background: var(--background);
+/* Retained wrapper names are compatibility hooks, not separate themes. */
+:where(.theme-light, .hq-luxe, .theme-exec) {
+  background-color: var(--background);
   color: var(--foreground);
   color-scheme: light;
-}
-.hq-luxe .card-elevated {
-  background: var(--card);
-  border-color: var(--border);
-  box-shadow: var(--shadow-card);
-}
-.hq-luxe .card-elevated:hover {
-  border-color: color-mix(in oklab, var(--primary) 18%, var(--border));
-  box-shadow: var(--shadow-card-hover);
 }
 
 /* Highlighted notice: luminous hairline + accent bar so alerts read at a glance. */
@@ -439,8 +377,8 @@
   position: relative;
   overflow: hidden;
   border-width: 1px;
-  background-image: linear-gradient(90deg, color-mix(in oklab, currentColor 14%, transparent), transparent 70%);
-  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%) inset, 0 12px 32px -20px currentColor;
+  background-image: none;
+  box-shadow: none;
   animation: notice-in 0.5s ease-out both;
 }
 @keyframes notice-in {
@@ -465,9 +403,9 @@
 .kpi-tile {
   position: relative;
   overflow: hidden;
-  border-radius: 0.875rem;
+  border-radius: var(--radius);
   padding: 0.6rem 0.7rem 0.55rem;
-  background: color-mix(in oklab, var(--kpi) 10%, transparent);
+  background: var(--card);
   border: 1px solid color-mix(in oklab, var(--kpi) 22%, transparent);
 }
 .kpi-tile::before, .kpi-accent::before {
@@ -489,171 +427,25 @@
 
 /* Glass panel: frosted surface with a soft top highlight. */
 .glass-panel {
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  background-color: var(--card);
   box-shadow: var(--shadow-card);
 }
-.hq-luxe {
-  background-image: radial-gradient(60rem 30rem at 10% -10%, color-mix(in oklab, var(--primary) 5%, transparent), transparent 60%),
-    radial-gradient(40rem 24rem at 100% 0%, color-mix(in oklab, var(--chart-4) 10%, transparent), transparent 60%);
-}
 
-/* WCAG AA: bright fill tokens are too light (<4.5:1) as text on white.
-   Unlayered so they beat Tailwind's layered text-* utilities; fills keep the
-   original bright shade. Dark ink panels keep the original bright text. */
-:root {
-  --primary-ink: oklch(0.55 0.13 80);
-  --success-ink: oklch(0.53 0.14 150);
-  --warning-ink: oklch(0.56 0.14 70);
-  --idle-ink: oklch(0.55 0.09 80);
-  --whatsapp-ink: oklch(0.55 0.12 85);
-  --verified-ink: oklch(0.55 0.13 85);
-}
-.text-primary { color: var(--primary-ink); }
-.hq-luxe { --primary-ink: var(--primary); }
-.text-success, .text-live { color: var(--success-ink); }
-.text-warning { color: var(--warning-ink); }
-.text-idle { color: var(--idle-ink); }
-.text-whatsapp { color: var(--whatsapp-ink); }
-.text-verified { color: var(--verified-ink); }
-:where(.bg-ink, .bg-exec-navy, .bg-primary, .bg-destructive, .dark) .text-primary { color: var(--primary); }
-:where(.bg-ink, .bg-exec-navy, .dark) :is(.text-success, .text-live) { color: var(--success); }
-:where(.bg-ink, .bg-exec-navy, .dark) .text-warning { color: var(--warning); }
-/* Dark scopes keep the original bright text shades. */
-.dark, .bg-ink, .bg-exec-navy {
-  --primary-ink: var(--primary);
-  --success-ink: var(--success);
-  --warning-ink: var(--warning);
-  --idle-ink: var(--idle);
-  --whatsapp-ink: var(--whatsapp);
-  --verified-ink: var(--verified);
-}
 
-/* ===========================================================================
-   Pipeline reskin (2026-10-12): calm mint canvas + sidebar, warm orange
-   actions, dark-teal ink. Same token names, so every screen follows; only
-   colours change — no layout or logic depends on these values.
-   =========================================================================== */
-.hq-luxe,
-.theme-light {
-  --background: oklch(0.975 0.012 175);
-  --foreground: oklch(0.24 0.03 185);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.03 185);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.03 185);
-  --primary: oklch(0.68 0.19 40);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-ink: oklch(0.55 0.17 40);
-  --secondary: oklch(0.95 0.02 175);
-  --secondary-foreground: oklch(0.24 0.03 185);
-  --muted: oklch(0.955 0.015 175);
-  --muted-foreground: oklch(0.48 0.025 185);
-  --accent: oklch(0.94 0.03 175);
-  --accent-foreground: oklch(0.26 0.04 185);
-  --border: oklch(0.91 0.015 175);
-  --input: oklch(0.89 0.015 175);
-  --ring: oklch(0.68 0.19 40);
-  --surface: oklch(0.97 0.012 175);
-  --surface-2: oklch(0.955 0.016 175);
-  --sidebar: oklch(0.95 0.022 175);
-  --ink: oklch(0.26 0.035 190);
-  --ink-foreground: oklch(0.96 0.01 175);
-  --chart-1: oklch(0.68 0.19 40);
-  --chart-2: oklch(0.6 0.1 185);
-  --chart-3: oklch(0.62 0.15 155);
-  --chart-4: oklch(0.75 0.14 75);
-  --chart-5: oklch(0.58 0.2 25);
-  --shadow-card: 0 1px 2px oklch(0.3 0.03 185 / 5%), 0 6px 20px -12px oklch(0.3 0.03 185 / 14%);
-  --shadow-card-hover: 0 1px 2px oklch(0.3 0.03 185 / 7%), 0 12px 28px -14px oklch(0.3 0.03 185 / 22%);
-  --radius: 0.85rem;
-}
+/* Accessible accent text: gold is decorative, darker gold is used for text. */
+.text-primary, .text-gold, .text-gold-strong { color: var(--gold-ink); }
+:is(svg.text-primary, svg.text-gold, svg.text-gold-strong),
+:is(.text-primary, .text-gold, .text-gold-strong) > svg { color: var(--gold); }
+.btn-enter { background-color: var(--enter); color: var(--enter-foreground); border-color: transparent; }
+.btn-enter:hover, .group:hover .btn-enter { background-color: var(--enter-hover); color: var(--enter-foreground); }
 
-/* Matching dark mode (toggle in the top bar). */
-.dark .hq-luxe,
-.dark .theme-light {
-  --background: oklch(0.17 0.015 190);
-  --foreground: oklch(0.94 0.01 175);
-  --card: oklch(0.21 0.018 190);
-  --card-foreground: oklch(0.94 0.01 175);
-  --popover: oklch(0.21 0.018 190);
-  --popover-foreground: oklch(0.94 0.01 175);
-  --primary: oklch(0.72 0.18 42);
-  --primary-foreground: oklch(0.15 0.02 40);
-  --primary-ink: oklch(0.78 0.15 45);
-  --secondary: oklch(0.25 0.02 190);
-  --secondary-foreground: oklch(0.94 0.01 175);
-  --muted: oklch(0.24 0.018 190);
-  --muted-foreground: oklch(0.72 0.02 180);
-  --accent: oklch(0.27 0.025 185);
-  --accent-foreground: oklch(0.94 0.01 175);
-  --border: oklch(0.3 0.02 190);
-  --input: oklch(0.32 0.02 190);
-  --surface: oklch(0.2 0.016 190);
-  --surface-2: oklch(0.23 0.018 190);
-  --sidebar: oklch(0.2 0.02 190);
-  --success-ink: var(--success);
-  --warning-ink: var(--warning);
-  color-scheme: dark;
-}
-
-/* Deep green "enter" actions: every button that opens a workspace. */
-:root {
-  --enter: oklch(0.36 0.09 160);
-  --enter-hover: oklch(0.3 0.08 160);
-  --enter-foreground: oklch(0.98 0.01 160);
-}
-.btn-enter {
-  background-color: var(--enter);
-  color: var(--enter-foreground);
-  border-color: transparent;
-}
-.btn-enter:hover,
-.group:hover .btn-enter {
-  background-color: var(--enter-hover);
-  color: var(--enter-foreground);
-}
-
-/* Executive minimal home theme: warm paper canvas, near-black ink, white flat
-   cards, champagne-gold accents only. No gradients, no heavy shadows. */
-:root {
-  --gold: #c6a66b;
-  --gold-strong: #d4af37;
-  --charcoal: #171717;
-}
-.theme-exec {
-  --background: #f5f0e7;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #0b0b0b;
-  --popover: #ffffff;
-  --popover-foreground: #0b0b0b;
-  --primary: #0b0b0b;
-  --primary-foreground: #f5f2ea;
-  --primary-ink: #0b0b0b;
-  --secondary: #efeadf;
-  --secondary-foreground: #0b0b0b;
-  --muted: #efece4;
-  --muted-foreground: #737170;
-  --accent: #f2ecdd;
-  --accent-foreground: #0b0b0b;
-  --border: #dbd9d2;
-  --input: #dbd9d2;
-  --ring: #c6a66b;
-  --surface: #faf8f2;
-  --surface-2: #efece4;
-  --shadow-card: none;
-  --shadow-card-hover: none;
-  background: var(--background);
-  color: var(--foreground);
-  color-scheme: light;
-}
-.theme-exec .card-elevated {
-  box-shadow: none;
-}
-.theme-exec .card-elevated:hover {
-  box-shadow: none;
-  border-color: var(--gold);
+/* Decorative effects removed without changing operational chart fills or
+   loading/animation lifecycles. Applies to existing Tailwind gradient wrappers. */
+[class*="bg-gradient-"], [class*="bg-linear-"] { background-image: none; }
+[class*="shadow-xl"], [class*="shadow-2xl"], [class*="shadow-lg"] { box-shadow: var(--shadow-card); }
+[class*="tracking-"] { letter-spacing: 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
 /* Bengali UI uses Hind Siliguri (matches the FinOS reference). */
@@ -667,7 +459,4 @@ html[lang="bn"] h3 {
   font-family: "Hind Siliguri", var(--font-sans);
 }
 
-/* Home page (video reference): black workspace buttons, handwritten section titles. */
-.theme-exec .btn-enter { background-color: var(--charcoal); color: var(--background); }
-.theme-exec .btn-enter:hover, .theme-exec .group:hover .btn-enter { background-color: var(--foreground); color: var(--background); }
 .font-hand { font-family: "Caveat", var(--font-display); }
