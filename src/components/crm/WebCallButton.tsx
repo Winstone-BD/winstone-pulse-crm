@@ -129,7 +129,7 @@ export function WebCallButton({
 
   const end = useMutation({
     mutationFn: () => {
-      const seconds = live ? Math.floor((Date.now() - live.startedAt) / 1000) : 0;
+      const seconds = webStopwatchSeconds(live?.startedAt, Date.now());
       const connected = seconds >= 10;
       if (leadId) {
         return finish({ data: { adminToken, leadId, durationSeconds: seconds, connected } });

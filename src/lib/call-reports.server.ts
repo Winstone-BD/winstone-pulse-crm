@@ -419,11 +419,22 @@ export async function submitCallReport(input: {
   const grade = received ? ((input.grade ?? null) as LeadGrade | null) : null;
   const classified = Boolean(temperature && grade);
 
-  // The stored duration wins whenever the phone actually measured the call; the
-  // agent's number is only used when nothing was measured.
-  const storedSeconds = report.duration_seconds ?? 0;
-  const durationSeconds =
-    storedSeconds > 0 ? storedSeconds : Math.max(0, Math.round(input.durationSeconds ?? 0));
+  // Phone-measured call time wins; time spent filling out the report never counts.
+  let phoneSeconds: number | null = null;
+  if (report.recording_id) {
+    const { data: rec } = await supabaseAdmin
+      .from("call_recordings")
+      .select("duration_seconds, call_source")
+      .eq("id", report.recording_id)
+      .maybeSingle();
+    if (rec && !String(rec.call_source ?? "").startsWith("web")) phoneSeconds = rec.duration_seconds ?? null;
+  }
+  const { resolveCallDuration } = await import("@/lib/call-duration");
+  const durationSeconds = resolveCallDuration({
+    phoneSeconds,
+    storedSeconds: report.duration_seconds,
+    enteredSeconds: input.durationSeconds,
+  });
   const noFollowUpNote = (input.followUpNote ?? "").trim();
   const note = input.followUpAt
     ? input.note?.trim() || null
