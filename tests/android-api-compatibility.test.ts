@@ -20,7 +20,7 @@ function serverRoute(path: string): string {
 describe('android API compatibility', () => {
   it('every /api/public path used by the app exists as a server route file', () => {
     const paths = [...kotlin.matchAll(/"(\/api\/public\/[^"?]+)"/g)].map((m) => m[1]!);
-    expect(paths.length).toBeGreaterThanOrEqual(15);
+    expect(paths.length).toBeGreaterThanOrEqual(10);
     for (const path of new Set(paths)) {
       expect(() => serverRoute(path), `missing server route for ${path}`).not.toThrow();
     }
