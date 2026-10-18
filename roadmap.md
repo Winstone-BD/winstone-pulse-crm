@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Canonical follow-up lifecycle: mandatory outcome/cancel/reschedule reasons; linked new follow-up on reschedule; completion never closes a lead; scoped reads/mutations, append-only history and clickable health filters. Verify with tests without altering real customer records.
 
 - [x] Full-system presentation polish: shared controls, readable tables, wrapped headers, dialog spacing, mobile touch sizes, flat welcome panel; 506 tests pass, recovery check and harness build OK. Signed-in HQ/IT/Desk/audit/reports verified at 1280/768/360px; LeadHub private content and populated agent-only workflows remain permission-gated. No data mutations or publication.
 
