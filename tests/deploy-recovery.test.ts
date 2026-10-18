@@ -14,6 +14,21 @@ const source = readFileSync("src/lib/deploy-recovery.ts", "utf8");
  * once waiting has genuinely run out.
  */
 describe("deployment recovery bootstrap", () => {
+  const start = deployRecoveryScript.indexOf("function urlFrom(m)");
+  const end = deployRecoveryScript.indexOf("var F=window.fetch", start);
+  const extract = new Function(`${deployRecoveryScript.slice(start, end)};return urlFrom;`)() as (message: string) => string | null;
+  it.each([
+    "https://preview.example/src/routes/system.tsx?tsr-split=component",
+    "https://preview.example/src/routes/desk.tsx?tsr-split=component&t=123",
+    "https://preview.example/assets/system-abc.js",
+    "https://preview.example/assets/system-abc.mjs?version=1",
+    "/src/routes/hq.tsx?tsr-split=component",
+  ])("probes the full failed module URL %s", url => {
+    expect(extract(`Failed to fetch dynamically imported module: ${url}`)).toBe(url);
+  });
+  it("does not invent a module URL for React hook errors", () => {
+    expect(extract("Cannot read properties of null (reading 'use')")).toBeNull();
+  });
   it("is valid JavaScript", () => {
     new Function(deployRecoveryScript);
   });
