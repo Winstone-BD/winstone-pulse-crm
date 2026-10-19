@@ -55,10 +55,15 @@ export const getAiTeamSummary = createServerFn({ method: "POST" })
     return m.teamDailySummary(data.lang);
   });
 
-export const getAiModel = createServerFn({ method: "GET" }).handler(async () => {
-  const m = await import("@/lib/ai-model.server");
-  return { model: await m.getAiModelChoice() };
-});
+export const getAiModel = createServerFn({ method: "GET" })
+  .inputValidator((i: unknown) => z.object({ adminToken: z.string().nullable().optional() }).parse(i ?? {}))
+  .handler(async ({ data }) => {
+    const { resolveCaller } = await import("@/lib/access.server");
+    const c = await resolveCaller(data.adminToken ?? null);
+    if (c.scope === "none") throw new Error("Sign in required");
+    const m = await import("@/lib/ai-model.server");
+    return { model: await m.getAiModelChoice() };
+  });
 
 export const setAiModel = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) =>

@@ -23,7 +23,12 @@ async function requireReviewer(context: {
   return { userId: context.userId, email };
 }
 
-export const getServiceBillAlert = createServerFn({ method: "GET" }).handler(async () => {
+export const getServiceBillAlert = createServerFn({ method: "GET" })
+ .inputValidator((input: unknown) => z.object({ adminToken: z.string().nullable().optional() }).parse(input ?? {}))
+ .handler(async ({ data }) => {
+  const { resolveCaller } = await import("@/lib/access.server");
+  const me = await resolveCaller(data.adminToken ?? null, { skipMaintenance: true });
+  if (me.scope === "none") throw new Error("Sign in required");
   const { currentServiceBill } = await import("@/lib/service-bill-review.server");
   const bill = await currentServiceBill("Authorized Winstone reviewer", null);
   return {

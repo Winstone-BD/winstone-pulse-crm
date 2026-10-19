@@ -470,6 +470,6 @@ export async function dailyTopPerformer(at: Date = new Date()): Promise<TopPerfo
 /** Reports submitted before phone-verification existed keep counting; newer ones need the phone's measurement. */
 export const VERIFIED_SCORING_SINCE = "2026-10-07T17:30:00Z";
 export function countsTowardScore(r: { connection_verified?: boolean | null; submitted_at?: string | null }) {
-  if (r.connection_verified !== false) return true;
+  if (r.connection_verified === true) return true;
   return !r.submitted_at || r.submitted_at < VERIFIED_SCORING_SINCE;
 }

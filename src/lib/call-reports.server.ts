@@ -507,7 +507,7 @@ export async function submitCallReport(input: {
       duration_source: durationSource,
       duration_synced_at: durationSource === "phone_sync" ? phoneSyncedAt : null,
       // Only the phone's own measurement counts toward performance ranking.
-      connection_verified: received && (report.duration_seconds ?? 0) > 0 && report.connected !== false,
+      connection_verified: received && durationSource === "phone_sync" && durationSeconds > 0,
       temperature,
       grade,
       ai_decision: input.aiDecision ?? null,

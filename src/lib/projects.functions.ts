@@ -68,7 +68,7 @@ export const listProjects = createServerFn({ method: "POST" })
     }));
     const shown = projects.filter((p) => p.image_url?.includes("/object/sign/project-photos/"));
     if (shown.length) await logPhotoView(supabaseAdmin, c, shown.map((p) => p.name)).catch(() => undefined);
-    return { canEdit: c.scope === "authority", projects };
+    return { canEdit: c.scope === "authority" && !c.readOnly, projects };
   });
 
 export const saveProject = createServerFn({ method: "POST" })
@@ -117,6 +117,7 @@ export const addSalesUpdate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { c, db } = await ctx(data.adminToken);
+    if (c.readOnly) throw new Error("Executive HQ is view-only");
     const { leadForCaller } = await import("@/lib/sales-intel.server");
     const lead = await leadForCaller(db, c, data.leadId);
     if (c.scope === "agent") {
@@ -152,6 +153,7 @@ export const addProjectNote = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { c, db } = await ctx(data.adminToken);
+    if (c.readOnly) throw new Error("Executive HQ is view-only");
     if (data.party === "client" && !data.leadId) throw new Error("ক্লায়েন্ট নোটে লিড দরকার");
     if (data.party !== "client" && c.scope !== "authority") throw new Error("মালিকের সঙ্গে আলোচনার নোট শুধু HQ/IT লিখতে পারে");
     let agentId: string | null = c.scope === "agent" ? c.agentId : null;
