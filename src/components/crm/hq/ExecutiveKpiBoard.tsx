@@ -1,3 +1,4 @@
+import type { computeCommandCenter } from "@/lib/command-center";
 import { dhakaDay } from "@/lib/lead-groups";
 import {
   AlertTriangle,
@@ -120,29 +121,24 @@ export function ExecutiveKpiBoard({
   leads,
   calls,
   messages,
+  metrics,
+  period,
 }: {
   profiles: Profile[];
   leads: Lead[];
   calls: CallRecording[];
   messages: WhatsappMessage[];
+  metrics: ReturnType<typeof computeCommandCenter>;
+  period: string;
 }) {
   const m = useMemo(() => {
     const now = Date.now();
     const today = dhakaDay(new Date());
-    const connected = calls.filter((c) => c.duration_seconds > CONNECTED_THRESHOLD_SECONDS);
-    const contactedLeads = new Set(connected.map((c) => c.lead_id).filter(Boolean)).size;
-    const hot = leads.filter((l) => l.temperature === "hot").length;
-    const warm = leads.filter((l) => l.temperature === "warm").length;
-    const qualified = hot + warm;
-    const won = leads.filter(
-      (l) => l.status === "closed" && l.outcome_category === "deal_won",
-    ).length;
-    const followUp = leads.filter((l) => l.status === "follow_up").length;
-    const overdue = leads.filter((l) => {
-      if (l.status !== "follow_up") return false;
-      if (l.retry_after) return Date.parse(l.retry_after) < now;
-      return now - Date.parse(l.last_call_at ?? l.updated_at) > 24 * 3_600_000;
-    }).length;
+    const contactedLeads = metrics.funnel.find((s) => s.key === "contacted")?.count ?? 0;
+    const qualified = metrics.funnel.find((s) => s.key === "interested")?.count ?? 0;
+    const won = metrics.kpi.bookings;
+    const followUp = metrics.kpi.openFollowUps;
+    const overdue = metrics.followUpHealth.overdue.count;
     const uncalled = leads.filter(
       (l) => l.call_attempts === 0 && !(l.call_count ?? 0) && !l.last_call_at,
     ).length;
@@ -166,7 +162,7 @@ export function ExecutiveKpiBoard({
       (msg) => now - Date.parse(msg.created_at) < 86_400_000,
     ).length;
     return {
-      total: leads.length,
+      total: metrics.kpi.totalLeads,
       contactedLeads,
       qualified,
       followUp,
@@ -180,10 +176,10 @@ export function ExecutiveKpiBoard({
       activeAgents: floorAgents.filter((p) => p.presence !== "offline").length,
       totalAgents: floorAgents.length,
       waQueue,
-      contactRate: leads.length ? Math.round((contactedLeads / leads.length) * 100) : 0,
-      conversion: leads.length ? Math.round((won / leads.length) * 1000) / 10 : 0,
+      contactRate: metrics.kpi.totalLeads ? Math.round((contactedLeads / metrics.kpi.totalLeads) * 1000) / 10 : 0,
+      conversion: metrics.kpi.totalLeads ? Math.round((won / metrics.kpi.totalLeads) * 1000) / 10 : 0,
     };
-  }, [calls, leads, messages, profiles]);
+  }, [calls, leads, messages, profiles, metrics]);
 
   const bn = (n: number) => n.toLocaleString("bn-BD");
 
@@ -203,7 +199,7 @@ export function ExecutiveKpiBoard({
           </p>
           <h2 className="text-lg font-bold sm:text-xl">এক্সিকিউটিভ পারফরম্যান্স বোর্ড</h2>
           <p className="text-[11px] text-muted-foreground">
-            ম্যানেজমেন্ট, এইচকিউ ও ইনভেস্টর উপস্থাপনের জন্য লাইভ সারসংক্ষেপ।
+            {period} · Asia/Dhaka
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -220,21 +216,21 @@ export function ExecutiveKpiBoard({
           icon={<Users className="size-4" />}
           label="মোট লিড"
           value={bn(m.total)}
-          hint="ডেটাবেজের সব লিড"
+          hint="বর্তমান ফিল্টারের সব লিড"
         />
         <KpiCard
           tone="emerald"
           icon={<PhoneCall className="size-4" />}
-          label="যোগাযোগ হয়েছে"
+          label="কাজ হয়েছে এমন লিড"
           value={bn(m.contactedLeads)}
-          hint={`${bn(m.contactRate)}% লিডে কথা হয়েছে`}
+          hint={`${bn(m.contactRate)}% · বর্তমান অবস্থা pending নয়`}
         />
         <KpiCard
           tone="blue"
           icon={<Target className="size-4" />}
-          label="কোয়ালিফাইড"
+          label="আগ্রহী লিড"
           value={bn(m.qualified)}
-          hint="হট + ওয়ার্ম লিড"
+          hint="হট/ওয়ার্ম বা সংরক্ষিত আগ্রহের সিগন্যাল"
         />
         <KpiCard
           tone="amber"
@@ -246,14 +242,14 @@ export function ExecutiveKpiBoard({
         <KpiCard
           tone="gold"
           icon={<Handshake className="size-4" />}
-          label="ডিল জেতা"
+          label="বুকিং সিগন্যাল"
           value={bn(m.won)}
-          hint="বুকিং সম্পন্ন"
+          hint="নির্বাচিত সময়ের closed-converted রিপোর্ট"
         />
         <KpiCard
           tone="blue"
           icon={<TrendingUp className="size-4" />}
-          label="রূপান্তরের হার"
+          label="বুকিং সিগন্যালের হার"
           value={`${m.conversion.toLocaleString("bn-BD")}%`}
           hint="মোট লিডের তুলনায়"
         />
@@ -281,7 +277,7 @@ export function ExecutiveKpiBoard({
             <FloorStat
               tone="blue"
               icon={<Flame className="size-3.5" />}
-              label="আজকের কল"
+              label="আজকের ফোন সিঙ্ক"
               value={bn(m.todayCallCount)}
             />
             <FloorStat
@@ -298,7 +294,7 @@ export function ExecutiveKpiBoard({
           <ul className="mt-2.5 space-y-1.5 text-[12px]">
             <Highlight label="মোট লিড" value={bn(m.total)} tone="gold" />
             <Highlight label="আজ কথা হয়েছে" value={bn(m.contactedToday)} tone="emerald" />
-            <Highlight label="কোয়ালিফাইড" value={bn(m.qualified)} tone="blue" />
+            <Highlight label="আগ্রহী লিড" value={bn(m.qualified)} tone="blue" />
             <Highlight label="ফলো-আপ বাকি" value={bn(m.followUp)} tone="amber" />
             <Highlight label="ওভারডিউ ফলো-আপ" value={bn(m.overdue)} tone="red" />
             <Highlight label="এখনো কল হয়নি" value={bn(m.uncalled)} tone="amber" />

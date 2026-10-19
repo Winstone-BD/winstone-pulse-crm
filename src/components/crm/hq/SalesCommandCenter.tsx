@@ -24,6 +24,9 @@ import { getCommandCenterFeed } from "@/lib/command-center.functions";
 import { computeCommandCenter, presetRange, type CcFilters } from "@/lib/command-center";
 import type { CallRecording, Lead, Profile } from "@/lib/crm-data";
 import { DEFAULT_DAILY_QUOTA } from "@/lib/lead-quota";
+import { ExecutiveKpiBoard } from "./ExecutiveKpiBoard";
+import { Button } from "@/components/ui/button";
+import type { WhatsappMessage } from "@/lib/crm-data";
 import { useAdminToken } from "@/lib/local-session";
 
 type Preset = "7d" | "30d" | "month" | "custom";
@@ -48,6 +51,7 @@ export function SalesCommandCenter({
   profiles,
   leads,
   calls,
+  messages,
   loading,
   onDrill,
   onSelectAgent,
@@ -55,6 +59,7 @@ export function SalesCommandCenter({
   profiles: Profile[];
   leads: Lead[];
   calls: CallRecording[];
+  messages: WhatsappMessage[];
   loading: boolean;
   onDrill: (spec: DrillSpec) => void;
   onSelectAgent: (id: string) => void;
@@ -128,10 +133,10 @@ export function SalesCommandCenter({
 
   const kpis = [
     { icon: Users, label: "মোট লিড", value: cc.kpi.totalLeads, hint: `এই সময়ে নতুন ${cc.kpi.newLeadsInRange}`, onClick: () => drill("মোট লিড", cc.funnel[0]!.leadIds) },
-    { icon: PhoneCall, label: "যোগাযোগ", value: cc.funnel[1]!.count, hint: `${fmt(cc.funnel[1]!.fromPrev)} · আজ ${cc.kpi.callsToday} কল, ${cc.kpi.connectedToday} সংযুক্ত`, onClick: () => drill("যোগাযোগ হওয়া লিড", cc.funnel[1]!.leadIds) },
+    { icon: PhoneCall, label: "কাজ হয়েছে এমন লিড", value: cc.funnel[1]!.count, hint: `${fmt(cc.funnel[1]!.fromPrev)} · বর্তমান অবস্থা pending নয়`, onClick: () => drill("যোগাযোগ হওয়া লিড", cc.funnel[1]!.leadIds) },
     { icon: CalendarCheck, label: "খোলা ফলো-আপ", value: cc.kpi.openFollowUps, hint: `${cc.followUpHealth.overdue.count} মেয়াদোত্তীর্ণ`, onClick: () => drill("মেয়াদোত্তীর্ণ ফলো-আপ", cc.followUpHealth.overdue.leadIds) },
     { icon: MapPin, label: "সাইট ভিজিট", value: cc.kpi.siteVisits, hint: "রিপোর্টে সংরক্ষিত সিগন্যাল", onClick: () => drill("সাইট ভিজিট লিড", cc.funnel[3]!.leadIds) },
-    { icon: Handshake, label: "বুকিং", value: cc.kpi.bookings, hint: "closed-converted রিপোর্ট", onClick: () => drill("বুকিং লিড", cc.funnel[4]!.leadIds) },
+    { icon: Handshake, label: "বুকিং সিগন্যাল", value: cc.kpi.bookings, hint: "নির্বাচিত সময়ের closed-converted রিপোর্ট", onClick: () => drill("বুকিং লিড", cc.funnel[4]!.leadIds) },
     { icon: Wallet, label: "রেভিনিউ", value: null, hint: "CRM-এ ডিল মূল্য রেকর্ড হয় না", onClick: undefined },
   ];
 
@@ -171,6 +176,7 @@ export function SalesCommandCenter({
       </div>
       {feed.error && <p className="text-xs text-destructive">রিপোর্ট ডেটা লোড হয়নি — সাইট ভিজিট/বুকিং/ফলো-আপ সংখ্যা অসম্পূর্ণ।</p>}
 
+      {feed.error ? <Button variant="outline" onClick={() => void feed.refetch()}>আবার চেষ্টা করুন</Button> : <>
       {/* KPI pulse */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {kpis.map((k) => {
@@ -192,6 +198,9 @@ export function SalesCommandCenter({
           );
         })}
       </div>
+
+      <ExecutiveKpiBoard profiles={profiles} leads={leads.filter((l) => cc.funnel[0]?.leadIds.includes(l.id))} calls={calls} messages={messages} metrics={cc} period={`${range.fromDay} – ${range.toDay}`} />
+      </>}
 
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Arrow-style funnel */}
