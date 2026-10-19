@@ -117,21 +117,28 @@ function AlertPill({
  * alert badges and today's highlight summary. Read-only view over the snapshot.
  */
 export function ExecutiveKpiBoard({
-  profiles,
-  leads,
-  calls,
-  messages,
+  profiles: profileRows,
+  leads: leadRows,
+  calls: callRows,
+  messages: messageRows,
   metrics,
   period,
 }: {
-  profiles: Profile[];
-  leads: Lead[];
-  calls: CallRecording[];
-  messages: WhatsappMessage[];
-  metrics: ReturnType<typeof computeCommandCenter>;
+  profiles?: Profile[] | null;
+  leads?: Lead[] | null;
+  calls?: CallRecording[] | null;
+  messages?: WhatsappMessage[] | null;
+  metrics?: ReturnType<typeof computeCommandCenter> | null;
   period: string;
 }) {
+  const profiles = Array.isArray(profileRows) ? profileRows : [];
+  const leads = Array.isArray(leadRows) ? leadRows : [];
+  const calls = Array.isArray(callRows) ? callRows : [];
+  const messages = Array.isArray(messageRows) ? messageRows : [];
   const m = useMemo(() => {
+    // Old hot-reloaded callers can temporarily retain the previous prop shape.
+    // Never substitute lead-status guesses or fabricated zero KPIs for the feed.
+    if (!metrics) return null;
     const now = Date.now();
     const today = dhakaDay(new Date());
     const contactedLeads = metrics.funnel.find((s) => s.key === "contacted")?.count ?? 0;
@@ -180,6 +187,8 @@ export function ExecutiveKpiBoard({
       conversion: metrics.kpi.totalLeads ? Math.round((won / metrics.kpi.totalLeads) * 1000) / 10 : 0,
     };
   }, [calls, leads, messages, profiles, metrics]);
+
+  if (!m) return <section role="status" aria-busy="true" className="p-4 text-sm text-muted-foreground">সারাংশের তথ্য লোড হচ্ছে…</section>;
 
   const bn = (n: number) => n.toLocaleString("bn-BD");
 
@@ -284,7 +293,7 @@ export function ExecutiveKpiBoard({
               tone="amber"
               icon={<AlertTriangle className="size-3.5" />}
               label="হোয়াটসঅ্যাপ (২৪ ঘণ্টা)"
-              value={bn(m.waQueue)}
+              value={Array.isArray(messageRows) ? bn(m.waQueue) : "—"}
             />
           </div>
         </div>
