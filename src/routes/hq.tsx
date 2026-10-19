@@ -40,6 +40,7 @@ import { AccountabilityReviewPanel } from "@/components/crm/AccountabilityReview
 import { NeglectDisputePanel } from "@/components/crm/LeadNeglectPanel";
 import { SocialHqPanel } from "@/components/crm/social/SocialHqPanel";
 import { ReportsBoard } from "@/components/crm/reports/ReportsBoard";
+import { WhatsappAgentSummary } from "@/components/crm/hq/WhatsappAgentSummary";
 
 import { buildAgentStats, buildTimeline, useSnapshot } from "@/lib/crm-data";
 
@@ -218,6 +219,7 @@ function ControlBoard() {
                   messages={messages}
                   onSelectAgent={setOpenAgentId}
                 />
+                <WhatsappAgentSummary />
                 <SalesChartsDashboard scope="hq" />
                 <SalesCommandCenter
                   profiles={profiles}
