@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Flame, Link, useRouterState } from "@tanstack/react-router";
 import { PAGE_SECTIONS, type SectionRoute } from "@/lib/page-sections";
 import {
   BarChart3,
@@ -54,6 +54,8 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   "/staff-portal": Users,
   "/runtime-errors": Server,
   "/inventory": Building2,
+  "/unit-board": Building2,
+  "/qualify": Flame,
   "/projects": Building2,
   "/sales-intel": Lightbulb,
   "/news": Newspaper,
@@ -75,7 +77,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
 
 const GROUPS: { title: { bn: string; en: string }; routes: string[] }[] = [
   { title: { bn: "প্রধান", en: "Main" }, routes: ["/", "/desk", "/coach"] },
-  { title: { bn: "লিড ও বিক্রয়", en: "Leads & sales" }, routes: ["/leadhub", "/live-leads", "/booking-review", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/reports"] },
+  { title: { bn: "লিড ও বিক্রয়", en: "Leads & sales" }, routes: ["/leadhub", "/live-leads", "/booking-review", "/sales-intel", "/news", "/site-visits", "/projects", "/inventory", "/unit-board", "/qualify", "/reports"] },
   { title: { bn: "ম্যানেজমেন্ট", en: "Management" }, routes: ["/hq", "/contributions", "/audit-log", "/staff-portal"] },
   { title: { bn: "সাপোর্ট", en: "Support" }, routes: ["/inbox", "/tickets", "/customers", "/support-admin"] },
   {
