@@ -50,6 +50,8 @@ export const NAV = [
   { to: "/site-visits", label: "Site Visits", scopes: ["authority", "agent"] },
   { to: "/projects", label: "Projects", scopes: ["authority", "coordinator", "agent"] },
   { to: "/inventory", label: "Inventory", scopes: ["authority", "coordinator"] },
+  { to: "/unit-board", label: "Unit Board", scopes: ["authority", "coordinator", "agent"] },
+  { to: "/qualify", label: "WhatsApp Qualify", scopes: ["authority", "coordinator", "agent"] },
   { to: "/reports", label: "Reports", scopes: ["authority", "coordinator", "agent"] },
   { to: "/system", label: "IT Console", scopes: ["authority"] },
   { to: "/runtime-errors", label: "Runtime Errors", scopes: ["authority"] },

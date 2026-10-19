@@ -44,6 +44,8 @@ export const NAV_LABELS: Record<string, { bn: string; en: string }> = {
   "/news": { bn: "মার্কেট নিউজ", en: "Market News" },
   "/site-visits": { bn: "সাইট ভিজিট", en: "Site Visits" },
   "/inventory": { bn: "ইনভেন্টরি", en: "Inventory" },
+  "/unit-board": { bn: "ইউনিট বোর্ড ও বুকিং", en: "Unit Board & Booking" },
+  "/qualify": { bn: "WhatsApp কোয়ালিফাই", en: "WhatsApp Qualify" },
   "/reports": { bn: "রিপোর্ট", en: "Reports" },
   "/system": { bn: "আইটি কনসোল", en: "IT Console" },
   "/runtime-errors": { bn: "রানটাইম এরর", en: "Runtime Errors" },

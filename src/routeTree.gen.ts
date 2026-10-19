@@ -40,6 +40,7 @@ import { Route as MigrationExportRouteImport } from './routes/migration-export'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as QualifyRouteImport } from './routes/qualify'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RuntimeErrorsRouteImport } from './routes/runtime-errors'
@@ -56,6 +57,7 @@ import { Route as SystemRouteImport } from './routes/system'
 import { Route as TechRouteImport } from './routes/tech'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TicketsRouteImport } from './routes/tickets'
+import { Route as UnitBoardRouteImport } from './routes/unit-board'
 import { Route as VoiceTranscriptionRouteImport } from './routes/voice-transcription'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DocsSlugRouteImport } from './routes/docs_.$slug'
@@ -268,6 +270,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QualifyRoute = QualifyRouteImport.update({
+  id: '/qualify',
+  path: '/qualify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -346,6 +353,11 @@ const TermsRoute = TermsRouteImport.update({
 const TicketsRoute = TicketsRouteImport.update({
   id: '/tickets',
   path: '/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnitBoardRoute = UnitBoardRouteImport.update({
+  id: '/unit-board',
+  path: '/unit-board',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VoiceTranscriptionRoute = VoiceTranscriptionRouteImport.update({
@@ -683,6 +695,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
+  '/qualify': typeof QualifyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/runtime-errors': typeof RuntimeErrorsRoute
@@ -699,6 +712,7 @@ export interface FileRoutesByFullPath {
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
+  '/unit-board': typeof UnitBoardRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -788,6 +802,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
+  '/qualify': typeof QualifyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/runtime-errors': typeof RuntimeErrorsRoute
@@ -804,6 +819,7 @@ export interface FileRoutesByTo {
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
+  '/unit-board': typeof UnitBoardRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs/$slug': typeof DocsSlugRoute
@@ -894,6 +910,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRoute
   '/privacy': typeof PrivacyRoute
   '/projects': typeof ProjectsRoute
+  '/qualify': typeof QualifyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/runtime-errors': typeof RuntimeErrorsRoute
@@ -910,6 +927,7 @@ export interface FileRoutesById {
   '/tech': typeof TechRoute
   '/terms': typeof TermsRoute
   '/tickets': typeof TicketsRoute
+  '/unit-board': typeof UnitBoardRoute
   '/voice-transcription': typeof VoiceTranscriptionRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/docs_/$slug': typeof DocsSlugRoute
@@ -1001,6 +1019,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy'
     | '/projects'
+    | '/qualify'
     | '/reports'
     | '/reset-password'
     | '/runtime-errors'
@@ -1017,6 +1036,7 @@ export interface FileRouteTypes {
     | '/tech'
     | '/terms'
     | '/tickets'
+    | '/unit-board'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
@@ -1106,6 +1126,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy'
     | '/projects'
+    | '/qualify'
     | '/reports'
     | '/reset-password'
     | '/runtime-errors'
@@ -1122,6 +1143,7 @@ export interface FileRouteTypes {
     | '/tech'
     | '/terms'
     | '/tickets'
+    | '/unit-board'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs/$slug'
@@ -1211,6 +1233,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/privacy'
     | '/projects'
+    | '/qualify'
     | '/reports'
     | '/reset-password'
     | '/runtime-errors'
@@ -1227,6 +1250,7 @@ export interface FileRouteTypes {
     | '/tech'
     | '/terms'
     | '/tickets'
+    | '/unit-board'
     | '/voice-transcription'
     | '/.well-known/oauth-protected-resource'
     | '/docs_/$slug'
@@ -1317,6 +1341,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProjectsRoute: typeof ProjectsRoute
+  QualifyRoute: typeof QualifyRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RuntimeErrorsRoute: typeof RuntimeErrorsRoute
@@ -1333,6 +1358,7 @@ export interface RootRouteChildren {
   TechRoute: typeof TechRoute
   TermsRoute: typeof TermsRoute
   TicketsRoute: typeof TicketsRoute
+  UnitBoardRoute: typeof UnitBoardRoute
   VoiceTranscriptionRoute: typeof VoiceTranscriptionRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DocsSlugRoute: typeof DocsSlugRoute
@@ -1610,6 +1636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/qualify': {
+      id: '/qualify'
+      path: '/qualify'
+      fullPath: '/qualify'
+      preLoaderRoute: typeof QualifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports': {
       id: '/reports'
       path: '/reports'
@@ -1720,6 +1753,13 @@ declare module '@tanstack/react-router' {
       path: '/tickets'
       fullPath: '/tickets'
       preLoaderRoute: typeof TicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unit-board': {
+      id: '/unit-board'
+      path: '/unit-board'
+      fullPath: '/unit-board'
+      preLoaderRoute: typeof UnitBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/voice-transcription': {
@@ -2149,6 +2189,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRoute,
   PrivacyRoute: PrivacyRoute,
   ProjectsRoute: ProjectsRoute,
+  QualifyRoute: QualifyRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RuntimeErrorsRoute: RuntimeErrorsRoute,
@@ -2165,6 +2206,7 @@ const rootRouteChildren: RootRouteChildren = {
   TechRoute: TechRoute,
   TermsRoute: TermsRoute,
   TicketsRoute: TicketsRoute,
+  UnitBoardRoute: UnitBoardRoute,
   VoiceTranscriptionRoute: VoiceTranscriptionRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
