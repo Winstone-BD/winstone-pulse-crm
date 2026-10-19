@@ -135,6 +135,34 @@ export function LeadDatabasePanel() {
         ) : null}
       </div>
 
+      {status.data && status.data.agents.length > 0 ? (() => {
+        const target = quantity || status.data.dailyPerAgent;
+        const rows = status.data.agents.map((a) => ({ ...a, gap: Math.max(0, target - a.heldToday) }));
+        const totalGap = rows.reduce((s, r) => s + r.gap, 0);
+        return (
+          <div className="space-y-2 rounded-xl border border-border p-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-xs font-semibold">বিতরণের আগে প্রিভিউ · প্রতি এজেন্ট {target}টি</h3>
+              <span className={`text-xs ${totalGap > poolCount ? "text-warning" : "text-muted-foreground"}`}>
+                মোট লাগবে {totalGap}টি · ডেটাবেজে {poolCount}টি
+              </span>
+            </div>
+            <div className="grid gap-1 text-sm">
+              <div className="grid grid-cols-[1fr_4rem_4rem] text-xs text-muted-foreground">
+                <span>এজেন্ট</span><span className="text-right">আজ আছে</span><span className="text-right">বাকি কোটা</span>
+              </div>
+              {rows.map((r) => (
+                <div key={r.id} className="grid grid-cols-[1fr_4rem_4rem] border-t border-border/60 pt-1">
+                  <span className="truncate">{r.name}</span>
+                  <span className="tabular text-right">{r.heldToday}</span>
+                  <span className={`tabular text-right font-medium ${r.gap ? "" : "text-muted-foreground"}`}>{r.gap}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })() : null}
+
       {status.data && status.data.agents.length > 0 ? (
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[380px] text-sm">
