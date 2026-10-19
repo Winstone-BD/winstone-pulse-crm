@@ -108,8 +108,17 @@ describe("support access follows own or unassigned conversations", () => {
     await expect(invoke(escalateSupportConversation, { conversationId: "conversation-b" })).rejects.toThrow("another agent");
     expect(state.escalations).toBe(0);
   });
-  it("permits escalation of unassigned work", async () => {
+  it("denies escalation of unassigned work until the agent owns it", async () => {
     state.assignee = null;
+    await expect(invoke(escalateSupportConversation, { conversationId: "conversation-a", reason: "Help needed" })).rejects.toThrow("must own");
+    expect(state.escalations).toBe(0);
+  });
+  it("permits escalation of the agent's own conversation", async () => {
+    await invoke(escalateSupportConversation, { conversationId: "conversation-a", reason: "Help needed" });
+    expect(state.escalations).toBe(1);
+  });
+  it("preserves support lead escalation of unassigned conversations", async () => {
+    state.caller.scope = "coordinator"; state.assignee = null;
     await invoke(escalateSupportConversation, { conversationId: "conversation-a", reason: "Help needed" });
     expect(state.escalations).toBe(1);
   });

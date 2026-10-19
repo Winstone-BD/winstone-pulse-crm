@@ -362,6 +362,9 @@ export const escalateSupportConversation = createServerFn({ method: "POST" })
     if (error || !conversation || !canTouch(me.scope, me.profile?.id ?? null, conversation.assignee_profile_id)) {
       throw new Error("This conversation belongs to another agent");
     }
+    if (me.scope === "agent" && (!me.profile?.id || conversation.assignee_profile_id !== me.profile.id)) {
+      throw new Error("You must own this conversation before escalating it");
+    }
     const { escalateConversation } = await import("@/lib/support.server");
     const { actorLabel } = await import("@/lib/support-access.server");
     const ticket = await escalateConversation({
@@ -371,6 +374,7 @@ export const escalateSupportConversation = createServerFn({ method: "POST" })
       createdByKind: "agent",
       actorProfileId: me.profile?.id ?? null,
       actorLabel: actorLabel(me),
+      ...(me.scope === "agent" && me.profile?.id ? { requiredAssigneeProfileId: me.profile.id } : {}),
     });
     return { ref: ticket.ref };
   });
