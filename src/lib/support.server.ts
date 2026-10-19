@@ -213,6 +213,7 @@ export async function logTicketEvent(input: {
   actorKind?: "ai" | "agent" | "customer" | "system";
   actorProfileId?: string | null;
   actorLabel?: string | null;
+  requiredAssigneeProfileId?: string;
 }) {
   await supabaseAdmin.from("support_ticket_events").insert({
     ticket_id: input.ticketId,
@@ -248,8 +249,11 @@ export async function escalateConversation(input: {
     .eq("id", input.conversationId)
     .maybeSingle();
   if (!conversation) throw new Error("Conversation not found");
+  if (input.requiredAssigneeProfileId && conversation.assignee_profile_id !== input.requiredAssigneeProfileId) {
+    throw new Error("You must own this conversation before escalating it");
+  }
 
-  await supabaseAdmin
+  const escalation = supabaseAdmin
     .from("support_conversations")
     .update({
       ai_handled: false,
@@ -261,6 +265,10 @@ export async function escalateConversation(input: {
       updated_at: now,
     })
     .eq("id", input.conversationId);
+  if (input.requiredAssigneeProfileId) escalation.eq("assignee_profile_id", input.requiredAssigneeProfileId);
+  const { data: updated, error: updateError } = await escalation.select("id").maybeSingle();
+  if (updateError) throw new Error(updateError.message);
+  if (!updated) throw new Error("Conversation ownership changed; reload before escalating");
 
   if (existing) return existing;
 

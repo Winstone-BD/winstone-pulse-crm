@@ -374,6 +374,7 @@ export const escalateSupportConversation = createServerFn({ method: "POST" })
       createdByKind: "agent",
       actorProfileId: me.profile?.id ?? null,
       actorLabel: actorLabel(me),
+      ...(me.scope === "agent" && me.profile?.id ? { requiredAssigneeProfileId: me.profile.id } : {}),
     });
     return { ref: ticket.ref };
   });
