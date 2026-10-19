@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] WhatsApp attempt date/agent/status filters and filtered CSV; agent escalation requires ownership; publish security fixes and recheck live without customer writes.
 - [x] HQ overview WhatsApp agent summary added using the existing latest-300 attempt feed: attempts, submitted/pending reports and latest attempt. Two aggregation tests passed; harness build OK; own-account desktop/428px preview verified. Current real feed is empty, so populated rows are unit-tested only; no live data or permissions changed. Unpublished.
 - [x] Targeted security fixes: scoped support customer reads/updates/notes and escalation, authenticated AI/bill reads, server phone evidence for scored call time, read-only HQ project write guards. 122 distinct targeted/regression checks passed; harness build OK. Browser verified anonymous bill denial and own-account bill/customer reads with no page errors. No live customer writes or role-grant changes; unpublished, real agent mutation/handset flow and refreshed deep scan remain unverified. Other scan findings untouched.
 - [x] Published call-time and assistant-panel fixes 2026-10-18: 14 targeted checks passed; harness build OK; fresh live entry/HQ/Reports HTTP 200, signed-in data renders, no page errors, deployed assistant guard confirmed. No customer writes or fabricated report; actual handset duration submission and browser-forced empty reply remain unverified.

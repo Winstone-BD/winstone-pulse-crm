@@ -124,7 +124,8 @@ export function ConversationWorkspace({ conversationId }: { conversationId: stri
     );
   }
 
-  const data = detail.data!;
+  const data = detail.data;
+  if (!data) return null;
   const conversation = data.conversation;
   const readOnly = data.me.readOnly;
   const sla = slaMinutesLeft(conversation.sla_due_at);
@@ -207,7 +208,8 @@ export function ConversationWorkspace({ conversationId }: { conversationId: stri
               size="sm"
               variant="outline"
               className="h-8 text-xs"
-              disabled={readOnly || escalate.isPending}
+              disabled={readOnly || escalate.isPending || (data.me.scope === "agent" && conversation.assignee_profile_id !== data.me.profileId)}
+              title={data.me.scope === "agent" && conversation.assignee_profile_id !== data.me.profileId ? "A support lead must assign this conversation to you before you can escalate it" : undefined}
               onClick={() => escalate.mutate()}
             >
               Create ticket
