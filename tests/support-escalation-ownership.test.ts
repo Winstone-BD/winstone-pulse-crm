@@ -3,7 +3,8 @@ const state = vi.hoisted(() => ({ assignee: "agent-a", changed: false, error: fa
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: (table: string) => {
   let updating = false;
   const chain = {
-    select: () => chain, eq: (key: string, value: string) => { if (updating && key === "assignee_profile_id") state.guarded = value === "agent-a"; return chain; },
+    select: () => chain, order: () => chain, limit: () => chain,
+    eq: (key: string, value: string) => { if (updating && key === "assignee_profile_id") state.guarded = value === "agent-a"; return chain; },
     update: () => { updating = true; return chain; },
     insert: () => { state.inserts++; return chain; },
     maybeSingle: async () => table === "support_tickets" ? { data: { id: "ticket-a", ref: "TKT-1" }, error: null } : updating
