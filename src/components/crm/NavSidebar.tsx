@@ -1,7 +1,8 @@
-import { Flame, Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { PAGE_SECTIONS, type SectionRoute } from "@/lib/page-sections";
 import {
   BarChart3,
+  Flame,
   BookOpen,
   Boxes,
   Brain,
