@@ -43,7 +43,7 @@ function ServiceBillAlertPage() {
       <div className="mx-auto max-w-xl space-y-4">
         <h1 className="text-3xl font-bold">Service Bill Alert</h1>
         <p>{isError ? "Sign in to view your service bill." : "Loading…"}</p>
-        {isError && <Button asChild><Link to="/auth">Sign in</Link></Button>}
+        {isError && <Button asChild><Link to="/auth" search={{ role: "agent", mode: "signin" }}>Sign in</Link></Button>}
       </div>
     </main>
   );
