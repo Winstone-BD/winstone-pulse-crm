@@ -1,4 +1,5 @@
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useHydrated } from "@tanstack/react-router";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarClock, FileCheck2, LockKeyhole, ShieldCheck } from "lucide-react";
 
@@ -8,14 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServiceBillAlert } from "@/lib/service-bill-review.functions";
 import { dhakaTime } from "@/lib/maintenance-rules";
-
-const billQuery = queryOptions({
-  queryKey: ["service-bill-alert"],
-  queryFn: () => getServiceBillAlert(),
-});
+import { useAdminToken } from "@/lib/local-session";
 
 export const Route = createFileRoute("/service-bill-alert")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(billQuery),
   head: () => ({
     meta: [
       { title: "Service Bill Alert — Winstone Pulse" },
@@ -34,7 +30,23 @@ export const Route = createFileRoute("/service-bill-alert")({
 });
 
 function ServiceBillAlertPage() {
-  const { data: bill } = useSuspenseQuery(billQuery);
+  const adminToken = useAdminToken();
+  const hydrated = useHydrated();
+  const { data: bill, isError } = useQuery({
+    queryKey: ["service-bill-alert", adminToken],
+    queryFn: () => getServiceBillAlert({ data: { adminToken } }),
+    enabled: hydrated,
+    retry: false,
+  });
+  if (!bill) return (
+    <main className="min-h-screen bg-background px-4 py-14 text-foreground">
+      <div className="mx-auto max-w-xl space-y-4">
+        <h1 className="text-3xl font-bold">Service Bill Alert</h1>
+        <p>{isError ? "Sign in to view your service bill." : "Loading…"}</p>
+        {isError && <Button asChild><Link to="/auth">Sign in</Link></Button>}
+      </div>
+    </main>
+  );
 
   return (
     <main className="min-h-screen bg-background">

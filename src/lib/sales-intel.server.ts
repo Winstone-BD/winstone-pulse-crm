@@ -47,6 +47,7 @@ export async function siCaller(adminToken: string | null | undefined): Promise<S
 
 export function requireAdminWriter(c: SiCaller) {
   if (c.scope !== "authority") throw new Error("শুধু HQ/IT এই তথ্য বদলাতে পারে");
+  if (c.readOnly) throw new Error("Executive HQ is view-only");
 }
 
 async function all<T>(page: (a: number, b: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {

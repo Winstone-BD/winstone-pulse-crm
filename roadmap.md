@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Active
+- [ ] Targeted security fixes: support customer access, private AI/bill reads, call-score evidence, and read-only HQ project writes; preserve live data and role grants, regression-test before release.
 - [x] Published call-time and assistant-panel fixes 2026-10-18: 14 targeted checks passed; harness build OK; fresh live entry/HQ/Reports HTTP 200, signed-in data renders, no page errors, deployed assistant guard confirmed. No customer writes or fabricated report; actual handset duration submission and browser-forced empty reply remain unverified.
 - [ ] Connect Wiz and run its security scan — BLOCKED: connection approval was interrupted before execution; Wiz is not connected.
 - [x] Fast-loading build published 2026-10-19: self-hosted fonts (zero external font requests), prerendered gateway, charts split out of the first download. Full production build OK; published to crm.winstonebd.com and live-verified — entry page shows "IT Console" (zero "IT HQ"), Get started reaches sign-in, signed-in HQ shows 17 charts, Reports/Desk/System/Live Leads render, LeadHub still PIN-gated, no page errors or 4xx/5xx.
