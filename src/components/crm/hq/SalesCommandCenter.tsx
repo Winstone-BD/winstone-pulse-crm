@@ -188,7 +188,7 @@ export function SalesCommandCenter({
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><Icon className="size-4" /></span>
               </span>
               <span className="tabular mt-1 block text-3xl font-bold tracking-tight">{k.value === null ? "—" : k.value.toLocaleString("bn-BD")}</span>
-              <span className={`mt-1 block truncate text-[11px] ${k.label === "খোলা ফলো-আপ" ? "text-destructive" : "text-muted-foreground"}`}>{k.hint}</span>
+              <span className={`mt-1 block min-h-8 break-words text-[11px] ${k.label === "খোলা ফলো-আপ" ? "text-destructive" : "text-muted-foreground"}`}>{k.hint}</span>
             </>
           );
           return k.onClick ? (

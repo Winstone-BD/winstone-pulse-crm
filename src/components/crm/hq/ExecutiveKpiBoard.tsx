@@ -62,7 +62,7 @@ function KpiCard({
         style={{ background: accent }}
       />
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="min-w-0 break-words text-[11px] font-semibold text-muted-foreground">
           {label}
         </p>
         <span
@@ -81,7 +81,7 @@ function KpiCard({
       >
         {value}
       </p>
-      <p className="mt-1.5 truncate text-[11px] text-muted-foreground">{hint}</p>
+      <p className="mt-1.5 min-h-8 break-words text-[11px] text-muted-foreground">{hint}</p>
     </div>
   );
 }
