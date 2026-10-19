@@ -4,7 +4,7 @@ export type AttemptRow = {
 };
 export type AttemptFilters = { from: string; to: string; agent: string; status: "all" | "submitted" | "pending" };
 /** Inclusive calendar dates in Dhaka; never expands the scoped latest-300 feed. */
-export function filterWhatsappAttempts<T extends AttemptRow>(rows: readonly T[], filters: AttemptFilters): T[] {
+export function filterWhatsappAttempts<T extends Pick<AttemptRow, "startedAt" | "agentName" | "submitted">>(rows: readonly T[], filters: AttemptFilters): T[] {
   return rows.filter((row) => {
     const time = Date.parse(row.startedAt);
     if (!Number.isFinite(time)) return false;
