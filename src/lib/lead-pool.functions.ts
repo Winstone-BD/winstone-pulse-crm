@@ -23,6 +23,8 @@ export type LeadPoolAgent = {
   total: number;
   pending: number;
   today: number;
+  /** Leads already counted against today's quota (same rule as the hand-out). */
+  heldToday: number;
 };
 
 /** Read access is restricted to the dedicated LeadHub PIN. */
@@ -191,10 +193,11 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await deckReader(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { dhakaToday, usablePoolCount, activeAgents, dailyPlan } = await import(
+    const { dhakaToday, usablePoolCount, activeAgents, dailyPlan, assignedTodayByAgent } = await import(
       "@/lib/lead-pool.server"
     );
     const today = dhakaToday();
+    const held = await assignedTodayByAgent(today);
 
     const [poolCount, agents, plan, { data: previewCandidates }, { data: assigned }, { data: audits }] = await Promise.all([
       usablePoolCount(),
@@ -239,6 +242,7 @@ export const leadPoolStatus = createServerFn({ method: "GET" })
         total: mine.length,
         pending: mine.filter((row) => row.status === "pending").length,
         today: mine.filter((row) => row.work_date === today).length,
+        heldToday: held.get(agent.id) ?? 0,
       };
     });
 
