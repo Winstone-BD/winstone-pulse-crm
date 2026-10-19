@@ -30,7 +30,6 @@ import { HqMixCards } from "@/components/crm/hq/HqMixCards";
 import { SalesChartsDashboard } from "@/components/crm/SalesChartsDashboard";
 import { HqTalkChart } from "@/components/crm/hq/HqTalkChart";
 import { HqRecentSummaries } from "@/components/crm/hq/HqRecentSummaries";
-import { ExecutiveKpiBoard } from "@/components/crm/hq/ExecutiveKpiBoard";
 import { FloorLockAdminPanel } from "@/components/crm/hq/FloorLockAdminPanel";
 
 import { TopPerformerBoard } from "@/components/crm/hq/TopPerformerBoard";
@@ -225,6 +224,7 @@ function ControlBoard() {
                   profiles={profiles}
                   leads={leads}
                   calls={calls}
+                  messages={messages}
                   loading={isPending}
                   onDrill={setDrill}
                   onSelectAgent={setOpenAgentId}
@@ -244,12 +244,6 @@ function ControlBoard() {
                   </section>
                 </div>
                 <SystemManualCard />
-                <ExecutiveKpiBoard
-                  profiles={profiles}
-                  leads={leads}
-                  calls={calls}
-                  messages={messages}
-                />
                 <SmartInsightStrip scope="floor" />
                 <ExecutiveBrief />
                 <HqStatTiles calls={calls} leads={leads} messages={messages} onDrill={setDrill} />

@@ -8,6 +8,22 @@ const base = { calls: [], followUps: [], agents: [{ id: "a1", name: "A" }, { id:
 const filters = { ...presetRange("7d", now), agentId: null, source: null, project: null };
 
 describe("command center aggregation", () => {
+  it("reconciles HQ totals using submitted booking signals and current follow-up work, not recording or lead-status guesses", () => {
+    const leads = Array.from({ length: 4863 }, (_, i) => L(String(i), { status: i < 2343 ? "contacted" : "pending" }));
+    const followUps = Array.from({ length: 814 }, (_, i) => ({ id: `f${i}`, lead_id: String(i % 252), agent_id: "a1", status: "upcoming", scheduled_at: i < 498 ? "2026-09-28T10:00:00Z" : "2026-10-01T10:00:00Z", completed_at: null }));
+    const reports = Array.from({ length: 6 }, (_, i) => R(`r${i}`, String(i), { category: "closed_converted" }));
+    const cc = computeCommandCenter({ ...base, filters, leads, followUps, reports });
+    expect(cc.kpi.totalLeads).toBe(4863);
+    expect(cc.funnel.find((s) => s.key === "contacted")?.count).toBe(2343);
+    expect(cc.kpi.openFollowUps).toBe(814);
+    expect(cc.followUpHealth.overdue.count).toBe(498);
+    expect(cc.kpi.bookings).toBe(6);
+  });
+  it("keeps booking signals date-filtered without changing the all-time worked-lead count", () => {
+    const cc = computeCommandCenter({ ...base, filters, leads: [L("1", { status: "contacted" })], reports: [R("old", "1", { category: "closed_converted", submitted_at: "2026-09-01T05:00:00Z" })] });
+    expect(cc.kpi.bookings).toBe(0);
+    expect(cc.funnel.find((s) => s.key === "contacted")?.count).toBe(1);
+  });
   it("counts funnel only from real rows and computes stage conversion", () => {
     const cc = computeCommandCenter({ ...base, filters,
       leads: [L("1", { status: "contacted", temperature: "hot" }), L("2", { status: "contacted" }), L("3")],
