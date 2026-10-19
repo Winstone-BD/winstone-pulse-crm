@@ -33,6 +33,6 @@
 - Desk uses a non-scrolling section grid; mobile navigation opens from below — why: avoid sideways navigation.
 - Social moderation: CRM logs work only (append-only social_activity_logs) and makes unassigned leads via intakeLead — why: no Meta API; LeadHub assigns.
 - Wrappers/portals inherit src/styles.css tokens; Buttons separate actions from accents; headers stack phone actions, dialogs reserve close space — why: one palette, phone-safe layouts.
-- Desk WorkViews and HQ WhatsApp summaries are read-only; summaries reuse the bounded attempt feed — why: no second write path or wider access.
+- Desk/HQ WhatsApp reads, Dhaka filters and formula-safe CSV reuse the bounded feed — why: no wider access or spreadsheet execution.
 - Fonts are self-hosted: woff2 files live in public/fonts with @font-face in src/styles.css; never re-add the Google Fonts stylesheet link — why: external render-blocking CSS was the top page-speed cost.
-- Private AI/bill reads authenticate in the handler; support customer access follows own/unassigned conversations, project mutations reject read-only HQ, and new scored call time requires phone-sync evidence — why: direct requests must honor existing access and cannot turn typed facts into verified measurements.
+- Private AI/bill reads authenticate; support reads follow own/unassigned work but agent escalation requires ownership; project writes reject read-only HQ; scored time needs phone sync — why: requests cannot bypass access or fabricate evidence.

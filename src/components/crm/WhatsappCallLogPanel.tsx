@@ -12,7 +12,7 @@ import { useLang } from "@/lib/i18n";
 import { filterWhatsappAttempts, whatsappAttemptsCsv, type AttemptFilters } from "@/lib/whatsapp-attempt-filters";
 const empty: AttemptFilters = { from: "", to: "", agent: "", status: "all" };
 export function WhatsappCallLogPanel({ onOpenLead }: { onOpenLead: (leadId: string) => void }) {
-  const [lang] = useLang();
+  const lang = useLang();
   const t = (bn: string, en: string) => lang === "bn" ? bn : en;
   const [filters, setFilters] = useState(empty);
   const adminToken = useAdminToken();
