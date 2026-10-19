@@ -26,7 +26,8 @@ const LOCATION_ALIASES: Record<DhakaLocationKey, string[]> = {
   purbachal: ["purbachal", "পূর্বাচল"], mirpur: ["mirpur", "মিরপুর"],
 };
 
-const num = (s: string) => Number(s.replace(/,/g, ""));
+const num = (s: string | undefined) => Number((s ?? "0").replace(/,/g, ""));
+
 
 export function extractQualification(text: string): Qualification {
   const t = fromBnDigits(text).toLowerCase();

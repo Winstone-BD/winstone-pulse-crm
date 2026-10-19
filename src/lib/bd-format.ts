@@ -7,7 +7,7 @@ export const CRORE = 10_000_000;
 export const SQFT_PER_KATHA = 720;
 
 const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
-export const toBnDigits = (s: string) => s.replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
+export const toBnDigits = (s: string) => s.replace(/\d/g, (d) => BN_DIGITS[Number(d)] ?? d);
 export const fromBnDigits = (s: string) => s.replace(/[০-৯]/g, (d) => String(BN_DIGITS.indexOf(d)));
 
 const trim = (n: number) => String(Math.round(n * 100) / 100);

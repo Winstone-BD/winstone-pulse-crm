@@ -16,7 +16,7 @@ export const DEFAULT_MILESTONES = [
 ];
 
 function addMonths(iso: string, m: number): string {
-  const [y, mo, d] = iso.split("-").map(Number);
+  const [y = 1970, mo = 1, d = 1] = iso.split("-").map(Number);
   const dt = new Date(Date.UTC(y, mo - 1 + m, 1));
   const last = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0)).getUTCDate();
   dt.setUTCDate(Math.min(d, last));

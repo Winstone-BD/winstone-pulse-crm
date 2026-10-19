@@ -114,7 +114,7 @@ function UnitEditor({ unit, projects, adminToken, onDone }: { unit: Unit | null;
   const qc = useQueryClient();
   const save = useServerFn(saveUnit);
   const m = useMutation({
-    mutationFn: (d: Parameters<typeof save>[0]["data"]) => save({ data: d }),
+    mutationFn: (d: Record<string, unknown>) => save({ data: d }),
     onSuccess: () => { toast.success(t({ bn: "সংরক্ষণ হয়েছে", en: "Saved" })); void qc.invalidateQueries({ queryKey: ["unit-board"] }); onDone(); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -213,7 +213,7 @@ function PaymentAndSlip({ unit }: { unit: Unit | null }) {
           <table className="w-full text-xs">
             <tbody>
               {shown.slice(0, 1).map((r) => <Row key={r.label} r={r} lang={lang} />)}
-              {inst.length ? <tr className="border-t"><td className="py-1">{t({ bn: `মাসিক কিস্তি × ${inst.length}`, en: `Monthly installment × ${inst.length}` })} ({inst[0].due} → {inst.at(-1)!.due})</td><td className="text-right">{formatTaka(inst[0].amountBdt, lang)} / {t({ bn: "মাস", en: "mo" })}</td></tr> : null}
+              {inst.length ? <tr className="border-t"><td className="py-1">{t({ bn: `মাসিক কিস্তি × ${inst.length}`, en: `Monthly installment × ${inst.length}` })} ({inst[0]!.due} → {inst.at(-1)!.due})</td><td className="text-right">{formatTaka(inst[0]!.amountBdt, lang)} / {t({ bn: "মাস", en: "mo" })}</td></tr> : null}
               {shown.slice(1).map((r) => <Row key={r.label} r={r} lang={lang} />)}
             </tbody>
           </table>
