@@ -213,7 +213,6 @@ export async function logTicketEvent(input: {
   actorKind?: "ai" | "agent" | "customer" | "system";
   actorProfileId?: string | null;
   actorLabel?: string | null;
-  requiredAssigneeProfileId?: string;
 }) {
   await supabaseAdmin.from("support_ticket_events").insert({
     ticket_id: input.ticketId,
@@ -239,6 +238,7 @@ export async function escalateConversation(input: {
   createdByKind?: "ai" | "agent" | "customer";
   actorProfileId?: string | null;
   actorLabel?: string | null;
+  requiredAssigneeProfileId?: string;
 }) {
   const existing = await ticketForConversation(input.conversationId);
   const now = new Date().toISOString();
