@@ -35,3 +35,4 @@
 - Wrappers/portals inherit src/styles.css tokens; Buttons separate actions from accents; headers stack phone actions, dialogs reserve close space — why: one palette, phone-safe layouts.
 - Desk WorkViews are scoped read-only; stages change via reports — why: no second write path.
 - Fonts are self-hosted: woff2 files live in public/fonts with @font-face in src/styles.css; never re-add the Google Fonts stylesheet link — why: external render-blocking CSS was the top page-speed cost.
+- Private AI/bill reads authenticate in the handler; support customer access follows own/unassigned conversations, project mutations reject read-only HQ, and new scored call time requires phone-sync evidence — why: direct requests must honor existing access and cannot turn typed facts into verified measurements.

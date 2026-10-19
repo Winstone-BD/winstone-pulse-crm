@@ -40,7 +40,20 @@ function canTouch(
   assignee: string | null,
 ) {
   if (scope === "authority" || scope === "coordinator") return true;
-  return !assignee || assignee === profileId;
+  return scope === "agent" && Boolean(profileId) && (!assignee || assignee === profileId);
+}
+
+async function requireCustomerAccess(
+  db: typeof import("@/integrations/supabase/client.server").supabaseAdmin,
+  me: Awaited<ReturnType<typeof caller>>,
+  customerId: string,
+) {
+  if (me.scope === "authority" || me.scope === "coordinator") return;
+  if (!me.profile?.id) throw new Error("This customer is not available to you");
+  const { data, error } = await db.from("support_conversations")
+    .select("id").eq("customer_id", customerId)
+    .or(`assignee_profile_id.is.null,assignee_profile_id.eq.${me.profile.id}`).limit(1);
+  if (error || !data?.length) throw new Error("This customer is not available to you");
 }
 
 export const listSupportInbox = createServerFn({ method: "POST" })
@@ -161,13 +174,16 @@ export const getSupportConversation = createServerFn({ method: "POST" })
       .eq("is_active", true)
       .order("name");
 
-    const { data: history } = await supabaseAdmin
+    let historyQuery = supabaseAdmin
       .from("support_conversations")
       .select("id, subject, status, created_at")
       .eq("customer_id", conversation.customer_id)
       .neq("id", conversation.id)
       .order("created_at", { ascending: false })
       .limit(8);
+    if (me.scope === "agent") historyQuery = historyQuery.or(`assignee_profile_id.is.null,assignee_profile_id.eq.${me.profile?.id}`);
+    const { data: history, error: historyError } = await historyQuery;
+    if (historyError) throw new Error("Customer history unavailable");
 
     await supabaseAdmin
       .from("support_conversations")
@@ -340,6 +356,12 @@ export const escalateSupportConversation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const me = await writer(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: conversation, error } = await supabaseAdmin.from("support_conversations")
+      .select("assignee_profile_id").eq("id", data.conversationId).maybeSingle();
+    if (error || !conversation || !canTouch(me.scope, me.profile?.id ?? null, conversation.assignee_profile_id)) {
+      throw new Error("This conversation belongs to another agent");
+    }
     const { escalateConversation } = await import("@/lib/support.server");
     const { actorLabel } = await import("@/lib/support-access.server");
     const ticket = await escalateConversation({
@@ -393,6 +415,7 @@ export const addSupportNote = createServerFn({ method: "POST" })
       }
     }
     if (data.customerId) {
+      await requireCustomerAccess(supabaseAdmin, me, data.customerId);
       const { data: row } = await supabaseAdmin
         .from("support_customers")
         .select("id")
@@ -503,14 +526,25 @@ export const listSupportCustomers = createServerFn({ method: "POST" })
     staffInput.extend({ search: z.string().trim().max(120).optional() }).parse(input),
   )
   .handler(async ({ data }) => {
-    await caller(data.adminToken);
+    const me = await caller(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let visibleCustomerIds: string[] | null = null;
+    if (me.scope === "agent") {
+      if (!me.profile?.id) throw new Error("Sign in required");
+      const { data: accessible, error } = await supabaseAdmin.from("support_conversations")
+        .select("customer_id").or(`assignee_profile_id.is.null,assignee_profile_id.eq.${me.profile.id}`);
+      if (error) throw new Error("Customer access unavailable");
+      visibleCustomerIds = [...new Set((accessible ?? []).map((row) => row.customer_id))];
+      if (!visibleCustomerIds.length) return { customers: [] };
+    }
 
     let query = supabaseAdmin
       .from("support_customers")
       .select("id, name, email, phone, company, tags, notes, created_at, last_seen_at")
       .order("last_seen_at", { ascending: false })
       .limit(200);
+    if (visibleCustomerIds) query = query.in("id", visibleCustomerIds);
     const customerSearch = data.search ? safeSearch(data.search) : "";
     if (customerSearch) {
       query = query.or(
@@ -521,13 +555,14 @@ export const listSupportCustomers = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const ids = (customers ?? []).map((c) => c.id);
-    const { data: conversations } = ids.length
-      ? await supabaseAdmin
+    let conversationsQuery = supabaseAdmin
           .from("support_conversations")
           .select("id, customer_id, status, subject, last_message_at")
           .in("customer_id", ids)
-          .order("last_message_at", { ascending: false })
-      : { data: [] };
+          .order("last_message_at", { ascending: false });
+    if (me.scope === "agent") conversationsQuery = conversationsQuery.or(`assignee_profile_id.is.null,assignee_profile_id.eq.${me.profile?.id}`);
+    const { data: conversations, error: conversationsError } = ids.length ? await conversationsQuery : { data: [], error: null };
+    if (conversationsError) throw new Error("Customer history unavailable");
 
     const grouped = new Map<string, { open: number; total: number; lastSubject: string | null }>();
     for (const row of conversations ?? []) {
@@ -560,8 +595,9 @@ export const updateSupportCustomer = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    await writer(data.adminToken);
+    const me = await writer(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await requireCustomerAccess(supabaseAdmin, me, data.customerId);
     const patch: Record<string, unknown> = {};
     for (const key of ["name", "company", "phone", "notes", "tags"] as const) {
       if (data[key] !== undefined) patch[key] = data[key];
