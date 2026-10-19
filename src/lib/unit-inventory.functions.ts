@@ -62,9 +62,10 @@ export const saveUnit = createServerFn({ method: "POST" })
     const { error } = await db.from("app_config").upsert({ id: KEY, data: { units: next }, updated_at: unit.updatedAt });
     if (error) throw new Error("Unit not saved / সংরক্ষণ হয়নি");
     await db.from("audit_logs").insert({
-      action: prev ? "unit_updated" : "unit_created", entity_type: "project_unit", entity_id: null, actor_label: c.actor,
-      details: { unit: unit.code, project: p.name, from: prev?.status ?? null, to: unit.status },
-    } as never).then(() => undefined, () => undefined);
+      action: prev ? "unit_updated" : "unit_created", entity_type: "project_unit", entity_id: null,
+      actor_profile_id: c.agentId, actor_label: c.actor,
+      metadata: { unitId: unit.id, unit: unit.code, project: p.name, from: prev?.status ?? null, to: unit.status },
+    });
     return { ok: true };
   });
 
