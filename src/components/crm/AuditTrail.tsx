@@ -18,6 +18,7 @@ const ACTION_LABEL: Record<string, string> = {
   lead_assigned: "লিড অ্যাসাইন",
   lead_self_claimed: "নিজে লিড নিয়েছেন",
   call_report_submitted: "কল রিপোর্ট জমা",
+  call_report_after_reassignment: "রি-অ্যাসাইনের পর রিপোর্ট",
   device_registered: "ডিভাইস নিবন্ধন",
   recording_reprocessed: "রেকর্ডিং পুনঃবিশ্লেষণ",
   alert_acknowledged: "সতর্কতা দেখা হয়েছে",
