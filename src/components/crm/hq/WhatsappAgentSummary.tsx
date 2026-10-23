@@ -66,6 +66,22 @@ export function WhatsappAgentSummary() {
             <Calendar mode="range" selected={range} onSelect={setRange} className="pointer-events-auto" />
           </PopoverContent>
         </Popover>
+        {([
+          { days: 1, bn: "আজ", en: "Today" },
+          { days: 7, bn: "গত ৭ দিন", en: "Last 7 days" },
+          { days: 30, bn: "গত ৩০ দিন", en: "Last 30 days" },
+        ] as const).map((p) => {
+          const end = new Date(Date.now() + 6 * 3600_000);
+          const today = new Date(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+          const start = new Date(today);
+          start.setDate(today.getDate() - (p.days - 1));
+          const active = from === format(start, "yyyy-MM-dd") && to === format(today, "yyyy-MM-dd");
+          return (
+            <Button key={p.days} size="sm" variant={active ? "default" : "secondary"} aria-pressed={active} onClick={() => setRange({ from: start, to: today })}>
+              {t({ bn: p.bn, en: p.en })}
+            </Button>
+          );
+        })}
         <Button variant="ghost" size="icon" disabled={!range?.from} onClick={() => setRange(undefined)} aria-label={t({ bn: "সারাংশের ফিল্টার সরান", en: "Reset summary filter" })} title={t({ bn: "সারাংশের ফিল্টার সরান", en: "Reset summary filter" })}><RotateCcw className="size-4" /></Button>
         <Button variant="outline" size="sm" disabled={isPending || isError || !rows.length} onClick={exportCsv}><Download className="size-4" />{t({ bn: "সারাংশ CSV রপ্তানি", en: "Export summary CSV" })}</Button>
       </div>

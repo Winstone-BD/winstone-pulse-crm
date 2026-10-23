@@ -877,12 +877,20 @@ function ReportDialog({
         });
         return { offline: true as const };
       }
-      await submit({ data: payload } as never);
-      return { offline: false as const };
+      const res = (await submit({ data: payload } as never)) as { reassigned?: boolean } | undefined;
+      return { offline: false as const, reassigned: Boolean(res?.reassigned) };
     },
     onSuccess: (result) => {
       clearReportDraft(detail.report.id);
-      toast.success(
+      if (!result.offline && "reassigned" in result && result.reassigned) {
+        toast.warning(
+          t({
+            bn: "এই লিডটি অন্য এজেন্টকে দেওয়া হয়েছে। আপনার রিপোর্ট ইতিহাসে সেভ হয়েছে, কিন্তু নতুন মালিকের লিড রেকর্ড, ফলো-আপ ও শ্রেণি অপরিবর্তিত রাখা হয়েছে।",
+            en: "This lead was reassigned to another agent. Your report was saved to history, but the new owner's lead record, follow-ups and classification were left unchanged.",
+          }),
+          { duration: 10_000 },
+        );
+      } else toast.success(
         result.offline
           ? t({ bn: "ইন্টারনেট নেই — রিপোর্ট এই ফোনে সেভ হয়েছে, নেট ফিরলে নিজেই সার্ভারে যাবে", en: "No internet — the report is saved on this phone and will sync once you're back online" })
           : t({ bn: "রিপোর্ট জমা হয়েছে — পরের লিড খুলে গেল", en: "Report submitted — the next lead has opened" }),

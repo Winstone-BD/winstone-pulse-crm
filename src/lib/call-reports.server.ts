@@ -696,6 +696,29 @@ export async function submitCallReport(input: {
     },
   });
 
+  // Separate, searchable trail for reports accepted after the lead moved owner.
+  if (reassigned) {
+    const currentOwnerId = currentLead ? (currentLead.assigned_to ?? currentLead.assigned_agent_id ?? null) : null;
+    let currentOwnerName: string | null = null;
+    if (currentOwnerId) {
+      const { data: owner } = await supabaseAdmin.from("profiles").select("name").eq("id", currentOwnerId).maybeSingle();
+      currentOwnerName = (owner as { name?: string } | null)?.name ?? null;
+    }
+    await logAudit({
+      action: "call_report_after_reassignment",
+      entityType: "call_report",
+      entityId: report.id,
+      actorProfileId: input.agentId,
+      metadata: {
+        leadId: report.lead_id,
+        reportSubmittedAt: new Date().toISOString(),
+        currentOwnerId,
+        currentOwnerName,
+        leadRecordChanged: false,
+      },
+    });
+  }
+
   // Sync trail for the phone: report accepted -> next lead unlocked.
   const { recordSyncEvent } = await import("@/lib/call-jobs.server");
   await recordSyncEvent({

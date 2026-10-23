@@ -18,6 +18,7 @@ const ACTION_LABEL: Record<string, string> = {
   lead_assigned: "লিড অ্যাসাইন",
   lead_self_claimed: "নিজে লিড নিয়েছেন",
   call_report_submitted: "কল রিপোর্ট জমা",
+  call_report_after_reassignment: "রি-অ্যাসাইনের পর রিপোর্ট",
   device_registered: "ডিভাইস নিবন্ধন",
   recording_reprocessed: "রেকর্ডিং পুনঃবিশ্লেষণ",
   alert_acknowledged: "সতর্কতা দেখা হয়েছে",
@@ -27,6 +28,16 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 const ACTIONS = Object.keys(ACTION_LABEL);
+
+function describeRow(row: { action: string; created_at: string; metadata: unknown }) {
+  const m = (row.metadata ?? {}) as Record<string, unknown>;
+  if (row.action === "call_report_after_reassignment") {
+    const at = typeof m.reportSubmittedAt === "string" ? m.reportSubmittedAt : row.created_at;
+    const owner = typeof m.currentOwnerName === "string" ? m.currentOwnerName : m.currentOwnerId ? String(m.currentOwnerId) : "কেউ নেই";
+    return `রিপোর্টের সময়: ${new Date(at).toLocaleString("bn-BD", { timeZone: "Asia/Dhaka" })} · লিডের বর্তমান মালিক: ${owner} · লিড রেকর্ড অপরিবর্তিত`;
+  }
+  return JSON.stringify(row.metadata ?? {});
+}
 const PAGE_SIZE = 25;
 
 /**
@@ -145,7 +156,7 @@ export function AuditTrail() {
                     </td>
                     <td className="py-2 pr-3">{row.entity_type}</td>
                     <td className="py-2 text-muted-foreground">
-                      {JSON.stringify(row.metadata ?? {})}
+                      {describeRow(row)}
                     </td>
                   </tr>
                 ))}
@@ -164,7 +175,7 @@ export function AuditTrail() {
                 </div>
                 <p className="mt-1 text-xs font-medium">{row.actor_label ?? "—"}</p>
                 <p className="text-[11px] break-words text-muted-foreground">
-                  {row.entity_type} · {JSON.stringify(row.metadata ?? {})}
+                  {row.entity_type} · {describeRow(row)}
                 </p>
               </li>
             ))}
