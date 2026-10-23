@@ -41,11 +41,11 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from:
     eq: () => chain, neq: () => chain, gte: () => chain, order: () => chain, limit: () => chain,
     in: (_key: string, ids: string[]) => { if (table === "support_customers") state.customerFilter = ids.join(","); return chain; },
     or: (s: string) => { filter = s; return chain; },
-    update: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); if (table === "call_reports") throw new Error("captured submission"); return chain; },
+    update: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); if (table === "call_reports" && !state.allowSubmit) throw new Error("captured submission"); return chain; },
     insert: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); return chain; },
     maybeSingle: async () => {
       if (table === "call_reports") return { data: { id: "report-a", agent_id: "agent-a", lead_id: "lead-a", recording_id: "recording-a", channel: state.channel, connected: true, duration_seconds: 9000, created_at: "2026-10-19T00:00:00Z" }, error: null };
-      if (table === "leads") return { data: { assigned_to: "agent-a" }, error: null };
+      if (table === "leads") return { data: { assigned_to: state.leadOwner, name: "Lead", phone_number: "01700000000", status: "pending" }, error: null };
       if (table === "call_recordings") return { data: state.phoneSeconds === null ? { duration_seconds: 9000, call_source: "web_manual" } : { duration_seconds: state.phoneSeconds, call_source: "android_sim", created_at: "2026-10-19T00:01:00Z" }, error: null };
       const r = result();
       return { ...r, data: r.data?.[0] ?? null };
@@ -68,6 +68,7 @@ beforeEach(() => {
   state.caller = { scope: "agent", readOnly: false, profile: { id: "agent-a", name: "Agent" } };
   state.assignee = "agent-a"; state.accessError = false; state.writes = []; state.configReads = 0;
   state.escalations = 0; state.customerFilter = ""; state.phoneSeconds = null; state.channel = "call";
+  state.leadOwner = "agent-a"; state.allowSubmit = false;
 });
 
 describe("private reads authenticate before accessing data", () => {
