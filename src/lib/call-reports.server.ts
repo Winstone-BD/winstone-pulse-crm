@@ -389,7 +389,13 @@ export async function submitCallReport(input: {
   if (report.agent_id !== input.agentId) throw new Error("এই রিপোর্ট আপনার নয়");
   if (report.status === "submitted") return { ok: true, alreadySubmitted: true as const };
   const { data: currentLead, error: ownerError } = await supabaseAdmin.from("leads").select("assigned_to, assigned_agent_id").eq("id", report.lead_id).maybeSingle();
-  if (ownerError || !currentLead || (currentLead.assigned_to ?? currentLead.assigned_agent_id) !== input.agentId) throw new Error("This lead is no longer assigned to you");
+  if (ownerError) throw new Error(ownerError.message);
+  // HQ may reassign the lead while this report is still open. The call still
+  // happened, so the report is accepted as history — otherwise the pending
+  // report would block every new call with no way out. But the lead itself,
+  // its classification and its follow-ups now belong to the new owner, so
+  // none of those are touched below.
+  const reassigned = !currentLead || (currentLead.assigned_to ?? currentLead.assigned_agent_id) !== input.agentId;
 
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
