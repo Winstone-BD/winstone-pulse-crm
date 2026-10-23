@@ -613,7 +613,7 @@ export async function submitCallReport(input: {
       source: "manual",
       classified_at: nowIso,
     });
-  } else {
+  } else if (!reassigned) {
     // Not received: the lead stays with the same agent. A did-not-receive call
     // is parked (snoozed / unresponsive) until its retry time; others retry now.
     await supabaseAdmin
@@ -632,7 +632,7 @@ export async function submitCallReport(input: {
 
   let followUpId: string | null = null;
   const plannedAt = input.followUpAt ?? cadence?.retryAt ?? null;
-  if (plannedAt) {
+  if (!reassigned && plannedAt) {
     const { replaceReportFollowUp } = await import("@/lib/follow-up-lifecycle.server");
     const stageNote = cadence ? (cadence.stage === "unresponsive" ? "Unresponsive Pool — 3 unanswered calls; reactivation after 7 days" : cadence.stage === "snooze_soft" ? "Second unanswered call — soft message and retry" : "First unanswered call — retry") : null;
     followUpId = await replaceReportFollowUp(input.agentId, report.id, {
