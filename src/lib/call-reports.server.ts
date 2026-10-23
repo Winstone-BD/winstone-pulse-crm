@@ -389,7 +389,13 @@ export async function submitCallReport(input: {
   if (report.agent_id !== input.agentId) throw new Error("এই রিপোর্ট আপনার নয়");
   if (report.status === "submitted") return { ok: true, alreadySubmitted: true as const };
   const { data: currentLead, error: ownerError } = await supabaseAdmin.from("leads").select("assigned_to, assigned_agent_id").eq("id", report.lead_id).maybeSingle();
-  if (ownerError || !currentLead || (currentLead.assigned_to ?? currentLead.assigned_agent_id) !== input.agentId) throw new Error("This lead is no longer assigned to you");
+  if (ownerError) throw new Error(ownerError.message);
+  // HQ may reassign the lead while this report is still open. The call still
+  // happened, so the report is accepted as history — otherwise the pending
+  // report would block every new call with no way out. But the lead itself,
+  // its classification and its follow-ups now belong to the new owner, so
+  // none of those are touched below.
+  const reassigned = !currentLead || (currentLead.assigned_to ?? currentLead.assigned_agent_id) !== input.agentId;
 
   // `connected` is set when the call ends, so the phone cannot skip the
   // classification requirement by omitting it from the submit payload. The agent
@@ -473,7 +479,7 @@ export async function submitCallReport(input: {
 
   // Did-not-receive cadence: planned (and validated) before anything is saved,
   // so a past custom time is refused without touching the report.
-  const didNotReceive = !received && (input.callStatus === "no_answer" || input.callStatus === "busy");
+  const didNotReceive = !reassigned && !received && (input.callStatus === "no_answer" || input.callStatus === "busy");
   let cadence: ReturnType<typeof import("@/lib/no-answer-cadence").planNoAnswer> | null = null;
   if (didNotReceive) {
     const { planNoAnswer, RetryPlanError } = await import("@/lib/no-answer-cadence");
@@ -578,7 +584,7 @@ export async function submitCallReport(input: {
     [input.summary?.trim(), input.note?.trim(), input.reason?.trim()].filter(Boolean).join(" — ") ||
     null;
 
-  if (received && classified) {
+  if (!reassigned && received && classified) {
     await supabaseAdmin
       .from("leads")
       .update({
@@ -607,7 +613,7 @@ export async function submitCallReport(input: {
       source: "manual",
       classified_at: nowIso,
     });
-  } else {
+  } else if (!reassigned) {
     // Not received: the lead stays with the same agent. A did-not-receive call
     // is parked (snoozed / unresponsive) until its retry time; others retry now.
     await supabaseAdmin
@@ -626,7 +632,7 @@ export async function submitCallReport(input: {
 
   let followUpId: string | null = null;
   const plannedAt = input.followUpAt ?? cadence?.retryAt ?? null;
-  if (plannedAt) {
+  if (!reassigned && plannedAt) {
     const { replaceReportFollowUp } = await import("@/lib/follow-up-lifecycle.server");
     const stageNote = cadence ? (cadence.stage === "unresponsive" ? "Unresponsive Pool — 3 unanswered calls; reactivation after 7 days" : cadence.stage === "snooze_soft" ? "Second unanswered call — soft message and retry" : "First unanswered call — retry") : null;
     followUpId = await replaceReportFollowUp(input.agentId, report.id, {
@@ -639,7 +645,7 @@ export async function submitCallReport(input: {
       previous_call_id: report.recording_id ?? null, scheduled_at: plannedAt,
       reminder_minutes: input.reminderMinutes ?? 30, status: "upcoming",
     }, input.customerResponse?.trim() || input.nextAction?.trim() || stageNote || "Customer requested a new follow-up in the saved call report");
-  } else if (received) {
+  } else if (!reassigned && received) {
     // Only a saved answered report supplies a real completion outcome.
     const outcome = [input.customerResponse, input.reason, input.note, input.noFollowUpReason, noFollowUpNote].filter(Boolean).join(" — ");
     const { data: open, error } = await supabaseAdmin.from("follow_up_events").select("id")
@@ -752,6 +758,7 @@ export async function submitCallReport(input: {
     sheet,
     review,
     nextReportId: nextQueued,
+    reassigned,
     workState: received && classified ? ("completed" as const) : ("pending" as const),
   };
 

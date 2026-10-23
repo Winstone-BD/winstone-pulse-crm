@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   escalations: 0,
   phoneSeconds: null as number | null,
   channel: "call",
+  leadOwner: "agent-a" as string | null,
+  allowSubmit: false,
 }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
   const chain = { inputValidator: () => chain, middleware: () => chain, handler: (fn: unknown) => fn };
@@ -31,6 +33,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from:
     }
     if (table === "support_customers") return { data: [{ id: "customer-a" }], error: null };
     if (table === "call_recordings") return { data: [], error: null };
+    if (table === "call_reports" && state.allowSubmit) return { data: [{ id: "report-a" }], error: null };
     return { data: [], error: null };
   };
   const chain = {
@@ -38,11 +41,11 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from:
     eq: () => chain, neq: () => chain, gte: () => chain, order: () => chain, limit: () => chain,
     in: (_key: string, ids: string[]) => { if (table === "support_customers") state.customerFilter = ids.join(","); return chain; },
     or: (s: string) => { filter = s; return chain; },
-    update: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); if (table === "call_reports") throw new Error("captured submission"); return chain; },
+    update: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); if (table === "call_reports" && !state.allowSubmit) throw new Error("captured submission"); return chain; },
     insert: (patch: Record<string, unknown>) => { state.writes.push({ table, patch }); return chain; },
     maybeSingle: async () => {
       if (table === "call_reports") return { data: { id: "report-a", agent_id: "agent-a", lead_id: "lead-a", recording_id: "recording-a", channel: state.channel, connected: true, duration_seconds: 9000, created_at: "2026-10-19T00:00:00Z" }, error: null };
-      if (table === "leads") return { data: { assigned_to: "agent-a" }, error: null };
+      if (table === "leads") return { data: { assigned_to: state.leadOwner, name: "Lead", phone_number: "01700000000", status: "pending" }, error: null };
       if (table === "call_recordings") return { data: state.phoneSeconds === null ? { duration_seconds: 9000, call_source: "web_manual" } : { duration_seconds: state.phoneSeconds, call_source: "android_sim", created_at: "2026-10-19T00:01:00Z" }, error: null };
       const r = result();
       return { ...r, data: r.data?.[0] ?? null };
@@ -65,6 +68,7 @@ beforeEach(() => {
   state.caller = { scope: "agent", readOnly: false, profile: { id: "agent-a", name: "Agent" } };
   state.assignee = "agent-a"; state.accessError = false; state.writes = []; state.configReads = 0;
   state.escalations = 0; state.customerFilter = ""; state.phoneSeconds = null; state.channel = "call";
+  state.leadOwner = "agent-a"; state.allowSubmit = false;
 });
 
 describe("private reads authenticate before accessing data", () => {
@@ -155,6 +159,24 @@ describe("report submission verifies only phone-measured duration", () => {
     state.phoneSeconds = 95; state.channel = "whatsapp";
     await expect(submitCallReport(input)).rejects.toThrow("captured submission");
     expect(state.writes[0]?.patch).toMatchObject({ connection_verified: false, duration_source: "whatsapp_entered" });
+  });
+  it("a lead reassigned before submit still closes the report without touching the lead", async () => {
+    state.allowSubmit = true; state.leadOwner = "agent-b";
+    const result = await submitCallReport(input) as { ok: boolean; reassigned: boolean };
+    expect(result.ok).toBe(true);
+    expect(result.reassigned).toBe(true);
+    const tables = state.writes.map((w) => w.table);
+    expect(tables).toContain("call_reports");
+    expect(tables).not.toContain("leads");
+    expect(tables).not.toContain("follow_up_events");
+    expect(tables).not.toContain("lead_classifications");
+  });
+  it("a lead still owned by the agent keeps the normal lead update", async () => {
+    state.allowSubmit = true;
+    const result = await submitCallReport(input) as { ok: boolean; reassigned: boolean };
+    expect(result.ok).toBe(true);
+    expect(result.reassigned).toBe(false);
+    expect(state.writes.map((w) => w.table)).toContain("leads");
   });
   it("new null verification cannot bypass ranking while historical reports remain eligible", () => {
     expect(countsTowardScore({ connection_verified: null, submitted_at: "2026-10-19T00:00:00Z" })).toBe(false);
