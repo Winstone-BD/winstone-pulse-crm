@@ -160,6 +160,24 @@ describe("report submission verifies only phone-measured duration", () => {
     await expect(submitCallReport(input)).rejects.toThrow("captured submission");
     expect(state.writes[0]?.patch).toMatchObject({ connection_verified: false, duration_source: "whatsapp_entered" });
   });
+  it("a lead reassigned before submit still closes the report without touching the lead", async () => {
+    state.allowSubmit = true; state.leadOwner = "agent-b";
+    const result = await submitCallReport(input) as { ok: boolean; reassigned: boolean };
+    expect(result.ok).toBe(true);
+    expect(result.reassigned).toBe(true);
+    const tables = state.writes.map((w) => w.table);
+    expect(tables).toContain("call_reports");
+    expect(tables).not.toContain("leads");
+    expect(tables).not.toContain("follow_up_events");
+    expect(tables).not.toContain("lead_classifications");
+  });
+  it("a lead still owned by the agent keeps the normal lead update", async () => {
+    state.allowSubmit = true;
+    const result = await submitCallReport(input) as { ok: boolean; reassigned: boolean };
+    expect(result.ok).toBe(true);
+    expect(result.reassigned).toBe(false);
+    expect(state.writes.map((w) => w.table)).toContain("leads");
+  });
   it("new null verification cannot bypass ranking while historical reports remain eligible", () => {
     expect(countsTowardScore({ connection_verified: null, submitted_at: "2026-10-19T00:00:00Z" })).toBe(false);
     expect(countsTowardScore({ connection_verified: null, submitted_at: "2026-10-01T00:00:00Z" })).toBe(true);
