@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   escalations: 0,
   phoneSeconds: null as number | null,
   channel: "call",
+  leadOwner: "agent-a" as string | null,
+  allowSubmit: false,
 }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
   const chain = { inputValidator: () => chain, middleware: () => chain, handler: (fn: unknown) => fn };
@@ -31,6 +33,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from:
     }
     if (table === "support_customers") return { data: [{ id: "customer-a" }], error: null };
     if (table === "call_recordings") return { data: [], error: null };
+    if (table === "call_reports" && state.allowSubmit) return { data: [{ id: "report-a" }], error: null };
     return { data: [], error: null };
   };
   const chain = {
