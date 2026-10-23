@@ -645,7 +645,7 @@ export async function submitCallReport(input: {
       previous_call_id: report.recording_id ?? null, scheduled_at: plannedAt,
       reminder_minutes: input.reminderMinutes ?? 30, status: "upcoming",
     }, input.customerResponse?.trim() || input.nextAction?.trim() || stageNote || "Customer requested a new follow-up in the saved call report");
-  } else if (received) {
+  } else if (!reassigned && received) {
     // Only a saved answered report supplies a real completion outcome.
     const outcome = [input.customerResponse, input.reason, input.note, input.noFollowUpReason, noFollowUpNote].filter(Boolean).join(" — ");
     const { data: open, error } = await supabaseAdmin.from("follow_up_events").select("id")
@@ -758,6 +758,7 @@ export async function submitCallReport(input: {
     sheet,
     review,
     nextReportId: nextQueued,
+    reassigned,
     workState: received && classified ? ("completed" as const) : ("pending" as const),
   };
 
