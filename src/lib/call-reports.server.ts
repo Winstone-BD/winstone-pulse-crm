@@ -479,7 +479,7 @@ export async function submitCallReport(input: {
 
   // Did-not-receive cadence: planned (and validated) before anything is saved,
   // so a past custom time is refused without touching the report.
-  const didNotReceive = !received && (input.callStatus === "no_answer" || input.callStatus === "busy");
+  const didNotReceive = !reassigned && !received && (input.callStatus === "no_answer" || input.callStatus === "busy");
   let cadence: ReturnType<typeof import("@/lib/no-answer-cadence").planNoAnswer> | null = null;
   if (didNotReceive) {
     const { planNoAnswer, RetryPlanError } = await import("@/lib/no-answer-cadence");
@@ -584,7 +584,7 @@ export async function submitCallReport(input: {
     [input.summary?.trim(), input.note?.trim(), input.reason?.trim()].filter(Boolean).join(" — ") ||
     null;
 
-  if (received && classified) {
+  if (!reassigned && received && classified) {
     await supabaseAdmin
       .from("leads")
       .update({
